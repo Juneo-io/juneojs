@@ -119,7 +119,7 @@ export class JuneoWallet {
 
   static generate (hrp: string): JuneoWallet {
     const mnemonic = bip39.generateMnemonic()
-    const wallet = JuneoWallet.recover(mnemonic, hrp)
+    const wallet = JuneoWallet.recover(hrp, mnemonic)
     return wallet
   }
 }

@@ -1,5 +1,5 @@
 import { type AxiosResponse } from 'axios'
-import { HttpError, JsonRpcError, ProtocolError } from '../utils'
+import { HttpError, JsonRpcError, NetworkError, ProtocolError } from '../utils'
 import axios from 'axios'
 
 const JsonRpcVersion: string = '2.0'
@@ -78,7 +78,9 @@ export class JuneoClient {
 
   async rpcCall (endpoint: string, request: JsonRpcRequest): Promise<JsonRpcResponse> {
     const jsonRpcObject: any = request.getJsonRpcObject(this.nextRequestId++)
-    const response: AxiosResponse = await this.post(endpoint, JSON.stringify(jsonRpcObject))
+    const response: AxiosResponse = await this.post(endpoint, JSON.stringify(jsonRpcObject)).catch(error => {
+      throw new NetworkError(error)
+    })
     const status = response.status
     if (status < 200 || status >= 300) {
       throw new HttpError(`request status is not accepted "${status}"`)

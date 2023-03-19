@@ -1,7 +1,6 @@
-import { NotImplementedError } from '../../utils'
 import { AbstractAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { GetBlockchainIDResponse, GetNetworkIDResponse, GetNetworkNameResponse, GetNodeIDResponse, GetNodeIPResponse, GetNodeVersionResponse, GetTxFeeResponse, GetVMsResponse, IsBootstrappedResponse, PeersResponse, UptimeResponse } from './data'
+import { type GetBlockchainIDResponse, type GetNetworkIDResponse, type GetNetworkNameResponse, type GetNodeIDResponse, type GetNodeIPResponse, type GetNodeVersionResponse, type GetTxFeeResponse, type GetVMsResponse, type IsBootstrappedResponse, type PeersResponse, type UptimeResponse } from './data'
 
 const MethodCallHeader: string = 'info'
 const Endpoint = '/ext/info'
@@ -57,12 +56,12 @@ export class InfoAPI extends AbstractAPI {
   }
 
   async peers (nodeIDs?: string[]): Promise<PeersResponse> {
-    const response: JsonRpcResponse = await this.call('peers', [{nodeIDs}])
+    const response: JsonRpcResponse = await this.call('peers', [{ nodeIDs }])
     return response.result
   }
 
   async uptime (supernetID?: string): Promise<UptimeResponse> {
-    const response: JsonRpcResponse = await this.call('uptime', [{supernetID}])
+    const response: JsonRpcResponse = await this.call('uptime', [{ supernetID }])
     return response.result
   }
 }

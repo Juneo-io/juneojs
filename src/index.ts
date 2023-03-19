@@ -1,6 +1,6 @@
 
-import * as juneo from './juneo'
+import * as juneojs from './juneo'
 
-export { juneo }
+export { juneojs }
 
 export * from './juneo'

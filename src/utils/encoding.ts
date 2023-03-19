@@ -4,8 +4,6 @@ import { DecodingError } from './errors'
 import hash from 'create-hash'
 import bs58 from 'bs58'
 
-const bech32 = require('bech32')
-
 export function concatChecksum (buffer: Buffer): Buffer {
   const hashBuffer: Buffer = hash('sha256').update(buffer).digest().slice(28)
   const buffers: Buffer[] = [buffer, hashBuffer]
@@ -61,10 +59,4 @@ export function decodeCHex (value: string): Buffer {
     throw new DecodingError('value checksum is not valid')
   }
   return buffer.subarray(0, buffer.length - 4)
-}
-
-export function encodeJuneoAddress (hrp: string, publicKey: string): string {
-  const sha256: Buffer = Buffer.from(hash('sha256').update(publicKey).digest())
-  const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
-  return bech32.bech32.encode(hrp, bech32.bech32.toWords(rmd160))
 }

@@ -2,13 +2,29 @@ import { type AxiosResponse } from 'axios'
 import { HttpError, JsonRpcError, ProtocolError } from '../utils'
 import axios from 'axios'
 
-const jsonRpcVersion: string = '2.0'
-const httpHeaders = {
+const JsonRpcVersion: string = '2.0'
+const HttpHeaders = {
   'Content-Type': 'application/json;charset=UTF-8'
 }
-const defaultProtocol: string = 'https'
-const defaultHost: string = 'api1.mcnpoc4.xyz'
-const defaultPort: number = 9650
+const DefaultProtocol: string = 'https'
+const DefaultHost: string = 'api1.mcnpoc4.xyz'
+const DefaultPort: number = 9650
+
+export function buildClient (address?: string): JuneoClient {
+  if (address === undefined) {
+    return new JuneoClient(DefaultProtocol, DefaultHost, DefaultPort)
+  }
+  return parseAddress(address)
+}
+
+function parseAddress (address: string): JuneoClient {
+  const protocolSplit: string[] = address.split('://')
+  const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
+  const hostSplit: string[] = protocolSplit.length > 1 ? protocolSplit[1].split(':') : protocolSplit[0].split(':')
+  const host: string = hostSplit[0]
+  const port: number = hostSplit.length > 1 ? +hostSplit[1] : DefaultPort
+  return new JuneoClient(protocol, host, port)
+}
 
 export class JuneoClient {
   private protocol: string
@@ -16,7 +32,7 @@ export class JuneoClient {
   private port: number
   private nextRequestId: number = 1
 
-  constructor (protocol?: string, host?: string, port?: number) {
+  constructor (protocol: string, host: string, port: number) {
     this.setProtocol(protocol)
     this.setHost(host)
     this.setPort(port)
@@ -24,17 +40,17 @@ export class JuneoClient {
 
   setProtocol (protocol: string | undefined): void {
     if (protocol === undefined) {
-      protocol = defaultProtocol
+      protocol = DefaultProtocol
     }
     if (protocol !== 'http' && protocol !== 'https') {
-      throw new ProtocolError('invalid protocol')
+      throw new ProtocolError(`invalid protocol "${protocol}"`)
     }
     this.protocol = protocol
   }
 
   setHost (host: string | undefined): void {
     if (host === undefined) {
-      this.host = defaultHost
+      this.host = DefaultHost
     } else {
       this.host = host
     }
@@ -42,7 +58,7 @@ export class JuneoClient {
 
   setPort (port: number | undefined): void {
     if (port === undefined) {
-      this.port = defaultPort
+      this.port = DefaultPort
     } else {
       this.port = port
     }
@@ -54,7 +70,7 @@ export class JuneoClient {
       {
         method: 'post',
         baseURL: `${this.protocol}://${this.host}:${this.port}`,
-        headers: httpHeaders,
+        headers: HttpHeaders,
         responseType: 'json',
         responseEncoding: 'utf8'
       })
@@ -65,7 +81,7 @@ export class JuneoClient {
     const response: AxiosResponse = await this.post(endpoint, JSON.stringify(jsonRpcObject))
     const status = response.status
     if (status < 200 || status >= 300) {
-      throw new HttpError('request status is not accepted')
+      throw new HttpError(`request status is not accepted "${status}"`)
     }
     this.nextRequestId++
     let data = response.data
@@ -94,7 +110,7 @@ export class JsonRpcRequest {
 
   getJsonRpcObject (id: number): any {
     const jsonRpcObject: any = {}
-    jsonRpcObject.jsonrpc = jsonRpcVersion
+    jsonRpcObject.jsonrpc = JsonRpcVersion
     jsonRpcObject.id = id
     jsonRpcObject.method = this.method
     jsonRpcObject.params = this.params
@@ -105,7 +121,7 @@ export class JsonRpcRequest {
 export class JsonRpcResponse {
   jsonrpc: string
   id: number
-  result: string
+  result: any
 
   constructor (jsonrpc: string, id: number, result: string) {
     this.jsonrpc = jsonrpc

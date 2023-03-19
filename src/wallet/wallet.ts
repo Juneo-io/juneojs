@@ -3,37 +3,15 @@ import { Buffer } from 'buffer'
 import { type Blockchain } from '../chain'
 import { ECKeyPair, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
+import * as bip39 from 'bip39'
+import * as bech32 from 'bech32'
+import hash from 'create-hash'
 import hdKey from 'hdkey'
-
-const bip39 = require('bip39')
 
 const EVM_HD_PATH = "m/44'/60'/0'/0/0"
 const JVM_HD_PATH = "m/44'/9000'/0'/0/0"
 
 const JVM_PRIVATE_KEY_PREFIX = 'PrivateKey-'
-
-export function recover (hrp: string, data: string): JuneoWallet {
-  if (isPrivateKey(data)) {
-    if (!validatePrivateKey(data)) {
-      throw new WalletError('invalid private key provided')
-    }
-    const wallet: JuneoWallet = new JuneoWallet(hrp)
-    wallet.privateKey = data
-    return wallet
-  }
-  if (bip39.validateMnemonic(data)) {
-    const wallet: JuneoWallet = new JuneoWallet(hrp)
-    wallet.setMnemonic(data)
-    return wallet
-  }
-  throw new WalletError('invalid recovery data provided')
-}
-
-export function generate (hrp: string): JuneoWallet {
-  const mnemonic = bip39.generateMnemonic()
-  const wallet = recover(mnemonic, hrp)
-  return wallet
-}
 
 export function isPrivateKey (data: string): boolean {
   return encoding.isHex(data) || data.includes(JVM_PRIVATE_KEY_PREFIX)
@@ -50,6 +28,12 @@ export function validatePrivateKey (data: string): boolean {
   return false
 }
 
+export function encodeJuneoAddress (hrp: string, publicKey: string): string {
+  const sha256: Buffer = Buffer.from(hash('sha256').update(publicKey).digest())
+  const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
+  return bech32.bech32.encode(hrp, bech32.bech32.toWords(rmd160))
+}
+
 export class JuneoWallet {
   hrp: string
   mnemonic: string
@@ -57,7 +41,7 @@ export class JuneoWallet {
   privateKey: string
   chainsWallets: Wallets = {}
 
-  constructor (hrp: string) {
+  private constructor (hrp: string) {
     this.hrp = hrp
   }
 
@@ -115,6 +99,29 @@ export class JuneoWallet {
     const seed: string = bip39.mnemonicToSeedSync(mnemonic).toString('hex')
     this.hdNode = hdKey.fromMasterSeed(Buffer.from(seed, 'hex'))
   }
+
+  static recover (hrp: string, data: string): JuneoWallet {
+    if (isPrivateKey(data)) {
+      if (!validatePrivateKey(data)) {
+        throw new WalletError('invalid private key provided')
+      }
+      const wallet: JuneoWallet = new JuneoWallet(hrp)
+      wallet.privateKey = data
+      return wallet
+    }
+    if (bip39.validateMnemonic(data)) {
+      const wallet: JuneoWallet = new JuneoWallet(hrp)
+      wallet.setMnemonic(data)
+      return wallet
+    }
+    throw new WalletError('invalid recovery data provided')
+  }
+
+  static generate (hrp: string): JuneoWallet {
+    const mnemonic = bip39.generateMnemonic()
+    const wallet = JuneoWallet.recover(mnemonic, hrp)
+    return wallet
+  }
 }
 
 export type Wallets = Record<string, VMWallet>
@@ -139,7 +146,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = encoding.encodeJuneoAddress(hrp, this.keyPair.getPublicKey())
+    this.address = encodeJuneoAddress(hrp, this.keyPair.getPublicKey())
   }
 
   getAddress (): string {

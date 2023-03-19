@@ -3,13 +3,13 @@ import * as elliptic from 'elliptic'
 import { Buffer } from 'buffer'
 
 const EC: typeof elliptic.ec = elliptic.ec
-const curve: elliptic.ec = new EC('secp256k1')
+const Curve: elliptic.ec = new EC('secp256k1')
 
 export class ECKeyPair {
   private readonly keyPair: elliptic.ec.KeyPair
 
   constructor (privateKey: string) {
-    this.keyPair = curve.keyFromPrivate(privateKey, 'hex')
+    this.keyPair = Curve.keyFromPrivate(privateKey, 'hex')
   }
 
   getPublicKey (): string {

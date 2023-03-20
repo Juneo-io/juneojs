@@ -2,9 +2,8 @@ import { juneojs, JuneoWallet } from '../dist';
 import { JEVMWallet, VMWallet } from '../dist/wallet';
 
 async function main() {
-    const belgradeHrp: string = juneojs.Belgrade.hrp
-    // generating new wallet
-    const masterWallet: JuneoWallet = juneojs.JuneoWallet.generate(belgradeHrp)
+    // generating new master wallet
+    let masterWallet: JuneoWallet = juneojs.JuneoWallet.generate()
     // generated mnemonic
     console.log(masterWallet.mnemonic)
     const jvmChainAddress: string = masterWallet.getAddress(juneojs.JVMChain)

@@ -12,6 +12,7 @@ const EVM_HD_PATH = "m/44'/60'/0'/0/0"
 const JVM_HD_PATH = "m/44'/9000'/0'/0/0"
 
 const JVM_PRIVATE_KEY_PREFIX = 'PrivateKey-'
+const DEFAULT_HRP = 'june'
 
 export function isPrivateKey (data: string): boolean {
   return encoding.isHex(data) || data.includes(JVM_PRIVATE_KEY_PREFIX)
@@ -28,7 +29,7 @@ export function validatePrivateKey (data: string): boolean {
   return false
 }
 
-export function encodeJuneoAddress (hrp: string, publicKey: string): string {
+export function encodeJuneoAddress (publicKey: string, hrp: string): string {
   const sha256: Buffer = Buffer.from(hash('sha256').update(publicKey).digest())
   const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
   return bech32.bech32.encode(hrp, bech32.bech32.toWords(rmd160))
@@ -36,13 +37,13 @@ export function encodeJuneoAddress (hrp: string, publicKey: string): string {
 
 export class JuneoWallet {
   hrp: string
-  mnemonic: string
+  mnemonic: string | undefined
   private hdNode: any
-  privateKey: string
+  privateKey: string | undefined
   chainsWallets: Wallets = {}
 
-  private constructor (hrp: string) {
-    this.hrp = hrp
+  private constructor (hrp?: string) {
+    this.hrp = hrp === undefined ? DEFAULT_HRP : hrp
   }
 
   getAddress (chain: Blockchain): string {
@@ -100,7 +101,7 @@ export class JuneoWallet {
     this.hdNode = hdKey.fromMasterSeed(Buffer.from(seed, 'hex'))
   }
 
-  static recover (hrp: string, data: string): JuneoWallet {
+  static recover (data: string, hrp?: string): JuneoWallet {
     if (isPrivateKey(data)) {
       if (!validatePrivateKey(data)) {
         throw new WalletError('invalid private key provided')
@@ -117,9 +118,9 @@ export class JuneoWallet {
     throw new WalletError('invalid recovery data provided')
   }
 
-  static generate (hrp: string): JuneoWallet {
+  static generate (hrp?: string): JuneoWallet {
     const mnemonic = bip39.generateMnemonic()
-    const wallet = JuneoWallet.recover(hrp, mnemonic)
+    const wallet = JuneoWallet.recover(mnemonic, hrp)
     return wallet
   }
 }
@@ -146,7 +147,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = encodeJuneoAddress(hrp, this.keyPair.getPublicKey())
+    this.address = encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
   }
 
   getAddress (): string {

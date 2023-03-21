@@ -1,19 +1,31 @@
-
-export const PRIMARY_SUPERNET_ID = '11111111111111111111111111111111LpoYY'
-
-export const JUNE_ASSET_ID: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
-
-export const RELAY_CHAIN_NAME: string = 'Relay Chain'
-export const RELAY_CHAIN_ID: string = '11111111111111111111111111111111LpoYY'
+import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
+import { Supernet, MCN } from './network'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
 export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
-export const JVM_CHAIN_ID: string = 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q'
-export const JUNE_CHAIN_ID: string = '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5'
-export const JUNE_CHAIN_EVM_ID: number = 330001
+export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
 
-export const RELAY_CHAIN_ALIASES: string[] = ['Relay']
-export const JVM_CHAIN_ALIASES: string[] = ['Asset']
-export const JUNE_CHAIN_ALIASES: string[] = ['JUNE']
+export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(BelgradeJUNEAssetId)
+export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain(
+  'JVM Chain',
+  'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q',
+  BelgradeJUNEAssetId)
+export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain(
+  'JUNE Chain',
+  '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
+  BelgradeJUNEAssetId,
+  330001)
+
+export const BelgradePrimarySupernet: Supernet = new Supernet('11111111111111111111111111111111LpoYY', [
+  BelgradeRelayChain,
+  BelgradeJVMChain,
+  BelgradeJUNEChain
+])
+
+export const BelgradeNetwork: MCN = new MCN(1, 'june', [BelgradePrimarySupernet])
+// TODO Update when testnet is online
+export const TestNetwork: MCN = BelgradeNetwork
+// TODO Update when mainnet is online
+export const MainNetwork: MCN = TestNetwork

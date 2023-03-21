@@ -10,20 +10,17 @@ const DefaultProtocol: string = 'https'
 const DefaultHost: string = 'api1.mcnpoc4.xyz'
 const DefaultPort: number = 9650
 
-export function buildClient (address?: string): JuneoClient {
-  if (address === undefined) {
-    return new JuneoClient(DefaultProtocol, DefaultHost, DefaultPort)
-  }
-  return parseAddress(address)
-}
-
-function parseAddress (address: string): JuneoClient {
+export function buildClient (address: string): JuneoClient {
   const protocolSplit: string[] = address.split('://')
   const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
   const hostSplit: string[] = protocolSplit.length > 1 ? protocolSplit[1].split(':') : protocolSplit[0].split(':')
   const host: string = hostSplit[0]
   const port: number = hostSplit.length > 1 ? +hostSplit[1] : DefaultPort
-  return new JuneoClient(protocol, host, port)
+  const client: JuneoClient = new JuneoClient()
+  client.setProtocol(protocol)
+  client.setHost(host)
+  client.setPort(port)
+  return client
 }
 
 export class JuneoClient {
@@ -32,46 +29,34 @@ export class JuneoClient {
   private port: number
   private nextRequestId: number = 1
 
-  constructor (protocol: string, host: string, port: number) {
-    this.protocol = this.parseProtocol(protocol)
-    this.host = this.parseHost(host)
-    this.port = this.parsePort(port)
+  constructor () {
+    this.protocol = DefaultProtocol
+    this.host = DefaultHost
+    this.port = DefaultPort
   }
 
   setProtocol (protocol: string): void {
-    this.protocol = this.parseProtocol(protocol)
-  }
-
-  private parseProtocol (protocol: string | undefined): string {
     if (protocol === undefined) {
-      return DefaultProtocol
+      this.protocol = DefaultProtocol
     }
     if (protocol !== 'http' && protocol !== 'https') {
       throw new ProtocolError(`invalid protocol "${protocol}"`)
     }
-    return protocol
+    this.protocol = protocol
   }
 
   setHost (host: string): void {
-    this.host = this.parseHost(host)
-  }
-
-  private parseHost (host: string | undefined): string {
     if (host === undefined) {
-      return DefaultHost
+      this.host = DefaultHost
     }
-    return host
+    this.host = host
   }
 
   setPort (port: number): void {
-    this.port = this.parsePort(port)
-  }
-
-  private parsePort (port: number | undefined): number {
     if (port === undefined) {
-      return DefaultPort
+      this.port = DefaultPort
     }
-    return port
+    this.port = port
   }
 
   private async post (endpoint: string, data: any): Promise<AxiosResponse> {

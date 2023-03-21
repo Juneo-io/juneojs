@@ -2,12 +2,12 @@ import { AbstractAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetBlockchainIDResponse, type GetNetworkIDResponse, type GetNetworkNameResponse, type GetNodeIDResponse, type GetNodeIPResponse, type GetNodeVersionResponse, type GetTxFeeResponse, type GetVMsResponse, type IsBootstrappedResponse, type PeersResponse, type UptimeResponse } from './data'
 
-const MethodCallHeader: string = 'info'
-const Endpoint = '/ext/info'
+const Service: string = 'info'
+const Endpoint = '/info'
 
 export class InfoAPI extends AbstractAPI {
   constructor (client: JuneoClient) {
-    super(client, Endpoint, MethodCallHeader)
+    super(client, Endpoint, Service)
   }
 
   async isBootstrapped (chain: string): Promise<IsBootstrappedResponse> {

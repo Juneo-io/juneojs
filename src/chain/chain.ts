@@ -1,6 +1,9 @@
 import { type JuneoWallet, type VMWallet } from '../wallet'
 import * as params from './params'
 
+const RELAY_CHAIN_NAME: string = 'Relay Chain'
+const RELAY_CHAIN_ID: string = '11111111111111111111111111111111LpoYY'
+
 export interface Blockchain {
 
   name: string
@@ -38,8 +41,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class RelayBlockchain extends AbstractBlockchain {
-  constructor () {
-    super(params.RELAY_CHAIN_NAME, params.RELAY_CHAIN_ID, params.RELAYVM_ID, params.JUNE_ASSET_ID, params.RELAY_CHAIN_ALIASES)
+  constructor (assetId: string) {
+    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, params.RELAYVM_ID, assetId)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {

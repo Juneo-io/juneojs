@@ -1,27 +1,39 @@
+import { type Blockchain } from '../chain/chain'
 import { JsonRpcRequest, type JsonRpcResponse, type JuneoClient } from './client'
+
+const BaseEndpoint: string = '/ext'
 
 export abstract class AbstractAPI {
   private readonly client: JuneoClient
   private readonly endpoint: string
-  private readonly methodCallHeader: string
+  private readonly service: string
 
-  constructor (client: JuneoClient, endpoint: string, methodCallHeader: string) {
+  constructor (client: JuneoClient, endpoint: string, service: string) {
     this.client = client
     this.endpoint = endpoint
-    this.methodCallHeader = methodCallHeader
+    this.service = service
   }
 
-  protected async callAt (endpoint: string, methodName: string, params?: object[]): Promise<JsonRpcResponse> {
-    const response: JsonRpcResponse = await this.client.rpcCall(endpoint,
-      new JsonRpcRequest(this.getMethod(methodName), params))
+  protected async callServiceAt (service: string, endpoint: string, method: string, params?: object[]): Promise<JsonRpcResponse> {
+    const response: JsonRpcResponse = await this.client.rpcCall(`${BaseEndpoint}${endpoint}`,
+      new JsonRpcRequest(`${service}.${method}`, params))
     return response
   }
 
-  protected async call (methodName: string, params?: object[]): Promise<JsonRpcResponse> {
-    return await this.callAt(this.endpoint, methodName, params)
+  protected async callAt (endpoint: string, method: string, params?: object[]): Promise<JsonRpcResponse> {
+    return await this.callServiceAt(this.service, endpoint, method, params)
   }
 
-  private getMethod (name: string): string {
-    return `${this.methodCallHeader}.${name}`
+  protected async call (method: string, params?: object[]): Promise<JsonRpcResponse> {
+    return await this.callAt(this.endpoint, method, params)
+  }
+}
+
+export abstract class AbstractChainAPI extends AbstractAPI {
+  private readonly chain: Blockchain
+
+  constructor (client: JuneoClient, service: string, chain: Blockchain) {
+    super(client, `/bc/${chain.id}`, service)
+    this.chain = chain
   }
 }

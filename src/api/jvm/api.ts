@@ -1,14 +1,14 @@
-import { AbstractAPI } from '../api'
+import { type JVMBlockchain } from '../../chain'
+import { AbstractChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetBalanceResponse, type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from './data'
 
-const MethodCallHeader: string = 'jvm'
-const Endpoint = '/ext/bc/Asset'
-const VMEndpoint = '/ext/vm/jvm'
+const Service: string = 'jvm'
+const VMEndpoint = '/vm/jvm'
 
-export class JVMAPI extends AbstractAPI {
-  constructor (client: JuneoClient) {
-    super(client, Endpoint, MethodCallHeader)
+export class JVMAPI extends AbstractChainAPI {
+  constructor (client: JuneoClient, chain: JVMBlockchain) {
+    super(client, Service, chain)
   }
 
   async buildGenesis (networkID: number, genesisData: JSON, encoding?: string): Promise<BuildGenesisResponse> {

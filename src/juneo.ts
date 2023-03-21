@@ -1,5 +1,7 @@
 import * as api from './api'
 import { type JuneoClient, InfoAPI } from './api'
+import { JVMAPI } from './api/jvm'
+import { RelayAPI } from './api/relay'
 import { JEVMBlockchain, JVMBlockchain, MCN, RelayBlockchain, Supernet } from './chain'
 import * as params from './chain/params'
 
@@ -24,9 +26,13 @@ export function buildProvider (address?: string): JuneoProvider {
 
 export class JuneoProvider {
   info: InfoAPI
+  relay: RelayAPI
+  jvm: JVMAPI
 
   constructor (client: JuneoClient) {
     this.info = new InfoAPI(client)
+    this.relay = new RelayAPI(client)
+    this.jvm = new JVMAPI(client)
   }
 }
 

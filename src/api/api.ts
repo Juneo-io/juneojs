@@ -11,11 +11,14 @@ export abstract class AbstractAPI {
     this.methodCallHeader = methodCallHeader
   }
 
-  protected async call (methodName: string, params?: object[]): Promise<JsonRpcResponse> {
-    const response: JsonRpcResponse = await this.client.rpcCall(this.endpoint,
-      new JsonRpcRequest(this.getMethod(methodName), params)
-    )
+  protected async callAt (endpoint: string, methodName: string, params?: object[]): Promise<JsonRpcResponse> {
+    const response: JsonRpcResponse = await this.client.rpcCall(endpoint,
+      new JsonRpcRequest(this.getMethod(methodName), params))
     return response
+  }
+
+  protected async call (methodName: string, params?: object[]): Promise<JsonRpcResponse> {
+    return await this.callAt(this.endpoint, methodName, params)
   }
 
   private getMethod (name: string): string {

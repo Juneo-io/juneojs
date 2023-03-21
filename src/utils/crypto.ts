@@ -1,15 +1,15 @@
 
-import * as elliptic from 'elliptic'
 import { Buffer } from 'buffer'
+import { ec as EC } from 'elliptic'
+import { CryptoError } from './errors'
 
-const EC: typeof elliptic.ec = elliptic.ec
-const Curve: elliptic.ec = new EC('secp256k1')
+const Secp256k1: EC = new EC('secp256k1')
 
 export class ECKeyPair {
-  private readonly keyPair: elliptic.ec.KeyPair
+  private readonly keyPair: EC.KeyPair
 
   constructor (privateKey: string) {
-    this.keyPair = Curve.keyFromPrivate(privateKey, 'hex')
+    this.keyPair = Secp256k1.keyFromPrivate(privateKey, 'hex')
   }
 
   getPublicKey (): string {
@@ -17,11 +17,15 @@ export class ECKeyPair {
   }
 
   sign (buffer: Buffer): Buffer {
-    const signature: elliptic.ec.Signature = this.keyPair.sign(buffer, undefined, { canonical: true })
+    const signature: EC.Signature = this.keyPair.sign(buffer, { canonical: true })
     const r: Buffer = Buffer.from(signature.r.toArray('be', 32))
     const s: Buffer = Buffer.from(signature.s.toArray('be', 32))
     const v: Buffer = Buffer.alloc(1)
-    v.writeUint8(signature.recoveryParam, 0)
+    const recoveryParam: number | null = signature.recoveryParam
+    if (recoveryParam === null || typeof recoveryParam !== 'number') {
+      throw new CryptoError('could not retrieve recovery params')
+    }
+    v.writeUint8(recoveryParam, 0)
     return Buffer.concat([r, s, v], 65)
   }
 }

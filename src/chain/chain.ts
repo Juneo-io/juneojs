@@ -1,5 +1,4 @@
 import { type JuneoWallet, type VMWallet } from '../wallet'
-import { type BN } from 'bn.js'
 import * as params from './params'
 
 export interface Blockchain {
@@ -16,7 +15,7 @@ export interface Blockchain {
 
 export interface JEVMBlockchain {
 
-  chainId: typeof BN
+  chainId: number
 
 }
 
@@ -59,9 +58,9 @@ export class JVMBlockchain extends AbstractBlockchain {
 }
 
 export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain {
-  chainId: typeof BN
+  chainId: number
 
-  constructor (name: string, id: string, assetId: string, chainId: typeof BN, aliases?: string[]) {
+  constructor (name: string, id: string, assetId: string, chainId: number, aliases?: string[]) {
     super(name, id, params.JEVM_ID, assetId, aliases)
     this.chainId = chainId
   }

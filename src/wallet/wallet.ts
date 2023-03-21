@@ -38,7 +38,7 @@ export function encodeJuneoAddress (publicKey: string, hrp: string): string {
 export class JuneoWallet {
   hrp: string
   mnemonic: string | undefined
-  private hdNode: any
+  private hdNode: hdKey | undefined
   privateKey: string | undefined
   chainsWallets: Wallets = {}
 

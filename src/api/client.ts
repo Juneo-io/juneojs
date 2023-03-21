@@ -33,35 +33,45 @@ export class JuneoClient {
   private nextRequestId: number = 1
 
   constructor (protocol: string, host: string, port: number) {
-    this.setProtocol(protocol)
-    this.setHost(host)
-    this.setPort(port)
+    this.protocol = this.parseProtocol(protocol)
+    this.host = this.parseHost(host)
+    this.port = this.parsePort(port)
   }
 
-  setProtocol (protocol: string | undefined): void {
+  setProtocol (protocol: string): void {
+    this.protocol = this.parseProtocol(protocol)
+  }
+
+  private parseProtocol (protocol: string | undefined): string {
     if (protocol === undefined) {
-      protocol = DefaultProtocol
+      return DefaultProtocol
     }
     if (protocol !== 'http' && protocol !== 'https') {
       throw new ProtocolError(`invalid protocol "${protocol}"`)
     }
-    this.protocol = protocol
+    return protocol
   }
 
-  setHost (host: string | undefined): void {
+  setHost (host: string): void {
+    this.host = this.parseHost(host)
+  }
+
+  private parseHost (host: string | undefined): string {
     if (host === undefined) {
-      this.host = DefaultHost
-    } else {
-      this.host = host
+      return DefaultHost
     }
+    return host
   }
 
-  setPort (port: number | undefined): void {
+  setPort (port: number): void {
+    this.port = this.parsePort(port)
+  }
+
+  private parsePort (port: number | undefined): number {
     if (port === undefined) {
-      this.port = DefaultPort
-    } else {
-      this.port = port
+      return DefaultPort
     }
+    return port
   }
 
   private async post (endpoint: string, data: any): Promise<AxiosResponse> {

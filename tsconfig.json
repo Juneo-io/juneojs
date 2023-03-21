@@ -6,8 +6,12 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "declaration": true,
-        "strictNullChecks": true
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "declarationMap": true,
+        "allowSyntheticDefaultImports": true,
+        "lib": ["DOM", "ES2016"]
     },
-    "exclude": ["node_modules", "tests"],
+    "exclude": ["node_modules", "tests", "examples"],
     "include": ["src/"]
 }

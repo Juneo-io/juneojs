@@ -30,7 +30,7 @@ export function validatePrivateKey (data: string): boolean {
 }
 
 export function encodeJuneoAddress (publicKey: string, hrp: string): string {
-  const sha256: Buffer = Buffer.from(hash('sha256').update(publicKey).digest())
+  const sha256: Buffer = Buffer.from(hash('sha256').update(Buffer.from(publicKey, 'hex')).digest())
   const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
   return bech32.bech32.encode(hrp, bech32.bech32.toWords(rmd160))
 }

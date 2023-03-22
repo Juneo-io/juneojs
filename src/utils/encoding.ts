@@ -5,7 +5,7 @@ import hash from 'create-hash'
 import bs58 from 'bs58'
 
 export function concatChecksum (buffer: Buffer): Buffer {
-  const hashBuffer: Buffer = hash('sha256').update(buffer).digest().slice(28)
+  const hashBuffer: Buffer = hash('sha256').update(buffer).digest().subarray(28, 32)
   const buffers: Buffer[] = [buffer, hashBuffer]
   return Buffer.concat(buffers)
 }

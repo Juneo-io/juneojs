@@ -14,10 +14,6 @@ const JVM_HD_PATH = "m/44'/9000'/0'/0/0"
 const JVM_PRIVATE_KEY_PREFIX = 'PrivateKey-'
 const DEFAULT_HRP = 'june'
 
-export function isPrivateKey (data: string): boolean {
-  return encoding.isHex(data) || data.includes(JVM_PRIVATE_KEY_PREFIX)
-}
-
 export function validatePrivateKey (data: string): boolean {
   if (encoding.isHex(data)) {
     return true
@@ -102,17 +98,21 @@ export class JuneoWallet {
   }
 
   static recover (data: string, hrp?: string): JuneoWallet {
-    if (isPrivateKey(data)) {
-      if (!validatePrivateKey(data)) {
-        throw new WalletError('invalid private key provided')
-      }
-      const wallet: JuneoWallet = new JuneoWallet(hrp)
-      wallet.privateKey = data
-      return wallet
-    }
     if (bip39.validateMnemonic(data)) {
       const wallet: JuneoWallet = new JuneoWallet(hrp)
       wallet.setMnemonic(data)
+      return wallet
+    }
+    if (validatePrivateKey(data)) {
+      const wallet: JuneoWallet = new JuneoWallet(hrp)
+      let privateKey: string = data
+      // should only be hex or bs58 private key after validate
+      if (encoding.isHex(privateKey)) {
+        privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2, privateKey.length) : privateKey
+      } else {
+        privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toString('hex')
+      }
+      wallet.privateKey = privateKey
       return wallet
     }
     throw new WalletError('invalid recovery data provided')

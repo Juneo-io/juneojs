@@ -126,6 +126,7 @@ export interface GetRewardUTXOsResponse {
 }
 
 export interface GetStakeResponse {
+  staked: number
   stakeds: Record<string, number>
   stakedOutputs: string[]
   encoding: string

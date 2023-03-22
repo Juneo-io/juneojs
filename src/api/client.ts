@@ -10,7 +10,7 @@ const DefaultProtocol: string = 'https'
 const DefaultHost: string = 'api1.mcnpoc4.xyz'
 const DefaultPort: number = 9650
 
-export function buildClient (address: string): JuneoClient {
+export function parseAddress (address: string): JuneoClient {
   const protocolSplit: string[] = address.split('://')
   const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
   const hostSplit: string[] = protocolSplit.length > 1 ? protocolSplit[1].split(':') : protocolSplit[0].split(':')

@@ -7,16 +7,20 @@ export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A
 
 export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
 
-export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(BelgradeJUNEAssetId)
+export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(
+  BelgradeJUNEAssetId,
+  ['Relay'])
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM Chain',
   'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q',
-  BelgradeJUNEAssetId)
+  BelgradeJUNEAssetId,
+  ['Asset'])
 export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE Chain',
   '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId,
-  330001)
+  330001,
+  ['JUNE'])
 
 export const BelgradePrimarySupernet: Supernet = new Supernet('11111111111111111111111111111111LpoYY', [
   BelgradeRelayChain,

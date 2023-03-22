@@ -41,8 +41,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class RelayBlockchain extends AbstractBlockchain {
-  constructor (assetId: string) {
-    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, params.RELAYVM_ID, assetId)
+  constructor (assetId: string, aliases?: string[]) {
+    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, params.RELAYVM_ID, assetId, aliases)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {

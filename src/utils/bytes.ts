@@ -16,6 +16,10 @@ export abstract class BytesData implements Serializable {
   serialize (): JuneoBuffer {
     return JuneoBuffer.fromBuffer(this.bytes)
   }
+
+  static comparator = (a: BytesData, b: BytesData): number => {
+    return a.bytes.compare(b.bytes)
+  }
 }
 
 export class JuneoBuffer {
@@ -75,5 +79,9 @@ export class JuneoBuffer {
 
   static fromCHex (cHex: string): JuneoBuffer {
     return JuneoBuffer.fromBuffer(encoding.decodeCHex(cHex))
+  }
+
+  static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {
+    return a.bytes.compare(b.bytes)
   }
 }

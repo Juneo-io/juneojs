@@ -1,5 +1,5 @@
 import { JuneoBuffer, type Serializable } from '../utils/bytes'
-import { type Address, AddressSize, type AssetId, AssetIdSize } from './types'
+import { Address, AddressSize, type AssetId, AssetIdSize } from './types'
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
@@ -18,6 +18,10 @@ export class TransferableOutput implements Serializable {
     buffer.write(outputBuffer)
     buffer.write(this.assetId.serialize())
     return buffer
+  }
+
+  static comparator = (a: TransferableOutput, b: TransferableOutput): number => {
+    return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
 }
 
@@ -39,7 +43,7 @@ export class Secp256k1Output implements TransactionOutput, Serializable {
     this.amount = amount
     this.locktime = locktime
     this.threshold = threshold
-    this.addresses = addresses.sort()
+    this.addresses = addresses.sort(Address.comparator)
   }
 
   serialize (): JuneoBuffer {

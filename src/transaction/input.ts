@@ -26,6 +26,10 @@ export class TransferableInput implements Serializable {
     buffer.write(inputBuffer)
     return buffer
   }
+
+  static comparator = (a: TransferableInput, b: TransferableInput): number => {
+    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+  }
 }
 
 export interface TransactionInput {
@@ -45,7 +49,9 @@ export class Secp256k1Input implements TransactionInput, Serializable {
     this.utxo = utxo
     this.amount = amount
     this.addressIndices = addressIndices
-    this.addressIndices.sort()
+    this.addressIndices.sort((a: number, b: number) => {
+      return a - b
+    })
   }
 
   serialize (): JuneoBuffer {

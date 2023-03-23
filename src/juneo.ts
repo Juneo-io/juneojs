@@ -20,6 +20,7 @@ export class JuneoProvider {
 
 export * as api from './api'
 export * as chain from './chain'
+export * as transaction from './transaction'
 export * as utils from './utils'
 
 export { JuneoWallet, JVMWallet, JEVMWallet } from './wallet'

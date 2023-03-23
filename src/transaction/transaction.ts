@@ -1,6 +1,6 @@
 import { JuneoBuffer, type Serializable } from '../utils'
-import { type TransferableInput } from './input'
-import { type TransferableOutput } from './output'
+import { TransferableInput } from './input'
+import { TransferableOutput } from './output'
 import { type BlockchainId, BlockchainIdSize } from './types'
 
 export interface UnsignedTransaction {
@@ -26,9 +26,9 @@ export class AbstractBaseTx implements UnsignedTransaction, Serializable {
     this.networkId = networkId
     this.blockchainId = blockchainId
     this.outputs = outputs
-    this.outputs.sort()
+    this.outputs.sort(TransferableOutput.comparator)
     this.inputs = inputs
-    this.inputs.sort()
+    this.inputs.sort(TransferableInput.comparator)
     this.memo = memo
   }
 

@@ -19,7 +19,7 @@ export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE Chain',
   '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId,
-  330001,
+  BigInt(330001),
   ['JUNE'])
 
 export const BelgradePrimarySupernet: Supernet = new Supernet('11111111111111111111111111111111LpoYY', [

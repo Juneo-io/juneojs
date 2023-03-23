@@ -2,28 +2,78 @@
 import { Buffer } from 'buffer'
 import * as encoding from './encoding'
 
-export class JuneoBuffer {
-  private readonly buffer: Buffer
+export interface Serializable {
+  serialize: () => JuneoBuffer
+}
 
-  constructor (bytes: Buffer[], size: number) {
-    this.buffer = Buffer.concat(bytes, size)
+export abstract class BytesData implements Serializable {
+  private readonly bytes: Buffer
+
+  constructor (bytes: Buffer) {
+    this.bytes = bytes
+  }
+
+  serialize (): JuneoBuffer {
+    return JuneoBuffer.fromBuffer(this.bytes)
+  }
+}
+
+export class JuneoBuffer {
+  private readonly bytes: Buffer
+  length: number
+
+  private constructor (length: number) {
+    this.bytes = Buffer.alloc(length)
+    this.length = length
+  }
+
+  write (data: JuneoBuffer): void {
+    this.writeBuffer(data.bytes)
+  }
+
+  writeBuffer (data: Buffer): void {
+    this.bytes.write(data.toString())
+  }
+
+  writeUInt16 (data: number): void {
+    this.bytes.writeUInt16BE(data)
+  }
+
+  writeUInt32 (data: number): void {
+    this.bytes.writeUInt32BE(data)
+  }
+
+  writeUInt64 (data: bigint): void {
+    this.bytes.writeBigUInt64BE(data)
+  }
+
+  writeString (data: string): void {
+    this.bytes.write(data)
   }
 
   toCB58 (): string {
-    return encoding.encodeCB58(this.buffer)
+    return encoding.encodeCB58(this.bytes)
   }
 
   toCHex (): string {
-    return encoding.encodeCHex(this.buffer)
+    return encoding.encodeCHex(this.bytes)
   }
 
-  fromCB58 (cb58: string): JuneoBuffer {
-    const buff: Buffer = encoding.decodeCB58(cb58)
-    return new JuneoBuffer([buff], buff.length)
+  static alloc (size: number): JuneoBuffer {
+    return new JuneoBuffer(size)
   }
 
-  fromCHex (cHex: string): JuneoBuffer {
-    const buff: Buffer = encoding.decodeCHex(cHex)
-    return new JuneoBuffer([buff], buff.length)
+  static fromBuffer (bytes: Buffer): JuneoBuffer {
+    const buffer: JuneoBuffer = new JuneoBuffer(bytes.length)
+    buffer.writeBuffer(bytes)
+    return buffer
+  }
+
+  static fromCB58 (cb58: string): JuneoBuffer {
+    return JuneoBuffer.fromBuffer(encoding.decodeCB58(cb58))
+  }
+
+  static fromCHex (cHex: string): JuneoBuffer {
+    return JuneoBuffer.fromBuffer(encoding.decodeCHex(cHex))
   }
 }

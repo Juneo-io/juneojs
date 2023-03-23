@@ -23,7 +23,7 @@ export class ECKeyPair {
     const v: Buffer = Buffer.alloc(1)
     const recoveryParam: number | null = signature.recoveryParam
     if (recoveryParam === null || typeof recoveryParam !== 'number') {
-      throw new CryptoError('could not retrieve recovery params')
+      throw new CryptoError('could not retrieve recovery param')
     }
     v.writeUint8(recoveryParam, 0)
     return Buffer.concat([r, s, v], 65)

@@ -4,7 +4,6 @@ import { type Blockchain } from '../chain'
 import { ECKeyPair, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
-import * as bech32 from 'bech32'
 import hash from 'create-hash'
 import hdKey from 'hdkey'
 
@@ -28,7 +27,7 @@ export function validatePrivateKey (data: string): boolean {
 export function encodeJuneoAddress (publicKey: string, hrp: string): string {
   const sha256: Buffer = Buffer.from(hash('sha256').update(Buffer.from(publicKey, 'hex')).digest())
   const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
-  return bech32.bech32.encode(hrp, bech32.bech32.toWords(rmd160))
+  return encoding.encodeBech32(hrp, rmd160)
 }
 
 export class JuneoWallet {

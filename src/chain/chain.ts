@@ -18,7 +18,7 @@ export interface Blockchain {
 
 export interface JEVMBlockchain {
 
-  chainId: number
+  chainId: bigint
 
 }
 
@@ -61,9 +61,9 @@ export class JVMBlockchain extends AbstractBlockchain {
 }
 
 export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain {
-  chainId: number
+  chainId: bigint
 
-  constructor (name: string, id: string, assetId: string, chainId: number, aliases?: string[]) {
+  constructor (name: string, id: string, assetId: string, chainId: bigint, aliases?: string[]) {
     super(name, id, params.JEVM_ID, assetId, aliases)
     this.chainId = chainId
   }

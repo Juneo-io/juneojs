@@ -5,6 +5,8 @@ import { CryptoError } from './errors'
 
 const Secp256k1: EC = new EC('secp256k1')
 
+export const SignatureLength: number = 65
+
 export class ECKeyPair {
   private readonly keyPair: EC.KeyPair
 
@@ -26,6 +28,6 @@ export class ECKeyPair {
       throw new CryptoError('could not retrieve recovery param')
     }
     v.writeUint8(recoveryParam, 0)
-    return Buffer.concat([r, s, v], 65)
+    return Buffer.concat([r, s, v], SignatureLength)
   }
 }

@@ -1,7 +1,6 @@
 import { type TransactionOutput } from './output'
+import { CodecId } from './transaction'
 import { type AssetId, type TransactionId } from './types'
-
-export const CodecId: number = 0
 
 export class Utxo {
   codecId: number = CodecId

@@ -7,14 +7,14 @@ export interface Serializable {
 }
 
 export abstract class BytesData implements Serializable {
-  private readonly bytes: Buffer
+  protected readonly bytes: Buffer
 
   constructor (bytes: Buffer) {
     this.bytes = bytes
   }
 
   serialize (): JuneoBuffer {
-    return JuneoBuffer.fromBuffer(this.bytes)
+    return JuneoBuffer.fromBytes(this.bytes)
   }
 
   static comparator = (a: BytesData, b: BytesData): number => {
@@ -63,22 +63,26 @@ export class JuneoBuffer {
     return encoding.encodeCHex(this.bytes)
   }
 
+  toBytes (): Buffer {
+    return this.bytes
+  }
+
   static alloc (size: number): JuneoBuffer {
     return new JuneoBuffer(size)
   }
 
-  static fromBuffer (bytes: Buffer): JuneoBuffer {
+  static fromBytes (bytes: Buffer): JuneoBuffer {
     const buffer: JuneoBuffer = new JuneoBuffer(bytes.length)
     buffer.writeBuffer(bytes)
     return buffer
   }
 
   static fromCB58 (cb58: string): JuneoBuffer {
-    return JuneoBuffer.fromBuffer(encoding.decodeCB58(cb58))
+    return JuneoBuffer.fromBytes(encoding.decodeCB58(cb58))
   }
 
   static fromCHex (cHex: string): JuneoBuffer {
-    return JuneoBuffer.fromBuffer(encoding.decodeCHex(cHex))
+    return JuneoBuffer.fromBytes(encoding.decodeCHex(cHex))
   }
 
   static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {

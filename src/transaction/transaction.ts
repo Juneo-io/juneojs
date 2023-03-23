@@ -3,6 +3,8 @@ import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
 import { type BlockchainId, BlockchainIdSize } from './types'
 
+export const CodecId: number = 0
+
 export interface UnsignedTransaction {
   typeId: number
   networkId: number

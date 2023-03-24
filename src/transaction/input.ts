@@ -1,6 +1,28 @@
+import { type Blockchain } from '../chain'
 import { JuneoBuffer, type Serializable } from '../utils'
-import { type AssetId, AssetIdSize, type TransactionId, TransactionIdSize } from './types'
+import { AssetId, AssetIdSize, type TransactionId, TransactionIdSize, Address } from './types'
 import { type Utxo } from './utxo'
+
+export class UserInput {
+  assetId: AssetId
+  sourceChain: Blockchain
+  amount: bigint
+  address: Address
+  destinationChain: Blockchain
+
+  constructor (assetId: string | AssetId, sourceChain: Blockchain, amount: bigint,
+    address: string | Address, destinationChain: Blockchain) {
+    this.assetId = typeof assetId === 'string'
+      ? new AssetId(assetId)
+      : assetId
+    this.sourceChain = sourceChain
+    this.amount = amount
+    this.address = typeof address === 'string'
+      ? new Address(address)
+      : address
+    this.destinationChain = destinationChain
+  }
+}
 
 export class TransferableInput implements Serializable {
   transactionId: TransactionId

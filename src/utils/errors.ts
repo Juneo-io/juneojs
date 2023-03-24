@@ -11,6 +11,9 @@ const WALLET_CODE: string = 'Wallet error'
 const CRYPTO_CODE: string = 'Crypto error'
 const TYPE_CODE: string = 'Type error'
 const PARSING_CODE: string = 'Parsing error'
+const TRANSACTION_CODE: string = 'Transaction error'
+const INPUT_CODE: string = 'Input error'
+const OUTPUT_CODE: string = 'Output error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -94,5 +97,23 @@ export class TypeError extends JuneoError {
 export class ParsingError extends JuneoError {
   constructor (message: string) {
     super(message, PARSING_CODE)
+  }
+}
+
+export class TransactionError extends JuneoError {
+  constructor (message: string) {
+    super(message, TRANSACTION_CODE)
+  }
+}
+
+export class InputError extends JuneoError {
+  constructor (message: string) {
+    super(message, INPUT_CODE)
+  }
+}
+
+export class OutputError extends JuneoError {
+  constructor (message: string) {
+    super(message, OUTPUT_CODE)
   }
 }

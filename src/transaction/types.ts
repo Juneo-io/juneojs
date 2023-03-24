@@ -21,8 +21,10 @@ export class Address extends BytesData {
     super(bytes)
   }
 
-  matches (address: string): boolean {
-    const bytes: Buffer = encoding.decodeBech32(address)
+  matches (address: string | Address): boolean {
+    const bytes: Buffer = typeof address === 'string'
+      ? encoding.decodeBech32(address)
+      : address.bytes
     if (bytes.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }

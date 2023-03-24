@@ -65,8 +65,8 @@ export function encodeCHex (buffer: Buffer): string {
 
 export function isHex (value: string): boolean {
   const hasPrefix: boolean = hasHexPrefix(value)
-  const regex = /[0-9A-Fa-f]{6}/g
-  return hasPrefix ? regex.test(value.substring(0, 2)) : regex.test(value)
+  const regex = /[0-9A-Fa-f]/g
+  return hasPrefix ? regex.test(value.substring(2)) : regex.test(value)
 }
 
 export function hasHexPrefix (value: string): boolean {
@@ -79,7 +79,7 @@ export function decodeHex (value: string): Buffer {
   }
   let hex: string = value
   if (hasHexPrefix(hex)) {
-    hex = hex.substring(2, hex.length)
+    hex = hex.substring(2)
   }
   return Buffer.from(hex, 'hex')
 }

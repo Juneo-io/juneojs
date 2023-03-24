@@ -106,12 +106,9 @@ export class JuneoBuffer {
   static fromString (data: string): JuneoBuffer {
     const isHex: boolean = encoding.isHex(data)
     if (!isHex && !encoding.isBase58(data)) {
-      throw new ParsingError('parsed data is not hex or cb58')
+      throw new ParsingError('parsed data is not CHex or CB58')
     }
-    return JuneoBuffer.fromBytes(isHex
-      ? encoding.decodeCHex(data)
-      : encoding.decodeCB58(data)
-    )
+    return isHex ? JuneoBuffer.fromCHex(data) : JuneoBuffer.fromCB58(data)
   }
 
   static fromCB58 (cb58: string): JuneoBuffer {

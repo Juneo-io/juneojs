@@ -107,7 +107,7 @@ export class JuneoWallet {
       let privateKey: string = data
       // should only be hex or bs58 private key after validate
       if (encoding.isHex(privateKey)) {
-        privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2, privateKey.length) : privateKey
+        privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2) : privateKey
       } else {
         privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toString('hex')
       }

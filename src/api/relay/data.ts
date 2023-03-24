@@ -1,8 +1,12 @@
 
 export interface GetBalanceResponse {
+  balance: number
   balances: Record<string, number>
+  unlocked: number
   unlockeds: Record<string, number>
+  lockedStakeable: number
   lockedStakeables: Record<string, number>
+  lockedNotStakeable: number
   lockedNotStakeables: Record<string, number>
   utxoIDs: UtxoID[]
 }

@@ -1,6 +1,7 @@
 
 import { Buffer } from 'buffer'
 import * as encoding from './encoding'
+import { ParsingError } from './errors'
 
 export interface Serializable {
   serialize: () => JuneoBuffer
@@ -24,7 +25,7 @@ export abstract class BytesData implements Serializable {
 
 /**
  * Buffer wrapper that has methods compatible with the Juneo platform encoding format.
- * 
+ *
  * Bytes are in big endian format and can be encoded/decoded in CHex or CB58
  */
 export class JuneoBuffer {
@@ -100,6 +101,17 @@ export class JuneoBuffer {
     const buffer: JuneoBuffer = new JuneoBuffer(bytes.length)
     buffer.writeBuffer(bytes)
     return buffer
+  }
+
+  static fromString (data: string): JuneoBuffer {
+    const isHex: boolean = encoding.isHex(data)
+    if (!isHex && !encoding.isBase58(data)) {
+      throw new ParsingError('parsed data is not hex or cb58')
+    }
+    return JuneoBuffer.fromBytes(isHex
+      ? encoding.decodeCHex(data)
+      : encoding.decodeCB58(data)
+    )
   }
 
   static fromCB58 (cb58: string): JuneoBuffer {

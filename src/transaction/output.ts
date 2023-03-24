@@ -1,5 +1,8 @@
+import { ParsingError } from '../utils'
 import { JuneoBuffer, type Serializable } from '../utils/bytes'
 import { Address, AddressSize, type AssetId, AssetIdSize } from './types'
+
+export const Secp256k1OutputTypeId: number = 0x00000007
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
@@ -23,6 +26,18 @@ export class TransferableOutput implements Serializable {
   static comparator = (a: TransferableOutput, b: TransferableOutput): number => {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
+
+  static parseOutput (data: string | JuneoBuffer): TransactionOutput {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    const typeId: number = buffer.readUInt32(0)
+    if (typeId === Secp256k1OutputTypeId) {
+      return Secp256k1Output.parse(data)
+    } else {
+      throw new ParsingError(`unsupported output type id "${typeId}"`)
+    }
+  }
 }
 
 export interface TransactionOutput {
@@ -33,7 +48,7 @@ export interface TransactionOutput {
 }
 
 export class Secp256k1Output implements TransactionOutput, Serializable {
-  readonly typeId: number = 0x00000007
+  readonly typeId: number = Secp256k1OutputTypeId
   amount: bigint
   locktime: bigint
   threshold: number
@@ -60,5 +75,29 @@ export class Secp256k1Output implements TransactionOutput, Serializable {
       buffer.write(address.serialize())
     })
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): Secp256k1Output {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    let position: number = 0
+    // skip type id reading
+    position += 4
+    const amount: bigint = buffer.readUInt64(position)
+    position += 8
+    const locktime: bigint = buffer.readUInt64(position)
+    position += 8
+    const threshold: number = buffer.readUInt32(position)
+    position += 4
+    const addressesCount: number = buffer.readUInt32(position)
+    position += 4
+    const addresses: Address[] = []
+    for (let i = 0; i < addressesCount; i++) {
+      const address: Address = new Address(buffer.read(position, AddressSize))
+      position += AddressSize
+      addresses.push(address)
+    }
+    return new Secp256k1Output(amount, locktime, threshold, addresses)
   }
 }

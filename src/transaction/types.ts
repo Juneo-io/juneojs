@@ -1,5 +1,5 @@
 import { type Buffer } from 'buffer'
-import { BytesData } from '../utils/bytes'
+import { BytesData, type JuneoBuffer } from '../utils/bytes'
 import { TypeError } from '../utils/errors'
 import * as encoding from '../utils/encoding'
 import { SignatureLength } from '../utils'
@@ -11,15 +11,14 @@ export const BlockchainIdSize: number = 32
 export const SignatureSize: number = SignatureLength
 
 export class Address extends BytesData {
-  address: string
-
-  constructor (address: string) {
-    const bytes: Buffer = encoding.decodeBech32(address)
+  constructor (address: string | JuneoBuffer) {
+    const bytes: Buffer = typeof address === 'string'
+      ? encoding.decodeBech32(address)
+      : address.toBytes()
     if (bytes.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
     super(bytes)
-    this.address = address
   }
 
   matches (address: string): boolean {

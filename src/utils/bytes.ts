@@ -22,6 +22,11 @@ export abstract class BytesData implements Serializable {
   }
 }
 
+/**
+ * Buffer wrapper that has methods compatible with the Juneo platform encoding format.
+ * 
+ * Bytes are in big endian format and can be encoded/decoded in CHex or CB58
+ */
 export class JuneoBuffer {
   private readonly bytes: Buffer
   length: number
@@ -53,6 +58,26 @@ export class JuneoBuffer {
 
   writeString (data: string): void {
     this.bytes.write(data)
+  }
+
+  readUInt16 (index: number): number {
+    return this.bytes.readUInt16BE(index)
+  }
+
+  readUInt32 (index: number): number {
+    return this.bytes.readUInt32BE(index)
+  }
+
+  readUInt64 (index: number): bigint {
+    return this.bytes.readBigUInt64BE(index)
+  }
+
+  readString (index: number, length: number): string {
+    return this.read(index, length).bytes.toString()
+  }
+
+  read (index: number, length: number): JuneoBuffer {
+    return JuneoBuffer.fromBytes(this.bytes.subarray(index, index + length))
   }
 
   toCB58 (): string {

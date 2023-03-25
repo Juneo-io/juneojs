@@ -1,35 +1,34 @@
 import { type Blockchain } from '../chain'
-import { InputError } from '../utils'
+import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, TransferableInput, type UserInput } from './input'
-import { type Secp256k1Output, Secp256k1OutputTypeId, type TransferableOutput } from './output'
+import { Secp256k1Output, Secp256k1OutputTypeId, TransferableOutput } from './output'
 import { type Utxo } from './utxo'
 import * as time from '../utils/time'
-import { type Address } from './types'
+import { Address } from './types'
 
 export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
   signersAddresses: Address[], fees: bigint): TransferableInput[] {
   if (userInputs.length < 1) {
-    throw new InputError('inputs cannot be empty')
+    throw new InputError('user inputs cannot be empty')
   }
   const sourceChain: Blockchain = userInputs[0].sourceChain
   const targetAmounts: Record<string, bigint> = {}
+  targetAmounts[sourceChain.assetId] = fees
   // checking user input validity and gathering data needed to build transaction inputs
   userInputs.forEach(input => {
     if (input.sourceChain.id !== sourceChain.id) {
       throw new InputError('all inputs do not have the same source chain')
     }
     // TODO check source/destination chain compatibility
-    let targetAmount: bigint = targetAmounts[input.assetId.assetId]
+    const assetId: string = input.assetId.assetId
+    let targetAmount: bigint = targetAmounts[assetId]
     if (targetAmount === undefined) {
-      targetAmount = input.amount
+      targetAmounts[assetId] = input.amount
     } else {
-      targetAmount += input.amount
+      targetAmounts[assetId] += input.amount
     }
-    targetAmounts[input.assetId.assetId] = targetAmount
   })
-  const feesAssetId: string = sourceChain.assetId
   const gatheredAmounts: Record<string, bigint> = {}
-  let feesGatheredAmount: bigint = BigInt(0)
   const inputs: TransferableInput[] = []
   // This loop tries to gather required amounts from the provided utxo set
   // it will try to get fees costs covered first and then
@@ -39,11 +38,10 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   // This is not an issue but note that it may require to group some utxos together
   // for the outputs so make sure to spend them to avoid losses.
   for (let i: number = 0;
-    i < utxoSet.length && (feesGatheredAmount < fees || isGatheringComplete(targetAmounts, gatheredAmounts));
+    i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts);
     i++) {
     const utxo: Utxo = utxoSet[i]
-    const typeId: number = utxo.output.typeId
-    if (typeId !== Secp256k1OutputTypeId) {
+    if (utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
     }
     const output: Secp256k1Output = utxo.output as Secp256k1Output
@@ -62,19 +60,14 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
         getSignersIndices(signersAddresses, utxo.output.addresses)
       )
     ))
-    let availableAmount: bigint = output.amount
     const assetId: string = utxo.assetId.assetId
-    // fees gathering
-    if (feesGatheredAmount < fees && assetId === feesAssetId) {
-      const neededAmount: bigint = fees - feesGatheredAmount
-      const amount: bigint = availableAmount > neededAmount
-        ? availableAmount - neededAmount
-        : availableAmount
-      availableAmount -= amount
-      feesGatheredAmount += amount
+    if (gatheredAmounts[assetId] === undefined) {
+        gatheredAmounts[assetId] = BigInt(0)
     }
-    // remaining value gathering
-    gatheredAmounts[assetId] += availableAmount
+    gatheredAmounts[assetId] += output.amount
+  }
+  if (!isGatheringComplete(targetAmounts, gatheredAmounts)) {
+    throw new InputError('provided utxo set does not have enough funds to cover user inputs')
   }
   return inputs
 }
@@ -105,6 +98,75 @@ function getSignersIndices (signers: Address[], addresses: Address[]): number[] 
   return indices
 }
 
-export function buildTransactionOutputs (): TransferableOutput[] {
-  throw new Error('not implemented')
+export function buildTransactionOutputs (userInputs: UserInput[], inputs: TransferableInput[],
+  fees: bigint, changeAddress: string): TransferableOutput[] {
+  if (userInputs.length < 1) {
+    throw new InputError('user inputs cannot be empty')
+  }
+  const sourceChain: Blockchain = userInputs[0].sourceChain
+  const spentAmounts: Record<string, bigint> = {}
+  const outputs: TransferableOutput[] = []
+  // checking each user input validity and adding matching outputs
+  userInputs.forEach(input => {
+    if (input.sourceChain.id !== sourceChain.id) {
+      throw new InputError('all inputs do not have the same source chain')
+    }
+    // TODO check source/destination chain compatibility
+    outputs.push(new TransferableOutput(
+      input.assetId, new Secp256k1Output(
+        input.amount,
+        input.locktime,
+        // for now threshold will only be 1
+        1,
+        // if we want to create a single output with multiple addresses
+        // e.g. multisig we need to do changes here
+        [input.address]
+      )
+    ))
+    const assetId: string = input.assetId.assetId
+    const spentAmount: bigint = spentAmounts[assetId]
+    if (spentAmount === undefined) {
+      spentAmounts[assetId] = input.amount
+    } else {
+      spentAmounts[assetId] += input.amount
+    }
+  })
+  const availableAmounts: Record<string, bigint> = {}
+  // getting the total amount spendable for each asset in provided inputs
+  inputs.forEach(input => {
+    const availableAmount: bigint = availableAmounts[input.assetId.assetId]
+    const amount: bigint = input.input.amount
+    if (availableAmount === undefined) {
+      availableAmounts[input.assetId.assetId] = BigInt(amount)
+    } else {
+      availableAmounts[input.assetId.assetId] += BigInt(amount)
+    }
+  })
+  // verifying that inputs have the funds to pay for the spent amounts
+  // also adding extra outputs to avoid losses if we have unspent values
+  for (let i: number = 0; i < inputs.length; i++) {
+    const input: TransferableInput = inputs[i]
+    const assetId: string = input.assetId.assetId
+    let spent: bigint = spentAmounts[assetId] === undefined ?
+      BigInt(0) :
+      spentAmounts[assetId]
+    const available: bigint = availableAmounts[assetId]
+    if (spent > available) {
+      throw new OutputError('output would produce more than provided inputs')
+    }
+    if (spent === available) {
+      continue
+    }
+    // adding output to send remaining value into the change address
+    outputs.push(new TransferableOutput(
+      input.assetId, new Secp256k1Output(
+        available - spent,
+        // no locktime for the change
+        BigInt(0),
+        1,
+        [new Address(changeAddress)]
+      )
+    ))
+  }
+  return outputs
 }

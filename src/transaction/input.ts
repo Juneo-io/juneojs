@@ -9,9 +9,10 @@ export class UserInput {
   amount: bigint
   address: Address
   destinationChain: Blockchain
+  locktime: bigint
 
   constructor (assetId: string | AssetId, sourceChain: Blockchain, amount: bigint,
-    address: string | Address, destinationChain: Blockchain) {
+    address: string | Address, destinationChain: Blockchain, locktime?: bigint) {
     this.assetId = typeof assetId === 'string'
       ? new AssetId(assetId)
       : assetId
@@ -21,6 +22,7 @@ export class UserInput {
       ? new Address(address)
       : address
     this.destinationChain = destinationChain
+    this.locktime = locktime === undefined ? BigInt(0) : locktime
   }
 }
 

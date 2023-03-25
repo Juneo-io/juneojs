@@ -159,33 +159,8 @@ export interface GetTotalStakeResponse {
   weight: number
 }
 
-export interface GetTxResponse {
-  tx: string
-  encoding: string
-}
-
-export interface GetTxStatusResponse {
-  status: string
-}
-
-export interface GetUTXOsResponse {
-  numFetched: number
-  utxos: string[]
-  endIndex: UTXOIndex
-  encoding: string
-}
-
-export interface UTXOIndex {
-  address: string
-  utxo: string
-}
-
 export interface GetValidatorsAtResponse {
   validators: Record<string, number>
-}
-
-export interface IssueTxResponse {
-  txID: string
 }
 
 export interface SampleValidatorsResponse {

@@ -28,28 +28,3 @@ export interface GetAssetDescriptionResponse {
 export interface GetBalanceResponse {
   balance: number
 }
-
-export interface GetTxResponse {
-  tx: string
-  encoding: string
-}
-
-export interface GetTxStatusResponse {
-  status: string
-}
-
-export interface GetUTXOsResponse {
-  numFetched: number
-  utxos: string[]
-  endIndex: UTXOIndex
-  encoding: string
-}
-
-export interface UTXOIndex {
-  address: string
-  utxo: string
-}
-
-export interface IssueTxResponse {
-  txID: string
-}

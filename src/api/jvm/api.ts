@@ -1,7 +1,8 @@
 import { type JVMBlockchain } from '../../chain'
 import { AbstractChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetBalanceResponse, type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from './data'
+import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
+import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetBalanceResponse } from './data'
 
 const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'

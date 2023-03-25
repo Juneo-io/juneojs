@@ -30,7 +30,10 @@ export abstract class AbstractAPI {
 }
 
 export abstract class AbstractChainAPI extends AbstractAPI {
+  chain: Blockchain
+
   constructor (client: JuneoClient, service: string, chain: Blockchain) {
     super(client, `/bc/${chain.id}`, service)
+    this.chain = chain
   }
 }

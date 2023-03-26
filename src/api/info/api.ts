@@ -6,7 +6,7 @@ const Service: string = 'info'
 const Endpoint = '/info'
 
 export class InfoAPI extends AbstractAPI {
-  txFeeCache: GetTxFeeResponse | undefined
+  private txFeeCache: GetTxFeeResponse | undefined
 
   constructor (client: JuneoClient) {
     super(client, Endpoint, Service)

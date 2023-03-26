@@ -4,23 +4,13 @@ import { type VMWallet } from '../../wallet'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { Secp256k1Credentials, type Signable } from '../signature'
-import { AbstractBaseTx, CodecId } from '../transaction'
+import { AbstractBaseTx } from '../transaction'
 import { type Address, Signature, type BlockchainId } from '../types'
 
 export class BaseTransaction extends AbstractBaseTx implements Signable {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
     super(0x00000000, networkId, blockchainId, outputs, inputs, memo)
-  }
-
-  serialize (): JuneoBuffer {
-    const transactionData: JuneoBuffer = super.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      2 + transactionData.length
-    )
-    buffer.writeUInt16(CodecId)
-    buffer.write(transactionData)
-    return buffer
   }
 
   sign (wallets: VMWallet[]): JuneoBuffer {

@@ -1,4 +1,5 @@
 import { JuneoBuffer, type Serializable } from '../utils'
+import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
 import { type BlockchainId, BlockchainIdSize } from './types'
@@ -6,15 +7,18 @@ import { type BlockchainId, BlockchainIdSize } from './types'
 export const CodecId: number = 0
 
 export interface UnsignedTransaction {
+  codecId: number
   typeId: number
   networkId: number
   blockchainId: BlockchainId
   outputs: TransferableOutput[]
   inputs: TransferableInput[]
   memo: string
+  sign: (wallets: VMWallet[]) => JuneoBuffer
 }
 
-export class AbstractBaseTx implements UnsignedTransaction, Serializable {
+export abstract class AbstractBaseTx implements UnsignedTransaction, Serializable {
+  codecId: number
   typeId: number
   networkId: number
   blockchainId: BlockchainId
@@ -24,6 +28,7 @@ export class AbstractBaseTx implements UnsignedTransaction, Serializable {
 
   constructor (typeId: number, networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
+    this.codecId = CodecId
     this.typeId = typeId
     this.networkId = networkId
     this.blockchainId = blockchainId
@@ -33,6 +38,8 @@ export class AbstractBaseTx implements UnsignedTransaction, Serializable {
     this.inputs.sort(TransferableInput.comparator)
     this.memo = memo
   }
+
+  abstract sign (wallets: VMWallet[]): JuneoBuffer
 
   serialize (): JuneoBuffer {
     const outputsBytes: JuneoBuffer[] = []
@@ -50,9 +57,10 @@ export class AbstractBaseTx implements UnsignedTransaction, Serializable {
       inputsBytes.push(bytes)
     })
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      // 4 + 4 + 4 + 4 + 4 = 20
-      20 + BlockchainIdSize + outputsSize + inputsSize + this.memo.length
+      // 2 + 4 + 4 + 4 + 4 + 4 = 22
+      22 + BlockchainIdSize + outputsSize + inputsSize + this.memo.length
     )
+    buffer.writeUInt16(this.codecId)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.networkId)
     buffer.write(this.blockchainId.serialize())

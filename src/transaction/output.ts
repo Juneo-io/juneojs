@@ -18,8 +18,8 @@ export class TransferableOutput implements Serializable {
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
       AssetIdSize + outputBuffer.length
     )
-    buffer.write(outputBuffer)
     buffer.write(this.assetId.serialize())
+    buffer.write(outputBuffer)
     return buffer
   }
 

@@ -2,9 +2,19 @@ import { type Blockchain } from '../chain'
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, Secp256k1OutputTypeId, TransferableOutput } from './output'
-import { type Utxo } from './utxo'
+import { Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address } from './types'
+import { type GetUTXOsResponse } from '../api/data'
+
+export function parseUtxoSet (data: GetUTXOsResponse): Utxo[] {
+  const utxos: string[] = data.utxos
+  const utxoSet: Utxo[] = []
+  utxos.forEach(utxo => {
+    utxoSet.push(Utxo.parse(utxo))
+  })
+  return utxoSet
+}
 
 export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
   signersAddresses: Address[], fees: bigint): TransferableInput[] {
@@ -21,7 +31,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
     }
     // TODO check source/destination chain compatibility
     const assetId: string = input.assetId.assetId
-    let targetAmount: bigint = targetAmounts[assetId]
+    const targetAmount: bigint = targetAmounts[assetId]
     if (targetAmount === undefined) {
       targetAmounts[assetId] = input.amount
     } else {
@@ -62,7 +72,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
     ))
     const assetId: string = utxo.assetId.assetId
     if (gatheredAmounts[assetId] === undefined) {
-        gatheredAmounts[assetId] = BigInt(0)
+      gatheredAmounts[assetId] = BigInt(0)
     }
     gatheredAmounts[assetId] += output.amount
   }
@@ -76,7 +86,7 @@ function isGatheringComplete (targets: Record<string, bigint>, gathereds: Record
   for (const key in targets) {
     const target: bigint = targets[key]
     const gathered: bigint = gathereds[key]
-    if (gathered < target) {
+    if (gathered < target || gathered === undefined) {
       return false
     }
   }
@@ -105,6 +115,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
   }
   const sourceChain: Blockchain = userInputs[0].sourceChain
   const spentAmounts: Record<string, bigint> = {}
+  // add fees as already spent so they are not added in outputs
+  spentAmounts[sourceChain.assetId] = fees
   const outputs: TransferableOutput[] = []
   // checking each user input validity and adding matching outputs
   userInputs.forEach(input => {
@@ -147,9 +159,9 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
   for (let i: number = 0; i < inputs.length; i++) {
     const input: TransferableInput = inputs[i]
     const assetId: string = input.assetId.assetId
-    let spent: bigint = spentAmounts[assetId] === undefined ?
-      BigInt(0) :
-      spentAmounts[assetId]
+    const spent: bigint = spentAmounts[assetId] === undefined
+      ? BigInt(0)
+      : spentAmounts[assetId]
     const available: bigint = availableAmounts[assetId]
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')

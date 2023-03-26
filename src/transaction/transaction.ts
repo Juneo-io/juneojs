@@ -1,8 +1,9 @@
-import { JuneoBuffer, type Serializable } from '../utils'
+import { JuneoBuffer, sha256, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
-import { type BlockchainId, BlockchainIdSize } from './types'
+import { Secp256k1Credentials } from './signature'
+import { type BlockchainId, BlockchainIdSize, Signature, type Address } from './types'
 
 export const CodecId: number = 0
 
@@ -15,6 +16,7 @@ export interface UnsignedTransaction {
   inputs: TransferableInput[]
   memo: string
   sign: (wallets: VMWallet[]) => JuneoBuffer
+  getUnsignedInputs: () => TransferableInput[]
 }
 
 export abstract class AbstractBaseTx implements UnsignedTransaction, Serializable {
@@ -39,7 +41,39 @@ export abstract class AbstractBaseTx implements UnsignedTransaction, Serializabl
     this.memo = memo
   }
 
-  abstract sign (wallets: VMWallet[]): JuneoBuffer
+  abstract getUnsignedInputs (): TransferableInput[]
+
+  sign (wallets: VMWallet[]): JuneoBuffer {
+    const bytes: Buffer = this.serialize().toBytes()
+    const credentials: JuneoBuffer[] = []
+    let credentialsSize: number = 0
+    this.getUnsignedInputs().forEach(input => {
+      const indices: number[] = input.input.addressIndices
+      const signatures: Signature[] = []
+      indices.forEach(indice => {
+        const address: Address = input.input.utxo.output.addresses[indice]
+        for (let i = 0; i < wallets.length; i++) {
+          const wallet: VMWallet = wallets[i]
+          if (address.matches(wallet.getAddress())) {
+            signatures.push(new Signature(wallet.sign(sha256(bytes))))
+            break
+          }
+        }
+      })
+      const credential: JuneoBuffer = new Secp256k1Credentials(signatures).serialize()
+      credentialsSize += credential.length
+      credentials.push(credential)
+    })
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      bytes.length + 4 + credentialsSize
+    )
+    buffer.writeBuffer(bytes)
+    buffer.writeUInt32(credentials.length)
+    credentials.forEach(credential => {
+      buffer.write(credential)
+    })
+    return buffer
+  }
 
   serialize (): JuneoBuffer {
     const outputsBytes: JuneoBuffer[] = []

@@ -18,9 +18,7 @@ export abstract class BytesData implements Serializable {
     return JuneoBuffer.fromBytes(this.bytes)
   }
 
-  static comparator = (a: BytesData, b: BytesData): number => {
-    return a.bytes.compare(b.bytes)
-  }
+  static comparator = (a: BytesData, b: BytesData): number => a.bytes.compare(b.bytes)
 }
 
 /**
@@ -29,7 +27,8 @@ export abstract class BytesData implements Serializable {
  * Bytes are in big endian format and can be encoded/decoded in CHex or CB58
  */
 export class JuneoBuffer {
-  private readonly bytes: Buffer
+  private bytes: Buffer
+  private cursor: number = 0
   length: number
 
   private constructor (length: number) {
@@ -42,23 +41,27 @@ export class JuneoBuffer {
   }
 
   writeBuffer (data: Buffer): void {
-    this.bytes.write(data.toString())
+    const written: Buffer = this.cursor === 0
+      ? Buffer.alloc(0)
+      : this.bytes.subarray(0, this.cursor)
+    this.bytes = Buffer.concat([written, data], this.bytes.length)
+    this.cursor += data.length
   }
 
   writeUInt16 (data: number): void {
-    this.bytes.writeUInt16BE(data)
+    this.cursor = this.bytes.writeUInt16BE(data, this.cursor)
   }
 
   writeUInt32 (data: number): void {
-    this.bytes.writeUInt32BE(data)
+    this.cursor = this.bytes.writeUInt32BE(data, this.cursor)
   }
 
   writeUInt64 (data: bigint): void {
-    this.bytes.writeBigUInt64BE(data)
+    this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
   }
 
   writeString (data: string): void {
-    this.bytes.write(data)
+    this.cursor = this.bytes.write(data, this.cursor)
   }
 
   readUInt16 (index: number): number {

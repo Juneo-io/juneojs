@@ -50,12 +50,12 @@ export function decodeCB58 (value: string): Buffer {
   if (!isBase58(value)) {
     throw new DecodingError('value is not base58')
   }
-  let buffer: Buffer = Buffer.from(value)
-  if (!verifyChecksum(Buffer.from(buffer))) {
+  const checksum: Buffer = Buffer.from(bs58.decode(value))
+  if (!verifyChecksum(checksum)) {
     throw new DecodingError('value checksum is not valid')
   }
-  buffer = buffer.subarray(0, buffer.length - 4)
-  return Buffer.from(bs58.decode(buffer.toString()))
+  const buffer: Buffer = Buffer.from(bs58.decode(value))
+  return Buffer.from(buffer.subarray(0, buffer.length - 4))
 }
 
 export function encodeCHex (buffer: Buffer): string {

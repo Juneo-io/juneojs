@@ -2,10 +2,25 @@
 import { Buffer } from 'buffer'
 import { ec as EC } from 'elliptic'
 import { CryptoError } from './errors'
+import hash from 'create-hash'
 
 const Secp256k1: EC = new EC('secp256k1')
 
 export const SignatureLength: number = 65
+
+export function rmd160 (data: string | Buffer): Buffer {
+  const buffer: Buffer = typeof data === 'string'
+    ? Buffer.from(data, 'hex')
+    : data
+  return Buffer.from(hash('ripemd160').update(buffer).digest())
+}
+
+export function sha256 (data: string | Buffer): Buffer {
+  const buffer: Buffer = typeof data === 'string'
+    ? Buffer.from(data, 'hex')
+    : data
+  return Buffer.from(hash('sha256').update(buffer).digest())
+}
 
 export class ECKeyPair {
   private readonly keyPair: EC.KeyPair

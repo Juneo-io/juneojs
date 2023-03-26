@@ -2,11 +2,11 @@
 import { Buffer } from 'buffer'
 import { DecodingError } from './errors'
 import * as bech32 from 'bech32'
-import hash from 'create-hash'
 import bs58 from 'bs58'
+import { sha256 } from './crypto'
 
 export function concatChecksum (buffer: Buffer): Buffer {
-  const hashBuffer: Buffer = hash('sha256').update(buffer).digest().subarray(28, 32)
+  const hashBuffer: Buffer = sha256(buffer).subarray(28, 32)
   const buffers: Buffer[] = [buffer, hashBuffer]
   return Buffer.concat(buffers)
 }

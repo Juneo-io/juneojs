@@ -1,10 +1,9 @@
 import { Wallet } from 'ethers'
 import { Buffer } from 'buffer'
 import { type Blockchain } from '../chain'
-import { ECKeyPair, WalletError } from '../utils'
+import { ECKeyPair, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
-import hash from 'create-hash'
 import hdKey from 'hdkey'
 
 const EVM_HD_PATH = "m/44'/60'/0'/0/0"
@@ -25,9 +24,7 @@ export function validatePrivateKey (data: string): boolean {
 }
 
 export function encodeJuneoAddress (publicKey: string, hrp: string): string {
-  const sha256: Buffer = Buffer.from(hash('sha256').update(Buffer.from(publicKey, 'hex')).digest())
-  const rmd160: Buffer = Buffer.from(hash('ripemd160').update(sha256).digest())
-  return encoding.encodeBech32(hrp, rmd160)
+  return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
 }
 
 export class JuneoWallet {

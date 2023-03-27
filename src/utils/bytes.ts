@@ -60,6 +60,7 @@ export class JuneoBuffer {
     // because Buffer package does not support writing UInt64 using bigint type
     // we instead split the bigint into 8 bytes to write it
     // we must do that to keep 64 bits uint precision which would be lost by converting to number type
+    // also bitwise operators are not the same for number and bigint so we are using strings
     const hex: string = data.toString(16).padStart(16, '0')
     for (let i: number = 0; i < hex.length; i += 2) {
       const byte: number = parseInt(hex.substring(i, i + 2), 16)
@@ -80,7 +81,13 @@ export class JuneoBuffer {
   }
 
   readUInt64 (index: number): bigint {
-    return this.bytes.readBigUInt64BE(index).valueOf()
+    // we have the same issue as for writeUInt64 so we fix it here too
+    let hex: string = '0x'
+    for (let i: number = 0; i < 16; i += 2) {
+      const byte: number = this.bytes.readUInt8(index + i)
+      hex = hex.concat(byte.toString(16))
+    }
+    return BigInt(hex)
   }
 
   readString (index: number, length: number): string {

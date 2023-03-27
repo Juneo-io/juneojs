@@ -1,4 +1,3 @@
-import { type Buffer } from 'buffer/'
 import { JuneoBuffer, sha256, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
@@ -45,7 +44,7 @@ export abstract class AbstractBaseTx implements UnsignedTransaction, Serializabl
   abstract getUnsignedInputs (): TransferableInput[]
 
   sign (wallets: VMWallet[]): JuneoBuffer {
-    const bytes: Buffer = this.serialize().toBytes()
+    const bytes: JuneoBuffer = this.serialize()
     const credentials: JuneoBuffer[] = []
     let credentialsSize: number = 0
     this.getUnsignedInputs().forEach(input => {
@@ -68,7 +67,7 @@ export abstract class AbstractBaseTx implements UnsignedTransaction, Serializabl
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
       bytes.length + 4 + credentialsSize
     )
-    buffer.writeBuffer(bytes)
+    buffer.write(bytes)
     buffer.writeUInt32(credentials.length)
     credentials.forEach(credential => {
       buffer.write(credential)

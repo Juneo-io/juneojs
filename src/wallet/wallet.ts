@@ -1,7 +1,6 @@
 import { Wallet } from 'ethers'
-import { Buffer } from 'buffer/'
 import { type Blockchain } from '../chain'
-import { ECKeyPair, rmd160, sha256, WalletError } from '../utils'
+import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
 import hdKey from 'hdkey'
@@ -105,7 +104,7 @@ export class JuneoWallet {
       if (encoding.isHex(privateKey)) {
         privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2) : privateKey
       } else {
-        privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toString('hex')
+        privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toHex()
       }
       wallet.privateKey = privateKey
       return wallet
@@ -126,7 +125,7 @@ export interface VMWallet {
 
   getAddress: () => string
 
-  sign: (buffer: Buffer) => Buffer
+  sign: (buffer: JuneoBuffer) => JuneoBuffer
 
 }
 
@@ -152,7 +151,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     return `${this.chain.id}-${this.address}`
   }
 
-  sign (buffer: Buffer): Buffer {
+  sign (buffer: JuneoBuffer): JuneoBuffer {
     return this.keyPair.sign(buffer)
   }
 }
@@ -162,7 +161,7 @@ export class JVMWallet extends AbstractVMWallet {
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
-    const jvmKey: string = encoding.encodeCB58(Buffer.from(privateKey, 'hex'))
+    const jvmKey: string = encoding.encodeCB58(JuneoBuffer.fromString(privateKey, 'hex'))
     this.jvmPrivateKey = `${JVM_PRIVATE_KEY_PREFIX}${jvmKey}`
   }
 }

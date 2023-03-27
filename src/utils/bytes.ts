@@ -8,10 +8,16 @@ export interface Serializable {
 }
 
 export abstract class BytesData implements Serializable {
-  protected readonly bytes: Buffer
+  private readonly buffer: JuneoBuffer
+  private readonly bytes: Buffer
 
-  constructor (bytes: Buffer) {
-    this.bytes = bytes
+  constructor (buffer: JuneoBuffer) {
+    this.buffer = buffer
+    this.bytes = this.buffer.getBytes()
+  }
+
+  protected getBuffer (): JuneoBuffer {
+    return this.buffer
   }
 
   serialize (): JuneoBuffer {
@@ -24,7 +30,7 @@ export abstract class BytesData implements Serializable {
 /**
  * Buffer wrapper that has methods compatible with the Juneo platform encoding format.
  *
- * Bytes are in big endian format and can be encoded/decoded in CHex or CB58
+ * Bytes are in big endian format and can be encoded/decoded in hex, CHex or CB58
  */
 export class JuneoBuffer {
   private bytes: Buffer
@@ -83,9 +89,9 @@ export class JuneoBuffer {
   readUInt64 (index: number): bigint {
     // we have the same issue as for writeUInt64 so we fix it here too
     let hex: string = '0x'
-    for (let i: number = 0; i < 16; i += 2) {
+    for (let i: number = 0; i < 8; i += 1) {
       const byte: number = this.bytes.readUInt8(index + i)
-      hex = hex.concat(byte.toString(16))
+      hex = hex.concat(byte.toString(16).padEnd(2, '0'))
     }
     return BigInt(hex)
   }
@@ -99,19 +105,38 @@ export class JuneoBuffer {
   }
 
   toCB58 (): string {
-    return encoding.encodeCB58(this.bytes)
+    return encoding.encodeCB58(this)
   }
 
   toCHex (): string {
-    return encoding.encodeCHex(this.bytes)
+    return encoding.encodeCHex(this)
   }
 
-  toBytes (): Buffer {
-    return this.bytes
+  toHex (): string {
+    return this.bytes.toString('hex')
+  }
+
+  getBytes (): Buffer {
+    return Buffer.from(this.bytes)
+  }
+
+  copyOf (start?: number, end?: number): JuneoBuffer {
+    const buffer: Buffer = this.bytes.slice(start, end)
+    return JuneoBuffer.fromBytes(buffer)
   }
 
   static alloc (size: number): JuneoBuffer {
     return new JuneoBuffer(size)
+  }
+
+  static concat (buffers: JuneoBuffer[]): JuneoBuffer {
+    const data: Buffer[] = []
+    let length: number = 0
+    buffers.forEach(buffer => {
+      data.push(buffer.bytes)
+      length += buffer.bytes.length
+    })
+    return JuneoBuffer.fromBytes(Buffer.concat(data, length))
   }
 
   static fromBytes (bytes: Buffer): JuneoBuffer {
@@ -121,19 +146,26 @@ export class JuneoBuffer {
   }
 
   static fromString (data: string, fromEncoding?: string): JuneoBuffer {
-    const isHex: boolean = encoding.isHex(data)
-    if (!isHex && !encoding.isBase58(data)) {
-      throw new ParsingError('parsed data is not CHex or CB58')
+    if (fromEncoding === undefined) {
+      const isHex: boolean = encoding.isHex(data)
+      if (isHex) {
+        const hasChecksum: boolean = encoding.verifyChecksum(encoding.decodeHex(data))
+        fromEncoding = hasChecksum ? 'cHex' : 'hex'
+      } else if (encoding.isBase58(data)) {
+        fromEncoding = 'CB58'
+      } else {
+        throw new ParsingError('parsed data is not hex, cHex or CB58')
+      }
     }
-    return isHex ? JuneoBuffer.fromCHex(data) : JuneoBuffer.fromCB58(data)
-  }
-
-  static fromCB58 (cb58: string): JuneoBuffer {
-    return JuneoBuffer.fromBytes(encoding.decodeCB58(cb58))
-  }
-
-  static fromCHex (cHex: string): JuneoBuffer {
-    return JuneoBuffer.fromBytes(encoding.decodeCHex(cHex))
+    if (fromEncoding.toLowerCase() === 'hex') {
+      return JuneoBuffer.fromBytes(Buffer.from(data, 'hex'))
+    } else if (fromEncoding.toLowerCase() === 'chex') {
+      return encoding.decodeCHex(data)
+    } else if (fromEncoding.toLowerCase() === 'cb58') {
+      return encoding.decodeCB58(data)
+    } else {
+      throw new ParsingError(`invalid encoding "${fromEncoding}" should be hex, cHex or CB58`)
+    }
   }
 
   static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {

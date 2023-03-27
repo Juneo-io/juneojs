@@ -4,26 +4,26 @@ import { DecodingError } from './errors'
 import * as bech32 from 'bech32'
 import bs58 from 'bs58'
 import { sha256 } from './crypto'
+import { JuneoBuffer } from './bytes'
 
-export function concatChecksum (buffer: Buffer): Buffer {
-  const hashBuffer: Buffer = sha256(buffer).slice(28, 32)
-  const buffers: Buffer[] = [buffer, hashBuffer]
-  return Buffer.concat(buffers)
+function concatChecksum (buffer: JuneoBuffer): JuneoBuffer {
+  const hashBuffer: JuneoBuffer = sha256(buffer).copyOf(28, 32)
+  return JuneoBuffer.concat([buffer, hashBuffer])
 }
 
-export function verifyChecksum (value: Buffer): boolean {
+export function verifyChecksum (value: JuneoBuffer): boolean {
   if (value.length < 5) {
     return false
   }
-  const buffer: Buffer = value.slice(0, value.length - 4)
-  return value.toString('hex') === concatChecksum(buffer).toString('hex')
+  const buffer: JuneoBuffer = value.copyOf(0, value.length - 4)
+  return value.toHex() === concatChecksum(buffer).toHex()
 }
 
-export function encodeBech32 (hrp: string, buffer: Buffer): string {
-  return bech32.bech32.encode(hrp, bech32.bech32.toWords(buffer))
+export function encodeBech32 (hrp: string, buffer: JuneoBuffer): string {
+  return bech32.bech32.encode(hrp, bech32.bech32.toWords(buffer.getBytes()))
 }
 
-export function decodeBech32 (value: string): Buffer {
+export function decodeBech32 (value: string): JuneoBuffer {
   const split: string[] = value.split('-')
   const part: string = split.length > 1 ? split[1] : split[0]
   const startIndex: number = part.lastIndexOf('1')
@@ -34,33 +34,34 @@ export function decodeBech32 (value: string): Buffer {
   if (hrp.length < 1) {
     throw new DecodingError('bech32 hrp missing')
   }
-  return Buffer.from(bech32.bech32.fromWords(bech32.bech32.decode(part).words))
+  return JuneoBuffer.fromBytes(
+    Buffer.from(bech32.bech32.fromWords(bech32.bech32.decode(part).words))
+  )
 }
 
-export function encodeCB58 (buffer: Buffer): string {
-  const bytes: Buffer = concatChecksum(buffer)
-  return bs58.encode(bytes)
+export function encodeCB58 (buffer: JuneoBuffer): string {
+  return bs58.encode(concatChecksum(buffer).getBytes())
 }
 
 export function isBase58 (value: string): boolean {
   return /^[A-HJ-NP-Za-km-z1-9]*$/.test(value)
 }
 
-export function decodeCB58 (value: string): Buffer {
+export function decodeCB58 (value: string): JuneoBuffer {
   if (!isBase58(value)) {
     throw new DecodingError('value is not base58')
   }
-  const checksum: Buffer = Buffer.from(bs58.decode(value))
-  if (!verifyChecksum(checksum)) {
+  const buffer: JuneoBuffer = JuneoBuffer.fromBytes(
+    Buffer.from(bs58.decode(value))
+  )
+  if (!verifyChecksum(buffer)) {
     throw new DecodingError('value checksum is not valid')
   }
-  const buffer: Buffer = Buffer.from(bs58.decode(value))
-  return Buffer.from(buffer.subarray(0, buffer.length - 4))
+  return buffer.copyOf(0, buffer.length - 4)
 }
 
-export function encodeCHex (buffer: Buffer): string {
-  const bytes: Buffer = concatChecksum(buffer)
-  return `0x${bytes.toString('hex')}`
+export function encodeCHex (buffer: JuneoBuffer): string {
+  return `0x${concatChecksum(buffer).toHex()}`
 }
 
 export function isHex (value: string): boolean {
@@ -73,7 +74,7 @@ export function hasHexPrefix (value: string): boolean {
   return value.length > 2 && value.substring(0, 2) === '0x'
 }
 
-export function decodeHex (value: string): Buffer {
+export function decodeHex (value: string): JuneoBuffer {
   if (!isHex(value)) {
     throw new DecodingError('value is not hexadecimal')
   }
@@ -81,13 +82,13 @@ export function decodeHex (value: string): Buffer {
   if (hasHexPrefix(hex)) {
     hex = hex.substring(2)
   }
-  return Buffer.from(hex, 'hex')
+  return JuneoBuffer.fromString(hex, 'hex')
 }
 
-export function decodeCHex (value: string): Buffer {
-  const buffer: Buffer = decodeHex(value)
+export function decodeCHex (value: string): JuneoBuffer {
+  const buffer: JuneoBuffer = decodeHex(value)
   if (!verifyChecksum(buffer)) {
     throw new DecodingError('value checksum is not valid')
   }
-  return buffer.slice(0, buffer.length - 4)
+  return buffer.copyOf(0, buffer.length - 4)
 }

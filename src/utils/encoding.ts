@@ -1,12 +1,12 @@
 
-import { Buffer } from 'buffer'
+import { Buffer } from 'buffer/'
 import { DecodingError } from './errors'
 import * as bech32 from 'bech32'
 import bs58 from 'bs58'
 import { sha256 } from './crypto'
 
 export function concatChecksum (buffer: Buffer): Buffer {
-  const hashBuffer: Buffer = sha256(buffer).subarray(28, 32)
+  const hashBuffer: Buffer = sha256(buffer).slice(28, 32)
   const buffers: Buffer[] = [buffer, hashBuffer]
   return Buffer.concat(buffers)
 }
@@ -15,7 +15,7 @@ export function verifyChecksum (value: Buffer): boolean {
   if (value.length < 5) {
     return false
   }
-  const buffer: Buffer = value.subarray(0, value.length - 4)
+  const buffer: Buffer = value.slice(0, value.length - 4)
   return value.toString('hex') === concatChecksum(buffer).toString('hex')
 }
 
@@ -89,5 +89,5 @@ export function decodeCHex (value: string): Buffer {
   if (!verifyChecksum(buffer)) {
     throw new DecodingError('value checksum is not valid')
   }
-  return buffer.subarray(0, buffer.length - 4)
+  return buffer.slice(0, buffer.length - 4)
 }

@@ -1,5 +1,5 @@
 
-import { Buffer } from 'buffer'
+import { Buffer } from 'buffer/'
 import * as encoding from './encoding'
 import { ParsingError } from './errors'
 
@@ -43,7 +43,7 @@ export class JuneoBuffer {
   writeBuffer (data: Buffer): void {
     const written: Buffer = this.cursor === 0
       ? Buffer.alloc(0)
-      : this.bytes.subarray(0, this.cursor)
+      : this.bytes.slice(0, this.cursor)
     this.bytes = Buffer.concat([written, data], this.bytes.length)
     this.cursor += data.length
   }
@@ -57,7 +57,14 @@ export class JuneoBuffer {
   }
 
   writeUInt64 (data: bigint): void {
-    this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
+    // because Buffer package does not support writing UInt64 using bigint type
+    // we instead split the bigint into 8 bytes to write it
+    // we must do that to keep 64 bits uint precision which would be lost by converting to number type
+    const hex: string = data.toString(16).padStart(16, '0')
+    for (let i: number = 0; i < hex.length; i += 2) {
+      const byte: number = parseInt(hex.substring(i, i + 2), 16)
+      this.cursor = this.bytes.writeUInt8(byte, this.cursor)
+    }
   }
 
   writeString (data: string): void {
@@ -73,7 +80,7 @@ export class JuneoBuffer {
   }
 
   readUInt64 (index: number): bigint {
-    return this.bytes.readBigUInt64BE(index)
+    return this.bytes.readBigUInt64BE(index).valueOf()
   }
 
   readString (index: number, length: number): string {
@@ -81,7 +88,7 @@ export class JuneoBuffer {
   }
 
   read (index: number, length: number): JuneoBuffer {
-    return JuneoBuffer.fromBytes(this.bytes.subarray(index, index + length))
+    return JuneoBuffer.fromBytes(this.bytes.slice(index, index + length))
   }
 
   toCB58 (): string {
@@ -106,7 +113,7 @@ export class JuneoBuffer {
     return buffer
   }
 
-  static fromString (data: string): JuneoBuffer {
+  static fromString (data: string, fromEncoding?: string): JuneoBuffer {
     const isHex: boolean = encoding.isHex(data)
     if (!isHex && !encoding.isBase58(data)) {
       throw new ParsingError('parsed data is not CHex or CB58')

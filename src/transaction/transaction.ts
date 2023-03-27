@@ -1,3 +1,4 @@
+import { type Buffer } from 'buffer/'
 import { JuneoBuffer, sha256, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'

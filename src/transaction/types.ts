@@ -1,4 +1,4 @@
-import { type Buffer } from 'buffer'
+import { type Buffer } from 'buffer/'
 import { BytesData, type JuneoBuffer } from '../utils/bytes'
 import { TypeError } from '../utils/errors'
 import * as encoding from '../utils/encoding'

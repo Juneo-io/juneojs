@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { Buffer } from 'buffer'
+import { Buffer } from 'buffer/'
 import { type Blockchain } from '../chain'
 import { ECKeyPair, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
@@ -89,8 +89,7 @@ export class JuneoWallet {
       throw new WalletError('invalid mnemonic provided')
     }
     this.mnemonic = mnemonic
-    const seed: string = bip39.mnemonicToSeedSync(mnemonic).toString('hex')
-    this.hdNode = hdKey.fromMasterSeed(Buffer.from(seed, 'hex'))
+    this.hdNode = hdKey.fromMasterSeed(bip39.mnemonicToSeedSync(mnemonic))
   }
 
   static recover (data: string, hrp?: string): JuneoWallet {

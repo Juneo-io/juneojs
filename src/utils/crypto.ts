@@ -1,5 +1,5 @@
 
-import { Buffer } from 'buffer'
+import { Buffer } from 'buffer/'
 import { ec as EC } from 'elliptic'
 import { CryptoError } from './errors'
 import hash from 'create-hash'
@@ -42,7 +42,7 @@ export class ECKeyPair {
     if (recoveryParam === null || typeof recoveryParam !== 'number') {
       throw new CryptoError('could not retrieve recovery param')
     }
-    v.writeUint8(recoveryParam, 0)
+    v.writeUInt8(recoveryParam, 0)
     return Buffer.concat([r, s, v], SignatureLength)
   }
 }

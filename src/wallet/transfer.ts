@@ -1,34 +1,34 @@
-import { type GetTxFeeResponse } from '../api/info/data'
 import { type Blockchain, JVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatusFetcher, type UserInput, type Utxo } from '../transaction'
-import { TransferError } from '../utils'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo } from '../transaction'
+import { IntraChainTransferError, TransferError } from '../utils'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
 import { parseUtxoSet } from '../transaction/builder'
 
-export const TransferStatusInit: string = 'Initializing'
-export const TransferStatusSending: string = 'Sending'
-export const TransferStatusDone: string = 'Done'
-export const TransferStatusError: string = 'Error'
-
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
+
+export enum TransferStatus {
+  Initializing = 'Initializing',
+  Sending = 'Sending',
+  Done = 'Done',
+  Timeout = 'Timeout',
+  Error = 'Error'
+}
 
 export class TransferManager {
   private readonly provider: MCNProvider
   private readonly wallet: JuneoWallet
-  private readonly fees: GetTxFeeResponse | undefined
-  executed: Record<number, TransferResult> = {}
 
   constructor (provider: MCNProvider, wallet: JuneoWallet) {
     this.provider = provider
     this.wallet = wallet
   }
 
-  calculate (userInputs: UserInput[]): FeeSummary {
+  calculate (userInputs: UserInput[]): FeeSummary[] {
     // TODO placeholder
-    return new FeeSummary(0)
+    return [new FeeSummary(0)]
   }
 
   transfer (userInputs: UserInput[]): TransferHandler[] {
@@ -55,14 +55,9 @@ export class TransferManager {
       )
       const handler: ExecutableTransferHandler = new IntraChainTransferHandler()
       handlers.push(handler)
-      handler.handle(this.provider, intraTransfer)
-        .then((result: TransferResult) => { this.transferHandlerCallback(result) })
+      void handler.execute(this.provider, intraTransfer)
     }
     return handlers
-  }
-
-  private transferHandlerCallback (result: TransferResult): void {
-    this.executed[result.transfer.id] = result
   }
 }
 
@@ -115,15 +110,13 @@ class InterChainTransfer extends AbstractTransfer {
   }
 }
 
-export class TransferResult {
-  transfer: Transfer
-  transactionStatus: string
-  transactionId: string
+export class TransactionReceipt {
+  chainId: string
+  transactionId: string | undefined
+  transactionStatus: string | undefined
 
-  constructor (transfer: Transfer, transactionStatus: string, transactionId: string) {
-    this.transfer = transfer
-    this.transactionStatus = transactionStatus
-    this.transactionId = transactionId
+  constructor (chainId: string) {
+    this.chainId = chainId
   }
 }
 
@@ -131,49 +124,65 @@ export interface TransferHandler {
 
   getStatus: () => string
 
-  getTransactionId: () => string | undefined
+  getTransfer: () => Transfer | undefined
+
+  getCurrentReceipts: () => TransactionReceipt[]
 
 }
 
 interface ExecutableTransferHandler extends TransferHandler {
 
-  handle: (provider: MCNProvider, transfer: Transfer) => Promise<TransferResult>
+  execute: (provider: MCNProvider, transfer: Transfer) => Promise<void>
 
 }
 
 class IntraChainTransferHandler implements ExecutableTransferHandler {
-  private status: string = TransferStatusInit
-  private transactionId: string | undefined
+  private status: string = TransferStatus.Initializing
+  private transfer: Transfer | undefined
+  private readonly receipts: TransactionReceipt[] = []
 
   getStatus (): string {
     return this.status
   }
 
-  getTransactionId (): string | undefined {
-    return this.transactionId
+  getTransfer (): Transfer | undefined {
+    return this.transfer
   }
 
-  async handle (provider: MCNProvider, transfer: IntraChainTransfer): Promise<TransferResult> {
+  getCurrentReceipts (): TransactionReceipt[] {
+    return this.receipts
+  }
+
+  async execute (provider: MCNProvider, transfer: IntraChainTransfer): Promise<void> {
+    this.transfer = transfer
     if (transfer.sourceChain.vmId === JVM_ID) {
-      return await this.handleJVMTransfer(provider, transfer)
+      await this.executeJVMTransfer(provider, transfer); return
     }
-    this.status = TransferStatusError
-    throw new TransferError('unsupported transfer type')
+    this.status = TransferStatus.Error
+    throw new IntraChainTransferError('unsupported vm id')
   }
 
-  async handleJVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<TransferResult> {
+  private async executeJVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.sourceChain)
     const senders: string[] = [wallet.getAddress()]
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs(senders))
     const fees: number = (await provider.getFees()).txFee
+    const chainId: string = transfer.sourceChain.id
+    const receipt: TransactionReceipt = new TransactionReceipt(chainId)
+    this.receipts.push(receipt)
     const transaction: string = jvm.buildBaseTransaction(transfer.userInputs, utxoSet, senders, BigInt(fees),
-      wallet.getAddress(), provider.mcn.id, transfer.sourceChain.id
+      wallet.getAddress(), provider.mcn.id, chainId
     ).sign([wallet]).toCHex()
-    this.status = TransferStatusSending
-    this.transactionId = (await provider.jvm.issueTx(transaction)).txID
+    this.status = TransferStatus.Sending
+    const transactionId = (await provider.jvm.issueTx(transaction)).txID
+    receipt.transactionId = transactionId
     const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, this.transactionId).fetch()
-    this.status = TransferStatusDone
-    return new TransferResult(transfer, transactionStatus, this.transactionId)
+      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+    receipt.transactionStatus = transactionStatus
+    if (transactionStatus !== JVMTransactionStatus.Accepted) {
+      this.status = TransferStatus.Timeout
+    } else {
+      this.status = TransferStatus.Done
+    }
   }
 }

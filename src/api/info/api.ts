@@ -6,14 +6,8 @@ const Service: string = 'info'
 const Endpoint = '/info'
 
 export class InfoAPI extends AbstractAPI {
-  private txFeeCache: GetTxFeeResponse | undefined
-
   constructor (client: JuneoClient) {
     super(client, Endpoint, Service)
-  }
-
-  clearCache (): void {
-    this.txFeeCache = undefined
   }
 
   async isBootstrapped (chain: string): Promise<IsBootstrappedResponse> {
@@ -51,10 +45,7 @@ export class InfoAPI extends AbstractAPI {
     return response.result
   }
 
-  async getTxFee (forceUpdate?: boolean): Promise<GetTxFeeResponse> {
-    if (forceUpdate === false && this.txFeeCache !== undefined) {
-      return this.txFeeCache
-    }
+  async getTxFee (): Promise<GetTxFeeResponse> {
     const response: JsonRpcResponse = await this.call('getTxFee')
     return response.result
   }

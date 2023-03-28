@@ -1,5 +1,8 @@
 import { type JuneoWallet, type VMWallet } from '../wallet'
-import * as params from './params'
+
+export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
+export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
+export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
 const RELAY_CHAIN_NAME: string = 'Relay Chain'
 const RELAY_CHAIN_ID: string = '11111111111111111111111111111111LpoYY'
@@ -42,7 +45,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 
 export class RelayBlockchain extends AbstractBlockchain {
   constructor (assetId: string, aliases?: string[]) {
-    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, params.RELAYVM_ID, assetId, aliases)
+    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, RELAYVM_ID, assetId, aliases)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {
@@ -52,7 +55,7 @@ export class RelayBlockchain extends AbstractBlockchain {
 
 export class JVMBlockchain extends AbstractBlockchain {
   constructor (name: string, id: string, assetId: string, aliases?: string[]) {
-    super(name, id, params.JVM_ID, assetId, aliases)
+    super(name, id, JVM_ID, assetId, aliases)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {
@@ -64,7 +67,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
   chainId: bigint
 
   constructor (name: string, id: string, assetId: string, chainId: bigint, aliases?: string[]) {
-    super(name, id, params.JEVM_ID, assetId, aliases)
+    super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
   }
 

@@ -7,56 +7,38 @@ const HttpHeaders = {
   'Content-Type': 'application/json;charset=UTF-8'
 }
 const DefaultProtocol: string = 'https'
-const DefaultHost: string = 'api1.mcnpoc4.xyz'
-const DefaultPort: number = 9650
-
-export function parseAddress (address: string): JuneoClient {
-  const protocolSplit: string[] = address.split('://')
-  const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
-  const hostSplit: string[] = protocolSplit.length > 1 ? protocolSplit[1].split(':') : protocolSplit[0].split(':')
-  const host: string = hostSplit[0]
-  const port: number = hostSplit.length > 1 ? +hostSplit[1] : DefaultPort
-  const client: JuneoClient = new JuneoClient()
-  client.setProtocol(protocol)
-  client.setHost(host)
-  client.setPort(port)
-  return client
-}
+const Protocols: string[] = ['http', 'https']
 
 export class JuneoClient {
-  private protocol: string
-  private host: string
-  private port: number
+  private protocol: string = DefaultProtocol
+  private host: string = ''
   private nextRequestId: number = 1
 
-  constructor () {
-    this.protocol = DefaultProtocol
-    this.host = DefaultHost
-    this.port = DefaultPort
+  private constructor () {}
+
+  setAddress (address: string): void {
+    const protocolSplit: string[] = address.split('://')
+    const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
+    const host: string = protocolSplit.length > 1 ? protocolSplit[1] : protocolSplit[0]
+    this.setProtocol(protocol)
+    this.setHost(host)
   }
 
   setProtocol (protocol: string): void {
-    if (protocol === undefined) {
-      this.protocol = DefaultProtocol
-    }
-    if (protocol !== 'http' && protocol !== 'https') {
+    if (!Protocols.includes(protocol)) {
       throw new ProtocolError(`invalid protocol "${protocol}"`)
     }
     this.protocol = protocol
   }
 
   setHost (host: string): void {
-    if (host === undefined) {
-      this.host = DefaultHost
-    }
     this.host = host
   }
 
-  setPort (port: number): void {
-    if (port === undefined) {
-      this.port = DefaultPort
-    }
-    this.port = port
+  static parse (address: string): JuneoClient {
+    const client: JuneoClient = new JuneoClient()
+    client.setAddress(address)
+    return client
   }
 
   private async post (endpoint: string, data: any): Promise<AxiosResponse> {
@@ -64,7 +46,7 @@ export class JuneoClient {
       data,
       {
         method: 'post',
-        baseURL: `${this.protocol}://${this.host}:${this.port}`,
+        baseURL: `${this.protocol}://${this.host}`,
         headers: HttpHeaders,
         responseType: 'json',
         responseEncoding: 'utf8'

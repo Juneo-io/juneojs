@@ -31,7 +31,7 @@ export class JuneoWallet {
   mnemonic: string | undefined
   private hdNode: hdKey | undefined
   privateKey: string | undefined
-  chainsWallets: Wallets = {}
+  chainsWallets: Record<string, VMWallet> = {}
 
   private constructor (hrp?: string) {
     this.hrp = hrp === undefined ? DEFAULT_HRP : hrp
@@ -49,6 +49,14 @@ export class JuneoWallet {
       this.setChainWallet(chain, chain.buildWallet(this))
     }
     return this.chainsWallets[chain.id]
+  }
+
+  getWallets (): VMWallet[] {
+    const wallets: VMWallet[] = []
+    for (const key in this.chainsWallets) {
+      wallets.push(this.chainsWallets[key])
+    }
+    return wallets
   }
 
   private setChainWallet (chain: Blockchain, wallet: VMWallet): void {
@@ -119,11 +127,11 @@ export class JuneoWallet {
   }
 }
 
-export type Wallets = Record<string, VMWallet>
-
 export interface VMWallet {
 
   getAddress: () => string
+
+  getChain: () => Blockchain
 
   sign: (buffer: JuneoBuffer) => JuneoBuffer
 
@@ -149,6 +157,10 @@ export abstract class AbstractVMWallet implements VMWallet {
       return `${this.chain.aliases[0]}-${this.address}`
     }
     return `${this.chain.id}-${this.address}`
+  }
+
+  getChain (): Blockchain {
+    return this.chain
   }
 
   sign (buffer: JuneoBuffer): JuneoBuffer {

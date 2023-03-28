@@ -14,6 +14,7 @@ const PARSING_CODE: string = 'Parsing error'
 const TRANSACTION_CODE: string = 'Transaction error'
 const INPUT_CODE: string = 'Input error'
 const OUTPUT_CODE: string = 'Output error'
+const TRANSFER_CODE: string = 'Transfer error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -115,5 +116,11 @@ export class InputError extends JuneoError {
 export class OutputError extends JuneoError {
   constructor (message: string) {
     super(message, OUTPUT_CODE)
+  }
+}
+
+export class TransferError extends JuneoError {
+  constructor (message: string) {
+    super(message, TRANSFER_CODE)
   }
 }

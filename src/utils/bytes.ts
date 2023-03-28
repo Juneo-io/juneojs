@@ -91,7 +91,7 @@ export class JuneoBuffer {
     let hex: string = '0x'
     for (let i: number = 0; i < 8; i += 1) {
       const byte: number = this.bytes.readUInt8(index + i)
-      hex = hex.concat(byte.toString(16).padEnd(2, '0'))
+      hex = hex.concat(byte.toString(16).padStart(2, '0'))
     }
     return BigInt(hex)
   }

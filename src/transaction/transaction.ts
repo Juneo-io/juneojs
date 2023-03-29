@@ -50,16 +50,17 @@ export abstract class AbstractBaseTx implements UnsignedTransaction, Serializabl
     this.getUnsignedInputs().forEach(input => {
       const indices: number[] = input.input.addressIndices
       const signatures: Signature[] = []
-      indices.forEach(indice => {
-        const address: Address = input.input.utxo.output.addresses[indice]
-        for (let i = 0; i < wallets.length; i++) {
-          const wallet: VMWallet = wallets[i]
+      const threshold: number = input.input.utxo.output.threshold
+      for (let i = 0; i < threshold && i < indices.length; i++) {
+        const address: Address = input.input.utxo.output.addresses[i]
+        for (let j = 0; j < wallets.length; j++) {
+          const wallet: VMWallet = wallets[j]
           if (address.matches(wallet.getAddress())) {
             signatures.push(new Signature(wallet.sign(sha256(bytes))))
             break
           }
         }
-      })
+      }
       const credential: JuneoBuffer = new Secp256k1Credentials(signatures).serialize()
       credentialsSize += credential.length
       credentials.push(credential)

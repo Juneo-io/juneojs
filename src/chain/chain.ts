@@ -1,3 +1,4 @@
+import { MCNProvider } from '../juneo'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
@@ -16,6 +17,8 @@ export interface Blockchain {
   aliases: string[] | undefined
 
   buildWallet: (wallet: JuneoWallet) => VMWallet
+
+  queryFee: (provider: MCNProvider) => Promise<bigint>
 
 }
 
@@ -41,6 +44,8 @@ export abstract class AbstractBlockchain implements Blockchain {
   }
 
   abstract buildWallet (wallet: JuneoWallet): VMWallet
+
+  abstract queryFee (provider: MCNProvider): Promise<bigint>
 }
 
 export class RelayBlockchain extends AbstractBlockchain {
@@ -51,6 +56,10 @@ export class RelayBlockchain extends AbstractBlockchain {
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
   }
+
+  async queryFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
 }
 
 export class JVMBlockchain extends AbstractBlockchain {
@@ -60,6 +69,10 @@ export class JVMBlockchain extends AbstractBlockchain {
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
+  }
+
+  async queryFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
   }
 }
 
@@ -73,5 +86,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJEVMWallet(this)
+  }
+  
+  async queryFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt(0)
   }
 }

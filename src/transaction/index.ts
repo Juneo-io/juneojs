@@ -1,6 +1,7 @@
 
 export * from './jvm'
 export * from './builder'
+export * from './fee'
 export * from './input'
 export * from './output'
 export * from './signature'

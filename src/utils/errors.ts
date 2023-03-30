@@ -17,6 +17,7 @@ const OUTPUT_CODE: string = 'Output error'
 const TRANSFER_CODE: string = 'Transfer error'
 const INTRA_TRANSFER_CODE: string = 'IntraChain transfer error'
 const INTER_TRANSFER_CODE: string = 'InterChain transfer error'
+const FEE_CODE: string = 'Fee error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -136,5 +137,11 @@ export class IntraChainTransferError extends JuneoError {
 export class InterChainTransferError extends JuneoError {
   constructor (message: string) {
     super(message, INTER_TRANSFER_CODE)
+  }
+}
+
+export class FeeError extends JuneoError {
+  constructor (message: string) {
+    super(message, FEE_CODE)
   }
 }

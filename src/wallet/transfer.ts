@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo } from '../transaction'
+import { FeeManager, JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo } from '../transaction'
 import { IntraChainTransferError, TransferError } from '../utils'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -31,24 +31,17 @@ export class TransferManager {
     const intraTransfersInputs: Record<string, UserInput[]> = transfersInputs[0]
     const interTransfersInputs: Record<string, UserInput[]> = transfersInputs[1]
     const summaries: TransferSummary[] = []
-    // for now we are doing very simple calculations but with incoming features
-    // this will become more complex
     for (const key in intraTransfersInputs) {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
-      const txFee: bigint = await source.queryFee(this.provider)
+      const txFee: bigint = await FeeManager.calculate(this.provider, source, source)
       summaries.push(new TransferSummary('Base transaction', source, txFee))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const destination: Blockchain = inputs[0].destinationChain
-      // this is not enough we also need to calculate the fees of the destination
-      // also this query needs to be calculated according to the tx type
-      // e.g. send tx in EVM has different cost than export/import tx
-      // whereas in JVM it is the same cost for import/export/base tx
-      let txFee: bigint = await source.queryFee(this.provider)
-      txFee += await destination.queryFee(this.provider)
+      let txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
       summaries.push(new TransferSummary('Cross chain transaction', source, txFee))
     }
     return summaries
@@ -91,6 +84,15 @@ export class TransferManager {
     // we will need to change that in the future as some chain
     // cannot do that and rather do parallel transactions
     userInputs.forEach(input => {
+      // TODO check cases:
+      // EVM A -> EVM A
+      // EVM A -> EVM B
+      // EVM A -> JVM A
+      // JVM A -> EVM A
+      // JVM A -> JVM A
+      if (input.amount < BigInt(1)) {
+        throw new TransferError('input amount must be greater than 0')
+      }
       const sourceId: string = input.sourceChain.id
       if (sourceId !== input.destinationChain.id) {
         throw new TransferError('inter chain transfers is not supported yet')

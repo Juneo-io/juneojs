@@ -18,8 +18,6 @@ export interface Blockchain {
 
   buildWallet: (wallet: JuneoWallet) => VMWallet
 
-  queryFee: (provider: MCNProvider) => Promise<bigint>
-
 }
 
 export interface JEVMBlockchain {
@@ -44,8 +42,6 @@ export abstract class AbstractBlockchain implements Blockchain {
   }
 
   abstract buildWallet (wallet: JuneoWallet): VMWallet
-
-  abstract queryFee (provider: MCNProvider): Promise<bigint>
 }
 
 export class RelayBlockchain extends AbstractBlockchain {
@@ -56,10 +52,6 @@ export class RelayBlockchain extends AbstractBlockchain {
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
   }
-
-  async queryFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
 }
 
 export class JVMBlockchain extends AbstractBlockchain {
@@ -69,10 +61,6 @@ export class JVMBlockchain extends AbstractBlockchain {
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
-  }
-
-  async queryFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
   }
 }
 
@@ -86,9 +74,5 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJEVMWallet(this)
-  }
-  
-  async queryFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt(0)
   }
 }

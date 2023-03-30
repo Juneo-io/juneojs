@@ -39,6 +39,22 @@ export function decodeBech32 (value: string): JuneoBuffer {
   )
 }
 
+export function validateBech32 (value: string, expectedHrp?: string): boolean {
+  const parts: string[] = value.split('-')
+  if (parts.length < 1) {
+    return false
+  }
+  if (expectedHrp !== undefined && parts[0] !== expectedHrp) {
+    return false
+  }
+  try {
+    decodeBech32(value)
+  } catch (error) {
+    return false
+  }
+  return true
+}
+
 export function encodeCB58 (buffer: JuneoBuffer): string {
   return bs58.encode(concatChecksum(buffer).getBytes())
 }

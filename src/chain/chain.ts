@@ -1,3 +1,5 @@
+import { isAddress } from 'ethers'
+import { validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
@@ -13,10 +15,11 @@ export interface Blockchain {
   id: string
   vmId: string
   assetId: string
-  aliases: string[] | undefined
+  aliases: string[]
 
   buildWallet: (wallet: JuneoWallet) => VMWallet
 
+  validateAddress: (address: string) => boolean
 }
 
 export interface JEVMBlockchain {
@@ -30,17 +33,19 @@ export abstract class AbstractBlockchain implements Blockchain {
   id: string
   vmId: string
   assetId: string
-  aliases: string[] | undefined
+  aliases: string[]
 
   constructor (name: string, id: string, vmId: string, assetId: string, aliases?: string[]) {
     this.name = name
     this.id = id
     this.vmId = vmId
     this.assetId = assetId
-    this.aliases = aliases
+    this.aliases = aliases === undefined ? [] : aliases
   }
 
   abstract buildWallet (wallet: JuneoWallet): VMWallet
+
+  abstract validateAddress (address: string): boolean
 }
 
 export class RelayBlockchain extends AbstractBlockchain {
@@ -51,6 +56,10 @@ export class RelayBlockchain extends AbstractBlockchain {
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
   }
+
+  validateAddress (address: string): boolean {
+    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : undefined)
+  }
 }
 
 export class JVMBlockchain extends AbstractBlockchain {
@@ -60,6 +69,10 @@ export class JVMBlockchain extends AbstractBlockchain {
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJVMWallet(this)
+  }
+
+  validateAddress (address: string): boolean {
+    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : undefined)
   }
 }
 
@@ -73,5 +86,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
 
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJEVMWallet(this)
+  }
+
+  validateAddress (address: string): boolean {
+    return isAddress(address)
   }
 }

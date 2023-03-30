@@ -153,7 +153,7 @@ export abstract class AbstractVMWallet implements VMWallet {
   }
 
   getAddress (): string {
-    if (this.chain.aliases !== undefined && this.chain.aliases.length > 0) {
+    if (this.chain.aliases.length > 0) {
       return `${this.chain.aliases[0]}-${this.address}`
     }
     return `${this.chain.id}-${this.address}`

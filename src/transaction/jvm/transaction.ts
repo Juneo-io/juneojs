@@ -1,10 +1,14 @@
 import { type JVMAPI } from '../../api/jvm'
-import { JuneoBuffer, sleep } from '../../utils'
+import { sleep } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTx } from '../transaction'
-import { BlockchainIdSize, type BlockchainId } from '../types'
+import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { type BlockchainId } from '../types'
+
+const BaseTransactionTypeId: number = 0x00000000
+const ExportTransactionTypeId: number = 0x00000004
+const ImportTransactionTypeId: number = 0x00000003
 
 export enum JVMTransactionStatus {
   Accepted = 'Accepted',
@@ -42,10 +46,10 @@ export class JVMTransactionStatusFetcher {
   }
 }
 
-export class BaseTransaction extends AbstractBaseTx implements Signable {
+export class BaseTransaction extends AbstractBaseTransaction implements Signable {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
-    super(0x00000000, networkId, blockchainId, outputs, inputs, memo)
+    super(BaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
 
   getUnsignedInputs (): TransferableInput[] {
@@ -53,78 +57,20 @@ export class BaseTransaction extends AbstractBaseTx implements Signable {
   }
 }
 
-export class ExportTransaction extends AbstractBaseTx {
-  destinationChain: BlockchainId
-  exportedOutputs: TransferableOutput[]
-
+export class JVMExportTransaction extends AbstractExportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
-    super(0x00000004, networkId, blockchainId, outputs, inputs, memo)
-    this.destinationChain = destinationChain
-    this.exportedOutputs = exportedOutputs
-  }
-
-  getUnsignedInputs (): TransferableInput[] {
-    return this.inputs
-  }
-
-  serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const exportedOutputsBytes: JuneoBuffer[] = []
-    let exportedOutputsSize: number = 0
-    this.exportedOutputs.forEach(output => {
-      const bytes: JuneoBuffer = output.serialize()
-      exportedOutputsSize += bytes.length
-      exportedOutputsBytes.push(bytes)
-    })
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + exportedOutputsSize
-    )
-    buffer.write(baseTransaction)
-    buffer.write(this.destinationChain.serialize())
-    buffer.writeUInt32(this.exportedOutputs.length)
-    exportedOutputsBytes.forEach(output => {
-      buffer.write(output)
-    })
-    return buffer
+    super(ExportTransactionTypeId, networkId, blockchainId, outputs,
+      inputs, memo, destinationChain, exportedOutputs)
   }
 }
 
-export class ImportTransaction extends AbstractBaseTx {
-  sourceChain: BlockchainId
-  importedInputs: TransferableInput[]
-
+export class JVMImportTransaction extends AbstractImportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     sourceChain: BlockchainId, importedInputs: TransferableInput[]) {
-    super(0x00000003, networkId, blockchainId, outputs, inputs, memo)
-    this.sourceChain = sourceChain
-    this.importedInputs = importedInputs
-  }
-
-  getUnsignedInputs (): TransferableInput[] {
-    return this.inputs.concat(this.importedInputs)
-  }
-
-  serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const importedInputsBytes: JuneoBuffer[] = []
-    let importedInputsSize: number = 0
-    this.importedInputs.forEach(input => {
-      const bytes: JuneoBuffer = input.serialize()
-      importedInputsSize += bytes.length
-      importedInputsBytes.push(bytes)
-    })
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + importedInputsSize
-    )
-    buffer.write(baseTransaction)
-    buffer.write(this.sourceChain.serialize())
-    buffer.writeUInt32(this.importedInputs.length)
-    importedInputsBytes.forEach(input => {
-      buffer.write(input)
-    })
-    return buffer
+    super(ImportTransactionTypeId, networkId, blockchainId, outputs,
+      inputs, memo, sourceChain, importedInputs)
   }
 }

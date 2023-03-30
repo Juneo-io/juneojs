@@ -1,5 +1,6 @@
 
 export * from './jvm'
+export * from './relay'
 export * from './builder'
 export * from './fee'
 export * from './input'

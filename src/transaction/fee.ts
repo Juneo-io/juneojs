@@ -19,7 +19,7 @@ export class FeeManager {
   }
 
   static registerAdapter (vmId: string, adapter: FeeQueryAdapter): void {
-    const manager: FeeManager = FeeManager.singleton
+    const manager: FeeManager = FeeManager.getSingleton()
     if (manager.adapters[vmId] !== undefined) {
       throw new FeeError(`an adapter is already registered for vm id: ${vmId}`)
     }
@@ -27,7 +27,7 @@ export class FeeManager {
   }
 
   static async calculate (provider: MCNProvider, source: Blockchain, destination: Blockchain): Promise<bigint> {
-    const manager: FeeManager = FeeManager.singleton
+    const manager: FeeManager = FeeManager.getSingleton()
     const sourceAdapter: FeeQueryAdapter = manager.adapters[source.vmId]
     if (sourceAdapter === undefined) {
       throw new FeeError(`there is no adapter registered for vm id: ${source.vmId}`)

@@ -41,7 +41,7 @@ export class TransferManager {
       const inputs: UserInput[] = interTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const destination: Blockchain = inputs[0].destinationChain
-      let txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
+      const txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
       summaries.push(new TransferSummary('Cross chain transaction', source, txFee))
     }
     return summaries

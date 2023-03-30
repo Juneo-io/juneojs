@@ -1,4 +1,3 @@
-import { MCNProvider } from '../juneo'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'

@@ -58,7 +58,7 @@ export class RelayBlockchain extends AbstractBlockchain {
   }
 
   validateAddress (address: string): boolean {
-    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : undefined)
+    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
   }
 }
 
@@ -72,7 +72,7 @@ export class JVMBlockchain extends AbstractBlockchain {
   }
 
   validateAddress (address: string): boolean {
-    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : undefined)
+    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
   }
 }
 

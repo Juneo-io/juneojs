@@ -217,7 +217,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const chainId: string = transfer.sourceChain.id
     const receipt: TransactionReceipt = new TransactionReceipt(chainId)
     this.receipts.push(receipt)
-    const transaction: string = jvm.buildBaseTransaction(
+    const transaction: string = jvm.buildJVMBaseTransaction(
       transfer.userInputs, utxoSet, senders, BigInt(fees),
       wallet.getAddress(), provider.mcn.id, chainId
     ).sign([wallet]).toCHex()

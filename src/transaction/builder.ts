@@ -26,10 +26,6 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   targetAmounts[sourceChain.assetId] = fees
   // checking user input validity and gathering data needed to build transaction inputs
   userInputs.forEach(input => {
-    if (input.sourceChain.id !== sourceChain.id) {
-      throw new InputError('all inputs do not have the same source chain')
-    }
-    // TODO check source/destination chain compatibility
     const assetId: string = input.assetId.assetId
     const targetAmount: bigint = targetAmounts[assetId]
     if (targetAmount === undefined) {
@@ -118,12 +114,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
   // add fees as already spent so they are not added in outputs
   spentAmounts[sourceChain.assetId] = fees
   const outputs: TransferableOutput[] = []
-  // checking each user input validity and adding matching outputs
+  // adding outputs matching user inputs
   userInputs.forEach(input => {
-    if (input.sourceChain.id !== sourceChain.id) {
-      throw new InputError('all inputs do not have the same source chain')
-    }
-    // TODO check source/destination chain compatibility
     outputs.push(new TransferableOutput(
       input.assetId, new Secp256k1Output(
         input.amount,

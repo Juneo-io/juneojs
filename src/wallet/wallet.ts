@@ -65,6 +65,8 @@ export class JuneoWallet {
 
   buildJVMWallet (chain: Blockchain): JVMWallet {
     let wallet: JVMWallet | undefined
+    // affecation after declaration to prevent linter to remove value
+    wallet = undefined
     if (this.hdNode !== undefined) {
       const privateKey = this.hdNode.derive(JVM_HD_PATH).privateKey.toString('hex')
       wallet = new JVMWallet(privateKey, this.hrp, chain)
@@ -79,6 +81,8 @@ export class JuneoWallet {
 
   buildJEVMWallet (chain: Blockchain): JEVMWallet {
     let wallet: JEVMWallet | undefined
+    // affecation after declaration to prevent linter to remove value
+    wallet = undefined
     if (this.hdNode !== undefined) {
       const privateKey = this.hdNode.derive(EVM_HD_PATH).privateKey.toString('hex')
       wallet = new JEVMWallet(privateKey, this.hrp, chain)

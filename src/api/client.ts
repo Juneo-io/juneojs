@@ -67,7 +67,7 @@ export class JuneoClient {
     if (typeof data === 'string') {
       data = JSON.parse(data)
     }
-    if (typeof data === 'object' && (data === null || data === 'error' in data)) {
+    if (data === null || data.error !== undefined) {
       throw new JsonRpcError(data.error.message)
     }
     return new JsonRpcResponse(data.jsonrpc, data.id, data.result)

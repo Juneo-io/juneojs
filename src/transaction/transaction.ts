@@ -140,7 +140,7 @@ export class AbstractExportTransaction extends AbstractBaseTransaction {
       exportedOutputsBytes.push(bytes)
     })
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + exportedOutputsSize
+      baseTransaction.length + BlockchainIdSize + 4 + exportedOutputsSize
     )
     buffer.write(baseTransaction)
     buffer.write(this.destinationChain.serialize())
@@ -179,7 +179,7 @@ export class AbstractImportTransaction extends AbstractBaseTransaction {
       importedInputsBytes.push(bytes)
     })
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + importedInputsSize
+      baseTransaction.length + BlockchainIdSize + 4 + importedInputsSize
     )
     buffer.write(baseTransaction)
     buffer.write(this.sourceChain.serialize())

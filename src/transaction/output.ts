@@ -1,5 +1,6 @@
 import { ParsingError } from '../utils'
 import { JuneoBuffer, type Serializable } from '../utils/bytes'
+import { type UserInput } from './input'
 import { Address, AddressSize, type AssetId, AssetIdSize } from './types'
 
 export const Secp256k1OutputTypeId: number = 0x00000007
@@ -37,6 +38,15 @@ export class TransferableOutput implements Serializable {
     } else {
       throw new ParsingError(`unsupported output type id "${typeId}"`)
     }
+  }
+}
+
+export class UserOutput extends TransferableOutput {
+  input: UserInput | undefined
+
+  constructor (assetId: AssetId, output: TransactionOutput & Serializable, input?: UserInput) {
+    super(assetId, output)
+    this.input = input
   }
 }
 

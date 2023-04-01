@@ -3,11 +3,12 @@ import { type TransferableInput, type UserInput } from '../input'
 import { type Utxo } from '../utxo'
 import { BaseTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 import { Address, BlockchainId } from '../types'
-import { type TransferableOutput } from '../output'
+import { type UserOutput, type TransferableOutput } from '../output'
 import { InputError } from '../../utils/errors'
+import { FeeData } from '../fee'
 
 export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], fees: bigint, changeAddress: string,
+  sendersAddresses: string[], fee: bigint, changeAddress: string,
   networkId: number, memo?: string): BaseTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
@@ -22,8 +23,9 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
-  const outputs: TransferableOutput[] = buildTransactionOutputs(userInputs, inputs, fees, changeAddress)
+  const feeData = new FeeData(userInputs[0].sourceChain.assetId, fee)
+  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
   return new BaseTransaction(
     networkId,
     new BlockchainId(sourceId),
@@ -34,7 +36,7 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
 }
 
 export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], fees: bigint, changeAddress: string,
+  sendersAddresses: string[], sourceFee: bigint, destinationFee: bigint, changeAddress: string,
   networkId: number, memo?: string): JVMExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
@@ -53,12 +55,24 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
+  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain.assetId, sourceFee)
+  const fees: FeeData[] = [sourceFeeData, new FeeData(userInputs[0].destinationChain.assetId, destinationFee)]
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
-  const exportedOutputs: TransferableOutput[] = buildTransactionOutputs(userInputs, inputs, fees, changeAddress)
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, sourceFeeData, changeAddress)
+  const exportedOutputs: TransferableOutput[] = []
+  const changeOutputs: TransferableOutput[] = []
+  outputs.forEach(output => {
+    // no user input means change output
+    if (output.input !== undefined) {
+      exportedOutputs.push(output)
+    } else {
+      changeOutputs.push(output)
+    }
+  })
   return new JVMExportTransaction(
     networkId,
     new BlockchainId(sourceId),
-    [],
+    changeOutputs,
     inputs,
     memo === undefined ? '' : memo,
     new BlockchainId(destinationId),
@@ -67,14 +81,14 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
 }
 
 export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fees: bigint, changeAddress: string, networkId: number, memo?: string): JVMImportTransaction {
+  fee: bigint, changeAddress: string, networkId: number, memo?: string): JVMImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
   const sourceId: string = userInputs[0].sourceChain.id
-  const chainId: string = userInputs[0].destinationChain.id
+  const destinationId: string = userInputs[0].destinationChain.id
   userInputs.forEach(input => {
-    if (input.sourceChain.id !== sourceId || input.destinationChain.id !== chainId) {
+    if (input.sourceChain.id !== sourceId || input.destinationChain.id !== destinationId) {
       throw new InputError('jvm import transaction cannot have different source or destination chain user inputs')
     }
     if (input.sourceChain.id === input.destinationChain.id) {
@@ -85,11 +99,12 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
-  const outputs: TransferableOutput[] = buildTransactionOutputs(userInputs, importedInputs, fees, changeAddress)
+  const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
+  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, importedInputs, feeData, changeAddress)
   return new JVMImportTransaction(
     networkId,
-    new BlockchainId(chainId),
+    new BlockchainId(destinationId),
     outputs,
     [],
     memo === undefined ? '' : memo,

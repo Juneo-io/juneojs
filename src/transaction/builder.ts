@@ -1,11 +1,11 @@
-import { type Blockchain } from '../chain'
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, TransferableOutput } from './output'
+import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
 import { Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address } from './types'
 import { type GetUTXOsResponse } from '../api/data'
+import { type FeeData } from './fee'
 
 export function parseUtxoSet (data: GetUTXOsResponse): Utxo[] {
   const utxos: string[] = data.utxos
@@ -17,14 +17,12 @@ export function parseUtxoSet (data: GetUTXOsResponse): Utxo[] {
 }
 
 export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
-  signersAddresses: Address[], fees: bigint): TransferableInput[] {
-  if (userInputs.length < 1) {
-    throw new InputError('user inputs cannot be empty')
-  }
-  const sourceChain: Blockchain = userInputs[0].sourceChain
+  signersAddresses: Address[], fees: FeeData[]): TransferableInput[] {
   const targetAmounts: Record<string, bigint> = {}
-  targetAmounts[sourceChain.assetId] = fees
-  // checking user input validity and gathering data needed to build transaction inputs
+  fees.forEach(fee => {
+    targetAmounts[fee.assetId] = fee.amount
+  })
+  // gathering data needed to build transaction inputs
   userInputs.forEach(input => {
     const assetId: string = input.assetId.assetId
     const targetAmount: bigint = targetAmounts[assetId]
@@ -105,18 +103,14 @@ function getSignersIndices (signers: Address[], addresses: Address[]): number[] 
 }
 
 export function buildTransactionOutputs (userInputs: UserInput[], inputs: TransferableInput[],
-  fees: bigint, changeAddress: string): TransferableOutput[] {
-  if (userInputs.length < 1) {
-    throw new InputError('user inputs cannot be empty')
-  }
-  const sourceChain: Blockchain = userInputs[0].sourceChain
+  fee: FeeData, changeAddress: string): UserOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
-  spentAmounts[sourceChain.assetId] = fees
-  const outputs: TransferableOutput[] = []
+  spentAmounts[fee.assetId] = fee.amount
+  const outputs: UserOutput[] = []
   // adding outputs matching user inputs
   userInputs.forEach(input => {
-    outputs.push(new TransferableOutput(
+    outputs.push(new UserOutput(
       input.assetId, new Secp256k1Output(
         input.amount,
         input.locktime,
@@ -125,7 +119,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
         // if we want to create a single output with multiple addresses
         // e.g. multisig we need to do changes here
         [input.address]
-      )
+      ),
+      input
     ))
     const assetId: string = input.assetId.assetId
     const spentAmount: bigint = spentAmounts[assetId]
@@ -161,8 +156,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
     if (spent === available) {
       continue
     }
-    // adding output to send remaining value into the change address
-    outputs.push(new TransferableOutput(
+    // adding change output to send remaining value into the change address
+    outputs.push(new UserOutput(
       input.assetId, new Secp256k1Output(
         available - spent,
         // no locktime for the change

@@ -2,6 +2,16 @@ import { type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { FeeError } from '../utils'
 
+export class FeeData {
+  assetId: string
+  amount: bigint
+
+  constructor (assetId: string, amount: bigint) {
+    this.assetId = assetId
+    this.amount = amount
+  }
+}
+
 export class FeeManager {
   private static singleton: FeeManager
   adapters: Record<string, FeeQueryAdapter> = {}

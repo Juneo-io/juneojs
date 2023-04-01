@@ -47,8 +47,8 @@ export class JVMAPI extends AbstractChainAPI {
     return response.result
   }
 
-  async getUTXOs (addresses: string[], limit?: number, startIndex?: UTXOIndex, sourceChain?: string, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, limit, startIndex, sourceChain, encoding }])
+  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
+    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
     return response.result
   }
 

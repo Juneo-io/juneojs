@@ -1,7 +1,7 @@
-import { type Blockchain, JVM_ID } from '../chain'
+import { type Blockchain, JVM_ID, isCrossable } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { FeeManager, JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo } from '../transaction'
-import { IntraChainTransferError, TransferError } from '../utils'
+import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
 import { parseUtxoSet } from '../transaction/builder'
@@ -54,8 +54,8 @@ export class TransferManager {
     const handlers: ExecutableTransferHandler[] = []
     for (const key in intraTransfersInputs) {
       const inputs: UserInput[] = intraTransfersInputs[key]
-      const intraTransfer: IntraChainTransfer = new IntraChainTransfer(
-        inputs[0].sourceChain, inputs, this.wallet
+      const intraTransfer: Transfer = new Transfer(
+        inputs[0].sourceChain, inputs[0].destinationChain, inputs, this.wallet
       )
       const handler: ExecutableTransferHandler = new IntraChainTransferHandler()
       handlers.push(handler)
@@ -63,13 +63,12 @@ export class TransferManager {
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
-      const interTransfer: InterChainTransfer = new InterChainTransfer(
-        inputs[0].sourceChain, inputs, this.wallet, inputs[0].destinationChain
+      const interTransfer: Transfer = new Transfer(
+        inputs[0].sourceChain, inputs[0].destinationChain, inputs, this.wallet
       )
-      // TODO update when inter chain is implemented
-      // const handler: ExecutableTransferHandler = new InterChainTransferHandler()
-      // handlers.push(handler)
-      // void handler.execute(this.provider, interTransfer)
+      const handler: ExecutableTransferHandler = new InterChainTransferHandler()
+      handlers.push(handler)
+      void handler.execute(this.provider, interTransfer)
     }
     return handlers
   }
@@ -80,27 +79,33 @@ export class TransferManager {
     }
     const intraTransfersInputs: Record<string, UserInput[]> = {}
     const interTransfersInputs: Record<string, UserInput[]> = {}
-    // for now we consider that all transfers support batching
-    // we will need to change that in the future as some chain
-    // cannot do that and rather do parallel transactions
+    // for chains that do not support transaction batching
+    // we can still do parallel transactions to simulate it
+    // do not forget to isolate user inputs again to do its
+    // note that fee cost will be higher for non batched transactions
     userInputs.forEach(input => {
-      // TODO check cases:
-      // EVM A -> EVM A
-      // EVM A -> EVM B
-      // EVM A -> JVM A
-      // JVM A -> EVM A
-      // JVM A -> JVM A
       if (input.amount < BigInt(1)) {
         throw new TransferError('input amount must be greater than 0')
       }
       const sourceId: string = input.sourceChain.id
+      // inter chain transfer case
       if (sourceId !== input.destinationChain.id) {
-        throw new TransferError('inter chain transfers is not supported yet')
-      }
-      if (intraTransfersInputs[sourceId] === undefined) {
-        intraTransfersInputs[sourceId] = [input]
+        // for now only crossable compatible chains can do inter chain transfers
+        if (!isCrossable(input.sourceChain) || !isCrossable(input.destinationChain)) {
+          throw new TransferError('both chains must implement Crossable to do inter chain transfer')
+        }
+        if (interTransfersInputs[sourceId] === undefined) {
+          interTransfersInputs[sourceId] = [input]
+        } else {
+          interTransfersInputs[sourceId].push(input)
+        }
+      // intra chain transfer case
       } else {
-        intraTransfersInputs[sourceId].push(input)
+        if (intraTransfersInputs[sourceId] === undefined) {
+          intraTransfersInputs[sourceId] = [input]
+        } else {
+          intraTransfersInputs[sourceId].push(input)
+        }
       }
     })
     return [intraTransfersInputs, interTransfersInputs]
@@ -119,40 +124,17 @@ export class TransferSummary {
   }
 }
 
-export interface Transfer {
-  id: number
+export class Transfer {
   sourceChain: Blockchain
-  userInputs: UserInput[]
-  signer: JuneoWallet
-}
-
-abstract class AbstractTransfer implements Transfer {
-  private static nextId: number = 0
-  id: number
-  sourceChain: Blockchain
+  destinationChain: Blockchain
   userInputs: UserInput[]
   signer: JuneoWallet
 
-  constructor (sourceChain: Blockchain, userInputs: UserInput[], signer: JuneoWallet) {
-    this.id = AbstractTransfer.nextId++
+  constructor (sourceChain: Blockchain, destinationChain: Blockchain, userInputs: UserInput[], signer: JuneoWallet) {
     this.sourceChain = sourceChain
+    this.destinationChain = destinationChain
     this.userInputs = userInputs
     this.signer = signer
-  }
-}
-
-class IntraChainTransfer extends AbstractTransfer {
-  constructor (sourceChain: Blockchain, userInputs: UserInput[], signer: JuneoWallet) {
-    super(sourceChain, userInputs, signer)
-  }
-}
-
-class InterChainTransfer extends AbstractTransfer {
-  destinationChain: Blockchain
-
-  constructor (sourceChain: Blockchain, userInputs: UserInput[], signer: JuneoWallet, destinationChain: Blockchain) {
-    super(sourceChain, userInputs, signer)
-    this.destinationChain = destinationChain
   }
 }
 
@@ -199,7 +181,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     return this.receipts
   }
 
-  async execute (provider: MCNProvider, transfer: IntraChainTransfer): Promise<void> {
+  async execute (provider: MCNProvider, transfer: Transfer): Promise<void> {
     this.transfer = transfer
     if (transfer.sourceChain.vmId === JVM_ID) {
       await this.executeJVMTransfer(provider, transfer)
@@ -231,6 +213,35 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       this.status = TransferStatus.Timeout
     } else {
       this.status = TransferStatus.Done
+    }
+  }
+}
+
+class InterChainTransferHandler implements ExecutableTransferHandler {
+  private status: string = TransferStatus.Initializing
+  private transfer: Transfer | undefined
+  private readonly receipts: TransactionReceipt[] = []
+
+  getStatus (): string {
+    return this.status
+  }
+
+  getTransfer (): Transfer | undefined {
+    return this.transfer
+  }
+
+  getCurrentReceipts (): TransactionReceipt[] {
+    return this.receipts
+  }
+
+  async execute (provider: MCNProvider, transfer: Transfer): Promise<void> {
+    this.transfer = transfer
+    // if (transfer.sourceChain.vmId === JVM_ID) {
+    // await this.executeJVMTransfer(provider, transfer)
+    if (false) {
+    } else {
+      this.status = TransferStatus.Error
+      throw new InterChainTransferError('unsupported vm id')
     }
   }
 }

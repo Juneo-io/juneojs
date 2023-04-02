@@ -1,5 +1,5 @@
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
-import { type TransferableInput, type UserInput } from '../input'
+import { UserInput, type TransferableInput } from '../input'
 import { type Utxo } from '../utxo'
 import { BaseTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 import { Address, BlockchainId } from '../types'
@@ -36,7 +36,7 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
 }
 
 export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], sourceFee: bigint, destinationFee: bigint, changeAddress: string,
+  sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
   networkId: number, memo?: string): JVMExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
@@ -56,9 +56,21 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
     signersAddresses.push(new Address(senderAddress))
   })
   const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain.assetId, sourceFee)
-  const fees: FeeData[] = [sourceFeeData, new FeeData(userInputs[0].destinationChain.assetId, destinationFee)]
+  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, destinationFee)
+  const fees: FeeData[] = [sourceFeeData, destinationFeeData]
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
-  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, sourceFeeData, changeAddress)
+  // fixed user inputs with a defined export address to import it later
+  const fixedUserInputs: UserInput[] = []
+  userInputs.forEach(input => {
+    fixedUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount,
+      exportAddress, input.destinationChain, input.locktime)
+    )
+  })
+  // adding fees as user input to be able to export it
+  fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
+    destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
+  )
+  const outputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, changeAddress)
   const exportedOutputs: TransferableOutput[] = []
   const changeOutputs: TransferableOutput[] = []
   outputs.forEach(output => {

@@ -3,7 +3,7 @@ import { Secp256k1Input, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
 import { Utxo } from './utxo'
 import * as time from '../utils/time'
-import { Address } from './types'
+import { Address, AssetId } from './types'
 import { type GetUTXOsResponse } from '../api/data'
 import { type FeeData } from './fee'
 
@@ -24,7 +24,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   })
   // gathering data needed to build transaction inputs
   userInputs.forEach(input => {
-    const assetId: string = input.assetId.assetId
+    const assetId: string = input.assetId
     const targetAmount: bigint = targetAmounts[assetId]
     if (targetAmount === undefined) {
       targetAmounts[assetId] = input.amount
@@ -111,18 +111,18 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
   // adding outputs matching user inputs
   userInputs.forEach(input => {
     outputs.push(new UserOutput(
-      input.assetId, new Secp256k1Output(
+      new AssetId(input.assetId), new Secp256k1Output(
         input.amount,
         input.locktime,
         // for now threshold will only be 1
         1,
         // if we want to create a single output with multiple addresses
         // e.g. multisig we need to do changes here
-        [input.address]
+        [new Address(input.address)]
       ),
       input
     ))
-    const assetId: string = input.assetId.assetId
+    const assetId: string = input.assetId
     const spentAmount: bigint = spentAmounts[assetId]
     if (spentAmount === undefined) {
       spentAmounts[assetId] = input.amount

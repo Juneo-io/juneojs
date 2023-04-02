@@ -88,6 +88,9 @@ export class TransferManager {
       if (input.amount < BigInt(1)) {
         throw new TransferError('input amount must be greater than 0')
       }
+      if (!input.destinationChain.validateAddress(input.address)) {
+        throw new TransferError(`invalid input address for destination chain: ${input.address}`)
+      }
       const sourceId: string = input.sourceChain.id
       // inter chain transfer case
       if (sourceId !== input.destinationChain.id) {

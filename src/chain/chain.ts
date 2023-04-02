@@ -1,6 +1,7 @@
 import { isAddress } from 'ethers'
 import { validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
+import { MCNProvider } from '../juneo'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -20,12 +21,29 @@ export interface Blockchain {
   buildWallet: (wallet: JuneoWallet) => VMWallet
 
   validateAddress: (address: string) => boolean
+
+  queryBaseFee: (provider: MCNProvider) => Promise<bigint>
+
 }
 
 export interface JEVMBlockchain {
 
   chainId: bigint
 
+}
+
+export interface Crossable {
+  
+  queryExportFee: (provider: MCNProvider) => Promise<bigint>
+
+  queryImportFee: (provider: MCNProvider) => Promise<bigint>
+
+}
+
+export function isCrossable (object: any): boolean {
+  const a: boolean = 'queryExportFee' in object
+  const b: boolean = 'queryImportFee' in object
+  return a && b
 }
 
 export abstract class AbstractBlockchain implements Blockchain {
@@ -46,9 +64,11 @@ export abstract class AbstractBlockchain implements Blockchain {
   abstract buildWallet (wallet: JuneoWallet): VMWallet
 
   abstract validateAddress (address: string): boolean
+
+  abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
 }
 
-export class RelayBlockchain extends AbstractBlockchain {
+export class RelayBlockchain extends AbstractBlockchain implements Crossable {
   constructor (assetId: string, aliases?: string[]) {
     super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, RELAYVM_ID, assetId, aliases)
   }
@@ -60,9 +80,21 @@ export class RelayBlockchain extends AbstractBlockchain {
   validateAddress (address: string): boolean {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
   }
+
+  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
+
+  async queryExportFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
+
+  async queryImportFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
 }
 
-export class JVMBlockchain extends AbstractBlockchain {
+export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   constructor (name: string, id: string, assetId: string, aliases?: string[]) {
     super(name, id, JVM_ID, assetId, aliases)
   }
@@ -74,9 +106,21 @@ export class JVMBlockchain extends AbstractBlockchain {
   validateAddress (address: string): boolean {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
   }
+
+  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
+  
+  async queryExportFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
+
+  async queryImportFee (provider: MCNProvider): Promise<bigint> {
+    return BigInt((await provider.getFees()).txFee)
+  }
 }
 
-export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain {
+export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain, Crossable {
   chainId: bigint
 
   constructor (name: string, id: string, assetId: string, chainId: bigint, aliases?: string[]) {
@@ -90,5 +134,17 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
 
   validateAddress (address: string): boolean {
     return isAddress(address)
+  }
+
+  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
+    throw new Error('not implemented yet')
+  }
+
+  async queryExportFee (provider: MCNProvider): Promise<bigint> {
+    throw new Error('not implemented yet')
+  }
+
+  async queryImportFee (provider: MCNProvider): Promise<bigint> {
+    throw new Error('not implemented yet')
   }
 }

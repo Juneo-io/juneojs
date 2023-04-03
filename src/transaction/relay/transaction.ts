@@ -10,6 +10,7 @@ import { type Secp256k1OutputOwners, type Validator } from './validation'
 const ExportTransactionTypeId: number = 0x00000012
 const ImportTransactionTypeId: number = 0x00000011
 const AddValidatorTransactionTypeId: number = 0x0000000c
+const AddDelegatorTransactionTypeId: number = 0x0000000e
 
 export enum RelayTransactionStatus {
   Committed = 'Committed',
@@ -106,6 +107,47 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     })
     buffer.write(rewardsOwnerBytes)
     buffer.writeUInt32(this.shares)
+    return buffer
+  }
+}
+
+export class AddDelegatorTransaction extends AbstractBaseTransaction {
+  validator: Validator
+  stake: TransferableOutput[]
+  rewardsOwner: Secp256k1OutputOwners
+
+  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[],
+    memo: string, validator: Validator, stake: TransferableOutput[], rewardsOwner: Secp256k1OutputOwners) {
+    super(AddDelegatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.validator = validator
+    this.stake = stake
+    this.rewardsOwner = rewardsOwner
+  }
+
+  getUnsignedInputs (): TransferableInput[] {
+    return this.inputs
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const stakeBytes: JuneoBuffer[] = []
+    let stakeBytesSize: number = 0
+    this.stake.forEach(output => {
+      const bytes: JuneoBuffer = output.serialize()
+      stakeBytesSize += bytes.length
+      stakeBytes.push(bytes)
+    })
+    const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + 44 + 4 + stakeBytesSize + rewardsOwnerBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.validator.serialize())
+    buffer.writeUInt32(this.stake.length)
+    stakeBytes.forEach(output => {
+      buffer.write(output)
+    })
+    buffer.write(rewardsOwnerBytes)
     return buffer
   }
 }

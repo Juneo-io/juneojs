@@ -35,7 +35,7 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
   const fixedUserInputs: UserInput[] = []
   userInputs.forEach(input => {
     fixedUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount,
-      exportAddress, input.destinationChain, input.locktime)
+      exportAddress, input.destinationChain)
     )
   })
   // adding fees as user input to be able to export it

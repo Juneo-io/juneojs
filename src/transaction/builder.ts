@@ -166,6 +166,12 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
         [new Address(changeAddress)]
       )
     ))
+    // adding the spending of the change output
+    if (spentAmounts[assetId] === undefined) {
+      spentAmounts[assetId] = available - spent
+    } else {
+      spentAmounts[assetId] += available - spent
+    }
   }
   return outputs
 }

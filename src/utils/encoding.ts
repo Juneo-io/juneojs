@@ -81,13 +81,12 @@ export function encodeCHex (buffer: JuneoBuffer): string {
 }
 
 export function isHex (value: string): boolean {
-  const hasPrefix: boolean = hasHexPrefix(value)
-  const regex = /[0-9A-Fa-f]/g
-  return hasPrefix ? regex.test(value.substring(2)) : regex.test(value)
+  const hex: string = hasHexPrefix(value) ? value.substring(2) : value
+  return /^[0-9A-Fa-f]*$/.test(hex)
 }
 
 export function hasHexPrefix (value: string): boolean {
-  return value.length > 2 && value.substring(0, 2) === '0x'
+  return value.startsWith('0x')
 }
 
 export function decodeHex (value: string): JuneoBuffer {

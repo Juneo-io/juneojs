@@ -323,7 +323,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id))
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, 'Import transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, 'Import transaction')
     this.receipts.push(receipt)
     const importTransaction: string = relay.buildRelayImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
@@ -341,7 +341,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id))
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, 'Import transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, 'Import transaction')
     this.receipts.push(receipt)
     const importTransaction: string = jvm.buildJVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],

@@ -8,6 +8,7 @@ export const AssetIdSize: number = 32
 export const TransactionIdSize: number = 32
 export const BlockchainIdSize: number = 32
 export const SignatureSize: number = SignatureLength
+export const NodeIdSize: number = 20
 
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
@@ -35,7 +36,7 @@ export class AssetId extends BytesData {
   assetId: string
 
   constructor (assetId: string) {
-    const buffer = encoding.decodeCB58(assetId)
+    const buffer: JuneoBuffer = encoding.decodeCB58(assetId)
     if (buffer.length !== AssetIdSize) {
       throw new TypeError(`asset id is not ${AssetIdSize} bytes long`)
     }
@@ -48,7 +49,7 @@ export class TransactionId extends BytesData {
   transactionId: string
 
   constructor (transactionId: string) {
-    const buffer = encoding.decodeCB58(transactionId)
+    const buffer: JuneoBuffer = encoding.decodeCB58(transactionId)
     if (buffer.length !== TransactionIdSize) {
       throw new TypeError(`transaction id is not ${TransactionIdSize} bytes long`)
     }
@@ -61,7 +62,7 @@ export class BlockchainId extends BytesData {
   blockchainId: string
 
   constructor (blockchainId: string) {
-    const buffer = encoding.decodeCB58(blockchainId)
+    const buffer: JuneoBuffer = encoding.decodeCB58(blockchainId)
     if (buffer.length !== BlockchainIdSize) {
       throw new TypeError(`blockchain id is not ${BlockchainIdSize} bytes long`)
     }
@@ -76,5 +77,20 @@ export class Signature extends BytesData {
       throw new TypeError(`signature is not ${SignatureSize} bytes long`)
     }
     super(signature)
+  }
+}
+
+export class NodeId extends BytesData {
+  nodeId: string
+
+  constructor (nodeId: string) {
+    const split: string[] = nodeId.split('-')
+    const parsedNodeId = split.length > 0 ? split[1] : split[0]
+    const buffer: JuneoBuffer = encoding.decodeCB58(parsedNodeId)
+    if (buffer.length !== NodeIdSize) {
+      throw new TypeError(`node id is not ${NodeIdSize} bytes long`)
+    }
+    super(buffer)
+    this.nodeId = parsedNodeId
   }
 }

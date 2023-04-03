@@ -18,6 +18,19 @@ export enum TransferStatus {
   Error = 'Error'
 }
 
+export enum TransferType {
+  Base = 'Base transfer',
+  Cross = 'Cross chain transfer',
+  Bridge = 'Bridge transfer'
+}
+
+export enum TransactionType {
+  Base = 'Base transaction',
+  Send = 'Send transaction',
+  Export = 'Export transaction',
+  Import = 'Import transaction'
+}
+
 export class TransferManager {
   private readonly provider: MCNProvider
   private readonly wallet: JuneoWallet
@@ -36,14 +49,14 @@ export class TransferManager {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const txFee: bigint = await FeeManager.calculate(this.provider, source, source)
-      summaries.push(new TransferSummary('Base transaction', source, txFee))
+      summaries.push(new TransferSummary(TransferType.Base, source, txFee))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const destination: Blockchain = inputs[0].destinationChain
       const txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
-      summaries.push(new TransferSummary('Cross chain transaction', source, txFee))
+      summaries.push(new TransferSummary(TransferType.Cross, source, txFee))
     }
     return summaries
   }
@@ -203,7 +216,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs(senders))
     const fee: bigint = await transfer.sourceChain.queryBaseFee(provider)
     const chainId: string = transfer.sourceChain.id
-    const receipt: TransactionReceipt = new TransactionReceipt(chainId, 'Base transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(chainId, TransactionType.Base)
     this.receipts.push(receipt)
     const transaction: string = jvm.buildJVMBaseTransaction(
       transfer.userInputs, utxoSet, senders, fee,
@@ -260,7 +273,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
     const importFee: bigint = await destinationChain.queryImportFee(provider)
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, 'Export transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = jvm.buildJVMExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
@@ -289,7 +302,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
     const importFee: bigint = await destinationChain.queryImportFee(provider)
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, 'Export transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = relay.buildRelayExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
@@ -323,7 +336,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id))
-    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, 'Import transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = relay.buildRelayImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
@@ -341,7 +354,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id))
-    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, 'Import transaction')
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = jvm.buildJVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],

@@ -6,6 +6,8 @@ import bs58 from 'bs58'
 import { sha256 } from './crypto'
 import { JuneoBuffer } from './bytes'
 
+const HexPrefix: string = '0x'
+
 function concatChecksum (buffer: JuneoBuffer): JuneoBuffer {
   const hashBuffer: JuneoBuffer = sha256(buffer).copyOf(28, 32)
   return JuneoBuffer.concat([buffer, hashBuffer])
@@ -77,7 +79,7 @@ export function decodeCB58 (value: string): JuneoBuffer {
 }
 
 export function encodeCHex (buffer: JuneoBuffer): string {
-  return `0x${concatChecksum(buffer).toHex()}`
+  return `${HexPrefix}${concatChecksum(buffer).toHex()}`
 }
 
 export function isHex (value: string): boolean {
@@ -86,7 +88,7 @@ export function isHex (value: string): boolean {
 }
 
 export function hasHexPrefix (value: string): boolean {
-  return value.startsWith('0x')
+  return value.startsWith(HexPrefix)
 }
 
 export function decodeHex (value: string): JuneoBuffer {

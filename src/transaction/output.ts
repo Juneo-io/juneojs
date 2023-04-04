@@ -1,7 +1,7 @@
 import { ParsingError } from '../utils'
 import { JuneoBuffer, type Serializable } from '../utils/bytes'
 import { type UserInput } from './input'
-import { Address, AddressSize, type AssetId, AssetIdSize } from './types'
+import { Address, AddressSize, AssetId, AssetIdSize } from './types'
 
 export const Secp256k1OutputTypeId: number = 0x00000007
 
@@ -28,7 +28,19 @@ export class TransferableOutput implements Serializable {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
 
-  static parseOutput (data: string | JuneoBuffer): TransactionOutput {
+  static parse (data: string): TransferableOutput {
+    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
+    // start at 2 to skip codec
+    let position: number = 2
+    const assetId: JuneoBuffer = buffer.read(position, AssetIdSize)
+    position += AssetIdSize
+    return new TransferableOutput(
+      new AssetId(assetId.toCB58()),
+      this.parseOutput(buffer.read(position, buffer.length - position))
+    )
+  }
+
+  static parseOutput (data: string | JuneoBuffer): TransactionOutput & Serializable {
     const buffer: JuneoBuffer = typeof data === 'string'
       ? JuneoBuffer.fromString(data)
       : data

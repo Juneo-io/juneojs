@@ -126,10 +126,17 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
     1,
     [new Address(rewardAddress)]
   )
+  const changeOutputs: TransferableOutput[] = []
+  outputs.forEach(output => {
+    // no user input means change output
+    if (output.input === undefined) {
+      changeOutputs.push(output)
+    }
+  })
   return new AddDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs,
     inputs,
     memo === undefined ? '' : memo,
     validator,

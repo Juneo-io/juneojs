@@ -85,7 +85,7 @@ export class NodeId extends BytesData {
 
   constructor (nodeId: string) {
     const split: string[] = nodeId.split('-')
-    const parsedNodeId = split.length > 0 ? split[1] : split[0]
+    const parsedNodeId = split.length > 1 ? split[1] : split[0]
     const buffer: JuneoBuffer = encoding.decodeCB58(parsedNodeId)
     if (buffer.length !== NodeIdSize) {
       throw new TypeError(`node id is not ${NodeIdSize} bytes long`)

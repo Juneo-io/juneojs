@@ -1,11 +1,13 @@
+import { type Blockchain } from '../../chain/chain'
 import { InputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
 import { UserInput, type TransferableInput } from '../input'
-import { type UserOutput, type TransferableOutput } from '../output'
-import { Address, BlockchainId } from '../types'
+import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
+import { Address, AssetId, BlockchainId, NodeId } from '../types'
 import { type Utxo } from '../utxo'
-import { RelayExportTransaction, RelayImportTransaction } from './transaction'
+import { AddDelegatorTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
+import { Validator } from './validation'
 
 export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
@@ -94,5 +96,44 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
     memo === undefined ? '' : memo,
     new BlockchainId(sourceId),
     importedInputs
+  )
+}
+
+export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo?: string): AddDelegatorTransaction {
+  const signersAddresses: Address[] = []
+  sendersAddresses.forEach(senderAddress => {
+    signersAddresses.push(new Address(senderAddress))
+  })
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain.assetId, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain.assetId, fee), changeAddress)
+  const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
+  const stake: TransferableOutput[] = [
+    new TransferableOutput(
+      new AssetId(stakedAssetId),
+      new Secp256k1Output(
+        stakeAmount,
+        BigInt(0),
+        1,
+        [new Address(rewardAddress)]
+      )
+    )
+  ]
+  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
+    stakeAmount,
+    BigInt(0),
+    1,
+    [new Address(rewardAddress)]
+  )
+  return new AddDelegatorTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo === undefined ? '' : memo,
+    validator,
+    stake,
+    rewardsOwner
   )
 }

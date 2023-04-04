@@ -1,4 +1,5 @@
 
 export * from './builder'
+export * from './stake'
 export * from './transaction'
-export * from './validator'
+export * from './validation'

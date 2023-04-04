@@ -18,8 +18,6 @@ async function main () {
     const amount: bigint = BigInt(100)
     const targetAddress1: string = 'Asset-june1klee0j2h6te65za6ncdln34an9ml2zg9v3n78u'
     const targetAddress2: string = 'Asset-june1d646n8hnpmg6rqphzxyxj099gwj5smmxnggnmh'
-    const address1: Address = new Address(targetAddress1)
-    const address2: Address = new Address(targetAddress2)
     // if destination is the same as source chain it will create an intra chain transaction
     // if it is different it will create an inter chain transaction
     const destinationChain: Blockchain = BelgradeJVMChain
@@ -31,7 +29,7 @@ async function main () {
             assetId,
             sourceChain,
             amount,
-            address1,
+            targetAddress1,
             destinationChain,
             locktime
         ),
@@ -39,7 +37,7 @@ async function main () {
             assetId,
             sourceChain,
             amount,
-            address2,
+            targetAddress2,
             destinationChain,
             locktime
         )

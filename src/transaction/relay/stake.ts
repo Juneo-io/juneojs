@@ -6,12 +6,13 @@ import { TransactionReceipt, type VMWallet } from '../../wallet'
 import { parseUtxoSet } from '../builder'
 import { Address, NodeId } from '../types'
 import { type Utxo } from '../utxo'
-import { buildAddDelegatorTransaction } from './builder'
+import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from './builder'
 import { AddDelegatorTransaction, RelayTransactionStatus, RelayTransactionStatusFetcher } from './transaction'
 import { type Secp256k1OutputOwners, Validator } from './validation'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
+const ValidationShare: number = 120000
 
 export enum StakeTransaction {
   PrimaryDelegation = 'Primary delegation',
@@ -29,6 +30,16 @@ export class StakeManager {
 
   delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint): StakeHandler {
     const handler: DelegationHandler = new DelegationHandler()
+    void handler.execute(
+      this.provider,
+      this.wallet,
+      new Validator(new NodeId(nodeId), startTime, endTime, amount)
+    )
+    return handler
+  }
+
+  validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint): StakeHandler {
+    const handler: ValidationHandler = new ValidationHandler()
     void handler.execute(
       this.provider,
       this.wallet,
@@ -137,6 +148,33 @@ export class DelegationHandler implements ExecutableStakeHandler {
       relay.assetId, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
     ).sign([relayWallet]).toCHex()
     const transactionId = (await provider.relay.issueTx(addDelegatorTransaction)).txID
+    this.receipt.transactionId = transactionId
+    this.receipt.transactionStatus = RelayTransactionStatus.Unknown
+    const transactionStatus: string = await new RelayTransactionStatusFetcher(provider.relay,
+      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+    this.receipt.transactionStatus = transactionStatus
+  }
+}
+
+export class ValidationHandler implements ExecutableStakeHandler {
+  private receipt: TransactionReceipt | undefined
+
+  getReceipt (): TransactionReceipt | undefined {
+    return this.receipt
+  }
+
+  async execute (provider: MCNProvider, wallet: JuneoWallet, validator: Validator): Promise<void> {
+    const relay: RelayBlockchain = provider.mcn.primary.relay
+    const relayWallet: VMWallet = wallet.getWallet(relay)
+    const senders: string[] = [relayWallet.getAddress()]
+    const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
+    const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
+    this.receipt = new TransactionReceipt(relay.id, StakeTransaction.PrimaryDelegation)
+    const addValidatorTransaction: string = buildAddValidatorTransaction(
+      utxoSet, senders, fee, relay, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      relay.assetId, ValidationShare, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
+    ).sign([relayWallet]).toCHex()
+    const transactionId = (await provider.relay.issueTx(addValidatorTransaction)).txID
     this.receipt.transactionId = transactionId
     this.receipt.transactionStatus = RelayTransactionStatus.Unknown
     const transactionStatus: string = await new RelayTransactionStatusFetcher(provider.relay,

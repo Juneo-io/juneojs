@@ -28,10 +28,12 @@ export class TransferableOutput implements Serializable {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
 
-  static parse (data: string): TransferableOutput {
-    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
-    // start at 2 to skip codec
-    let position: number = 2
+  static parse (data: string | JuneoBuffer): TransferableOutput {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    // start at 2 to skip codec if from string from api
+    let position: number = typeof data === 'string' ? 2 : 0
     const assetId: JuneoBuffer = buffer.read(position, AssetIdSize)
     position += AssetIdSize
     return new TransferableOutput(

@@ -1,4 +1,4 @@
-import { JuneoBuffer, sha256, type Serializable } from '../utils'
+import { JuneoBuffer, sha256, type Serializable, TransactionError } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
@@ -48,6 +48,9 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
     const credentials: JuneoBuffer[] = []
     let credentialsSize: number = 0
     this.getUnsignedInputs().forEach(input => {
+      if (input.input.utxo === undefined) {
+        throw new TransactionError('cannot sign transcations containing invalid utxos as inputs')
+      }
       const indices: number[] = input.input.addressIndices
       const signatures: Signature[] = []
       const threshold: number = input.input.utxo.output.threshold

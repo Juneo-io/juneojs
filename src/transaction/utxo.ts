@@ -1,10 +1,8 @@
 import { TransferableOutput, type TransactionOutput } from './output'
-import { CodecId } from './transaction'
 import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
 import { JuneoBuffer } from '../utils'
 
 export class Utxo {
-  codecId: number = CodecId
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId

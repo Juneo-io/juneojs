@@ -59,9 +59,9 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
       utxo.utxoIndex,
       utxo.assetId,
       new Secp256k1Input(
-        utxo,
         output.amount,
-        getSignersIndices(signersAddresses, utxo.output.addresses)
+        getSignersIndices(signersAddresses, utxo.output.addresses),
+        utxo
       )
     ))
     const assetId: string = utxo.assetId.assetId

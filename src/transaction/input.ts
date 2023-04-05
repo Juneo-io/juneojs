@@ -1,7 +1,9 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, type Serializable } from '../utils'
-import { type AssetId, AssetIdSize, type TransactionId, TransactionIdSize } from './types'
+import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
+import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
 import { type Utxo } from './utxo'
+
+const Secp256k1InputTypeId: number = 0x00000005
 
 export class UserInput {
   assetId: string
@@ -50,22 +52,54 @@ export class TransferableInput implements Serializable {
   static comparator = (a: TransferableInput, b: TransferableInput): number => {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
+
+  static parse (data: string | JuneoBuffer): TransferableInput {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    // start at 2 to skip codec if from string from api
+    let position: number = typeof data === 'string' ? 2 : 0
+    const transactionId: TransactionId = new TransactionId(buffer.read(position, TransactionIdSize).toCB58())
+    position += TransactionIdSize
+    const utxoIndex: number = buffer.readUInt32(position)
+    position += 4
+    const assetId: AssetId = new AssetId(buffer.read(position, AssetIdSize).toCB58())
+    position += AssetIdSize
+    return new TransferableInput(
+      transactionId,
+      utxoIndex,
+      assetId,
+      this.parseInput(buffer.read(position, buffer.length - position))
+    )
+  }
+
+  static parseInput (data: string | JuneoBuffer): TransactionInput & Serializable {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    const typeId: number = buffer.readUInt32(0)
+    if (typeId === Secp256k1InputTypeId) {
+      return Secp256k1Input.parse(data)
+    } else {
+      throw new ParsingError(`unsupported output type id "${typeId}"`)
+    }
+  }
 }
 
 export interface TransactionInput {
-  utxo: Utxo
+  utxo: Utxo | undefined
   typeId: number
   amount: bigint
   addressIndices: number[]
 }
 
 export class Secp256k1Input implements TransactionInput, Serializable {
-  utxo: Utxo
-  readonly typeId: number = 0x00000005
+  utxo: Utxo | undefined
+  readonly typeId: number = Secp256k1InputTypeId
   amount: bigint
   addressIndices: number[]
 
-  constructor (utxo: Utxo, amount: bigint, addressIndices: number[]) {
+  constructor (amount: bigint, addressIndices: number[], utxo?: Utxo) {
     this.utxo = utxo
     this.amount = amount
     this.addressIndices = addressIndices
@@ -86,5 +120,25 @@ export class Secp256k1Input implements TransactionInput, Serializable {
       buffer.writeUInt32(indice)
     })
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): Secp256k1Input {
+    const buffer: JuneoBuffer = typeof data === 'string'
+      ? JuneoBuffer.fromString(data)
+      : data
+    let position: number = 0
+    // skip type id reading
+    position += 4
+    const amount: bigint = buffer.readUInt64(position)
+    position += 8
+    const addressIndicesCount: number = buffer.readUInt32(position)
+    position += 4
+    const indices: number[] = []
+    for (let i = 0; i < addressIndicesCount; i++) {
+      const indice: number = buffer.readUInt32(position)
+      position += 4
+      indices.push(indice)
+    }
+    return new Secp256k1Input(amount, indices)
   }
 }

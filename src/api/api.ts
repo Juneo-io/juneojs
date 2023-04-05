@@ -14,17 +14,17 @@ export abstract class AbstractAPI {
     this.service = service
   }
 
-  protected async callServiceAt (service: string, endpoint: string, method: string, params?: object[]): Promise<JsonRpcResponse> {
+  protected async callServiceAt (service: string, endpoint: string, method: string, params?: object[] | string[]): Promise<JsonRpcResponse> {
     const response: JsonRpcResponse = await this.client.rpcCall(`${BaseEndpoint}${endpoint}`,
       new JsonRpcRequest(`${service}${service.length > 0 ? '.' : ''}${method}`, params))
     return response
   }
 
-  protected async callAt (endpoint: string, method: string, params?: object[]): Promise<JsonRpcResponse> {
+  protected async callAt (endpoint: string, method: string, params?: object[] | string[]): Promise<JsonRpcResponse> {
     return await this.callServiceAt(this.service, endpoint, method, params)
   }
 
-  protected async call (method: string, params?: object[]): Promise<JsonRpcResponse> {
+  protected async call (method: string, params?: object[] | string[]): Promise<JsonRpcResponse> {
     return await this.callAt(this.endpoint, method, params)
   }
 }

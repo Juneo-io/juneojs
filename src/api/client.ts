@@ -76,9 +76,9 @@ export class JuneoClient {
 
 export class JsonRpcRequest {
   method: string
-  params: object[]
+  params: object[] | string[]
 
-  constructor (method: string, params?: object[]) {
+  constructor (method: string, params?: object[] | string[]) {
     this.method = method
     if (params === undefined) {
       this.params = []

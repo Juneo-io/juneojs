@@ -1,12 +1,14 @@
+import { type GetTxResponse } from '../../api/data'
+import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator, type RewardOwner } from '../../api/relay/data'
 import { type RelayBlockchain } from '../../chain'
 import { type JuneoWallet, type MCNProvider } from '../../juneo'
 import { TransactionReceipt, type VMWallet } from '../../wallet'
 import { parseUtxoSet } from '../builder'
-import { NodeId } from '../types'
+import { Address, NodeId } from '../types'
 import { type Utxo } from '../utxo'
 import { buildAddDelegatorTransaction } from './builder'
-import { RelayTransactionStatus, RelayTransactionStatusFetcher } from './transaction'
-import { Validator } from './validation'
+import { AddDelegatorTransaction, RelayTransactionStatus, RelayTransactionStatusFetcher } from './transaction'
+import { type Secp256k1OutputOwners, Validator } from './validation'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
@@ -33,6 +35,78 @@ export class StakeManager {
       new Validator(new NodeId(nodeId), startTime, endTime, amount)
     )
     return handler
+  }
+
+  async pendingRewards (): Promise<StakeReward[]> {
+    const address: Address = new Address(this.wallet.getAddress(this.provider.mcn.primary.relay))
+    const stakeRewards: StakeReward[] = []
+    const validators: GetCurrentValidatorsResponse = await this.provider.relay.getCurrentValidators()
+    for (let i: number = 0; i < validators.validators.length; i++) {
+      const validator: APIValidator = validators.validators[i]
+      const validatorRewards: RewardOwner = validator.validationRewardOwner
+      if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
+        stakeRewards.push(new StakeReward(
+          StakeRewardType.Validation,
+          this.provider.mcn.primary.relay.assetId,
+          validator.txID,
+          BigInt(validator.startTime),
+          BigInt(validator.endTime),
+          BigInt(validator.stakeAmount),
+          validator.nodeID,
+          BigInt(validator.potentialReward)
+        ))
+      }
+      if (validator.delegators === null) {
+        continue
+      }
+      for (let j: number = 0; j < validator.delegators.length; j++) {
+        const delegator: Delegator = validator.delegators[j]
+        const transaction: GetTxResponse = await this.provider.relay.getTx(delegator.txID)
+        const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
+        const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner
+        if (delegatorRewards.addresses.length > 0 && address.matches(delegatorRewards.addresses[0])) {
+          stakeRewards.push(new StakeReward(
+            StakeRewardType.Delegation,
+            this.provider.mcn.primary.relay.assetId,
+            delegator.txID,
+            BigInt(delegator.startTime),
+            BigInt(delegator.endTime),
+            BigInt(delegator.stakeAmount),
+            delegator.nodeID,
+            BigInt(delegator.potentialReward)
+          ))
+        }
+      }
+    }
+    return stakeRewards
+  }
+}
+
+export enum StakeRewardType {
+  Validation = 'Validation',
+  Delegation = 'Delegation'
+}
+
+export class StakeReward {
+  stakeType: string
+  assetId: string
+  transactionId: string
+  startTime: bigint
+  endTime: bigint
+  stakeAmount: bigint
+  nodeId: string
+  potentialReward: bigint
+
+  constructor (stakeType: string, assetId: string, transactionId: string, startTime: bigint,
+    endTime: bigint, stakeAmount: bigint, nodeId: string, potentialReward: bigint) {
+    this.stakeType = stakeType
+    this.assetId = assetId
+    this.transactionId = transactionId
+    this.startTime = startTime
+    this.endTime = endTime
+    this.stakeAmount = stakeAmount
+    this.nodeId = nodeId
+    this.potentialReward = potentialReward
   }
 }
 

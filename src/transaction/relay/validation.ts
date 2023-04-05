@@ -1,5 +1,5 @@
 import { JuneoBuffer, type Serializable } from '../../utils/bytes'
-import { type TransactionOutput } from '../output'
+import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput } from '../output'
 import { Address, AddressSize, NodeId, NodeIdSize } from '../types'
 
 export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
@@ -77,8 +77,17 @@ export class Secp256k1OutputOwners implements TransactionOutput {
       ? JuneoBuffer.fromString(data)
       : data
     let position: number = 0
-    // skip type id reading
+    const typeId: number = buffer.readUInt32(position)
     position += 4
+    // we must check this due to a bug? in current network version
+    if (typeId === Secp256k1OutputTypeId) {
+      const output: Secp256k1Output = Secp256k1Output.parse(buffer)
+      return new Secp256k1OutputOwners(
+        output.locktime,
+        output.threshold,
+        output.addresses
+      )
+    }
     const locktime: bigint = buffer.readUInt64(position)
     position += 8
     const threshold: number = buffer.readUInt32(position)

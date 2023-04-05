@@ -16,7 +16,7 @@ export abstract class AbstractAPI {
 
   protected async callServiceAt (service: string, endpoint: string, method: string, params?: object[]): Promise<JsonRpcResponse> {
     const response: JsonRpcResponse = await this.client.rpcCall(`${BaseEndpoint}${endpoint}`,
-      new JsonRpcRequest(`${service}.${method}`, params))
+      new JsonRpcRequest(`${service}${service.length > 0 ? '.' : ''}${method}`, params))
     return response
   }
 

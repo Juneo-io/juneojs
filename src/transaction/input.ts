@@ -126,9 +126,8 @@ export class Secp256k1Input implements TransactionInput, Serializable {
     const buffer: JuneoBuffer = typeof data === 'string'
       ? JuneoBuffer.fromString(data)
       : data
-    let position: number = 0
-    // skip type id reading
-    position += 4
+    // start at 4 to skip type id reading
+    let position: number = 4
     const amount: bigint = buffer.readUInt64(position)
     position += 8
     const addressIndicesCount: number = buffer.readUInt32(position)

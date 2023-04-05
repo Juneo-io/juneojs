@@ -6,7 +6,7 @@ import { UserInput, type TransferableInput } from '../input'
 import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
 import { Address, AssetId, BlockchainId, NodeId } from '../types'
 import { type Utxo } from '../utxo'
-import { AddDelegatorTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
+import { AddDelegatorTransaction, AddValidatorTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
 import { Validator } from './validation'
 
 export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
@@ -96,6 +96,53 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
     memo === undefined ? '' : memo,
     new BlockchainId(sourceId),
     importedInputs
+  )
+}
+
+export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo?: string): AddValidatorTransaction {
+  const signersAddresses: Address[] = []
+  sendersAddresses.forEach(senderAddress => {
+    signersAddresses.push(new Address(senderAddress))
+  })
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain.assetId, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain.assetId, fee), changeAddress)
+  const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
+  const stake: TransferableOutput[] = [
+    new TransferableOutput(
+      new AssetId(stakedAssetId),
+      new Secp256k1Output(
+        stakeAmount,
+        BigInt(0),
+        1,
+        [new Address(rewardAddress)]
+      )
+    )
+  ]
+  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
+    stakeAmount,
+    BigInt(0),
+    1,
+    [new Address(rewardAddress)]
+  )
+  const changeOutputs: TransferableOutput[] = []
+  outputs.forEach(output => {
+    // no user input means change output
+    if (output.input === undefined) {
+      changeOutputs.push(output)
+    }
+  })
+  return new AddValidatorTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    changeOutputs,
+    inputs,
+    memo === undefined ? '' : memo,
+    validator,
+    stake,
+    rewardsOwner,
+    share
   )
 }
 

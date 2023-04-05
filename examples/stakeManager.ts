@@ -20,6 +20,7 @@ async function main () {
     const endTime: bigint = now() + BigInt(86400 * 15)
     // try to delegate with currently available utxos in the relay chain
     manager.delegate(nodeId, stakeAmount, startTime, endTime)
+    // if you want to validate instead of delegate use manager.validate instead
 
     // get the pending rewards for the wallet of this manager
     const pending: StakeReward[] = await manager.pendingRewards()

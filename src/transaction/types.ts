@@ -23,12 +23,20 @@ export class Address extends BytesData {
 
   matches (address: string | Address): boolean {
     const buffer: JuneoBuffer = typeof address === 'string'
-      ? encoding.decodeBech32(address)
+      ? this.decodeAddress(address)
       : address.getBuffer()
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
     return JuneoBuffer.comparator(buffer, this.getBuffer()) === 0
+  }
+
+  private decodeAddress (address: string): JuneoBuffer {
+    if (encoding.isHex(address)) {
+      return encoding.decodeHex(address)
+    } else {
+      return encoding.decodeBech32(address)
+    }
   }
 }
 

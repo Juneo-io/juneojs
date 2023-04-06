@@ -2,7 +2,7 @@ import { type JEVMAPI } from '../../api/jevm/api'
 import { InputError, JuneoBuffer, sha256, type Serializable } from '../../utils'
 import { sleep } from '../../utils/time'
 import { type VMWallet } from '../../wallet/wallet'
-import { TransferableInput } from '../input'
+import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId } from '../transaction'
@@ -73,7 +73,7 @@ export class EVMOutput implements Serializable {
   }
 }
 
-export class EVMInput implements Serializable, Signable {
+export class EVMInput implements Serializable, Signable, Spendable {
   address: Address
   amount: bigint
   assetId: AssetId
@@ -84,6 +84,14 @@ export class EVMInput implements Serializable, Signable {
     this.amount = amount
     this.assetId = assetId
     this.nonce = nonce
+  }
+
+  getAmount (): bigint {
+    return this.amount
+  }
+
+  getAssetId (): AssetId {
+    return this.assetId
   }
 
   sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {

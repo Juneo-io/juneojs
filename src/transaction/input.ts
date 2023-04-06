@@ -26,7 +26,12 @@ export class UserInput {
   }
 }
 
-export class TransferableInput implements Serializable, Signable {
+export interface Spendable {
+  getAmount: () => bigint
+  getAssetId: () => AssetId
+}
+
+export class TransferableInput implements Serializable, Signable, Spendable {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
@@ -37,6 +42,17 @@ export class TransferableInput implements Serializable, Signable {
     this.utxoIndex = utxoIndex
     this.assetId = assetId
     this.input = input
+  }
+
+  getAmount (): bigint {
+    if (this.input.typeId === Secp256k1InputTypeId) {
+      return (this.input as Secp256k1Input).amount
+    }
+    return BigInt(0)
+  }
+
+  getAssetId (): AssetId {
+    return this.assetId
   }
 
   sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {

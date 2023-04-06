@@ -1,5 +1,5 @@
 import { InputError, OutputError } from '../utils'
-import { Secp256k1Input, TransferableInput, type UserInput } from './input'
+import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
 import { Utxo } from './utxo'
 import * as time from '../utils/time'
@@ -102,7 +102,7 @@ function getSignersIndices (signers: Address[], addresses: Address[]): number[] 
   return indices
 }
 
-export function buildTransactionOutputs (userInputs: UserInput[], inputs: TransferableInput[],
+export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[],
   fee: FeeData, changeAddress: string): UserOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
@@ -133,19 +133,19 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
   const availableAmounts: Record<string, bigint> = {}
   // getting the total amount spendable for each asset in provided inputs
   inputs.forEach(input => {
-    const availableAmount: bigint = availableAmounts[input.assetId.assetId]
-    const amount: bigint = input.input.amount
+    const availableAmount: bigint = availableAmounts[input.getAssetId().assetId]
+    const amount: bigint = input.getAmount()
     if (availableAmount === undefined) {
-      availableAmounts[input.assetId.assetId] = BigInt(amount)
+      availableAmounts[input.getAssetId().assetId] = BigInt(amount)
     } else {
-      availableAmounts[input.assetId.assetId] += BigInt(amount)
+      availableAmounts[input.getAssetId().assetId] += BigInt(amount)
     }
   })
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
   for (let i: number = 0; i < inputs.length; i++) {
-    const input: TransferableInput = inputs[i]
-    const assetId: string = input.assetId.assetId
+    const input: Spendable = inputs[i]
+    const assetId: string = input.getAssetId().assetId
     const spent: bigint = spentAmounts[assetId] === undefined
       ? BigInt(0)
       : spentAmounts[assetId]
@@ -158,7 +158,7 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Transf
     }
     // adding change output to send remaining value into the change address
     outputs.push(new UserOutput(
-      input.assetId, new Secp256k1Output(
+      input.getAssetId(), new Secp256k1Output(
         available - spent,
         // no locktime for the change
         BigInt(0),

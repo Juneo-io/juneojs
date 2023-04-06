@@ -1,10 +1,12 @@
 import { type JEVMAPI } from '../../api/jevm/api'
-import { JuneoBuffer, type Serializable } from '../../utils'
+import { InputError, JuneoBuffer, sha256, type Serializable } from '../../utils'
 import { sleep } from '../../utils/time'
+import { type VMWallet } from '../../wallet/wallet'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
+import { sign, type Signable } from '../signature'
 import { CodecId } from '../transaction'
-import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId } from '../types'
+import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature } from '../types'
 
 const ImportTransactionTypeId: number = 0
 const ExportTransactionTypeId: number = 1
@@ -71,7 +73,7 @@ export class EVMOutput implements Serializable {
   }
 }
 
-export class EVMInput implements Serializable {
+export class EVMInput implements Serializable, Signable {
   address: Address
   amount: bigint
   assetId: AssetId
@@ -82,6 +84,22 @@ export class EVMInput implements Serializable {
     this.amount = amount
     this.assetId = assetId
     this.nonce = nonce
+  }
+
+  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+    const signatures: Signature[] = []
+    const address: Address = this.address
+    for (let i = 0; i < wallets.length; i++) {
+      const wallet: VMWallet = wallets[i]
+      if (address.matches(wallet.getAddress())) {
+        signatures.push(new Signature(wallet.sign(sha256(bytes))))
+        break
+      }
+    }
+    if (signatures.length < 1) {
+      throw new InputError('missing wallets to complete signatures')
+    }
+    return signatures
   }
 
   serialize (): JuneoBuffer {
@@ -118,6 +136,10 @@ export class JEVMExportTransaction implements Serializable {
     this.inputs.sort(EVMInput.comparator)
     this.exportedOutputs = exportedOutputs
     this.exportedOutputs.sort(TransferableOutput.comparator)
+  }
+
+  signTransaction (wallets: VMWallet[]): JuneoBuffer {
+    return sign(this.serialize(), this.inputs, wallets)
   }
 
   serialize (): JuneoBuffer {
@@ -174,6 +196,10 @@ export class JEVMImportTransaction implements Serializable {
     this.importedInputs.sort(TransferableInput.comparator)
     this.outputs = outputs
     this.outputs.sort(EVMOutput.comparator)
+  }
+
+  signTransaction (wallets: VMWallet[]): JuneoBuffer {
+    return sign(this.serialize(), this.importedInputs, wallets)
   }
 
   serialize (): JuneoBuffer {

@@ -1,8 +1,9 @@
 import { JuneoClient, InfoAPI } from './api'
 import { type GetTxFeeResponse } from './api/info/data'
+import { JEVMAPI } from './api/jevm'
 import { JVMAPI } from './api/jvm'
 import { RelayAPI } from './api/relay'
-import { type MCN } from './chain'
+import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain } from './chain'
 import * as params from './chain/params'
 
 export class MCNProvider {
@@ -11,6 +12,7 @@ export class MCNProvider {
   private feesCache: GetTxFeeResponse | undefined
   relay: RelayAPI
   jvm: JVMAPI
+  jevm: Record<string, JEVMAPI> = {}
 
   constructor (mcn?: MCN, client?: JuneoClient) {
     if (mcn === undefined) {
@@ -24,6 +26,15 @@ export class MCNProvider {
     this.info = new InfoAPI(client)
     this.relay = new RelayAPI(client, this.mcn.primary.relay)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)
+    for (let i: number = 0; i < this.mcn.supernets.length; i++) {
+      const supernet: Supernet = this.mcn.supernets[i]
+      for (let j: number = 0; j < supernet.chains.length; j++) {
+        const chain: Blockchain = supernet.chains[j]
+        if (chain.vmId === JEVM_ID) {
+          this.jevm[chain.id] = new JEVMAPI(client, chain as JEVMBlockchain)
+        }
+      }
+    }
   }
 
   async getFees (forceUpdate?: boolean): Promise<GetTxFeeResponse> {

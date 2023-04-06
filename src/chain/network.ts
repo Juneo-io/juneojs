@@ -1,4 +1,4 @@
-import { type JVMBlockchain, type RelayBlockchain, type Blockchain } from './chain'
+import { type JVMBlockchain, type RelayBlockchain, type Blockchain, type JEVMBlockchain } from './chain'
 
 export class MCN {
   address: string
@@ -33,10 +33,14 @@ export class Supernet {
 export class PrimarySupernet extends Supernet {
   relay: RelayBlockchain
   jvm: JVMBlockchain
+  jevm: Record<string, JEVMBlockchain> = {}
 
-  constructor (id: string, chains: Blockchain[], relay: RelayBlockchain, jvm: JVMBlockchain) {
+  constructor (id: string, chains: Blockchain[], relay: RelayBlockchain, jvm: JVMBlockchain, jevm: JEVMBlockchain[]) {
     super(id, chains)
     this.relay = relay
     this.jvm = jvm
+    jevm.forEach(vm => {
+      this.jevm[vm.id] = vm
+    })
   }
 }

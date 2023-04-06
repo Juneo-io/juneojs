@@ -28,7 +28,8 @@ new PrimarySupernet(
     BelgradeJVMChain,
     BelgradeJUNEChain],
   BelgradeRelayChain,
-  BelgradeJVMChain
+  BelgradeJVMChain,
+  [BelgradeJUNEChain]
 )
 
 const BelgradeAddress: string = 'https://api1.mcnpoc4.xyz:9650'

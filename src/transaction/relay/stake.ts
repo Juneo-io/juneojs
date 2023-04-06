@@ -1,5 +1,5 @@
 import { type GetTxResponse } from '../../api/data'
-import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator, type RewardOwner } from '../../api/relay/data'
+import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator } from '../../api/relay/data'
 import { type RelayBlockchain } from '../../chain'
 import { type JuneoWallet, type MCNProvider } from '../../juneo'
 import { TransactionReceipt, type VMWallet } from '../../wallet'
@@ -7,7 +7,7 @@ import { parseUtxoSet } from '../builder'
 import { Address, NodeId } from '../types'
 import { type Utxo } from '../utxo'
 import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from './builder'
-import { AddDelegatorTransaction, RelayTransactionStatus, RelayTransactionStatusFetcher } from './transaction'
+import { AddDelegatorTransaction, AddValidatorTransaction, RelayTransactionStatus, RelayTransactionStatusFetcher } from './transaction'
 import { type Secp256k1OutputOwners, Validator } from './validation'
 
 const StatusFetcherDelay: number = 100
@@ -54,7 +54,9 @@ export class StakeManager {
     const validators: GetCurrentValidatorsResponse = await this.provider.relay.getCurrentValidators()
     for (let i: number = 0; i < validators.validators.length; i++) {
       const validator: APIValidator = validators.validators[i]
-      const validatorRewards: RewardOwner = validator.validationRewardOwner
+      const validatorTx: GetTxResponse = await this.provider.relay.getTx(validator.txID)
+      const validatorTransaction: AddValidatorTransaction = AddValidatorTransaction.parse(validatorTx.tx)
+      const validatorRewards: Secp256k1OutputOwners = validatorTransaction.rewardsOwner
       if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
         stakeRewards.push(new StakeReward(
           StakeRewardType.Validation,

@@ -49,14 +49,14 @@ export class TransferManager {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const txFee: bigint = await FeeManager.calculate(this.provider, source, source)
-      summaries.push(new TransferSummary(TransferType.Base, source, txFee))
+      summaries.push(new TransferSummary(TransferType.Base, inputs, source, txFee))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const destination: Blockchain = inputs[0].destinationChain
       const txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
-      summaries.push(new TransferSummary(TransferType.Cross, source, txFee))
+      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, txFee))
     }
     return summaries
   }
@@ -131,11 +131,13 @@ export class TransferManager {
 
 export class TransferSummary {
   type: string
+  sortedInputs: UserInput[]
   sourceChain: Blockchain
   fee: bigint
 
-  constructor (type: string, sourceChain: Blockchain, fee: bigint) {
+  constructor (type: string, sortedInputs: UserInput[], sourceChain: Blockchain, fee: bigint) {
     this.type = type
+    this.sortedInputs = sortedInputs
     this.sourceChain = sourceChain
     this.fee = fee
   }

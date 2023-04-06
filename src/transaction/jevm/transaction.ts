@@ -6,8 +6,8 @@ import { type TransferableOutput } from '../output'
 import { CodecId } from '../transaction'
 import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId } from '../types'
 
-const ExportTransactionTypeId: number = 1
 const ImportTransactionTypeId: number = 0
+const ExportTransactionTypeId: number = 1
 
 export enum JEVMTransactionStatus {
   Accepted = 'Accepted',
@@ -88,6 +88,114 @@ export class EVMInput implements Serializable {
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
     buffer.writeUInt64(this.nonce)
+    return buffer
+  }
+}
+
+export class JEVMExportTransaction implements Serializable {
+  codecId: number = CodecId
+  typeId: number = ExportTransactionTypeId
+  networkId: number
+  blockchainId: BlockchainId
+  destinationChain: BlockchainId
+  inputs: EVMInput[]
+  exportedOutputs: TransferableOutput[]
+
+  constructor (networkId: number, blockchainId: BlockchainId, destinationChain: BlockchainId,
+    inputs: EVMInput[], exportedOutputs: TransferableOutput[]) {
+    this.networkId = networkId
+    this.blockchainId = blockchainId
+    this.destinationChain = destinationChain
+    this.inputs = inputs
+    this.exportedOutputs = exportedOutputs
+  }
+
+  serialize (): JuneoBuffer {
+    const inputsBytes: JuneoBuffer[] = []
+    let inputsSize: number = 0
+    this.inputs.forEach(input => {
+      const bytes: JuneoBuffer = input.serialize()
+      inputsSize += bytes.length
+      inputsBytes.push(bytes)
+    })
+    const outputsBytes: JuneoBuffer[] = []
+    let outputsSize: number = 0
+    this.exportedOutputs.forEach(output => {
+      const bytes: JuneoBuffer = output.serialize()
+      outputsSize += bytes.length
+      outputsBytes.push(bytes)
+    })
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      // 2 + 4 + 4 + 4 + 4 = 18
+      18 + BlockchainIdSize * 2 + inputsSize + outputsSize
+    )
+    buffer.writeUInt16(this.codecId)
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt32(this.networkId)
+    buffer.write(this.blockchainId.serialize())
+    buffer.write(this.destinationChain.serialize())
+    buffer.writeUInt32(this.inputs.length)
+    inputsBytes.forEach(input => {
+      buffer.write(input)
+    })
+    buffer.writeUInt32(this.exportedOutputs.length)
+    outputsBytes.forEach(output => {
+      buffer.write(output)
+    })
+    return buffer
+  }
+}
+
+export class JEVMImportTransaction implements Serializable {
+  codecId: number = CodecId
+  typeId: number = ImportTransactionTypeId
+  networkId: number
+  blockchainId: BlockchainId
+  sourceChain: BlockchainId
+  importedInputs: TransferableInput[]
+  outputs: EVMOutput[]
+
+  constructor (networkId: number, blockchainId: BlockchainId, sourceChain: BlockchainId,
+    importedInputs: TransferableInput[], outputs: EVMOutput[]) {
+    this.networkId = networkId
+    this.blockchainId = blockchainId
+    this.sourceChain = sourceChain
+    this.importedInputs = importedInputs
+    this.outputs = outputs
+  }
+
+  serialize (): JuneoBuffer {
+    const inputsBytes: JuneoBuffer[] = []
+    let inputsSize: number = 0
+    this.importedInputs.forEach(input => {
+      const bytes: JuneoBuffer = input.serialize()
+      inputsSize += bytes.length
+      inputsBytes.push(bytes)
+    })
+    const outputsBytes: JuneoBuffer[] = []
+    let outputsSize: number = 0
+    this.outputs.forEach(output => {
+      const bytes: JuneoBuffer = output.serialize()
+      outputsSize += bytes.length
+      outputsBytes.push(bytes)
+    })
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      // 2 + 4 + 4 + 4 + 4 = 18
+      18 + BlockchainIdSize * 2 + inputsSize + outputsSize
+    )
+    buffer.writeUInt16(this.codecId)
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt32(this.networkId)
+    buffer.write(this.blockchainId.serialize())
+    buffer.write(this.sourceChain.serialize())
+    buffer.writeUInt32(this.importedInputs.length)
+    inputsBytes.forEach(input => {
+      buffer.write(input)
+    })
+    buffer.writeUInt32(this.outputs.length)
+    outputsBytes.forEach(output => {
+      buffer.write(output)
+    })
     return buffer
   }
 }

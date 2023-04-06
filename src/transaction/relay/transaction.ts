@@ -109,6 +109,62 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     buffer.writeUInt32(this.shares)
     return buffer
   }
+
+  static parse (data: string): AddValidatorTransaction {
+    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
+    // start at 2 + 4 to skip codec and type id reading
+    let position: number = 6
+    const networkId: number = buffer.readUInt32(position)
+    position += 4
+    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
+    position += BlockchainIdSize
+    const outputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const outputs: TransferableOutput[] = []
+    for (let i: number = 0; i < outputsLength; i++) {
+      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
+      position += output.serialize().length
+      outputs.push(output)
+    }
+    const inputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const inputs: TransferableInput[] = []
+    for (let i: number = 0; i < inputsLength; i++) {
+      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
+      position += input.serialize().length
+      inputs.push(input)
+    }
+    const memoLength: number = buffer.readUInt32(position)
+    position += 4
+    const memo: string = memoLength > 0
+      ? String(buffer.read(position, memoLength))
+      : ''
+    position += memoLength
+    const validator: Validator = Validator.parse(buffer.read(position, buffer.length - position))
+    position += Validator.Size
+    const stakeLength: number = buffer.readUInt32(position)
+    position += 4
+    const stakes: TransferableOutput[] = []
+    for (let i: number = 0; i < stakeLength; i++) {
+      const stake: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
+      position += stake.serialize().length
+      stakes.push(stake)
+    }
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
+    position += rewardsOwner.serialize().length
+    const shares: number = buffer.readUInt32(position)
+    return new AddValidatorTransaction(
+      networkId,
+      blockchainId,
+      outputs,
+      inputs,
+      memo,
+      validator,
+      stakes,
+      rewardsOwner,
+      shares
+    )
+  }
 }
 
 export class AddDelegatorTransaction extends AbstractBaseTransaction {

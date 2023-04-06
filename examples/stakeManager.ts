@@ -1,5 +1,5 @@
 import { MCNProvider, JuneoWallet } from "../dist"
-import { StakeManager, StakeReward } from "../dist/transaction/relay/stake"
+import { StakeManager, StakeReward } from "../dist/wallet/stake"
 import { now } from "../dist/utils"
 
 async function main () {

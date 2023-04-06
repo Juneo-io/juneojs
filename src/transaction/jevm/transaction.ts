@@ -1,8 +1,8 @@
 import { type JEVMAPI } from '../../api/jevm/api'
 import { JuneoBuffer, type Serializable } from '../../utils'
 import { sleep } from '../../utils/time'
-import { type TransferableInput } from '../input'
-import { type TransferableOutput } from '../output'
+import { TransferableInput } from '../input'
+import { TransferableOutput } from '../output'
 import { CodecId } from '../transaction'
 import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId } from '../types'
 
@@ -65,6 +65,10 @@ export class EVMOutput implements Serializable {
     buffer.write(this.assetId.serialize())
     return buffer
   }
+
+  static comparator = (a: EVMOutput, b: EVMOutput): number => {
+    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+  }
 }
 
 export class EVMInput implements Serializable {
@@ -90,6 +94,10 @@ export class EVMInput implements Serializable {
     buffer.writeUInt64(this.nonce)
     return buffer
   }
+
+  static comparator = (a: EVMInput, b: EVMInput): number => {
+    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+  }
 }
 
 export class JEVMExportTransaction implements Serializable {
@@ -107,7 +115,9 @@ export class JEVMExportTransaction implements Serializable {
     this.blockchainId = blockchainId
     this.destinationChain = destinationChain
     this.inputs = inputs
+    this.inputs.sort(EVMInput.comparator)
     this.exportedOutputs = exportedOutputs
+    this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
   serialize (): JuneoBuffer {
@@ -161,7 +171,9 @@ export class JEVMImportTransaction implements Serializable {
     this.blockchainId = blockchainId
     this.sourceChain = sourceChain
     this.importedInputs = importedInputs
+    this.importedInputs.sort(TransferableInput.comparator)
     this.outputs = outputs
+    this.outputs.sort(EVMOutput.comparator)
   }
 
   serialize (): JuneoBuffer {

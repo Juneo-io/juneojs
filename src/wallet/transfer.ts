@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { FeeManager, JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { parseUtxoSet } from '../transaction/builder'
@@ -48,15 +48,17 @@ export class TransferManager {
     for (const key in intraTransfersInputs) {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
-      const txFee: bigint = await FeeManager.calculate(this.provider, source, source)
+      const txFee: bigint = await source.queryBaseFee(this.provider)
       summaries.push(new TransferSummary(TransferType.Base, inputs, source, txFee))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
-      const source: Blockchain = inputs[0].sourceChain
-      const destination: Blockchain = inputs[0].destinationChain
-      const txFee: bigint = await FeeManager.calculate(this.provider, source, destination)
-      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, txFee))
+      // because of previously sorting should always be safe casting here
+      const source: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
+      const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
+      const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
+      const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
+      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, exportFee + importFee))
     }
     return summaries
   }
@@ -274,7 +276,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const senders: string[] = [wallet.getAddress()]
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
-    const importFee: bigint = await destinationChain.queryImportFee(provider)
+    const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = jvm.buildJVMExportTransaction(
@@ -303,7 +305,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const senders: string[] = [wallet.getAddress()]
     const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
-    const importFee: bigint = await destinationChain.queryImportFee(provider)
+    const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = relay.buildRelayExportTransaction(

@@ -1,7 +1,9 @@
 import { isAddress } from 'ethers'
 import { validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
-import { MCNProvider } from '../juneo'
+import { type MCNProvider } from '../juneo'
+import { type UserInput } from '../transaction'
+import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -33,10 +35,10 @@ export interface JEVMBlockchain {
 }
 
 export interface Crossable {
-  
-  queryExportFee: (provider: MCNProvider) => Promise<bigint>
 
-  queryImportFee: (provider: MCNProvider) => Promise<bigint>
+  queryExportFee: (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string) => Promise<bigint>
+
+  queryImportFee: (provider: MCNProvider, userInputs: UserInput[]) => Promise<bigint>
 
 }
 
@@ -85,11 +87,11 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
     return BigInt((await provider.getFees()).txFee)
   }
 
-  async queryExportFee (provider: MCNProvider): Promise<bigint> {
+  async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
-  async queryImportFee (provider: MCNProvider): Promise<bigint> {
+  async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 }
@@ -110,12 +112,12 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
-  
-  async queryExportFee (provider: MCNProvider): Promise<bigint> {
+
+  async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
-  async queryImportFee (provider: MCNProvider): Promise<bigint> {
+  async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 }
@@ -137,14 +139,26 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    throw new Error('not implemented yet')
+    return BigInt.asUintN(64, await provider.jevm[this.id].eth_baseFee())
   }
 
-  async queryExportFee (provider: MCNProvider): Promise<bigint> {
-    throw new Error('not implemented yet')
+  async queryExportFee (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string): Promise<bigint> {
+    const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
+      userInputs, this.assetId, importFeeAssetId, false
+    )
+    const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
+    const gasUsed: bigint = BigInt(1) * BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10000)
+    const baseFee: bigint = await this.queryBaseFee(provider)
+    return gasUsed * baseFee
   }
 
-  async queryImportFee (provider: MCNProvider): Promise<bigint> {
-    throw new Error('not implemented yet')
+  async queryImportFee (provider: MCNProvider, userInputs: UserInput[]): Promise<bigint> {
+    const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
+      userInputs, this.assetId, false
+    )
+    const size: number = JEVMImportTransaction.estimateSize(signaturesCount)
+    const gasUsed: bigint = BigInt(1) * BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10000)
+    const baseFee: bigint = await this.queryBaseFee(provider)
+    return gasUsed * baseFee
   }
 }

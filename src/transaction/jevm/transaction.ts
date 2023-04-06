@@ -2,11 +2,11 @@ import { type JEVMAPI } from '../../api/jevm/api'
 import { InputError, JuneoBuffer, sha256, type Serializable } from '../../utils'
 import { sleep } from '../../utils/time'
 import { type VMWallet } from '../../wallet/wallet'
-import { type Spendable, TransferableInput } from '../input'
+import { type Spendable, TransferableInput, type UserInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId } from '../transaction'
-import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature } from '../types'
+import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
 
 const ImportTransactionTypeId: number = 0
 const ExportTransactionTypeId: number = 1
@@ -48,6 +48,7 @@ export class JEVMTransactionStatusFetcher {
 }
 
 export class EVMOutput implements Serializable {
+  static Size: number = AddressSize + 8 + AssetIdSize
   address: Address
   amount: bigint
   assetId: AssetId
@@ -59,9 +60,7 @@ export class EVMOutput implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      AddressSize + 8 + AssetIdSize
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(EVMOutput.Size)
     buffer.write(this.address.serialize())
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
@@ -74,6 +73,7 @@ export class EVMOutput implements Serializable {
 }
 
 export class EVMInput implements Serializable, Signable, Spendable {
+  static Size: number = AddressSize + 8 + AssetIdSize + 8
   address: Address
   amount: bigint
   assetId: AssetId
@@ -111,9 +111,7 @@ export class EVMInput implements Serializable, Signable, Spendable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      AddressSize + 8 + AssetIdSize + 8
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(EVMInput.Size)
     buffer.write(this.address.serialize())
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
@@ -184,6 +182,40 @@ export class JEVMExportTransaction implements Serializable {
     })
     return buffer
   }
+
+  static estimateSignaturesCount (userInputs: UserInput[], exportFeeAssetId: string, importFeeAssetId: string, mergingInputs: boolean = false): number {
+    // see if import/export fee outputs will be merged with user outputs only if merging after estimate
+    let ignoreImportFee: boolean = false
+    let ignoreExportFee: boolean = false
+    if (mergingInputs) {
+      userInputs.forEach(input => {
+        if (input.assetId === exportFeeAssetId) {
+          ignoreExportFee = true
+        }
+        if (input.assetId === importFeeAssetId) {
+          ignoreImportFee = true
+        }
+      })
+    }
+    let feeInputsCount: number = ignoreImportFee ? 0 : 1
+    // import and export fee could also be merged together
+    if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
+      feeInputsCount += 1
+    }
+    return userInputs.length + feeInputsCount
+  }
+
+  static estimateSize (inputsCount: number): number {
+    // 2 + 4 + 4 + 4 + 4 = 18
+    return 18 + BlockchainIdSize * 2 + EVMInput.Size * inputsCount + this.estimateOutputsSize(inputsCount)
+  }
+
+  private static estimateOutputsSize (inputsCount: number): number {
+    // TransferableOutput size
+    // 4 + 8 + 8 + 4 + 4 = 28 + 20 * addressesCount
+    // addresses count most likely will be 1 so = 48
+    return AssetIdSize + 48 * inputsCount
+  }
 }
 
 export class JEVMImportTransaction implements Serializable {
@@ -243,5 +275,31 @@ export class JEVMImportTransaction implements Serializable {
       buffer.write(output)
     })
     return buffer
+  }
+
+  static estimateSignaturesCount (userInputs: UserInput[], feeAssetId: string, mergingInputs: boolean = false): number {
+    // fee output will be merged with user outputs if has same asset id and explicitly merged after estimate
+    let ignoreFeeInput: boolean = false
+    if (mergingInputs) {
+      userInputs.forEach(input => {
+        if (input.assetId === feeAssetId) {
+          ignoreFeeInput = true
+        }
+      })
+    }
+    const feeInputsCount: number = ignoreFeeInput ? 0 : 1
+    return userInputs.length + feeInputsCount
+  }
+
+  static estimateSize (inputsCount: number): number {
+    // 2 + 4 + 4 + 4 + 4 = 18
+    return 18 + BlockchainIdSize * 2 + this.estimateInputsSize(inputsCount) + EVMOutput.Size * inputsCount
+  }
+
+  private static estimateInputsSize (inputsCount: number): number {
+    // TransferableInput size
+    // 4 + 8 + 4 = 16 + 4 * addressesCount
+    // addresses count most likely will be 1 so = 20
+    return TransactionIdSize + 4 + AssetIdSize + 20 * inputsCount
   }
 }

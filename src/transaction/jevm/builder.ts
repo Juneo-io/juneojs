@@ -1,10 +1,10 @@
 import { InputError, OutputError } from '../../utils/errors'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
-import { Spendable, TransferableInput, UserInput } from '../input'
-import { Secp256k1Output, type TransferableOutput, type UserOutput } from '../output'
+import { type Spendable, type TransferableInput, UserInput } from '../input'
+import { type TransferableOutput, type UserOutput } from '../output'
 import { Address, AssetId, BlockchainId } from '../types'
-import { Utxo } from '../utxo'
+import { type Utxo } from '../utxo'
 import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } from './transaction'
 
 export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: FeeData[]): EVMInput[] {
@@ -29,7 +29,7 @@ export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: Tra
   const outputs: EVMOutput[] = []
   userInputs.forEach(input => {
     const assetId: string = input.assetId
-    new EVMOutput(new Address(input.address), input.amount, new AssetId(assetId))
+    outputs.push(new EVMOutput(new Address(input.address), input.amount, new AssetId(assetId)))
     const spentAmount: bigint = spentAmounts[assetId]
     if (spentAmount === undefined) {
       spentAmounts[assetId] = input.amount

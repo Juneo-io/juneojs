@@ -73,20 +73,28 @@ export class TransferManager {
       const intraTransfer: Transfer = new Transfer(
         inputs[0].sourceChain, inputs[0].destinationChain, inputs, this.wallet
       )
-      const handler: ExecutableTransferHandler = new IntraChainTransferHandler()
-      handlers.push(handler)
-      void handler.execute(this.provider, intraTransfer)
+      handlers.push(new IntraChainTransferHandler(intraTransfer))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       const interTransfer: Transfer = new Transfer(
         inputs[0].sourceChain, inputs[0].destinationChain, inputs, this.wallet
       )
-      const handler: ExecutableTransferHandler = new InterChainTransferHandler()
-      handlers.push(handler)
-      void handler.execute(this.provider, interTransfer)
+      handlers.push(new InterChainTransferHandler(interTransfer))
     }
+    // we cannot do parallel transfers because they all have the same source chain
+    // and if they use utxos we must wait before one transaction is done to be more
+    // easily able to calculate which utxo to use for the others
+    // if we want to parallelize this process it would require some rework on how
+    // the utxos are fetch during transaction building
+    void this.executeHandlers(handlers)
     return handlers
+  }
+
+  private async executeHandlers (handlers: ExecutableTransferHandler[]): Promise<void> {
+    for (let i: number = 0; i < handlers.length; i++) {
+      await handlers[i].execute(this.provider)
+    }
   }
 
   private sortInputs (userInputs: UserInput[]): Array<Record<string, UserInput[]>> {
@@ -183,14 +191,18 @@ export interface TransferHandler {
 
 interface ExecutableTransferHandler extends TransferHandler {
 
-  execute: (provider: MCNProvider, transfer: Transfer) => Promise<void>
+  execute: (provider: MCNProvider) => Promise<void>
 
 }
 
 class IntraChainTransferHandler implements ExecutableTransferHandler {
   private status: string = TransferStatus.Initializing
-  private transfer: Transfer | undefined
+  private readonly transfer: Transfer
   private readonly receipts: TransactionReceipt[] = []
+
+  constructor (transfer: Transfer) {
+    this.transfer = transfer
+  }
 
   getStatus (): string {
     return this.status
@@ -204,10 +216,9 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     return this.receipts
   }
 
-  async execute (provider: MCNProvider, transfer: Transfer): Promise<void> {
-    this.transfer = transfer
-    if (transfer.sourceChain.vmId === JVM_ID) {
-      await this.executeJVMTransfer(provider, transfer)
+  async execute (provider: MCNProvider): Promise<void> {
+    if (this.transfer.sourceChain.vmId === JVM_ID) {
+      await this.executeJVMTransfer(provider, this.transfer)
     } else {
       this.status = TransferStatus.Error
       throw new IntraChainTransferError('unsupported vm id')
@@ -242,8 +253,12 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
 
 class InterChainTransferHandler implements ExecutableTransferHandler {
   private status: string = TransferStatus.Initializing
-  private transfer: Transfer | undefined
+  private readonly transfer: Transfer
   private readonly receipts: TransactionReceipt[] = []
+
+  constructor (transfer: Transfer) {
+    this.transfer = transfer
+  }
 
   getStatus (): string {
     return this.status
@@ -257,12 +272,11 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     return this.receipts
   }
 
-  async execute (provider: MCNProvider, transfer: Transfer): Promise<void> {
-    this.transfer = transfer
-    if (transfer.sourceChain.vmId === JVM_ID) {
-      await this.executeJVMTransfer(provider, transfer)
-    } else if (transfer.sourceChain.vmId === RELAYVM_ID) {
-      await this.executeRelayTransfer(provider, transfer)
+  async execute (provider: MCNProvider): Promise<void> {
+    if (this.transfer.sourceChain.vmId === JVM_ID) {
+      await this.executeJVMTransfer(provider, this.transfer)
+    } else if (this.transfer.sourceChain.vmId === RELAYVM_ID) {
+      await this.executeRelayTransfer(provider, this.transfer)
     } else {
       this.status = TransferStatus.Error
       throw new InterChainTransferError('unsupported export vm id')

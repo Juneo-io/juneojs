@@ -2,7 +2,6 @@ import { type JVMAPI } from '../../api/jvm'
 import { sleep } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
-import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
 
@@ -46,7 +45,7 @@ export class JVMTransactionStatusFetcher {
   }
 }
 
-export class BaseTransaction extends AbstractBaseTransaction implements Signable {
+export class BaseTransaction extends AbstractBaseTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
     super(BaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)

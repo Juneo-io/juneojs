@@ -221,7 +221,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const transaction: string = jvm.buildJVMBaseTransaction(
       transfer.userInputs, utxoSet, senders, fee,
       wallet.getAddress(), provider.mcn.id, chainId
-    ).sign([wallet]).toCHex()
+    ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await provider.jvm.issueTx(transaction)).txID
     receipt.transactionId = transactionId
@@ -278,7 +278,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const exportTransaction: string = jvm.buildJVMExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
       exportFee, importFee, wallet.getAddress(), provider.mcn.id, sourceChain.id
-    ).sign([wallet]).toCHex()
+    ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await provider.jvm.issueTx(exportTransaction)).txID
     receipt.transactionId = transactionId
@@ -307,7 +307,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const exportTransaction: string = relay.buildRelayExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
       exportFee, importFee, wallet.getAddress(), provider.mcn.id, sourceChain.id
-    ).sign([wallet]).toCHex()
+    ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await provider.relay.issueTx(exportTransaction)).txID
     receipt.transactionId = transactionId
@@ -341,7 +341,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importTransaction: string = relay.buildRelayImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
       fee, wallet.getAddress(), provider.mcn.id
-    ).sign([transfer.signer.getWallet(sourceChain)]).toCHex()
+    ).signTransaction([transfer.signer.getWallet(sourceChain)]).toCHex()
     const transactionId: string = (await provider.relay.issueTx(importTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new RelayTransactionStatusFetcher(provider.relay,
@@ -359,7 +359,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importTransaction: string = jvm.buildJVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
       fee, wallet.getAddress(), provider.mcn.id
-    ).sign([transfer.signer.getWallet(sourceChain)]).toCHex()
+    ).signTransaction([transfer.signer.getWallet(sourceChain)]).toCHex()
     const transactionId: string = (await provider.jvm.issueTx(importTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm,

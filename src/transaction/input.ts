@@ -1,6 +1,8 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
-import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
+import { InputError, JuneoBuffer, ParsingError, sha256, type Serializable } from '../utils'
+import { type VMWallet } from '../wallet'
+import { type Signable } from './signature'
+import { type Address, AssetId, AssetIdSize, Signature, TransactionId, TransactionIdSize } from './types'
 import { type Utxo } from './utxo'
 
 const Secp256k1InputTypeId: number = 0x00000005
@@ -24,7 +26,7 @@ export class UserInput {
   }
 }
 
-export class TransferableInput implements Serializable {
+export class TransferableInput implements Serializable, Signable {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
@@ -35,6 +37,29 @@ export class TransferableInput implements Serializable {
     this.utxoIndex = utxoIndex
     this.assetId = assetId
     this.input = input
+  }
+
+  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+    if (this.input.utxo === undefined) {
+      throw new InputError('cannot sign read only inputs')
+    }
+    const indices: number[] = this.input.addressIndices
+    const signatures: Signature[] = []
+    const threshold: number = this.input.utxo.output.threshold
+    for (let i = 0; i < threshold && i < indices.length; i++) {
+      const address: Address = this.input.utxo.output.addresses[i]
+      for (let j = 0; j < wallets.length; j++) {
+        const wallet: VMWallet = wallets[j]
+        if (address.matches(wallet.getAddress())) {
+          signatures.push(new Signature(wallet.sign(sha256(bytes))))
+          break
+        }
+      }
+    }
+    if (signatures.length < threshold) {
+      throw new InputError('missing wallets to complete signatures')
+    }
+    return signatures
   }
 
   serialize (): JuneoBuffer {

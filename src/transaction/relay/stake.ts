@@ -148,7 +148,7 @@ export class DelegationHandler implements ExecutableStakeHandler {
     const addDelegatorTransaction: string = buildAddDelegatorTransaction(
       utxoSet, senders, fee, relay, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       relay.assetId, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
-    ).sign([relayWallet]).toCHex()
+    ).signTransaction([relayWallet]).toCHex()
     const transactionId = (await provider.relay.issueTx(addDelegatorTransaction)).txID
     this.receipt.transactionId = transactionId
     this.receipt.transactionStatus = RelayTransactionStatus.Unknown
@@ -175,7 +175,7 @@ export class ValidationHandler implements ExecutableStakeHandler {
     const addValidatorTransaction: string = buildAddValidatorTransaction(
       utxoSet, senders, fee, relay, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       relay.assetId, ValidationShare, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
-    ).sign([relayWallet]).toCHex()
+    ).signTransaction([relayWallet]).toCHex()
     const transactionId = (await provider.relay.issueTx(addValidatorTransaction)).txID
     this.receipt.transactionId = transactionId
     this.receipt.transactionStatus = RelayTransactionStatus.Unknown

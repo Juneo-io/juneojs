@@ -1,9 +1,9 @@
-import { JuneoBuffer, sha256, type Serializable, TransactionError } from '../utils'
+import { JuneoBuffer, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
-import { Secp256k1Credentials } from './signature'
-import { type BlockchainId, BlockchainIdSize, Signature, type Address } from './types'
+import { sign } from './signature'
+import { type BlockchainId, BlockchainIdSize } from './types'
 
 export const CodecId: number = 0
 
@@ -15,7 +15,7 @@ export interface UnsignedTransaction {
   outputs: TransferableOutput[]
   inputs: TransferableInput[]
   memo: string
-  sign: (wallets: VMWallet[]) => JuneoBuffer
+  signTransaction: (wallets: VMWallet[]) => JuneoBuffer
   getUnsignedInputs: () => TransferableInput[]
 }
 
@@ -43,40 +43,8 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
 
   abstract getUnsignedInputs (): TransferableInput[]
 
-  sign (wallets: VMWallet[]): JuneoBuffer {
-    const bytes: JuneoBuffer = this.serialize()
-    const credentials: JuneoBuffer[] = []
-    let credentialsSize: number = 0
-    this.getUnsignedInputs().forEach(input => {
-      if (input.input.utxo === undefined) {
-        throw new TransactionError('cannot sign transcations containing invalid utxos as inputs')
-      }
-      const indices: number[] = input.input.addressIndices
-      const signatures: Signature[] = []
-      const threshold: number = input.input.utxo.output.threshold
-      for (let i = 0; i < threshold && i < indices.length; i++) {
-        const address: Address = input.input.utxo.output.addresses[i]
-        for (let j = 0; j < wallets.length; j++) {
-          const wallet: VMWallet = wallets[j]
-          if (address.matches(wallet.getAddress())) {
-            signatures.push(new Signature(wallet.sign(sha256(bytes))))
-            break
-          }
-        }
-      }
-      const credential: JuneoBuffer = new Secp256k1Credentials(signatures).serialize()
-      credentialsSize += credential.length
-      credentials.push(credential)
-    })
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      bytes.length + 4 + credentialsSize
-    )
-    buffer.write(bytes)
-    buffer.writeUInt32(credentials.length)
-    credentials.forEach(credential => {
-      buffer.write(credential)
-    })
-    return buffer
+  signTransaction (wallets: VMWallet[]): JuneoBuffer {
+    return sign(this.serialize(), this.getUnsignedInputs(), wallets)
   }
 
   serialize (): JuneoBuffer {

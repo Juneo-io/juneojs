@@ -144,21 +144,22 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
 
   async queryExportFee (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string): Promise<bigint> {
     const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      userInputs, this.assetId, importFeeAssetId, false
+      userInputs, this.assetId, importFeeAssetId
     )
     const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    const gasUsed: bigint = BigInt(1) * BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10000)
+    const gasUsed: bigint = BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10_000)
     const baseFee: bigint = await this.queryBaseFee(provider)
-    return gasUsed * baseFee
+    return gasUsed * baseFee / BigInt(1_000_000_000)
   }
 
   async queryImportFee (provider: MCNProvider, userInputs: UserInput[]): Promise<bigint> {
+    const mergedInputs: boolean = false
     const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
-      userInputs, this.assetId, false
+      userInputs, this.assetId, mergedInputs
     )
-    const size: number = JEVMImportTransaction.estimateSize(signaturesCount)
-    const gasUsed: bigint = BigInt(1) * BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10000)
+    const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
+    const gasUsed: bigint = BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10_000)
     const baseFee: bigint = await this.queryBaseFee(provider)
-    return gasUsed * baseFee
+    return gasUsed * baseFee / BigInt(1_000_000_000)
   }
 }

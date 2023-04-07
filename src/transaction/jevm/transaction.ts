@@ -1,7 +1,7 @@
 import { type JEVMAPI } from '../../api/jevm/api'
 import { InputError, JuneoBuffer, sha256, type Serializable } from '../../utils'
 import { sleep } from '../../utils/time'
-import { type VMWallet } from '../../wallet/wallet'
+import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput, type UserInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
@@ -98,8 +98,11 @@ export class EVMInput implements Serializable, Signable, Spendable {
     const signatures: Signature[] = []
     const address: Address = this.address
     for (let i = 0; i < wallets.length; i++) {
-      const wallet: VMWallet = wallets[i]
-      if (address.matches(wallet.getAddress())) {
+      if (!(wallets[i] instanceof JEVMWallet)) {
+        continue
+      }
+      const wallet: JEVMWallet = wallets[i] as JEVMWallet
+      if (address.matches(wallet.getHexAddress())) {
         signatures.push(new Signature(wallet.sign(sha256(bytes))))
         break
       }
@@ -183,20 +186,18 @@ export class JEVMExportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (userInputs: UserInput[], exportFeeAssetId: string, importFeeAssetId: string, mergingInputs: boolean = false): number {
+  static estimateSignaturesCount (userInputs: UserInput[], exportFeeAssetId: string, importFeeAssetId: string): number {
     // see if import/export fee outputs will be merged with user outputs only if merging after estimate
     let ignoreImportFee: boolean = false
     let ignoreExportFee: boolean = false
-    if (mergingInputs) {
-      userInputs.forEach(input => {
-        if (input.assetId === exportFeeAssetId) {
-          ignoreExportFee = true
-        }
-        if (input.assetId === importFeeAssetId) {
-          ignoreImportFee = true
-        }
-      })
-    }
+    userInputs.forEach(input => {
+      if (input.assetId === exportFeeAssetId) {
+        ignoreExportFee = true
+      }
+      if (input.assetId === importFeeAssetId) {
+        ignoreImportFee = true
+      }
+    })
     let feeInputsCount: number = ignoreImportFee ? 0 : 1
     // import and export fee could also be merged together
     if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
@@ -206,8 +207,10 @@ export class JEVMExportTransaction implements Serializable {
   }
 
   static estimateSize (inputsCount: number): number {
+    // for now consider inputs + 2 outputs for fees outputs
+    const outputsCount: number = inputsCount + 2
     // 2 + 4 + 4 + 4 + 4 = 18
-    return 18 + BlockchainIdSize * 2 + EVMInput.Size * inputsCount + this.estimateOutputsSize(inputsCount)
+    return 18 + BlockchainIdSize * 2 + EVMInput.Size * inputsCount + this.estimateOutputsSize(outputsCount)
   }
 
   private static estimateOutputsSize (inputsCount: number): number {
@@ -277,10 +280,10 @@ export class JEVMImportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (userInputs: UserInput[], feeAssetId: string, mergingInputs: boolean = false): number {
+  static estimateSignaturesCount (userInputs: UserInput[], feeAssetId: string, mergedInputs: boolean): number {
     // fee output will be merged with user outputs if has same asset id and explicitly merged after estimate
     let ignoreFeeInput: boolean = false
-    if (mergingInputs) {
+    if (mergedInputs) {
       userInputs.forEach(input => {
         if (input.assetId === feeAssetId) {
           ignoreFeeInput = true
@@ -291,15 +294,16 @@ export class JEVMImportTransaction implements Serializable {
     return userInputs.length + feeInputsCount
   }
 
-  static estimateSize (inputsCount: number): number {
+  static estimateSize (inputsCount: number, mergedInputs: boolean): number {
+    const outputsCount: number = mergedInputs ? inputsCount : inputsCount - 1
     // 2 + 4 + 4 + 4 + 4 = 18
-    return 18 + BlockchainIdSize * 2 + this.estimateInputsSize(inputsCount) + EVMOutput.Size * inputsCount
+    return 18 + BlockchainIdSize * 2 + this.estimateInputsSize(inputsCount) + EVMOutput.Size * outputsCount
   }
 
   private static estimateInputsSize (inputsCount: number): number {
     // TransferableInput size
     // 4 + 8 + 4 = 16 + 4 * addressesCount
     // addresses count most likely will be 1 so = 20
-    return TransactionIdSize + 4 + AssetIdSize + 20 * inputsCount
+    return (TransactionIdSize + 4 + AssetIdSize + 20) * inputsCount
   }
 }

@@ -2,26 +2,36 @@ import { InputError, OutputError } from '../../utils/errors'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
 import { type Spendable, type TransferableInput, UserInput } from '../input'
-import { type TransferableOutput, type UserOutput } from '../output'
+import { type UserOutput } from '../output'
 import { Address, AssetId, BlockchainId } from '../types'
 import { type Utxo } from '../utxo'
 import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } from './transaction'
 
 export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: FeeData[]): EVMInput[] {
   const inputs: EVMInput[] = []
-  let nextNonce: bigint = nonce
-  // adding fees
-  fees.forEach(fee => {
-    inputs.push(new EVMInput(new Address(signer), fee.amount, new AssetId(fee.assetId), nextNonce++))
-  })
   // adding inputs
   userInputs.forEach(userInput => {
-    inputs.push(new EVMInput(new Address(signer), userInput.amount, new AssetId(userInput.assetId), nextNonce++))
+    inputs.push(new EVMInput(new Address(signer), userInput.amount, new AssetId(userInput.assetId), nonce))
+  })
+  // adding fees
+  fees.forEach(fee => {
+    let merged: boolean = false
+    // try to merge fee with an input if we can
+    inputs.forEach(input => {
+      if (input.assetId.assetId === fee.assetId) {
+        merged = true
+        input.amount += fee.amount
+      }
+    })
+    // adding fee as a new input if could not merge
+    if (!merged) {
+      inputs.push(new EVMInput(new Address(signer), fee.amount, new AssetId(fee.assetId), nonce))
+    }
   })
   return inputs
 }
 
-export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: TransferableInput[], feeData: FeeData, changeAddress: string): EVMOutput[] {
+export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: TransferableInput[], feeData: FeeData): EVMOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
   spentAmounts[feeData.assetId] = feeData.amount
@@ -60,23 +70,12 @@ export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: Tra
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')
     }
-    if (spent === available) {
-      continue
-    }
-    // adding change output to send remaining value into the change address
-    outputs.push(new EVMOutput(new Address(changeAddress), available - spent, input.getAssetId()))
-    // adding the spending of the change output
-    if (spentAmounts[assetId] === undefined) {
-      spentAmounts[assetId] = available - spent
-    } else {
-      spentAmounts[assetId] += available - spent
-    }
   }
   return outputs
 }
 
 export function buildJEVMExportTransaction (userInputs: UserInput[], signer: string, nonce: bigint, exportAddress: string,
-  sourceFee: bigint, destinationFee: bigint, changeAddress: string, networkId: number): JEVMExportTransaction {
+  sourceFee: bigint, destinationFee: bigint, networkId: number): JEVMExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -105,18 +104,9 @@ export function buildJEVMExportTransaction (userInputs: UserInput[], signer: str
   fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
     destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
   )
-  const outputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, changeAddress)
-  const exportedOutputs: TransferableOutput[] = []
-  const changeOutputs: TransferableOutput[] = []
-  // lets do an extra safety check for change outputs eventhough there should be none with evm inputs
-  outputs.forEach(output => {
-    // no user input means change output
-    if (output.input !== undefined) {
-      exportedOutputs.push(output)
-    } else {
-      changeOutputs.push(output)
-    }
-  })
+  // we provide a change address but this will not be used here because
+  // inputs will have fixed value as they are EVM Inputs
+  const exportedOutputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, signer)
   return new JEVMExportTransaction(
     networkId,
     new BlockchainId(sourceId),
@@ -127,7 +117,7 @@ export function buildJEVMExportTransaction (userInputs: UserInput[], signer: str
 }
 
 export function buildJEVMImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number): JEVMImportTransaction {
+  fee: bigint, networkId: number): JEVMImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -147,7 +137,7 @@ export function buildJEVMImportTransaction (userInputs: UserInput[], utxoSet: Ut
   })
   const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
   const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
-  const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData, changeAddress)
+  const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData)
   return new JEVMImportTransaction(
     networkId,
     new BlockchainId(destinationId),

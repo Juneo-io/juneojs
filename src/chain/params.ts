@@ -2,34 +2,27 @@ import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet } from './network'
 
 export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
+export const BelgradeUSDC1AssetId: string = 'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv'
+export const BelgradeBUSD1AssetId: string = '2h4isjyZaNpKf5qFt5gBfAZGXcWRVgUqVaNYE9LRFNrF4rqKwx'
+export const BelgradeEUROC1AssetId: string = '2dBT199DhU99qgohAbG1oYM9PuGoAy6xPpBJ4EUDhPpCKyF7n3'
+export const BelgradePAXG1AssetId: string = 'XP39Jfa56x33U269ejiKgP6XZ5GXkMZX5m7ZR63u3gDSZVShs'
+export const BelgradeMBTC1AssetId: string = 'tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4M4Y9xRmxQ18zuX'
 
 export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(
   BelgradeJUNEAssetId,
   ['Relay']
 )
-export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain(
-  'JVM Chain',
-  'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q',
-  BelgradeJUNEAssetId,
-  ['Asset']
-)
-export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain(
-  'JUNE Chain',
-  '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
-  BelgradeJUNEAssetId,
-  BigInt(330001),
-  ['JUNE']
-)
+export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
+export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5', BelgradeJUNEAssetId, BigInt(330001), ['JUNE'])
+export const BelgradeUSDC1Chain: JEVMBlockchain = new JEVMBlockchain('USDC1-Chain', '2q7wRN9B835BxcpkAtiyaYqF9SDrKY9wPmkq6osNjxrTccZViq', BelgradeUSDC1AssetId, BigInt(330002), ['USDC1'])
+export const BelgradeBUSD1Chain: JEVMBlockchain = new JEVMBlockchain('BUSD1-Chain', '2Pg3FsDKyPKTMH179zN6vQN9248gqcqLAx2dvasxjqKZ8oCePX', BelgradeBUSD1AssetId, BigInt(330003), ['BUSD1'])
+export const BelgradeEUROC1Chain: JEVMBlockchain = new JEVMBlockchain('EUROC1-Chain', 'v1Kt7z7GAjsfJzHF7r2UPXWCpEF6U7wQaGmKyzHSBZeYmpCvH', BelgradeEUROC1AssetId, BigInt(330004), ['EUROC1'])
+export const BelgradePAXG1Chain: JEVMBlockchain = new JEVMBlockchain('PAXG1-Chain', 'r3YpRNgLLXJBPbihK23us9MnJ3Jcncz2gCUbuzWrw1LyhtFBD', BelgradePAXG1AssetId, BigInt(330005), ['PAXG1'])
+export const BelgradeMBTC1Chain: JEVMBlockchain = new JEVMBlockchain('mBTC1-Chain', 'uvSeFKmQG1H7J1Zd4obsdqr2YNEtR397htc6pVUZdHFnkoEf5', BelgradeMBTC1AssetId, BigInt(330006), ['mBTC1'])
 
-export const BelgradePrimarySupernet: PrimarySupernet =
-new PrimarySupernet(
-  '11111111111111111111111111111111LpoYY',
-  [BelgradeRelayChain,
-    BelgradeJVMChain,
-    BelgradeJUNEChain],
-  BelgradeRelayChain,
-  BelgradeJVMChain,
-  [BelgradeJUNEChain]
+export const BelgradePrimarySupernet: PrimarySupernet = new PrimarySupernet('11111111111111111111111111111111LpoYY',
+  [BelgradeRelayChain, BelgradeJVMChain, BelgradeJUNEChain, BelgradeUSDC1Chain, BelgradeBUSD1Chain, BelgradeEUROC1Chain, BelgradePAXG1Chain, BelgradeMBTC1Chain],
+  BelgradeRelayChain, BelgradeJVMChain
 )
 
 const BelgradeAddress: string = 'https://api1.mcnpoc4.xyz:9650'

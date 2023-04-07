@@ -183,7 +183,7 @@ export class JVMWallet extends AbstractVMWallet {
 }
 
 export class JEVMWallet extends AbstractVMWallet {
-  private readonly evmWallet: Wallet
+  evmWallet: Wallet
   evmAddress: string
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {

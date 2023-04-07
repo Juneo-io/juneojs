@@ -1,5 +1,5 @@
-import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, type JEVMBlockchain } from '../chain'
-import { type MCNProvider } from '../juneo'
+import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
+import { transaction, type MCNProvider } from '../juneo'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
@@ -8,7 +8,9 @@ import * as jvm from '../transaction/jvm'
 import * as jevm from '../transaction/jevm'
 import * as relay from '../transaction/relay'
 import { type JEVMAPI } from '../api/jevm'
-import { JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
+import { EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
+import { JsonRpcProvider, Wallet, type ethers, hexlify } from 'ethers'
+import { type TransactionRequest } from 'ethers/types/providers'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
@@ -255,12 +257,41 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       this.status = TransferStatus.Done
     }
   }
-  
+
   private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
     const sourceChain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
     const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
-    const fee: bigint = await sourceChain.queryBaseFee(provider)
-    throw new Error('not implemented yet')
+    const ethProvider: ethers.JsonRpcProvider = sourceChain.ethProvider
+    const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
+    const api: JEVMAPI = provider.jevm[sourceChain.id]
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    const gasPrice: bigint = await api.eth_baseFee()
+    this.status = TransferStatus.Sending
+    for (let i: number = 0; i < transfer.userInputs.length; i++) {
+      const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Send)
+      this.receipts.push(receipt)
+      const input: UserInput = transfer.userInputs[i]
+      const transactionData: TransactionRequest = {
+        from: evmWallet.address,
+        to: input.address,
+        value: input.amount,
+        nonce: Number(nonce++),
+        chainId: sourceChain.chainId,
+        gasLimit: JEVMBlockchain.SendEtherGasLimit,
+        gasPrice
+      }
+      const transaction: string = await evmWallet.signTransaction(transactionData)
+      const transactionHash: string = await api.eth_sendRawTransaction(transaction)
+      receipt.transactionId = transactionHash
+      const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+        StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+      receipt.transactionStatus = transactionStatus
+      if (transactionStatus !== JEVMTransactionStatus.Accepted) {
+        this.status = TransferStatus.Timeout
+      } else {
+        this.status = TransferStatus.Done
+      }
+    }
   }
 }
 

@@ -55,4 +55,14 @@ export class JEVMAPI extends AbstractChainAPI {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getChainConfig')
     return response.result
   }
+
+  async eth_getBalance (address: string, block: string): Promise<bigint> {
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getBalance', [address, block])
+    return response.result
+  }
+
+  async eth_getTransactionCount (address: string, block: string): Promise<bigint> {
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionCount', [address, block])
+    return response.result
+  }
 }

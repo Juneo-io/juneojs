@@ -13,7 +13,7 @@ export const NodeIdSize: number = 20
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
     const buffer: JuneoBuffer = typeof address === 'string'
-      ? encoding.decodeBech32(address)
+      ? Address.decodeAddress(address)
       : address
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
@@ -23,7 +23,7 @@ export class Address extends BytesData {
 
   matches (address: string | Address): boolean {
     const buffer: JuneoBuffer = typeof address === 'string'
-      ? this.decodeAddress(address)
+      ? Address.decodeAddress(address)
       : address.getBuffer()
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
@@ -31,7 +31,7 @@ export class Address extends BytesData {
     return JuneoBuffer.comparator(buffer, this.getBuffer()) === 0
   }
 
-  private decodeAddress (address: string): JuneoBuffer {
+  private static decodeAddress (address: string): JuneoBuffer {
     if (encoding.isHex(address)) {
       return encoding.decodeHex(address)
     } else {

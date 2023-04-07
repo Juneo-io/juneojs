@@ -67,6 +67,8 @@ export class StakeManager {
           BigInt(validator.endTime),
           BigInt(validator.stakeAmount),
           validator.nodeID,
+          validator.uptime,
+          validator.connected,
           BigInt(validator.potentialReward)
         ))
       }
@@ -87,6 +89,8 @@ export class StakeManager {
             BigInt(delegator.endTime),
             BigInt(delegator.stakeAmount),
             delegator.nodeID,
+            validator.uptime,
+            validator.connected,
             BigInt(delegator.potentialReward)
           ))
         }
@@ -109,10 +113,12 @@ export class StakeReward {
   endTime: bigint
   stakeAmount: bigint
   nodeId: string
+  nodeUptime: string
+  nodeConnected: boolean
   potentialReward: bigint
 
-  constructor (stakeType: string, assetId: string, transactionId: string, startTime: bigint,
-    endTime: bigint, stakeAmount: bigint, nodeId: string, potentialReward: bigint) {
+  constructor (stakeType: string, assetId: string, transactionId: string, startTime: bigint, endTime: bigint,
+    stakeAmount: bigint, nodeId: string, nodeUptime: string, nodeConnected: boolean, potentialReward: bigint) {
     this.stakeType = stakeType
     this.assetId = assetId
     this.transactionId = transactionId
@@ -120,6 +126,8 @@ export class StakeReward {
     this.endTime = endTime
     this.stakeAmount = stakeAmount
     this.nodeId = nodeId
+    this.nodeUptime = nodeUptime
+    this.nodeConnected = nodeConnected
     this.potentialReward = potentialReward
   }
 }

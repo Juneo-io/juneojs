@@ -124,6 +124,7 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 }
 
 export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain, Crossable {
+  static readonly SendEtherGasLimit: bigint = BigInt(21000)
   chainId: bigint
   ethProvider: JsonRpcProvider
 

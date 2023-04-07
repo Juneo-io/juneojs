@@ -47,6 +47,53 @@ export class JEVMTransactionStatusFetcher {
   }
 }
 
+export enum EVMTransactionStatus {
+  Success = 'Success',
+  Failure = 'Failure',
+  Pending = 'Pending',
+  Unknown = 'Unknown'
+}
+
+enum EVMReceiptStatus {
+  Failure = 0,
+  Success = 1
+}
+
+export class EVMTransactionStatusFetcher {
+  jevmApi: JEVMAPI
+  delay: number
+  private attempts: number = 0
+  maxAttempts: number
+  transactionHash: string
+  currentStatus: string = EVMTransactionStatus.Unknown
+
+  constructor (jevmApi: JEVMAPI, delay: number, maxAttempts: number, transactionHash: string) {
+    this.jevmApi = jevmApi
+    this.delay = delay
+    this.maxAttempts = maxAttempts
+    this.transactionHash = transactionHash
+  }
+
+  getAttemptsCount (): number {
+    return this.attempts
+  }
+
+  async fetch (): Promise<string> {
+    this.currentStatus = EVMTransactionStatus.Pending
+    while (this.attempts < this.maxAttempts && this.currentStatus !== EVMTransactionStatus.Success) {
+      await sleep(this.delay)
+      const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
+      if (receipt === null) {
+        this.attempts += 1
+        continue
+      }
+      const status: number = Number(receipt.status)
+      this.currentStatus = status === 1 ? EVMTransactionStatus.Success : EVMTransactionStatus.Failure
+    }
+    return this.currentStatus
+  }
+}
+
 export class EVMOutput implements Serializable {
   static Size: number = AddressSize + 8 + AssetIdSize
   address: Address

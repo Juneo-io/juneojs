@@ -40,12 +40,16 @@ export class RelayTransactionStatusFetcher {
   }
 
   async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && this.currentStatus !== RelayTransactionStatus.Committed) {
-      this.currentStatus = (await this.relayApi.getTxStatus(this.transactionId)).status
+    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
+      this.currentStatus = (await this.relayApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
+  }
+
+  private isCurrentStatusSettled (): boolean {
+    return this.currentStatus !== RelayTransactionStatus.Unknown && this.currentStatus !== RelayTransactionStatus.Processing
   }
 }
 

@@ -36,12 +36,16 @@ export class JVMTransactionStatusFetcher {
   }
 
   async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && this.currentStatus !== JVMTransactionStatus.Accepted) {
-      this.currentStatus = (await this.jvmApi.getTxStatus(this.transactionId)).status
+    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
+      this.currentStatus = (await this.jvmApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
+  }
+
+  private isCurrentStatusSettled (): boolean {
+    return this.currentStatus !== JVMTransactionStatus.Unknown && this.currentStatus !== JVMTransactionStatus.Processing
   }
 }
 

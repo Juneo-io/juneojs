@@ -38,12 +38,16 @@ export class JEVMTransactionStatusFetcher {
   }
 
   async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && this.currentStatus !== JEVMTransactionStatus.Accepted) {
-      this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
+    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
+      this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
+  }
+
+  private isCurrentStatusSettled (): boolean {
+    return this.currentStatus !== JEVMTransactionStatus.Unknown && this.currentStatus !== JEVMTransactionStatus.Processing
   }
 }
 
@@ -52,11 +56,6 @@ export enum EVMTransactionStatus {
   Failure = 'Failure',
   Pending = 'Pending',
   Unknown = 'Unknown'
-}
-
-enum EVMReceiptStatus {
-  Failure = 0,
-  Success = 1
 }
 
 export class EVMTransactionStatusFetcher {

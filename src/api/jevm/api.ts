@@ -38,17 +38,17 @@ export class JEVMAPI extends AbstractChainAPI {
 
   async eth_getAssetBalance (address: string, block: string, assetID: string): Promise<bigint> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getAssetBalance', [address, block, assetID])
-    return response.result
+    return BigInt.asUintN(64, response.result)
   }
 
   async eth_baseFee (): Promise<bigint> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_baseFee')
-    return response.result
+    return BigInt.asUintN(64, response.result)
   }
 
   async eth_maxPriorityFeePerGas (): Promise<bigint> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_maxPriorityFeePerGas')
-    return response.result
+    return BigInt.asUintN(64, response.result)
   }
 
   async eth_getChainConfig (): Promise<JSON> {
@@ -58,11 +58,11 @@ export class JEVMAPI extends AbstractChainAPI {
 
   async eth_getBalance (address: string, block: string): Promise<bigint> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getBalance', [address, block])
-    return response.result
+    return BigInt.asUintN(64, response.result)
   }
 
   async eth_getTransactionCount (address: string, block: string): Promise<bigint> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionCount', [address, block])
-    return response.result
+    return BigInt.asUintN(64, response.result)
   }
 }

@@ -1,4 +1,4 @@
-import { isAddress } from 'ethers'
+import { JsonRpcProvider, isAddress } from 'ethers'
 import { validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 import { type MCNProvider } from '../juneo'
@@ -28,9 +28,10 @@ export interface Blockchain {
 
 }
 
-export interface JEVMBlockchain {
+export interface EVMBlockchain {
 
   chainId: bigint
+  ethProvider: JsonRpcProvider
 
 }
 
@@ -122,12 +123,14 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   }
 }
 
-export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain, Crossable {
+export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain, Crossable {
   chainId: bigint
+  ethProvider: JsonRpcProvider
 
-  constructor (name: string, id: string, assetId: string, chainId: bigint, aliases?: string[]) {
+  constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[]) {
     super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
+    this.ethProvider = new JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {
@@ -139,7 +142,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements JEVMBlockchain
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt.asUintN(64, await provider.jevm[this.id].eth_baseFee())
+    return await provider.jevm[this.id].eth_baseFee()
   }
 
   async queryExportFee (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string): Promise<bigint> {

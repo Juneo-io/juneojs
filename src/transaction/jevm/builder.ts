@@ -9,25 +9,29 @@ import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } fro
 
 export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: FeeData[]): EVMInput[] {
   const inputs: EVMInput[] = []
-  // adding inputs
+  const values: Record<string, bigint> = {}
+  // merging inputs
   userInputs.forEach(userInput => {
-    inputs.push(new EVMInput(new Address(signer), userInput.amount, new AssetId(userInput.assetId), nonce))
-  })
-  // adding fees
-  fees.forEach(fee => {
-    let merged: boolean = false
-    // try to merge fee with an input if we can
-    inputs.forEach(input => {
-      if (input.assetId.assetId === fee.assetId) {
-        merged = true
-        input.amount += fee.amount
-      }
-    })
-    // adding fee as a new input if could not merge
-    if (!merged) {
-      inputs.push(new EVMInput(new Address(signer), fee.amount, new AssetId(fee.assetId), nonce))
+    const assetId: string = userInput.assetId
+    if (values[assetId] === undefined) {
+      values[assetId] = userInput.amount
+    } else {
+      values[assetId] += userInput.amount
     }
   })
+  // adding and merging fees
+  fees.forEach(fee => {
+    const assetId: string = fee.assetId
+    if (values[assetId] === undefined) {
+      values[assetId] = fee.amount
+    } else {
+      values[assetId] += fee.amount
+    }
+  })
+  // adding inputs
+  for (const key in values) {
+    inputs.push(new EVMInput(new Address(signer), values[key], new AssetId(key), nonce))
+  }
   return inputs
 }
 

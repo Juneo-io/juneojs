@@ -21,11 +21,13 @@ export function buildTransactionEVMInputs (userInputs: UserInput[], signer: stri
   })
   // adding and merging fees
   fees.forEach(fee => {
-    const assetId: string = fee.assetId
-    if (values[assetId] === undefined) {
-      values[assetId] = fee.amount
-    } else {
-      values[assetId] += fee.amount
+    if (fee.amount > 0) {
+      const assetId: string = fee.assetId
+      if (values[assetId] === undefined) {
+        values[assetId] = fee.amount
+      } else {
+        values[assetId] += fee.amount
+      }
     }
   })
   // adding inputs
@@ -63,7 +65,6 @@ export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: Tra
     }
   })
   // verifying that inputs have the funds to pay for the spent amounts
-  // also adding extra outputs to avoid losses if we have unspent values
   for (let i: number = 0; i < inputs.length; i++) {
     const input: Spendable = inputs[i]
     const assetId: string = input.getAssetId().assetId

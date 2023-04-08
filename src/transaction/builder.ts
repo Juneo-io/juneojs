@@ -20,7 +20,9 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   signersAddresses: Address[], fees: FeeData[]): TransferableInput[] {
   const targetAmounts: Record<string, bigint> = {}
   fees.forEach(fee => {
-    targetAmounts[fee.assetId] = fee.amount
+    if (fee.amount > 0) {
+      targetAmounts[fee.assetId] = fee.amount
+    }
   })
   // gathering data needed to build transaction inputs
   userInputs.forEach(input => {

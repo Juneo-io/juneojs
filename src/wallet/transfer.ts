@@ -397,7 +397,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
     const exportFee: bigint = await sourceChain.queryExportFee(provider, transfer.userInputs, destinationChain.assetId)
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
-    const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+    const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getHexAddress(), destinationChain.assetId)
     const canExportFee: boolean = sourceBalance >= importFee
     const api: JEVMAPI = provider.jevm[sourceChain.id]
     const nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')

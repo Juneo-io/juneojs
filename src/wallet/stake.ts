@@ -10,10 +10,12 @@ import { AddDelegatorTransaction, AddValidatorTransaction, RelayTransactionStatu
 import { type Secp256k1OutputOwners, Validator } from '../transaction/relay/validation'
 import { TransactionReceipt } from './transfer'
 import { type VMWallet } from './wallet'
+import { calculatePrimary, now } from '../utils'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
-const ValidationShare: number = 120000
+const ValidationShare: number = 12_0000 // 12%
+const DelegationShare: number = 100_0000 - ValidationShare
 
 export enum StakeTransaction {
   PrimaryDelegation = 'Primary delegation',
@@ -27,6 +29,16 @@ export class StakeManager {
   constructor (provider: MCNProvider, wallet: JuneoWallet) {
     this.provider = provider
     this.wallet = wallet
+  }
+
+  estimateValidation (stakePeriod: bigint, stakeAmount: bigint): bigint {
+    return calculatePrimary(stakePeriod, now(), stakeAmount)
+  }
+
+  estimateDelegation (stakePeriod: bigint, stakeAmount: bigint): bigint {
+    let rewards: bigint = calculatePrimary(stakePeriod, now(), stakeAmount)
+    rewards = rewards * BigInt(DelegationShare) / BigInt(1000000)
+    return rewards
   }
 
   delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint): StakeHandler {

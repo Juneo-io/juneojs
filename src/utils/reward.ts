@@ -14,9 +14,9 @@ const ConstantPercentage: bigint = PercentDenominator
 
 // used for non Primary supernet rewards
 export function calculate (targetReward: bigint, stakePeriod: bigint, stakeAmount: bigint): bigint {
-    const timePercentage: bigint = stakePeriod * PercentDenominator / MaxStakePeriod
-    const bonusRewards: bigint = stakePeriod * PercentDenominator / MaxStakePeriod * MaxPeriodBonusReward / PercentDenominator
-    return getTimeRewardsValue(targetReward, targetReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
+  const timePercentage: bigint = stakePeriod * PercentDenominator / MaxStakePeriod
+  const bonusRewards: bigint = stakePeriod * PercentDenominator / MaxStakePeriod * MaxPeriodBonusReward / PercentDenominator
+  return getTimeRewardsValue(targetReward, targetReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
 }
 
 export function calculatePrimary (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
@@ -37,8 +37,8 @@ function getTimeRewards (currentTime: bigint, stakeAmount: bigint, bonusRewards:
   }
   if (currentTime >= StartRewardYear) {
     // rewarding period
-      return getTimeRewardsValue(StartReward, DiminishingRewardTarget, bonusRewards, timePercentage,
-        getTimeBoundsPercentage(StartRewardYear, DiminishingRewardYear, currentTime), stakeAmount)
+    return getTimeRewardsValue(StartReward, DiminishingRewardTarget, bonusRewards, timePercentage,
+      getTimeBoundsPercentage(StartRewardYear, DiminishingRewardYear, currentTime), stakeAmount)
   }
   // start period or before
   return getTimeRewardsValue(StartReward, StartReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
@@ -62,7 +62,7 @@ function getTimeRewardsValue (lowerValue: bigint, upperValue: bigint, bonusRewar
 
 function getTimeBoundsPercentage (lowerTimeBound: bigint, upperTimeBound: bigint, currentTime: bigint): bigint {
   let periodValue: bigint = currentTime
-  let periodValueDenominator: bigint = upperTimeBound - lowerTimeBound
+  const periodValueDenominator: bigint = upperTimeBound - lowerTimeBound
   periodValue -= lowerTimeBound
   periodValue *= PercentDenominator
   periodValue /= periodValueDenominator

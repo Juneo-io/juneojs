@@ -1,9 +1,10 @@
-import { JsonRpcProvider, isAddress } from 'ethers'
+import { ethers } from 'ethers'
 import { validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 import { type MCNProvider } from '../juneo'
 import { type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
+import { type JEVMAPI } from '../api/jevm'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -24,6 +25,8 @@ export interface Blockchain {
 
   validateAddress: (address: string) => boolean
 
+  queryBalance: (provider: MCNProvider, address: string, assetId: string) => Promise<bigint>
+
   queryBaseFee: (provider: MCNProvider) => Promise<bigint>
 
 }
@@ -31,7 +34,7 @@ export interface Blockchain {
 export interface EVMBlockchain {
 
   chainId: bigint
-  ethProvider: JsonRpcProvider
+  ethProvider: ethers.JsonRpcProvider
 
 }
 
@@ -69,6 +72,8 @@ export abstract class AbstractBlockchain implements Blockchain {
   abstract validateAddress (address: string): boolean
 
   abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
+
+  abstract queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint>
 }
 
 export class RelayBlockchain extends AbstractBlockchain implements Crossable {
@@ -82,6 +87,11 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
 
   validateAddress (address: string): boolean {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
+  }
+
+  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
+    const balance: number = (await provider.relay.getBalance([address])).balances[assetId]
+    return balance === undefined ? BigInt(0) : BigInt(balance)
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
@@ -110,6 +120,10 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
   }
 
+  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
+    return BigInt((await provider.jvm.getBalance(address, assetId)).balance)
+  }
+
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
@@ -126,12 +140,12 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain, Crossable {
   static readonly SendEtherGasLimit: bigint = BigInt(21000)
   chainId: bigint
-  ethProvider: JsonRpcProvider
+  ethProvider: ethers.JsonRpcProvider
 
   constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[]) {
     super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
-    this.ethProvider = new JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
+    this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {
@@ -139,7 +153,12 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
   }
 
   validateAddress (address: string): boolean {
-    return isAddress(address)
+    return ethers.isAddress(address)
+  }
+
+  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
+    const api: JEVMAPI = provider.jevm[this.id]
+    return await api.eth_getAssetBalance(address, 'latest', assetId)
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {

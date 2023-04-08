@@ -5,19 +5,23 @@ import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
 import hdKey from 'hdkey'
 
-const EVM_HD_PATH = "m/44'/60'/0'/0/0"
-const JVM_HD_PATH = "m/44'/9000'/0'/0/0"
+const EvmHdPath = "m/44'/60'/0'/0/0"
+const JvmHdPath = "m/44'/9000'/0'/0/0"
 
-const JVM_PRIVATE_KEY_PREFIX = 'PrivateKey-'
-const DEFAULT_HRP = 'june'
+const JvmPrivateKeyPrefix = 'PrivateKey-'
+const PrivateKeyLength: number = 64
+const DefaultHrp = 'june'
 
 export function validatePrivateKey (data: string): boolean {
   if (encoding.isHex(data)) {
-    return true
+    const hasPrefix: boolean = encoding.hasHexPrefix(data)
+    const length = hasPrefix ? data.substring(2).length : data.length
+    return length === PrivateKeyLength
   }
-  if (data.includes(JVM_PRIVATE_KEY_PREFIX)) {
+  if (data.includes(JvmPrivateKeyPrefix)) {
     const split: string[] = data.split('-')
-    return split.length > 1 && encoding.isBase58(split[1])
+    const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
+    return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
   }
   return false
 }
@@ -34,7 +38,7 @@ export class JuneoWallet {
   chainsWallets: Record<string, VMWallet> = {}
 
   private constructor (hrp?: string) {
-    this.hrp = hrp === undefined ? DEFAULT_HRP : hrp
+    this.hrp = hrp === undefined ? DefaultHrp : hrp
   }
 
   getAddress (chain: Blockchain): string {
@@ -68,7 +72,7 @@ export class JuneoWallet {
     // affecation after declaration to prevent linter to remove value
     wallet = undefined
     if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(JVM_HD_PATH).privateKey.toString('hex')
+      const privateKey = this.hdNode.derive(JvmHdPath).privateKey.toString('hex')
       wallet = new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JVMWallet(this.privateKey, this.hrp, chain)
@@ -84,7 +88,7 @@ export class JuneoWallet {
     // affecation after declaration to prevent linter to remove value
     wallet = undefined
     if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(EVM_HD_PATH).privateKey.toString('hex')
+      const privateKey = this.hdNode.derive(EvmHdPath).privateKey.toString('hex')
       wallet = new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JEVMWallet(this.privateKey, this.hrp, chain)
@@ -178,7 +182,7 @@ export class JVMWallet extends AbstractVMWallet {
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
     const jvmKey: string = encoding.encodeCB58(JuneoBuffer.fromString(privateKey, 'hex'))
-    this.jvmPrivateKey = `${JVM_PRIVATE_KEY_PREFIX}${jvmKey}`
+    this.jvmPrivateKey = `${JvmPrivateKeyPrefix}${jvmKey}`
   }
 }
 

@@ -158,6 +158,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
     const api: JEVMAPI = provider.jevm[this.id]
+    if (assetId === this.assetId) {
+      return await api.eth_getBalance(address, 'latest')
+    }
     return await api.eth_getAssetBalance(address, 'latest', assetId)
   }
 

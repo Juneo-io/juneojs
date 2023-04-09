@@ -4,13 +4,15 @@ export class MCN {
   address: string
   id: number
   hrp: string
+  stakeConfig: StakeConfig
   primary: PrimarySupernet
   supernets: Supernet[]
 
-  constructor (address: string, id: number, hrp: string, primary: PrimarySupernet, supernets?: Supernet[]) {
+  constructor (address: string, id: number, hrp: string, stakeConfig: StakeConfig, primary: PrimarySupernet, supernets?: Supernet[]) {
     this.address = address
     this.id = id
     this.hrp = hrp
+    this.stakeConfig = stakeConfig
     this.primary = primary
     if (supernets === undefined) {
       this.supernets = [this.primary]
@@ -28,6 +30,25 @@ export class MCN {
       }
     }
     return undefined
+  }
+}
+
+export class StakeConfig {
+  uptimeRequirement: number
+  minValidatorStake: number
+  maxValidatorStake: number
+  minDelegatorStake: number
+  minStakeDuration: number
+  maxStakeDuration: number
+
+  constructor (uptimeRequirement: number, minValidatorStake: number, maxValidatorStake: number,
+    minDelegatorStake: number, minStakeDuration: number, maxStakeDuration: number) {
+    this.uptimeRequirement = uptimeRequirement
+    this.minValidatorStake = minValidatorStake
+    this.maxValidatorStake = maxValidatorStake
+    this.minDelegatorStake = minDelegatorStake
+    this.minStakeDuration = minStakeDuration
+    this.maxStakeDuration = maxStakeDuration
   }
 }
 

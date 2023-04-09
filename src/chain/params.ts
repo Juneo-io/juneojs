@@ -1,5 +1,5 @@
 import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
-import { MCN, PrimarySupernet } from './network'
+import { MCN, PrimarySupernet, StakeConfig } from './network'
 
 export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
 export const BelgradeUSDC1AssetId: string = 'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv'
@@ -29,7 +29,12 @@ export const BelgradePrimarySupernet: PrimarySupernet = new PrimarySupernet('111
   BelgradeRelayChain, BelgradeJVMChain
 )
 
-export const BelgradeNetwork: MCN = new MCN(BelgradeAddress, 1, 'june', BelgradePrimarySupernet)
+export const BelgradeStakeConfig: StakeConfig = new StakeConfig(
+  // 80%, 100, 45000, 0.01, 14 days, 365 days
+  0.8, 100_000000000, 45000_000000000, 10000000, 2 * 7 * 24 * 3600, 365 * 24 * 3600
+)
+
+export const BelgradeNetwork: MCN = new MCN(BelgradeAddress, 1, 'june', BelgradeStakeConfig, BelgradePrimarySupernet)
 // TODO Update when testnet is online
 export const TestNetwork: MCN = BelgradeNetwork
 // TODO Update when mainnet is online

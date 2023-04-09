@@ -40,10 +40,12 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
       exportAddress, input.destinationChain)
     )
   })
-  // adding fees as user input to be able to export it
-  fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
-    destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
-  )
+  if (destinationFeeData.amount > BigInt(0)) {
+    // adding fees as user input to be able to export it
+    fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
+      destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
+    )
+  }
   const outputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, changeAddress)
   const exportedOutputs: TransferableOutput[] = []
   const changeOutputs: TransferableOutput[] = []

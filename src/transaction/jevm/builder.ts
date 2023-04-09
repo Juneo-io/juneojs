@@ -105,10 +105,12 @@ export function buildJEVMExportTransaction (userInputs: UserInput[], signer: str
       exportAddress, input.destinationChain)
     )
   })
-  // adding fees as user input to be able to export it
-  fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
-    destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
-  )
+  if (destinationFeeData.amount > BigInt(0)) {
+    // adding fees as user input to be able to export it
+    fixedUserInputs.push(new UserInput(destinationFeeData.assetId, userInputs[0].sourceChain,
+      destinationFeeData.amount, exportAddress, userInputs[0].destinationChain)
+    )
+  }
   // we provide a change address but this will not be used here because
   // inputs will have fixed value as they are EVM Inputs
   const exportedOutputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, signer)

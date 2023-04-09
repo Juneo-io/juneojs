@@ -436,7 +436,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   private async executeRelayImport (provider: MCNProvider, transfer: Transfer, fee: bigint, isFeeImported: boolean): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    let utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id))
+    let utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
     if (!isFeeImported) {
       const utxos: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()]))
       utxoSet = utxoSet.concat(utxos)
@@ -458,7 +458,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   private async executeJVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint, isFeeImported: boolean): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    let utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id))
+    let utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
     if (!isFeeImported) {
       const utxos: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()]))
       utxoSet = utxoSet.concat(utxos)
@@ -481,7 +481,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const api: JEVMAPI = provider.jevm[transfer.destinationChain.id]
-    let utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id))
+    let utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
     if (!isFeeImported) {
       const utxos: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()]))
       utxoSet = utxoSet.concat(utxos)

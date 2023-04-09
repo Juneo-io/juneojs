@@ -88,13 +88,25 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
     signersAddresses.push(new Address(senderAddress))
   })
   const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
-  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
+  const inputs: TransferableInput[] = []
+  const importedInputs: TransferableInput[] = []
+  buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData]).forEach(input => {
+    if (input.input.utxo === undefined) {
+      throw new InputError('input cannot use read only utxo')
+    }
+    const utxo: Utxo = input.input.utxo
+    if (utxo.sourceChain === undefined) {
+      inputs.push(input)
+    } else {
+      importedInputs.push(input)
+    }
+  })
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, importedInputs, feeData, changeAddress)
   return new RelayImportTransaction(
     networkId,
     new BlockchainId(destinationId),
     outputs,
-    [],
+    inputs,
     memo === undefined ? '' : memo,
     new BlockchainId(sourceId),
     importedInputs

@@ -127,7 +127,7 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
       importedInputs.push(input)
     }
   })
-  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, importedInputs, feeData, changeAddress)
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs.concat(importedInputs), feeData, changeAddress)
   return new JVMImportTransaction(
     networkId,
     new BlockchainId(destinationId),

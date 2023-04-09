@@ -101,7 +101,7 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
       importedInputs.push(input)
     }
   })
-  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, importedInputs, feeData, changeAddress)
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs.concat(importedInputs), feeData, changeAddress)
   return new RelayImportTransaction(
     networkId,
     new BlockchainId(destinationId),

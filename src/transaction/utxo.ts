@@ -1,12 +1,25 @@
 import { TransferableOutput, type TransactionOutput } from './output'
 import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
 import { JuneoBuffer } from '../utils'
+import { type GetUTXOsResponse } from '../api/data'
+
+export function parseUtxoSet (data: GetUTXOsResponse, sourceChain?: string): Utxo[] {
+  const utxos: string[] = data.utxos
+  const utxoSet: Utxo[] = []
+  utxos.forEach(next => {
+    const utxo: Utxo = Utxo.parse(next)
+    utxo.sourceChain = sourceChain
+    utxoSet.push(utxo)
+  })
+  return utxoSet
+}
 
 export class Utxo {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
   output: TransactionOutput
+  sourceChain?: string
 
   constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, output: TransactionOutput) {
     this.transactionId = transactionId

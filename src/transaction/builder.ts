@@ -1,20 +1,10 @@
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
-import { Utxo } from './utxo'
+import { type Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
-import { type GetUTXOsResponse } from '../api/data'
 import { type FeeData } from './fee'
-
-export function parseUtxoSet (data: GetUTXOsResponse): Utxo[] {
-  const utxos: string[] = data.utxos
-  const utxoSet: Utxo[] = []
-  utxos.forEach(utxo => {
-    utxoSet.push(Utxo.parse(utxo))
-  })
-  return utxoSet
-}
 
 export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
   signersAddresses: Address[], fees: FeeData[]): TransferableInput[] {

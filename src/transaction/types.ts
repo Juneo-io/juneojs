@@ -51,6 +51,14 @@ export class AssetId extends BytesData {
     super(buffer)
     this.assetId = assetId
   }
+
+  static validate (assetId: string): boolean {
+    if (!encoding.isBase58(assetId)) {
+      return false
+    }
+    const buffer: JuneoBuffer = encoding.decodeCB58(assetId)
+    return buffer.length === AssetIdSize
+  }
 }
 
 export class TransactionId extends BytesData {

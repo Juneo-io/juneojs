@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
-import { validateBech32 } from '../utils'
+import { isHex, validateBech32 } from '../utils'
 import { type JuneoWallet, type VMWallet } from '../wallet'
 import { type MCNProvider } from '../juneo'
-import { type UserInput } from '../transaction'
+import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 import { type JEVMAPI } from '../api/jevm'
 
@@ -24,6 +24,8 @@ export interface Blockchain {
   buildWallet: (wallet: JuneoWallet) => VMWallet
 
   validateAddress: (address: string) => boolean
+
+  validateAssetId: (assetId: string) => boolean
 
   queryBalance: (provider: MCNProvider, address: string, assetId: string) => Promise<bigint>
 
@@ -71,6 +73,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   abstract validateAddress (address: string): boolean
 
+  abstract validateAssetId (assetId: string): boolean
+
   abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
 
   abstract queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint>
@@ -87,6 +91,11 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
 
   validateAddress (address: string): boolean {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
+  }
+
+  validateAssetId (assetId: string): boolean {
+    // TODO add address api check
+    return AssetId.validate(assetId)
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
@@ -118,6 +127,11 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
   validateAddress (address: string): boolean {
     return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
+  }
+
+  validateAssetId (assetId: string): boolean {
+    // TODO add address api check
+    return AssetId.validate(assetId)
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
@@ -154,6 +168,14 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
 
   validateAddress (address: string): boolean {
     return ethers.isAddress(address)
+  }
+
+  validateAssetId (assetId: string): boolean {
+    if (assetId === this.assetId) {
+      return true
+    }
+    // TODO add address api check
+    return isHex(assetId)
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {

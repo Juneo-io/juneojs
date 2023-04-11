@@ -79,7 +79,7 @@ export class EVMTransactionStatusFetcher {
 
   async fetch (): Promise<string> {
     this.currentStatus = EVMTransactionStatus.Pending
-    while (this.attempts < this.maxAttempts && this.currentStatus !== EVMTransactionStatus.Success) {
+    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
       const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
       if (receipt === null) {
@@ -90,6 +90,10 @@ export class EVMTransactionStatusFetcher {
       this.currentStatus = status === 1 ? EVMTransactionStatus.Success : EVMTransactionStatus.Failure
     }
     return this.currentStatus
+  }
+
+  private isCurrentStatusSettled (): boolean {
+    return this.currentStatus !== EVMTransactionStatus.Unknown && this.currentStatus !== EVMTransactionStatus.Pending
   }
 }
 

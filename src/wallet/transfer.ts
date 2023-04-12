@@ -65,9 +65,15 @@ export class TransferManager {
       const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
       fees.push(new FeeData(source, source.assetId, exportFee))
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
-      const sourceBalance: bigint = await source.queryBalance(this.provider, this.wallet.getAddress(source), destination.assetId)
-      const canExportFee: boolean = sourceBalance >= importFee
-      fees.push(new FeeData(canExportFee ? source : destination, destination.assetId, importFee))
+      // export fee by default
+      let exportingFee: boolean = true
+      // if destination can pay for the import fee with utxos
+      // check if source can really export it and otherwise will pay for it in import tx
+      if (destination.canPayImportFee()) {
+        const sourceBalance: bigint = await source.queryBalance(this.provider, this.wallet.getAddress(source), destination.assetId)
+        exportingFee = sourceBalance >= importFee
+      }
+      fees.push(new FeeData(exportingFee ? source : destination, destination.assetId, importFee))
       summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fees))
     }
     return summaries
@@ -342,13 +348,16 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
-    const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
-    const canExportFee: boolean = sourceBalance >= importFee
+    let exportingFee: boolean = true
+    if (destinationChain.canPayImportFee()) {
+      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      exportingFee = sourceBalance >= importFee
+    }
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = jvm.buildJVMExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
-      exportFee, canExportFee ? importFee : BigInt(0), wallet.getAddress(), provider.mcn.id, sourceChain.id
+      exportFee, exportingFee ? importFee : BigInt(0), wallet.getAddress(), provider.mcn.id, sourceChain.id
     ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await provider.jvm.issueTx(exportTransaction)).txID
@@ -361,7 +370,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       this.status = TransferStatus.Timeout
       return
     }
-    const validStatus: boolean = await this.executeImport(provider, transfer, importFee, canExportFee)
+    const validStatus: boolean = await this.executeImport(provider, transfer, importFee)
     this.status = validStatus ? TransferStatus.Done : TransferStatus.Timeout
   }
 
@@ -373,13 +382,16 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
     const exportFee: bigint = await sourceChain.queryExportFee(provider)
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
-    const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
-    const canExportFee: boolean = sourceBalance >= importFee
+    let exportingFee: boolean = true
+    if (destinationChain.canPayImportFee()) {
+      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      exportingFee = sourceBalance >= importFee
+    }
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = relay.buildRelayExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
-      exportFee, canExportFee ? importFee : BigInt(0), wallet.getAddress(), provider.mcn.id, sourceChain.id
+      exportFee, exportingFee ? importFee : BigInt(0), wallet.getAddress(), provider.mcn.id, sourceChain.id
     ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await provider.relay.issueTx(exportTransaction)).txID
@@ -392,7 +404,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       this.status = TransferStatus.Timeout
       return
     }
-    const validStatus: boolean = await this.executeImport(provider, transfer, importFee, canExportFee)
+    const validStatus: boolean = await this.executeImport(provider, transfer, importFee)
     this.status = validStatus ? TransferStatus.Done : TransferStatus.Timeout
   }
 
@@ -423,15 +435,15 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       this.status = TransferStatus.Timeout
       return
     }
-    const validStatus: boolean = await this.executeImport(provider, transfer, importFee, canExportFee)
+    const validStatus: boolean = await this.executeImport(provider, transfer, importFee)
     this.status = validStatus ? TransferStatus.Done : TransferStatus.Timeout
   }
 
-  private async executeImport (provider: MCNProvider, transfer: Transfer, importFee: bigint, isFeeExported: boolean): Promise<boolean> {
+  private async executeImport (provider: MCNProvider, transfer: Transfer, importFee: bigint): Promise<boolean> {
     if (transfer.destinationChain.vmId === RELAYVM_ID) {
-      return await this.executeRelayImport(provider, transfer, importFee, isFeeExported)
+      return await this.executeRelayImport(provider, transfer, importFee)
     } else if (transfer.destinationChain.vmId === JVM_ID) {
-      return await this.executeJVMImport(provider, transfer, importFee, isFeeExported)
+      return await this.executeJVMImport(provider, transfer, importFee)
     } else if (transfer.destinationChain.vmId === JEVM_ID) {
       return await this.executeJEVMImport(provider, transfer, importFee)
     } else {
@@ -439,14 +451,12 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     }
   }
 
-  private async executeRelayImport (provider: MCNProvider, transfer: Transfer, fee: bigint, isFeeImported: boolean): Promise<boolean> {
+  private async executeRelayImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    let utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    if (!isFeeImported) {
-      const utxos: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()]))
-      utxoSet = utxoSet.concat(utxos)
-    }
+    const utxos: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()]))
+    const importUtxo: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
+    const utxoSet: Utxo[] = utxos.concat(importUtxo)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = relay.buildRelayImportTransaction(
@@ -461,14 +471,12 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     return transactionStatus === RelayTransactionStatus.Committed
   }
 
-  private async executeJVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint, isFeeImported: boolean): Promise<boolean> {
+  private async executeJVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    let utxoSet: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    if (!isFeeImported) {
-      const utxos: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()]))
-      utxoSet = utxoSet.concat(utxos)
-    }
+    const utxos: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()]))
+    const importUtxo: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
+    const utxoSet: Utxo[] = utxos.concat(importUtxo)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = jvm.buildJVMImportTransaction(

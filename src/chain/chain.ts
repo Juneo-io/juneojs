@@ -46,6 +46,8 @@ export interface Crossable {
 
   queryImportFee: (provider: MCNProvider, userInputs: UserInput[]) => Promise<bigint>
 
+  canPayImportFee: () => boolean
+
 }
 
 export function isCrossable (object: any): boolean {
@@ -114,6 +116,10 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
   async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
+
+  canPayImportFee (): boolean {
+    return true
+  }
 }
 
 export class JVMBlockchain extends AbstractBlockchain implements Crossable {
@@ -148,6 +154,10 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
   async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
+  }
+
+  canPayImportFee (): boolean {
+    return true
   }
 }
 
@@ -209,5 +219,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     const gasUsed: bigint = BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10_000)
     const baseFee: bigint = await this.queryBaseFee(provider)
     return gasUsed * baseFee / BigInt(1_000_000_000)
+  }
+
+  canPayImportFee (): boolean {
+    return false
   }
 }

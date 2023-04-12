@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -420,7 +420,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
-      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getHexAddress(), destinationChain.assetId)
       exportingFee = sourceBalance >= importFee
     }
     const api: JEVMAPI = provider.jevm[sourceChain.id]
@@ -447,9 +447,23 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   }
 
   private async proxyJVMTransfer (provider: MCNProvider, transfer: Transfer, destination: JEVMBlockchain): Promise<void> {
-    const toJVMTransfer: Transfer = transfer
-    this.status = TransferStatus.Error
-    throw new Error('proxy JVM transfer is not implemented yet')
+    const signer: JuneoWallet = transfer.signer
+    const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
+    const toJVMUserInputs: UserInput[] = []
+    transfer.userInputs.forEach(input => {
+      toJVMUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount, signer.getAddress(jvmChain), jvmChain))
+    })
+    await this.executeJEVMTransfer(provider, new Transfer(transfer.sourceChain, jvmChain, toJVMUserInputs, signer))
+    // if first cross failed then abort
+    if (this.status !== TransferStatus.Done) {
+      return
+    }
+    const jevmWallet: JEVMWallet = signer.getWallet(destination) as JEVMWallet
+    const toJEVMUserInputs: UserInput[] = []
+    transfer.userInputs.forEach(input => {
+      toJEVMUserInputs.push(new UserInput(input.assetId, jvmChain, input.amount, jevmWallet.getHexAddress(), destination))
+    })
+    await this.executeJVMTransfer(provider, new Transfer(jvmChain, destination, toJEVMUserInputs, signer))
   }
 
   private async executeImport (provider: MCNProvider, transfer: Transfer, importFee: bigint): Promise<boolean> {
@@ -467,9 +481,10 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   private async executeRelayImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    const utxos: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()]))
     const importUtxo: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    const utxoSet: Utxo[] = utxos.concat(importUtxo)
+    const utxos: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs([wallet.getAddress()]))
+    // put import utxos first to priorize usage of imported inputs
+    const utxoSet: Utxo[] = importUtxo.concat(utxos)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = relay.buildRelayImportTransaction(
@@ -489,7 +504,8 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const sourceChain: Blockchain = transfer.sourceChain
     const utxos: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()]))
     const importUtxo: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    const utxoSet: Utxo[] = utxos.concat(importUtxo)
+    // put import utxos first to priorize usage of imported inputs
+    const utxoSet: Utxo[] = importUtxo.concat(utxos)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = jvm.buildJVMImportTransaction(

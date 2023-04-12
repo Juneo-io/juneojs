@@ -3,10 +3,12 @@ import { type MCNProvider } from '../juneo'
 import { FeeError } from '../utils'
 
 export class FeeData {
+  chain: Blockchain
   assetId: string
   amount: bigint
 
-  constructor (assetId: string, amount: bigint) {
+  constructor (chain: Blockchain, assetId: string, amount: bigint) {
+    this.chain = chain
     this.assetId = assetId
     this.amount = amount
   }

@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, type UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -53,16 +53,22 @@ export class TransferManager {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const txFee: bigint = await source.queryBaseFee(this.provider)
-      summaries.push(new TransferSummary(TransferType.Base, inputs, source, txFee))
+      const feeData: FeeData = new FeeData(source, source.assetId, txFee)
+      summaries.push(new TransferSummary(TransferType.Base, inputs, source, [feeData]))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       // because of previously sorting should always be safe casting here
       const source: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
       const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
+      const fees: FeeData[] = []
       const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
+      fees.push(new FeeData(source, source.assetId, exportFee))
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
-      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, exportFee + importFee))
+      const sourceBalance: bigint = await source.queryBalance(this.provider, this.wallet.getAddress(source), destination.assetId)
+      const canExportFee: boolean = sourceBalance >= importFee
+      fees.push(new FeeData(canExportFee ? source : destination, destination.assetId, importFee))
+      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fees))
     }
     return summaries
   }
@@ -148,13 +154,13 @@ export class TransferSummary {
   type: string
   sortedInputs: UserInput[]
   sourceChain: Blockchain
-  fee: bigint
+  fees: FeeData[]
 
-  constructor (type: string, sortedInputs: UserInput[], sourceChain: Blockchain, fee: bigint) {
+  constructor (type: string, sortedInputs: UserInput[], sourceChain: Blockchain, fees: FeeData[]) {
     this.type = type
     this.sortedInputs = sortedInputs
     this.sourceChain = sourceChain
-    this.fee = fee
+    this.fees = fees
   }
 }
 

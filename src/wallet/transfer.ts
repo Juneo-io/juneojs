@@ -7,7 +7,7 @@ import * as jvm from '../transaction/jvm'
 import * as jevm from '../transaction/jevm'
 import * as relay from '../transaction/relay'
 import { type JEVMAPI } from '../api/jevm'
-import { EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
+import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
 import { type ethers } from 'ethers'
 import { type TransactionRequest } from 'ethers/types/providers'
 
@@ -110,7 +110,7 @@ export class TransferManager {
     const interTransfersInputs: Record<string, UserInput[]> = {}
     // for chains that do not support transaction batching
     // we can still do parallel transactions to simulate it
-    // do not forget to isolate user inputs again to do its
+    // do not forget to isolate user inputs again to execute it
     // note that fee cost will be higher for non batched transactions
     userInputs.forEach(input => {
       if (input.amount < BigInt(1)) {
@@ -285,7 +285,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
         StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
       receipt.transactionStatus = transactionStatus
-      if (transactionStatus !== JEVMTransactionStatus.Accepted) {
+      if (transactionStatus !== EVMTransactionStatus.Success) {
         this.status = TransferStatus.Timeout
       } else {
         this.status = TransferStatus.Done
@@ -427,7 +427,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     } else if (transfer.destinationChain.vmId === JVM_ID) {
       return await this.executeJVMImport(provider, transfer, importFee, isFeeExported)
     } else if (transfer.destinationChain.vmId === JEVM_ID) {
-      return await this.executeJEVMImport(provider, transfer, importFee, isFeeExported)
+      return await this.executeJEVMImport(provider, transfer, importFee)
     } else {
       throw new InterChainTransferError('unsupported import vm id')
     }
@@ -477,15 +477,11 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     return transactionStatus === JVMTransactionStatus.Accepted
   }
 
-  private async executeJEVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint, isFeeImported: boolean): Promise<boolean> {
+  private async executeJEVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const api: JEVMAPI = provider.jevm[transfer.destinationChain.id]
-    let utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    if (!isFeeImported) {
-      const utxos: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()]))
-      utxoSet = utxoSet.concat(utxos)
-    }
+    const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = jevm.buildJEVMImportTransaction(

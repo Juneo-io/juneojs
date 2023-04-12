@@ -52,7 +52,14 @@ export class TransferManager {
     for (const key in intraTransfersInputs) {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
-      const txFee: bigint = await source.queryBaseFee(this.provider)
+      let txFee: bigint = await source.queryBaseFee(this.provider)
+      if (source.vmId === JEVM_ID) {
+        let gasTxFee: bigint = BigInt(0)
+        inputs.forEach(input => {
+          gasTxFee += txFee * (source as JEVMBlockchain).estimateGasLimit(input.assetId)
+        })
+        txFee = gasTxFee
+      }
       const feeData: FeeData = new FeeData(source, txFee, source.assetId)
       summaries.push(new TransferSummary(TransferType.Base, inputs, source, [feeData]))
     }

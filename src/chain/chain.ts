@@ -35,6 +35,8 @@ export interface EVMBlockchain {
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
 
+  estimateGasLimit: (assetId: string) => bigint
+
 }
 
 export interface Crossable {
@@ -167,6 +169,10 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
+  }
+
+  estimateGasLimit (assetId: string): bigint {
+    return JEVMBlockchain.SendEtherGasLimit
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {

@@ -23,7 +23,7 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const feeData = new FeeData(userInputs[0].sourceChain.assetId, fee)
+  const feeData = new FeeData(userInputs[0].sourceChain, fee)
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
   return new BaseTransaction(
@@ -55,8 +55,8 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain.assetId, sourceFee)
-  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, destinationFee)
+  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
+  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
   const fees: FeeData[] = [sourceFeeData, destinationFeeData]
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
   // fixed user inputs with a defined export address to import it later
@@ -113,7 +113,7 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
+  const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
   buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData]).forEach(input => {

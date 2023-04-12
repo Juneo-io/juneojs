@@ -94,8 +94,8 @@ export function buildJEVMExportTransaction (userInputs: UserInput[], signer: str
       throw new InputError('jevm export transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain.assetId, sourceFee)
-  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, destinationFee)
+  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
+  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
   const fees: FeeData[] = [sourceFeeData, destinationFeeData]
   const inputs: EVMInput[] = buildTransactionEVMInputs(userInputs, signer, nonce, fees)
   // fixed user inputs with a defined export address to import it later
@@ -142,7 +142,7 @@ export function buildJEVMImportTransaction (userInputs: UserInput[], utxoSet: Ut
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
+  const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
   const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
   const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData)
   return new JEVMImportTransaction(

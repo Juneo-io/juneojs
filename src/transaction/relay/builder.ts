@@ -29,8 +29,8 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain.assetId, sourceFee)
-  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, destinationFee)
+  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
+  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
   const fees: FeeData[] = [sourceFeeData, destinationFeeData]
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
   // fixed user inputs with a defined export address to import it later
@@ -87,7 +87,7 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
-  const feeData: FeeData = new FeeData(userInputs[0].destinationChain.assetId, fee)
+  const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
   buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData]).forEach(input => {
@@ -120,8 +120,8 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
     signersAddresses.push(new Address(senderAddress))
   })
   const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain.assetId, fee)])
-  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain.assetId, fee), changeAddress)
+  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain, fee), changeAddress)
   const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
   const stake: TransferableOutput[] = [
     new TransferableOutput(
@@ -167,8 +167,8 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
     signersAddresses.push(new Address(senderAddress))
   })
   const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain.assetId, fee)])
-  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain.assetId, fee), changeAddress)
+  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [new FeeData(chain, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new FeeData(chain, fee), changeAddress)
   const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
   const stake: TransferableOutput[] = [
     new TransferableOutput(

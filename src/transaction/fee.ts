@@ -4,13 +4,13 @@ import { FeeError } from '../utils'
 
 export class FeeData {
   chain: Blockchain
-  assetId: string
   amount: bigint
+  assetId: string
 
-  constructor (chain: Blockchain, assetId: string, amount: bigint) {
+  constructor (chain: Blockchain, amount: bigint, assetId?: string) {
     this.chain = chain
-    this.assetId = assetId
     this.amount = amount
+    this.assetId = assetId === undefined ? chain.assetId : assetId
   }
 }
 

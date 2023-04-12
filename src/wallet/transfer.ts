@@ -53,7 +53,7 @@ export class TransferManager {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
       const txFee: bigint = await source.queryBaseFee(this.provider)
-      const feeData: FeeData = new FeeData(source, source.assetId, txFee)
+      const feeData: FeeData = new FeeData(source, txFee, source.assetId)
       summaries.push(new TransferSummary(TransferType.Base, inputs, source, [feeData]))
     }
     for (const key in interTransfersInputs) {
@@ -63,7 +63,7 @@ export class TransferManager {
       const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
       const fees: FeeData[] = []
       const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
-      fees.push(new FeeData(source, source.assetId, exportFee))
+      fees.push(new FeeData(source, exportFee, source.assetId))
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
       // export fee by default
       let exportingFee: boolean = true
@@ -73,7 +73,7 @@ export class TransferManager {
         const sourceBalance: bigint = await source.queryBalance(this.provider, this.wallet.getAddress(source), destination.assetId)
         exportingFee = sourceBalance >= importFee
       }
-      fees.push(new FeeData(exportingFee ? source : destination, destination.assetId, importFee))
+      fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId))
       summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fees))
     }
     return summaries
@@ -411,18 +411,25 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
     const sourceChain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
     const destinationChain: Blockchain & Crossable = transfer.destinationChain as Blockchain & Crossable
+    if (destinationChain.vmId === JEVM_ID) {
+      void this.proxyJVMTransfer(provider, transfer, transfer.destinationChain as JEVMBlockchain)
+      return
+    }
     const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
     const exportFee: bigint = await sourceChain.queryExportFee(provider, transfer.userInputs, destinationChain.assetId)
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
-    const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getHexAddress(), destinationChain.assetId)
-    const canExportFee: boolean = sourceBalance >= importFee
+    let exportingFee: boolean = true
+    if (destinationChain.canPayImportFee()) {
+      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      exportingFee = sourceBalance >= importFee
+    }
     const api: JEVMAPI = provider.jevm[sourceChain.id]
     const nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = jevm.buildJEVMExportTransaction(
       transfer.userInputs, wallet.getHexAddress(), nonce, transfer.signer.getAddress(destinationChain),
-      exportFee, canExportFee ? importFee : BigInt(0), provider.mcn.id
+      exportFee, exportingFee ? importFee : BigInt(0), provider.mcn.id
     ).signTransaction([wallet]).toCHex()
     this.status = TransferStatus.Sending
     const transactionId = (await api.issueTx(exportTransaction)).txID
@@ -437,6 +444,12 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     }
     const validStatus: boolean = await this.executeImport(provider, transfer, importFee)
     this.status = validStatus ? TransferStatus.Done : TransferStatus.Timeout
+  }
+
+  private async proxyJVMTransfer (provider: MCNProvider, transfer: Transfer, destination: JEVMBlockchain): Promise<void> {
+    const toJVMTransfer: Transfer = transfer
+    this.status = TransferStatus.Error
+    throw new Error('proxy JVM transfer is not implemented yet')
   }
 
   private async executeImport (provider: MCNProvider, transfer: Transfer, importFee: bigint): Promise<boolean> {

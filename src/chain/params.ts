@@ -9,7 +9,9 @@ export const BelgradePAXG1AssetId: string = 'XP39Jfa56x33U269ejiKgP6XZ5GXkMZX5m7
 export const BelgradeMBTC1AssetId: string = 'tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4M4Y9xRmxQ18zuX'
 
 const BelgradeAddress: string = 'https://api1.mcnpoc4.xyz:9650'
-export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(BelgradeJUNEAssetId, ['Relay'])
+const RelayChainName: string = 'Relay-Chain'
+const RelayChainId: string = '11111111111111111111111111111111LpoYY'
+export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(RelayChainName, RelayChainId, BelgradeJUNEAssetId, ['Relay'])
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
 export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'])

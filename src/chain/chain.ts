@@ -10,9 +10,6 @@ export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
 export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
-const RELAY_CHAIN_NAME: string = 'Relay Chain'
-const RELAY_CHAIN_ID: string = '11111111111111111111111111111111LpoYY'
-
 export interface Blockchain {
 
   name: string
@@ -83,8 +80,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class RelayBlockchain extends AbstractBlockchain implements Crossable {
-  constructor (assetId: string, aliases?: string[]) {
-    super(RELAY_CHAIN_NAME, RELAY_CHAIN_ID, RELAYVM_ID, assetId, aliases)
+  constructor (name: string, id: string, assetId: string, aliases?: string[]) {
+    super(name, id, RELAYVM_ID, assetId, aliases)
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {

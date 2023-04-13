@@ -465,10 +465,9 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     if (this.status !== TransferStatus.Done) {
       return
     }
-    const jevmWallet: JEVMWallet = signer.getWallet(destination) as JEVMWallet
     const toJEVMUserInputs: UserInput[] = []
     transfer.userInputs.forEach(input => {
-      toJEVMUserInputs.push(new UserInput(input.assetId, jvmChain, input.amount, jevmWallet.getHexAddress(), destination))
+      toJEVMUserInputs.push(new UserInput(input.assetId, jvmChain, input.amount, input.address, destination))
     })
     await this.executeJVMTransfer(provider, new Transfer(jvmChain, destination, toJEVMUserInputs, signer))
   }

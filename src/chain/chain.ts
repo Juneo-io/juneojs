@@ -5,6 +5,7 @@ import { type MCNProvider } from '../juneo'
 import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 import { type JEVMAPI } from '../api/jevm'
+import { type GetAssetDescriptionResponse } from '../api/jvm/data'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -22,7 +23,7 @@ export interface Blockchain {
 
   validateAddress: (address: string, hrp?: string) => boolean
 
-  validateAssetId: (assetId: string) => boolean
+  validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>
 
   queryBalance: (provider: MCNProvider, address: string, assetId: string) => Promise<bigint>
 
@@ -75,7 +76,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   abstract validateAddress (address: string, hrp?: string): boolean
 
-  abstract validateAssetId (assetId: string): boolean
+  abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
 
   abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
 
@@ -95,9 +96,8 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
     return validateBech32(address, hrp, this.aliases.concat(this.id))
   }
 
-  validateAssetId (assetId: string): boolean {
-    // TODO add address api check
-    return AssetId.validate(assetId)
+  async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
+    return await JVMBlockchain.validateJVMAssetId(provider, assetId)
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
@@ -135,9 +135,8 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
     return validateBech32(address, hrp, this.aliases.concat(this.id))
   }
 
-  validateAssetId (assetId: string): boolean {
-    // TODO add address api check
-    return AssetId.validate(assetId)
+  async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
+    return await JVMBlockchain.validateJVMAssetId(provider, assetId)
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
@@ -158,6 +157,21 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
   canPayImportFee (): boolean {
     return true
+  }
+
+  static async validateJVMAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
+    // local check of asset id format to avoid network call if possible
+    if (!AssetId.validate(assetId)) {
+      return false
+    }
+    try {
+      const asset: GetAssetDescriptionResponse = await provider.jvm.getAssetDescription(assetId)
+      // if user used an alias that was valid for an asset id
+      // it could be different so we have to check the asset id is really this one
+      return asset.assetID === assetId
+    } catch (error) {
+      return false
+    }
   }
 }
 
@@ -184,7 +198,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     return ethers.isAddress(address)
   }
 
-  validateAssetId (assetId: string): boolean {
+  async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     if (assetId === this.assetId) {
       return true
     }

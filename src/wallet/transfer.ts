@@ -476,6 +476,8 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     // if first cross failed then abort
     if (this.status !== TransferStatus.Done) {
       return
+    } else {
+      this.status = TransferStatus.Sending
     }
     const toJEVMUserInputs: UserInput[] = []
     transfer.userInputs.forEach(input => {

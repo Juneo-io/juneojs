@@ -72,10 +72,8 @@ export class TransferManager {
       const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
       if (requiresProxy) {
         const jvmChain: JVMBlockchain = this.provider.jvm.chain as JVMBlockchain
-        const jvmImportFee: bigint = await jvmChain.queryImportFee(this.provider, inputs)
-        const jvmExportFee: bigint = await jvmChain.queryExportFee(this.provider, inputs)
-        fees.push(new FeeData(jvmChain, jvmImportFee, jvmChain.assetId))
-        fees.push(new FeeData(jvmChain, jvmExportFee, jvmChain.assetId))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider, inputs), jvmChain.assetId))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider, inputs), jvmChain.assetId))
       }
       const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
       fees.push(new FeeData(source, exportFee, source.assetId))
@@ -85,7 +83,12 @@ export class TransferManager {
       // if destination can pay for the import fee with utxos
       // check if source can really export it and otherwise will pay for it in import tx
       if (destination.canPayImportFee()) {
-        const sourceBalance: bigint = await source.queryBalance(this.provider, this.wallet.getAddress(source), destination.assetId)
+        let address: string = this.wallet.getAddress(source)
+        if (source.vmId === JEVM_ID) {
+          const evmWallet: JEVMWallet = this.wallet.getWallet(source) as JEVMWallet
+          address = evmWallet.getHexAddress()
+        }
+        const sourceBalance: bigint = await source.queryBalance(this.provider, address, destination.assetId)
         exportingFee = sourceBalance >= importFee
       }
       fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId))

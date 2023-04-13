@@ -277,16 +277,16 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
   }
 
   private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
-    const sourceChain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
-    const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
-    const ethProvider: ethers.JsonRpcProvider = sourceChain.ethProvider
+    const chain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
+    const wallet: JEVMWallet = transfer.signer.getWallet(chain) as JEVMWallet
+    const ethProvider: ethers.JsonRpcProvider = chain.ethProvider
     const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
-    const api: JEVMAPI = provider.jevm[sourceChain.id]
+    const api: JEVMAPI = provider.jevm[chain.id]
     let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
     const gasPrice: bigint = await api.eth_baseFee()
     this.status = TransferStatus.Sending
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
-      const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Send)
+      const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Send)
       this.receipts.push(receipt)
       const input: UserInput = transfer.userInputs[i]
       const transactionData: TransactionRequest = {
@@ -294,7 +294,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
         to: input.address,
         value: input.amount,
         nonce: Number(nonce++),
-        chainId: sourceChain.chainId,
+        chainId: chain.chainId,
         gasLimit: JEVMBlockchain.SendEtherGasLimit,
         gasPrice
       }
@@ -306,10 +306,10 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       receipt.transactionStatus = transactionStatus
       if (transactionStatus !== EVMTransactionStatus.Success) {
         this.status = TransferStatus.Timeout
-      } else {
-        this.status = TransferStatus.Done
+        return
       }
     }
+    this.status = TransferStatus.Done
   }
 }
 

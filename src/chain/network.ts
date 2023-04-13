@@ -8,17 +8,13 @@ export class MCN {
   primary: PrimarySupernet
   supernets: Supernet[]
 
-  constructor (address: string, id: number, hrp: string, stakeConfig: StakeConfig, primary: PrimarySupernet, supernets?: Supernet[]) {
+  constructor (address: string, id: number, hrp: string, stakeConfig: StakeConfig, primary: PrimarySupernet, supernets: Supernet[] = [primary]) {
     this.address = address
     this.id = id
     this.hrp = hrp
     this.stakeConfig = stakeConfig
     this.primary = primary
-    if (supernets === undefined) {
-      this.supernets = [this.primary]
-    } else {
-      this.supernets = supernets
-    }
+    this.supernets = supernets
   }
 
   getChain (chainId: string): Blockchain | undefined {

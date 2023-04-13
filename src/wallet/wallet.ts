@@ -37,8 +37,8 @@ export class JuneoWallet {
   privateKey: string | undefined
   chainsWallets: Record<string, VMWallet> = {}
 
-  private constructor (hrp?: string) {
-    this.hrp = hrp === undefined ? DefaultHrp : hrp
+  private constructor (hrp: string = DefaultHrp) {
+    this.hrp = hrp
   }
 
   getAddress (chain: Blockchain): string {

@@ -9,7 +9,7 @@ import { FeeData } from '../fee'
 
 export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], fee: bigint, changeAddress: string,
-  networkId: number, memo?: string): BaseTransaction {
+  networkId: number, memo: string = ''): BaseTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -31,13 +31,13 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
     new BlockchainId(sourceId),
     outputs,
     inputs,
-    memo === undefined ? '' : memo
+    memo
   )
 }
 
 export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
-  networkId: number, memo?: string): JVMExportTransaction {
+  networkId: number, memo: string = ''): JVMExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -88,14 +88,14 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
     new BlockchainId(sourceId),
     changeOutputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     new BlockchainId(destinationId),
     exportedOutputs
   )
 }
 
 export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number, memo?: string): JVMImportTransaction {
+  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): JVMImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -133,7 +133,7 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
     new BlockchainId(destinationId),
     outputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     new BlockchainId(sourceId),
     importedInputs
   )

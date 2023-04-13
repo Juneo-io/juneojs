@@ -16,13 +16,13 @@ export class UserInput {
   locktime: bigint
 
   constructor (assetId: string, sourceChain: Blockchain, amount: bigint,
-    address: string, destinationChain: Blockchain, locktime?: bigint) {
+    address: string, destinationChain: Blockchain, locktime: bigint = BigInt(0)) {
     this.assetId = assetId
     this.sourceChain = sourceChain
     this.amount = amount
     this.address = address
     this.destinationChain = destinationChain
-    this.locktime = locktime === undefined ? BigInt(0) : locktime
+    this.locktime = locktime
   }
 }
 

@@ -14,15 +14,8 @@ export class MCNProvider {
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
-  constructor (mcn?: MCN, client?: JuneoClient) {
-    if (mcn === undefined) {
-      this.mcn = params.BelgradeNetwork
-    } else {
-      this.mcn = mcn
-    }
-    if (client === undefined) {
-      client = JuneoClient.parse(this.mcn.address)
-    }
+  constructor (mcn: MCN = params.BelgradeNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+    this.mcn = mcn
     this.info = new InfoAPI(client)
     this.relay = new RelayAPI(client, this.mcn.primary.relay)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)

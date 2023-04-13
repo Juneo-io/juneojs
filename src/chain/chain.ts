@@ -62,12 +62,12 @@ export abstract class AbstractBlockchain implements Blockchain {
   assetId: string
   aliases: string[]
 
-  constructor (name: string, id: string, vmId: string, assetId: string, aliases?: string[]) {
+  constructor (name: string, id: string, vmId: string, assetId: string, aliases: string[] = []) {
     this.name = name
     this.id = id
     this.vmId = vmId
     this.assetId = assetId
-    this.aliases = aliases === undefined ? [] : aliases
+    this.aliases = aliases
   }
 
   abstract buildWallet (wallet: JuneoWallet): VMWallet

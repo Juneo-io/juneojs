@@ -11,7 +11,7 @@ import { Validator } from './validation'
 
 export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
-  networkId: number, memo?: string): RelayExportTransaction {
+  networkId: number, memo: string = ''): RelayExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -62,14 +62,14 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
     new BlockchainId(sourceId),
     changeOutputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     new BlockchainId(destinationId),
     exportedOutputs
   )
 }
 
 export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number, memo?: string): RelayImportTransaction {
+  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): RelayImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -107,14 +107,14 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
     new BlockchainId(destinationId),
     outputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     new BlockchainId(sourceId),
     importedInputs
   )
 }
 
 export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo?: string): AddValidatorTransaction {
+  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddValidatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
@@ -152,7 +152,7 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
     new BlockchainId(chain.id),
     changeOutputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     validator,
     stake,
     rewardsOwner,
@@ -161,7 +161,7 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
 }
 
 export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo?: string): AddDelegatorTransaction {
+  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddDelegatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
@@ -199,7 +199,7 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
     new BlockchainId(chain.id),
     changeOutputs,
     inputs,
-    memo === undefined ? '' : memo,
+    memo,
     validator,
     stake,
     rewardsOwner

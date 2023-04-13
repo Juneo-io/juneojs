@@ -78,13 +78,9 @@ export class JsonRpcRequest {
   method: string
   params: object[] | string[]
 
-  constructor (method: string, params?: object[] | string[]) {
+  constructor (method: string, params: object[] | string[] = []) {
     this.method = method
-    if (params === undefined) {
-      this.params = []
-    } else {
-      this.params = params
-    }
+    this.params = params
   }
 
   getJsonRpcObject (id: number): any {

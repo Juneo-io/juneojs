@@ -41,20 +41,25 @@ export function decodeBech32 (value: string): JuneoBuffer {
   )
 }
 
-export function validateBech32 (value: string, expectedHrp?: string): boolean {
+export function validateBech32 (value: string, expectedHrp?: string, expectedPrefix: string[] = []): boolean {
   const parts: string[] = value.split('-')
   if (parts.length < 1) {
     return false
   }
-  if (expectedHrp !== undefined && parts[0] !== expectedHrp) {
+  if (!expectedPrefix.includes(parts[0])) {
     return false
   }
+  const bech32: string = parts[1]
   try {
-    decodeBech32(value)
+    decodeBech32(bech32)
   } catch (error) {
     return false
   }
-  return true
+  if (expectedHrp === undefined) {
+    return true
+  }
+  const hrp: string = bech32.slice(0, bech32.lastIndexOf('1'))
+  return hrp === expectedHrp
 }
 
 export function encodeCB58 (buffer: JuneoBuffer): string {

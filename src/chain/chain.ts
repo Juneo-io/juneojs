@@ -20,7 +20,7 @@ export interface Blockchain {
 
   buildWallet: (wallet: JuneoWallet) => VMWallet
 
-  validateAddress: (address: string) => boolean
+  validateAddress: (address: string, hrp?: string) => boolean
 
   validateAssetId: (assetId: string) => boolean
 
@@ -52,7 +52,8 @@ export interface Crossable {
 export function isCrossable (object: any): boolean {
   const a: boolean = 'queryExportFee' in object
   const b: boolean = 'queryImportFee' in object
-  return a && b
+  const c: boolean = 'canPayImportFee' in object
+  return a && b && c
 }
 
 export abstract class AbstractBlockchain implements Blockchain {
@@ -72,7 +73,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   abstract buildWallet (wallet: JuneoWallet): VMWallet
 
-  abstract validateAddress (address: string): boolean
+  abstract validateAddress (address: string, hrp?: string): boolean
 
   abstract validateAssetId (assetId: string): boolean
 
@@ -90,8 +91,8 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
     return wallet.buildJVMWallet(this)
   }
 
-  validateAddress (address: string): boolean {
-    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
+  validateAddress (address: string, hrp?: string): boolean {
+    return validateBech32(address, hrp, this.aliases.concat(this.id))
   }
 
   validateAssetId (assetId: string): boolean {
@@ -130,8 +131,8 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
     return wallet.buildJVMWallet(this)
   }
 
-  validateAddress (address: string): boolean {
-    return validateBech32(address, this.aliases.length > 0 ? this.aliases[0] : this.id)
+  validateAddress (address: string, hrp?: string): boolean {
+    return validateBech32(address, hrp, this.aliases.concat(this.id))
   }
 
   validateAssetId (assetId: string): boolean {

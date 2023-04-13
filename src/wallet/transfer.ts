@@ -74,8 +74,8 @@ export class TransferManager {
       const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
       if (requiresProxy) {
         const jvmChain: JVMBlockchain = this.provider.jvm.chain as JVMBlockchain
-        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider, inputs), jvmChain.assetId, FeeType.ImportFee))
-        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider, inputs), jvmChain.assetId, FeeType.ExportFee))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider), jvmChain.assetId, FeeType.ImportFee))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider), jvmChain.assetId, FeeType.ExportFee))
       }
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
       // export fee by default
@@ -146,7 +146,7 @@ export class TransferManager {
       if (input.amount < BigInt(1)) {
         throw new TransferError('input amount must be greater than 0')
       }
-      if (!input.destinationChain.validateAddress(input.address)) {
+      if (!input.destinationChain.validateAddress(input.address, this.provider.mcn.hrp)) {
         throw new TransferError(`invalid input address for destination chain: ${input.address}`)
       }
       const sourceId: string = input.sourceChain.id

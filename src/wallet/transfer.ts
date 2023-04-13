@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData, FeeType } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -60,7 +60,7 @@ export class TransferManager {
         })
         txFee = gasTxFee
       }
-      const feeData: FeeData = new FeeData(source, txFee, source.assetId)
+      const feeData: FeeData = new FeeData(source, txFee, source.assetId, FeeType.BaseFee)
       summaries.push(new TransferSummary(TransferType.Base, inputs, source, [feeData]))
     }
     for (const key in interTransfersInputs) {
@@ -69,14 +69,14 @@ export class TransferManager {
       const source: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
       const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
       const fees: FeeData[] = []
+      const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
+      fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
       const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
       if (requiresProxy) {
         const jvmChain: JVMBlockchain = this.provider.jvm.chain as JVMBlockchain
-        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider, inputs), jvmChain.assetId))
-        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider, inputs), jvmChain.assetId))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider, inputs), jvmChain.assetId, FeeType.ImportFee))
+        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider, inputs), jvmChain.assetId, FeeType.ExportFee))
       }
-      const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
-      fees.push(new FeeData(source, exportFee, source.assetId))
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
       // export fee by default
       let exportingFee: boolean = true
@@ -91,7 +91,7 @@ export class TransferManager {
         const sourceBalance: bigint = await source.queryBalance(this.provider, address, destination.assetId)
         exportingFee = sourceBalance >= importFee
       }
-      fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId))
+      fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId, FeeType.ImportFee))
       summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fees))
     }
     return summaries

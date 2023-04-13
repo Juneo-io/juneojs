@@ -2,15 +2,24 @@ import { type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { FeeError } from '../utils'
 
+export enum FeeType {
+  Undefined = 'Undefined',
+  BaseFee = 'Base fee',
+  ExportFee = 'Export fee',
+  ImportFee = 'Import fee'
+}
+
 export class FeeData {
   chain: Blockchain
   amount: bigint
   assetId: string
+  type: string
 
-  constructor (chain: Blockchain, amount: bigint, assetId?: string) {
+  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined) {
     this.chain = chain
     this.amount = amount
-    this.assetId = assetId === undefined ? chain.assetId : assetId
+    this.assetId = assetId
+    this.type = type
   }
 }
 

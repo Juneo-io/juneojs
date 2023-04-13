@@ -69,6 +69,14 @@ export class TransferManager {
       const source: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
       const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
       const fees: FeeData[] = []
+      const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
+      if (requiresProxy) {
+        const jvmChain: JVMBlockchain = this.provider.jvm.chain as JVMBlockchain
+        const jvmImportFee: bigint = await jvmChain.queryImportFee(this.provider, inputs)
+        const jvmExportFee: bigint = await jvmChain.queryExportFee(this.provider, inputs)
+        fees.push(new FeeData(jvmChain, jvmImportFee, jvmChain.assetId))
+        fees.push(new FeeData(jvmChain, jvmExportFee, jvmChain.assetId))
+      }
       const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
       fees.push(new FeeData(source, exportFee, source.assetId))
       const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
@@ -145,10 +153,11 @@ export class TransferManager {
         if (!isCrossable(input.sourceChain) || !isCrossable(input.destinationChain)) {
           throw new TransferError('both chains must implement Crossable to do inter chain transfer')
         }
-        if (interTransfersInputs[sourceId] === undefined) {
-          interTransfersInputs[sourceId] = [input]
+        const key: string = sourceId + input.destinationChain.id
+        if (interTransfersInputs[key] === undefined) {
+          interTransfersInputs[key] = [input]
         } else {
-          interTransfersInputs[sourceId].push(input)
+          interTransfersInputs[key].push(input)
         }
       // intra chain transfer case
       } else {

@@ -6,6 +6,7 @@ import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
+import { BaseERC20ABI } from '../solidity'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -202,8 +203,19 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     if (assetId === this.assetId) {
       return true
     }
-    // TODO add address api check
-    return isHex(assetId)
+    if (!JEVMBlockchain.isContractAddress(assetId)) {
+      return false
+    }
+    // checking if is ERC20 by calling decimals read only function
+    // other main tokens interfaces should not be using decimals
+    // IERC165 is not widespread enough to be used by ERC20 tokens
+    const contract: ethers.Contract = new ethers.Contract(assetId, BaseERC20ABI, this.ethProvider)
+    try {
+      await contract.decimals()
+    } catch (error) {
+      return false
+    }
+    return true
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
@@ -211,7 +223,13 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     if (assetId === this.assetId) {
       return await api.eth_getBalance(address, 'latest')
     }
-    return await api.eth_getAssetBalance(address, 'latest', assetId)
+    if (AssetId.validate(assetId)) {
+      return await api.eth_getAssetBalance(address, 'latest', assetId)
+    }
+    // from here can only be solidity smart contract
+    // ERC20 and ERC721 have the same balanceOf function signature
+    const contract: ethers.Contract = new ethers.Contract(assetId, BaseERC20ABI, this.ethProvider)
+    return BigInt.asUintN(256, await contract.balanceOf(address))
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
@@ -241,5 +259,10 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
 
   canPayImportFee (): boolean {
     return false
+  }
+
+  static isContractAddress (assetId: string): boolean {
+    // ethers.isAddress supports also ICAP addresses so check if it is hex too
+    return isHex(assetId) && ethers.isAddress(assetId)
   }
 }

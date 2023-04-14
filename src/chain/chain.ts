@@ -32,15 +32,6 @@ export interface Blockchain {
 
 }
 
-export interface EVMBlockchain {
-
-  chainId: bigint
-  ethProvider: ethers.JsonRpcProvider
-
-  estimateGasLimit: (assetId: string, from: string, to: string, amount: bigint) => Promise<bigint>
-
-}
-
 export interface Crossable {
 
   queryExportFee: (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string) => Promise<bigint>
@@ -176,7 +167,7 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   }
 }
 
-export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain, Crossable {
+export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   static readonly SendEtherGasLimit: bigint = BigInt(21000)
   static readonly AtomicSignatureCost: bigint = BigInt(1000)
   static readonly AtomicBaseCost: bigint = BigInt(10_000)

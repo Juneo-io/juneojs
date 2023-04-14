@@ -55,9 +55,11 @@ export class TransferManager {
       let txFee: bigint = await source.queryBaseFee(this.provider)
       if (source.vmId === JEVM_ID) {
         let gasTxFee: bigint = BigInt(0)
-        inputs.forEach(input => {
-          gasTxFee += txFee * (source as JEVMBlockchain).estimateGasLimit(input.assetId)
-        })
+        for (let i: number = 0; i < inputs.length; i++) {
+          const input: UserInput = inputs[i]
+          const hexAddress: string = (this.wallet.getWallet(source) as JEVMWallet).getHexAddress()
+          gasTxFee += txFee * await (source as JEVMBlockchain).estimateGasLimit(input.assetId, hexAddress, input.address, input.amount)
+        }
         txFee = gasTxFee
       }
       const feeData: FeeData = new FeeData(source, txFee, source.assetId, FeeType.BaseFee)
@@ -301,14 +303,17 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Send)
       this.receipts.push(receipt)
       const input: UserInput = transfer.userInputs[i]
+      const isContract: boolean = JEVMBlockchain.isContractAddress(input.assetId)
+      const gasLimit: bigint = await chain.estimateGasLimit(input.assetId, wallet.getHexAddress(), input.address, input.amount)
       const transactionData: TransactionRequest = {
         from: evmWallet.address,
-        to: input.address,
-        value: input.amount,
+        to: isContract ? input.assetId : input.address,
+        value: isContract ? BigInt(0) : input.amount,
         nonce: Number(nonce++),
         chainId: chain.chainId,
-        gasLimit: JEVMBlockchain.SendEtherGasLimit,
-        gasPrice
+        gasLimit,
+        gasPrice,
+        data: isContract ? await chain.getContractTransactionData(input.assetId, input.address, input.amount) : '0x'
       }
       const transaction: string = await evmWallet.signTransaction(transactionData)
       const transactionHash: string = await api.eth_sendRawTransaction(transaction)

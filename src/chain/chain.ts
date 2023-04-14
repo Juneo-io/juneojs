@@ -1,6 +1,5 @@
 import { ethers } from 'ethers'
 import { isHex, validateBech32 } from '../utils'
-import { type JuneoWallet, type VMWallet } from '../wallet'
 import { type MCNProvider } from '../juneo'
 import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
@@ -19,8 +18,6 @@ export interface Blockchain {
   vmId: string
   assetId: string
   aliases: string[]
-
-  buildWallet: (wallet: JuneoWallet) => VMWallet
 
   validateAddress: (address: string, hrp?: string) => boolean
 
@@ -64,8 +61,6 @@ export abstract class AbstractBlockchain implements Blockchain {
     this.aliases = aliases
   }
 
-  abstract buildWallet (wallet: JuneoWallet): VMWallet
-
   abstract validateAddress (address: string, hrp?: string): boolean
 
   abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
@@ -78,10 +73,6 @@ export abstract class AbstractBlockchain implements Blockchain {
 export class RelayBlockchain extends AbstractBlockchain implements Crossable {
   constructor (name: string, id: string, assetId: string, aliases?: string[]) {
     super(name, id, RELAYVM_ID, assetId, aliases)
-  }
-
-  buildWallet (wallet: JuneoWallet): VMWallet {
-    return wallet.buildJVMWallet(this)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -117,10 +108,6 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
 export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   constructor (name: string, id: string, assetId: string, aliases?: string[]) {
     super(name, id, JVM_ID, assetId, aliases)
-  }
-
-  buildWallet (wallet: JuneoWallet): VMWallet {
-    return wallet.buildJVMWallet(this)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -175,6 +162,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
   contractHandler: ContractHandler
+  jrcAddresses: string[] = []
 
   constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[]) {
     super(name, id, JEVM_ID, assetId, aliases)
@@ -205,10 +193,6 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     } else {
       return contract.getTransferData(assetId, to, amount)
     }
-  }
-
-  buildWallet (wallet: JuneoWallet): VMWallet {
-    return wallet.buildJEVMWallet(this)
   }
 
   validateAddress (address: string): boolean {

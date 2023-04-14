@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { type Blockchain } from '../chain'
+import { JEVM_ID, type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
 import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
@@ -43,14 +43,14 @@ export class JuneoWallet {
 
   getAddress (chain: Blockchain): string {
     if (this.chainsWallets[chain.id] === undefined) {
-      this.setChainWallet(chain, chain.buildWallet(this))
+      this.setChainWallet(chain)
     }
     return this.getWallet(chain).getAddress()
   }
 
   getWallet (chain: Blockchain): VMWallet {
     if (this.chainsWallets[chain.id] === undefined) {
-      this.setChainWallet(chain, chain.buildWallet(this))
+      this.setChainWallet(chain)
     }
     return this.chainsWallets[chain.id]
   }
@@ -63,11 +63,19 @@ export class JuneoWallet {
     return wallets
   }
 
-  private setChainWallet (chain: Blockchain, wallet: VMWallet): void {
-    this.chainsWallets[chain.id] = wallet
+  private setChainWallet (chain: Blockchain): void {
+    if (chain.vmId === JEVM_ID) {
+      this.chainsWallets[chain.id] = this.buildJEVMWallet(chain)
+    } else if (chain.vmId === JVM_ID) {
+      this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
+    } else if (chain.vmId === RELAYVM_ID) {
+      this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
+    } else {
+      throw new WalletError('unsupported vm id')
+    }
   }
 
-  buildJVMWallet (chain: Blockchain): JVMWallet {
+  private buildJVMWallet (chain: Blockchain): JVMWallet {
     let wallet: JVMWallet | undefined
     // affecation after declaration to prevent linter to remove value
     wallet = undefined
@@ -83,7 +91,7 @@ export class JuneoWallet {
     return wallet
   }
 
-  buildJEVMWallet (chain: Blockchain): JEVMWallet {
+  private buildJEVMWallet (chain: Blockchain): JEVMWallet {
     let wallet: JEVMWallet | undefined
     // affecation after declaration to prevent linter to remove value
     wallet = undefined
@@ -99,7 +107,7 @@ export class JuneoWallet {
     return wallet
   }
 
-  setMnemonic (mnemonic: string): void {
+  private setMnemonic (mnemonic: string): void {
     if (!bip39.validateMnemonic(mnemonic)) {
       throw new WalletError('invalid mnemonic provided')
     }

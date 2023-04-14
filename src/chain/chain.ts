@@ -37,7 +37,7 @@ export interface EVMBlockchain {
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
 
-  estimateGasLimit: (assetId: string) => bigint
+  estimateGasLimit: (assetId: string, from: string, to: string, amount: bigint) => Promise<bigint>
 
 }
 
@@ -195,8 +195,16 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     ])
   }
 
-  estimateGasLimit (assetId: string): bigint {
-    return JEVMBlockchain.SendEtherGasLimit
+  async estimateGasLimit (assetId: string, from: string, to: string, amount: bigint): Promise<bigint> {
+    if (assetId === this.assetId) {
+      return JEVMBlockchain.SendEtherGasLimit
+    }
+    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    if (contract === null) {
+      return BigInt(0)
+    } else {
+      return await contract.queryTransferGasEstimate(assetId, from, to, amount)
+    }
   }
 
   buildWallet (wallet: JuneoWallet): VMWallet {

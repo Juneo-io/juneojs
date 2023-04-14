@@ -178,6 +178,9 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
 export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain, Crossable {
   static readonly SendEtherGasLimit: bigint = BigInt(21000)
+  static readonly AtomicSignatureCost: bigint = BigInt(1000)
+  static readonly AtomicBaseCost: bigint = BigInt(10_000)
+  static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
   contractHandler: ContractHandler
@@ -243,9 +246,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
       userInputs, this.assetId, importFeeAssetId
     )
     const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    const gasUsed: bigint = BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10_000)
-    const baseFee: bigint = await this.queryBaseFee(provider)
-    return gasUsed * baseFee / BigInt(1_000_000_000)
+    return await this.calculateAtomicCost(provider, BigInt(size), BigInt(signaturesCount))
   }
 
   async queryImportFee (provider: MCNProvider, userInputs: UserInput[]): Promise<bigint> {
@@ -254,9 +255,13 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
       userInputs, this.assetId, mergedInputs
     )
     const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
-    const gasUsed: bigint = BigInt(size) + BigInt(1000 * signaturesCount) + BigInt(10_000)
+    return await this.calculateAtomicCost(provider, BigInt(size), BigInt(signaturesCount))
+  }
+
+  private async calculateAtomicCost (provider: MCNProvider, size: bigint, signaturesCount: bigint): Promise<bigint> {
+    const gasUsed: bigint = size + JEVMBlockchain.AtomicSignatureCost * signaturesCount + JEVMBlockchain.AtomicBaseCost
     const baseFee: bigint = await this.queryBaseFee(provider)
-    return gasUsed * baseFee / BigInt(1_000_000_000)
+    return gasUsed * baseFee / JEVMBlockchain.AtomicDenomination
   }
 
   canPayImportFee (): boolean {

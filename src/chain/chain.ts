@@ -201,7 +201,7 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
     const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
     if (contract === null) {
-      return ''
+      return '0x'
     } else {
       return contract.getTransferData(assetId, to, amount)
     }

@@ -29,6 +29,7 @@ export interface ContractAdapter {
   instanceOf: (contractAddress: string) => Promise<boolean>
   queryBalance: (contractAddress: string, address: string) => Promise<bigint>
   queryTransferGasEstimate: (contractAddress: string, from: string, to: string, amount: bigint) => Promise<bigint>
+  getTransferData: (contractAddress: string, to: string, amount: bigint) => string
 }
 
 export class ERC20ContractAdapter implements ContractAdapter {
@@ -65,5 +66,10 @@ export class ERC20ContractAdapter implements ContractAdapter {
       value: BigInt(0),
       data
     })
+  }
+
+  getTransferData (contractAddress: string, to: string, amount: bigint): string {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, BaseERC20ABI, this.provider)
+    return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 }

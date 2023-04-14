@@ -207,6 +207,15 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     }
   }
 
+  async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
+    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    if (contract === null) {
+      return ''
+    } else {
+      return contract.getTransferData(assetId, to, amount)
+    }
+  }
+
   buildWallet (wallet: JuneoWallet): VMWallet {
     return wallet.buildJEVMWallet(this)
   }

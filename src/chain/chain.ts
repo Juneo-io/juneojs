@@ -6,7 +6,7 @@ import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
-import { BaseERC20ABI } from '../solidity'
+import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -180,11 +180,16 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
   static readonly SendEtherGasLimit: bigint = BigInt(21000)
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
+  contractHandler: ContractHandler
 
   constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[]) {
     super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
+    this.contractHandler = new ContractHandler()
+    this.contractHandler.registerAdapters([
+      new ERC20ContractAdapter(this.ethProvider)
+    ])
   }
 
   estimateGasLimit (assetId: string): bigint {
@@ -206,30 +211,27 @@ export class JEVMBlockchain extends AbstractBlockchain implements EVMBlockchain,
     if (!JEVMBlockchain.isContractAddress(assetId)) {
       return false
     }
-    // checking if is ERC20 by calling decimals read only function
-    // other main tokens interfaces should not be using decimals
-    // IERC165 is not widespread enough to be used by ERC20 tokens
-    const contract: ethers.Contract = new ethers.Contract(assetId, BaseERC20ABI, this.ethProvider)
-    try {
-      await contract.decimals()
-    } catch (error) {
-      return false
-    }
-    return true
+    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    return contract !== null
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
     const api: JEVMAPI = provider.jevm[this.id]
+    // native asset
     if (assetId === this.assetId) {
       return await api.eth_getBalance(address, 'latest')
     }
+    // shared memory asset
     if (AssetId.validate(assetId)) {
       return await api.eth_getAssetBalance(address, 'latest', assetId)
     }
-    // from here can only be solidity smart contract
-    // ERC20 and ERC721 have the same balanceOf function signature
-    const contract: ethers.Contract = new ethers.Contract(assetId, BaseERC20ABI, this.ethProvider)
-    return BigInt.asUintN(256, await contract.balanceOf(address))
+    // from here should only be solidity smart contract
+    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    if (contract === null) {
+      return BigInt(0)
+    } else {
+      return await contract.queryBalance(assetId, address)
+    }
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {

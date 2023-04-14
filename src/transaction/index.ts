@@ -1,4 +1,5 @@
 
+export * from './jevm'
 export * from './jvm'
 export * from './relay'
 export * from './builder'

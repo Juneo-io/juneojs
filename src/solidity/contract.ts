@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { BaseERC20ABI } from './abi'
+import * as abi from './abi'
 
 export class ContractHandler {
   private readonly adapters: ContractAdapter[] = []
@@ -33,14 +33,14 @@ export interface ContractAdapter {
 }
 
 export class ERC20ContractAdapter implements ContractAdapter {
-  private readonly provider: ethers.JsonRpcProvider
+  protected readonly provider: ethers.JsonRpcProvider
 
   constructor (provider: ethers.JsonRpcProvider) {
     this.provider = provider
   }
 
   async instanceOf (contractAddress: string): Promise<boolean> {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, BaseERC20ABI, this.provider)
+    const contract: ethers.Contract = this.getContract(contractAddress)
     // checking if is ERC20 by calling decimals read only function
     // other main tokens interfaces should not be using decimals
     // IERC165 is not widespread enough to be used by ERC20 tokens
@@ -53,13 +53,12 @@ export class ERC20ContractAdapter implements ContractAdapter {
   }
 
   async queryBalance (contractAddress: string, address: string): Promise<bigint> {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, BaseERC20ABI, this.provider)
+    const contract: ethers.Contract = this.getContract(contractAddress)
     return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
   }
 
   async queryTransferGasEstimate (contractAddress: string, from: string, to: string, amount: bigint): Promise<bigint> {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, BaseERC20ABI, this.provider)
-    const data: string = contract.interface.encodeFunctionData('transfer', [to, amount])
+    const data: string = this.getTransferData(contractAddress, to, amount)
     return await this.provider.estimateGas({
       from,
       to: contractAddress,
@@ -69,7 +68,11 @@ export class ERC20ContractAdapter implements ContractAdapter {
   }
 
   getTransferData (contractAddress: string, to: string, amount: bigint): string {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, BaseERC20ABI, this.provider)
+    const contract: ethers.Contract = this.getContract(contractAddress)
     return contract.interface.encodeFunctionData('transfer', [to, amount])
+  }
+
+  protected getContract (contractAddress: string): ethers.Contract {
+    return new ethers.Contract(contractAddress, abi.ERC20ABI, this.provider)
   }
 }

@@ -1,5 +1,5 @@
 
-export const BaseERC20ABI: string[] = [
+export const ERC20ABI: string[] = [
   'function name() view returns (string)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
@@ -12,3 +12,9 @@ export const BaseERC20ABI: string[] = [
   'event Transfer(address indexed from, address indexed to, uint256 value)',
   'event Approval(address indexed owner, address indexed spender, uint256 value)'
 ]
+
+export const JRC20ABI: string[] = ERC20ABI.concat([
+  'function deposit()',
+  'function withdraw(uint256 value)',
+  'function nativeSupply() view returns (uint256)'
+])

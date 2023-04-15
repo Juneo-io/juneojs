@@ -183,7 +183,13 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     if (contract === null) {
       return BigInt(0)
     } else {
-      return await contract.queryTransferGasEstimate(assetId, from, to, amount)
+      const data: string = contract.getTransferData(assetId, to, amount)
+      return await this.ethProvider.estimateGas({
+        from,
+        to: assetId,
+        value: BigInt(0),
+        data
+      })
     }
   }
 

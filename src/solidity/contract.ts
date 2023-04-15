@@ -28,7 +28,6 @@ export class ContractHandler {
 export interface ContractAdapter {
   instanceOf: (contractAddress: string) => Promise<boolean>
   queryBalance: (contractAddress: string, address: string) => Promise<bigint>
-  queryTransferGasEstimate: (contractAddress: string, from: string, to: string, amount: bigint) => Promise<bigint>
   getTransferData: (contractAddress: string, to: string, amount: bigint) => string
 }
 
@@ -55,16 +54,6 @@ export class ERC20ContractAdapter implements ContractAdapter {
   async queryBalance (contractAddress: string, address: string): Promise<bigint> {
     const contract: ethers.Contract = this.getContract(contractAddress)
     return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
-  }
-
-  async queryTransferGasEstimate (contractAddress: string, from: string, to: string, amount: bigint): Promise<bigint> {
-    const data: string = this.getTransferData(contractAddress, to, amount)
-    return await this.provider.estimateGas({
-      from,
-      to: contractAddress,
-      value: BigInt(0),
-      data
-    })
   }
 
   getTransferData (contractAddress: string, to: string, amount: bigint): string {

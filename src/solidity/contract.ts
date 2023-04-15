@@ -15,12 +15,16 @@ export class ContractHandler {
   }
 
   registerAdapter (adapter: ContractAdapter): void {
-    this.adapters.push(adapter)
+    // register at first position because of getAdapter iteration implementation
+    // since specific adapter may have common functions with default ones
+    // it is preferable to check if it is part of those first.
+    // Should do a better getAdapter function in the future
+    this.adapters.unshift(adapter)
   }
 
   registerAdapters (adapters: ContractAdapter[]): void {
     adapters.forEach(adapter => {
-      this.adapters.push(adapter)
+      this.adapters.unshift(adapter)
     })
   }
 }

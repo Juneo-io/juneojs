@@ -76,3 +76,51 @@ export class ERC20ContractAdapter implements ContractAdapter {
     return new ethers.Contract(contractAddress, abi.ERC20ABI, this.provider)
   }
 }
+
+export class JRC20ContractAdapter extends ERC20ContractAdapter {
+  override async instanceOf (contractAddress: string): Promise<boolean> {
+    const contract: ethers.Contract = this.getContract(contractAddress)
+    // checking if is JRC20 by calling nativeSupply read only function
+    // other main tokens interfaces should not be using nativeSupply
+    try {
+      await contract.nativeSupply()
+    } catch (error) {
+      return false
+    }
+    return true
+  }
+
+  async queryWithdrawGasEstimate (contractAddress: string, from: string, value: bigint): Promise<bigint> {
+    const data: string = this.getWithdrawData(contractAddress, value)
+    return await this.provider.estimateGas({
+      from,
+      to: contractAddress,
+      value: BigInt(0),
+      data
+    })
+  }
+
+  getWithdrawData (contractAddress: string, value: bigint): string {
+    const contract: ethers.Contract = this.getContract(contractAddress)
+    return contract.interface.encodeFunctionData('withdraw', [value])
+  }
+
+  async queryDepositGasEstimate (contractAddress: string, from: string): Promise<bigint> {
+    const data: string = this.getDepositData(contractAddress)
+    return await this.provider.estimateGas({
+      from,
+      to: contractAddress,
+      value: BigInt(0),
+      data
+    })
+  }
+
+  getDepositData (contractAddress: string): string {
+    const contract: ethers.Contract = this.getContract(contractAddress)
+    return contract.interface.encodeFunctionData('deposit')
+  }
+
+  protected override getContract (contractAddress: string): ethers.Contract {
+    return new ethers.Contract(contractAddress, abi.JRC20ABI, this.provider)
+  }
+}

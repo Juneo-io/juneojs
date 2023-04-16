@@ -643,7 +643,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
           return false
         }
-        const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Withdraw)
+        const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Deposit)
         this.receipts.push(receipt)
         const jrc20: JRC20ContractAdapter = contract
         const data: string = jrc20.getDepositData(contractAddress, input.assetId, input.amount)

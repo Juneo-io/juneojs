@@ -608,11 +608,12 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   }
 
   private async executeJEVMImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
-    const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
+    const evmChain: JEVMBlockchain = transfer.destinationChain as JEVMBlockchain
+    const wallet: JEVMWallet = transfer.signer.getWallet(evmChain) as JEVMWallet
     const sourceChain: Blockchain = transfer.sourceChain
-    const api: JEVMAPI = provider.jevm[transfer.destinationChain.id]
+    const api: JEVMAPI = provider.jevm[evmChain.id]
     const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
+    const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
     this.receipts.push(receipt)
     const importTransaction: string = jevm.buildJEVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()], fee, provider.mcn.id
@@ -622,6 +623,57 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionStatus: string = await new JEVMTransactionStatusFetcher(api,
       StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
+    // checking if one of the imported assets has a jrc20 contract address
+    // to move it out from shared memory and wrap it as an erc20 token
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    const gasPrice: bigint = await api.eth_baseFee()
+    for (let i: number = 0; i < transfer.userInputs.length; i++) {
+      const input: UserInput = transfer.userInputs[i]
+      let contractAddress: string = ''
+      for (const key in evmChain.jrc20Assets) {
+        if (key === input.assetId) {
+          contractAddress = evmChain.jrc20Assets[key]
+          break
+        }
+      }
+      // found an input with a smart contract address
+      if (contractAddress !== '') {
+        const contract: ContractAdapter | null = await evmChain.contractHandler.getAdapter(input.assetId)
+        // for cross transactions only contract that can handle that should be JRC20
+        if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
+          return false
+        }
+        const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Withdraw)
+        this.receipts.push(receipt)
+        const jrc20: JRC20ContractAdapter = contract
+        const data: string = jrc20.getDepositData(contractAddress)
+        const gasLimit: bigint = await evmChain.ethProvider.estimateGas({
+          from: wallet.getHexAddress(),
+          to: input.assetId,
+          value: BigInt(0),
+          data
+        })
+        const transactionData: TransactionRequest = {
+          from: wallet.getHexAddress(),
+          to: input.assetId,
+          value: BigInt(0),
+          nonce: Number(nonce++),
+          chainId: evmChain.chainId,
+          gasLimit,
+          gasPrice,
+          data
+        }
+        const transaction: string = await wallet.evmWallet.signTransaction(transactionData)
+        const transactionHash: string = await api.eth_sendRawTransaction(transaction)
+        receipt.transactionId = transactionHash
+        const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+          StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+        receipt.transactionStatus = transactionStatus
+        if (transactionStatus !== EVMTransactionStatus.Success) {
+          return false
+        }
+      }
+    }
     return transactionStatus === JEVMTransactionStatus.Accepted
   }
 }

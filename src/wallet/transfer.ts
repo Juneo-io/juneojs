@@ -623,6 +623,9 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionStatus: string = await new JEVMTransactionStatusFetcher(api,
       StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
+    if (transactionStatus !== JEVMTransactionStatus.Accepted) {
+      return false
+    }
     // checking if one of the imported assets has a jrc20 contract address
     // to move it out from shared memory and wrap it as an erc20 token
     let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
@@ -674,6 +677,6 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         }
       }
     }
-    return transactionStatus === JEVMTransactionStatus.Accepted
+    return true
   }
 }

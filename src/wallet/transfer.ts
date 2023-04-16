@@ -1,4 +1,4 @@
-import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
+import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain, type JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData, FeeType } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
@@ -10,6 +10,7 @@ import { type JEVMAPI } from '../api/jevm'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
 import { type ethers } from 'ethers'
 import { type TransactionRequest } from 'ethers/types/providers'
+import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
@@ -32,7 +33,9 @@ export enum TransactionType {
   Base = 'Base transaction',
   Send = 'Send transaction',
   Export = 'Export transaction',
-  Import = 'Import transaction'
+  Import = 'Import transaction',
+  Withdraw = 'Withdraw transaction',
+  Deposit = 'Deposit transaction'
 }
 
 export class TransferManager {
@@ -434,12 +437,67 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
 
   private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
     const sourceChain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
+    const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
+    const api: JEVMAPI = provider.jevm[sourceChain.id]
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    const gasPrice: bigint = await api.eth_baseFee()
+    for (let i: number = 0; i < transfer.userInputs.length; i++) {
+      const input: UserInput = transfer.userInputs[i]
+      if (!JEVMBlockchain.isContractAddress(input.assetId)) {
+        continue
+      }
+      const contract: ContractAdapter | null = await sourceChain.contractHandler.getAdapter(input.assetId)
+      // for cross transactions only contract that can handle that should be JRC20
+      if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
+        this.status = TransferStatus.Error
+        return
+      }
+      // temporary until all JRC20 contracts implement assetId method to retrieve it we must hardcode the data
+      // TODO update it when implementation is done properly on all networks
+      let assetId: string = ''
+      for (let j: number = 0; j < sourceChain.jrc20Assets.length; j++) {
+        const asset: JRC20Asset = sourceChain.jrc20Assets[j]
+        if (asset.contractAddress === input.assetId) {
+          assetId = asset.id
+          break
+        }
+      }
+      if (assetId === '') {
+        this.status = TransferStatus.Error
+        return
+      }
+      const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Withdraw)
+      this.receipts.push(receipt)
+      const jrc20: JRC20ContractAdapter = contract
+      const gasLimit: bigint = await jrc20.queryWithdrawGasEstimate(input.assetId, wallet.getHexAddress(), input.amount)
+      const transactionData: TransactionRequest = {
+        from: wallet.getHexAddress(),
+        to: input.assetId,
+        value: BigInt(0),
+        nonce: Number(nonce++),
+        chainId: sourceChain.chainId,
+        gasLimit,
+        gasPrice,
+        data: jrc20.getWithdrawData(input.assetId, input.amount)
+      }
+      const transaction: string = await wallet.evmWallet.signTransaction(transactionData)
+      const transactionHash: string = await api.eth_sendRawTransaction(transaction)
+      receipt.transactionId = transactionHash
+      const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+        StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+      receipt.transactionStatus = transactionStatus
+      // asset id must be updated to its JVM id for next export/import tx
+      input.assetId = assetId
+      if (transactionStatus !== EVMTransactionStatus.Success) {
+        this.status = TransferStatus.Timeout
+        return
+      }
+    }
     const destinationChain: Blockchain & Crossable = transfer.destinationChain as Blockchain & Crossable
     if (destinationChain.vmId === JEVM_ID) {
       void this.proxyJVMTransfer(provider, transfer, transfer.destinationChain as JEVMBlockchain)
       return
     }
-    const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
     const exportFee: bigint = await sourceChain.queryExportFee(provider, transfer.userInputs, destinationChain.assetId)
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     let exportingFee: boolean = true
@@ -447,8 +505,6 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getHexAddress(), destinationChain.assetId)
       exportingFee = sourceBalance >= importFee
     }
-    const api: JEVMAPI = provider.jevm[sourceChain.id]
-    const nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
     this.receipts.push(receipt)
     const exportTransaction: string = jevm.buildJEVMExportTransaction(

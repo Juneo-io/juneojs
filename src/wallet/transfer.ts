@@ -1,4 +1,4 @@
-import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain, type JRC20Asset } from '../chain'
+import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData, FeeType } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
@@ -455,10 +455,10 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       // temporary until all JRC20 contracts implement assetId method to retrieve it we must hardcode the data
       // TODO update it when implementation is done properly on all networks
       let assetId: string = ''
-      for (let j: number = 0; j < sourceChain.jrc20Assets.length; j++) {
-        const asset: JRC20Asset = sourceChain.jrc20Assets[j]
-        if (asset.contractAddress === input.assetId) {
-          assetId = asset.id
+      for (const key in sourceChain.jrc20Assets) {
+        const contractAddress: string = sourceChain.jrc20Assets[key]
+        if (contractAddress === input.assetId) {
+          assetId = key
           break
         }
       }

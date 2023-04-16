@@ -1,5 +1,4 @@
 import { JRC20ContractAdapter } from '../solidity'
-import { JRC20Asset } from './asset'
 import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet, StakeConfig } from './network'
 
@@ -17,13 +16,13 @@ export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(RelayChai
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
 const JuneChainId: string = '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5'
 export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', JuneChainId,
-  BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'], [
-    new JRC20Asset(BelgradeUSDC1AssetId, JuneChainId, '0x2d00000000000000000000000000000000000000'),
-    new JRC20Asset(BelgradeBUSD1AssetId, JuneChainId, '0x2e00000000000000000000000000000000000000'),
-    new JRC20Asset(BelgradeEUROC1AssetId, JuneChainId, '0x2f00000000000000000000000000000000000000'),
-    new JRC20Asset(BelgradePAXG1AssetId, JuneChainId, '0x3000000000000000000000000000000000000000'),
-    new JRC20Asset(BelgradeMBTC1AssetId, JuneChainId, '0x3100000000000000000000000000000000000000')
-  ]
+  BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'], {
+    BelgradeUSDC1AssetId: '0x2d00000000000000000000000000000000000000',
+    BelgradeBUSD1AssetId: '0x2e00000000000000000000000000000000000000',
+    BelgradeEUROC1AssetId: '0x2f00000000000000000000000000000000000000',
+    BelgradePAXG1AssetId: '0x3000000000000000000000000000000000000000',
+    BelgradeMBTC1AssetId: '0x3100000000000000000000000000000000000000'
+  }
 )
 BelgradeJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(BelgradeJUNEChain.ethProvider))
 export const BelgradeUSDC1Chain: JEVMBlockchain = new JEVMBlockchain('USDC1-Chain', '2q7wRN9B835BxcpkAtiyaYqF9SDrKY9wPmkq6osNjxrTccZViq',

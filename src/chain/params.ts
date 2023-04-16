@@ -2,6 +2,9 @@ import { JRC20ContractAdapter } from '../solidity'
 import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet, StakeConfig } from './network'
 
+export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
+export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
+
 export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
 export const BelgradeUSDC1AssetId: string = 'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv'
 export const BelgradeBUSD1AssetId: string = '2h4isjyZaNpKf5qFt5gBfAZGXcWRVgUqVaNYE9LRFNrF4rqKwx'
@@ -16,11 +19,11 @@ export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(RelayChai
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
 export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'], {
-    'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv': '0x2d00000000000000000000000000000000000000',
+    f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv: '0x2d00000000000000000000000000000000000000',
     '2h4isjyZaNpKf5qFt5gBfAZGXcWRVgUqVaNYE9LRFNrF4rqKwx': '0x2e00000000000000000000000000000000000000',
     '2dBT199DhU99qgohAbG1oYM9PuGoAy6xPpBJ4EUDhPpCKyF7n3': '0x2f00000000000000000000000000000000000000',
-    'XP39Jfa56x33U269ejiKgP6XZ5GXkMZX5m7ZR63u3gDSZVShs': '0x3000000000000000000000000000000000000000',
-    'tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4M4Y9xRmxQ18zuX': '0x3100000000000000000000000000000000000000'
+    XP39Jfa56x33U269ejiKgP6XZ5GXkMZX5m7ZR63u3gDSZVShs: '0x3000000000000000000000000000000000000000',
+    tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4M4Y9xRmxQ18zuX: '0x3100000000000000000000000000000000000000'
   }
 )
 BelgradeJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(BelgradeJUNEChain.ethProvider))

@@ -1,4 +1,4 @@
-import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain } from '../chain'
+import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData, FeeType } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
@@ -641,7 +641,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       }
       // found an input with a smart contract address
       if (contractAddress !== '') {
-        const contract: ContractAdapter | null = await evmChain.contractHandler.getAdapter(input.assetId)
+        const contract: ContractAdapter | null = await evmChain.contractHandler.getAdapter(contractAddress)
         // for cross transactions only contract that can handle that should be JRC20
         if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
           return false
@@ -652,13 +652,13 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         const data: string = jrc20.getDepositData(contractAddress, input.assetId, input.amount)
         const gasLimit: bigint = await evmChain.ethProvider.estimateGas({
           from: wallet.getHexAddress(),
-          to: input.assetId,
+          to: NativeAssetCallContract,
           value: BigInt(0),
           data
         })
         const transactionData: TransactionRequest = {
           from: wallet.getHexAddress(),
-          to: input.assetId,
+          to: NativeAssetCallContract,
           value: BigInt(0),
           nonce: Number(nonce++),
           chainId: evmChain.chainId,

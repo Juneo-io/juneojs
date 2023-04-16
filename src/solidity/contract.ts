@@ -83,29 +83,9 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
     return true
   }
 
-  async queryWithdrawGasEstimate (contractAddress: string, from: string, value: bigint): Promise<bigint> {
-    const data: string = this.getWithdrawData(contractAddress, value)
-    return await this.provider.estimateGas({
-      from,
-      to: contractAddress,
-      value: BigInt(0),
-      data
-    })
-  }
-
   getWithdrawData (contractAddress: string, value: bigint): string {
     const contract: ethers.Contract = this.getContract(contractAddress)
     return contract.interface.encodeFunctionData('withdraw', [value])
-  }
-
-  async queryDepositGasEstimate (contractAddress: string, from: string): Promise<bigint> {
-    const data: string = this.getDepositData(contractAddress)
-    return await this.provider.estimateGas({
-      from,
-      to: contractAddress,
-      value: BigInt(0),
-      data
-    })
   }
 
   getDepositData (contractAddress: string): string {

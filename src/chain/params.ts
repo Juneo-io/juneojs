@@ -14,14 +14,13 @@ const RelayChainName: string = 'Relay-Chain'
 const RelayChainId: string = '11111111111111111111111111111111LpoYY'
 export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(RelayChainName, RelayChainId, BelgradeJUNEAssetId, ['Relay'])
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
-const JuneChainId: string = '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5'
-export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', JuneChainId,
+export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'], {
-    BelgradeUSDC1AssetId: '0x2d00000000000000000000000000000000000000',
-    BelgradeBUSD1AssetId: '0x2e00000000000000000000000000000000000000',
-    BelgradeEUROC1AssetId: '0x2f00000000000000000000000000000000000000',
-    BelgradePAXG1AssetId: '0x3000000000000000000000000000000000000000',
-    BelgradeMBTC1AssetId: '0x3100000000000000000000000000000000000000'
+    'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv': '0x2d00000000000000000000000000000000000000',
+    '2h4isjyZaNpKf5qFt5gBfAZGXcWRVgUqVaNYE9LRFNrF4rqKwx': '0x2e00000000000000000000000000000000000000',
+    '2dBT199DhU99qgohAbG1oYM9PuGoAy6xPpBJ4EUDhPpCKyF7n3': '0x2f00000000000000000000000000000000000000',
+    'XP39Jfa56x33U269ejiKgP6XZ5GXkMZX5m7ZR63u3gDSZVShs': '0x3000000000000000000000000000000000000000',
+    'tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4M4Y9xRmxQ18zuX': '0x3100000000000000000000000000000000000000'
   }
 )
 BelgradeJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(BelgradeJUNEChain.ethProvider))

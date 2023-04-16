@@ -149,6 +149,7 @@ export class StakeManager {
         }
       }
     }
+    stakes.fetched = true
   }
 }
 

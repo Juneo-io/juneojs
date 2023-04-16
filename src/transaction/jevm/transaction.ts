@@ -173,7 +173,11 @@ export class EVMInput implements Serializable, Signable, Spendable {
   }
 
   static comparator = (a: EVMInput, b: EVMInput): number => {
-    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+    let comparison: number = JuneoBuffer.comparator(a.address.serialize(), b.address.serialize())
+    if (comparison === 0) {
+      comparison = JuneoBuffer.comparator(a.assetId.serialize(), b.assetId.serialize())
+    }
+    return comparison
   }
 }
 

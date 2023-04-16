@@ -6,6 +6,7 @@ import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jev
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
+import { type JRC20Asset } from './asset'
 
 export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -162,13 +163,13 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   chainId: bigint
   ethProvider: ethers.JsonRpcProvider
   contractHandler: ContractHandler
-  jrcAddresses: string[]
+  jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[], jrcAddresses: string[] = []) {
+  constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[], jrc20Assets: JRC20Asset[] = []) {
     super(name, id, JEVM_ID, assetId, aliases)
     this.chainId = chainId
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
-    this.jrcAddresses = jrcAddresses
+    this.jrc20Assets = jrc20Assets
     this.contractHandler = new ContractHandler()
     this.contractHandler.registerAdapters([
       new ERC20ContractAdapter(this.ethProvider)

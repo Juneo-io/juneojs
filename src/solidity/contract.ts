@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import * as abi from './abi'
+import { AssetId } from '../transaction'
 
 export class ContractHandler {
   private readonly adapters: ContractAdapter[] = []
@@ -88,9 +89,16 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
     return contract.interface.encodeFunctionData('withdraw', [value])
   }
 
-  getDepositData (contractAddress: string): string {
+  getDepositData (contractAddress: string, assetId: string, amount: bigint): string {
     const contract: ethers.Contract = this.getContract(contractAddress)
-    return contract.interface.encodeFunctionData('deposit')
+    // native asset call data
+    let data: string = ethers.solidityPacked(
+      ['address', 'uint256', 'uint256'],
+      [contractAddress, new AssetId(assetId).serialize().toHex(), amount]
+    )
+    // add deposit function removed hex prefix
+    data += contract.interface.encodeFunctionData('deposit').substring(2)
+    return data
   }
 
   protected override getContract (contractAddress: string): ethers.Contract {

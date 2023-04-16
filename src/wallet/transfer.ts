@@ -646,7 +646,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Withdraw)
         this.receipts.push(receipt)
         const jrc20: JRC20ContractAdapter = contract
-        const data: string = jrc20.getDepositData(contractAddress)
+        const data: string = jrc20.getDepositData(contractAddress, input.assetId, input.amount)
         const gasLimit: bigint = await evmChain.ethProvider.estimateGas({
           from: wallet.getHexAddress(),
           to: input.assetId,

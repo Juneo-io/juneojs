@@ -94,7 +94,7 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
     // native asset call data
     let data: string = ethers.solidityPacked(
       ['address', 'uint256', 'uint256'],
-      [contractAddress, new AssetId(assetId).serialize().toHex(), amount]
+      [contractAddress, `0x${new AssetId(assetId).serialize().toHex()}`, amount]
     )
     // add deposit function removed hex prefix
     data += contract.interface.encodeFunctionData('deposit').substring(2)

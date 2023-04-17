@@ -1,6 +1,7 @@
-import { type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
-import { type MCNProvider } from '../juneo'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain, type Crossable, type JVMBlockchain, isCrossable } from '../chain'
+import { type JEVMWallet, type JuneoWallet, type MCNProvider } from '../juneo'
 import { FeeError } from '../utils'
+import { type UserInput } from './input'
 
 export enum FeeType {
   Undefined = 'Undefined',
@@ -23,85 +24,48 @@ export class FeeData {
   }
 }
 
-export class FeeManager {
-  private static singleton: FeeManager
-  adapters: Record<string, FeeQueryAdapter> = {}
-
-  private constructor () {
-    this.adapters[RELAYVM_ID] = new RelayVMFeeQueryAdapter()
-    this.adapters[JVM_ID] = new JVMFeeQueryAdapter()
-  }
-
-  private static getSingleton (): FeeManager {
-    if (FeeManager.singleton === undefined) {
-      FeeManager.singleton = new FeeManager()
+export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
+  if (source.id === destination.id) {
+    let txFee: bigint = await source.queryBaseFee(provider)
+    if (source.vmId === JEVM_ID) {
+      let gasTxFee: bigint = BigInt(0)
+      for (let i: number = 0; i < inputs.length; i++) {
+        const input: UserInput = inputs[i]
+        const hexAddress: string = (wallet.getWallet(source) as JEVMWallet).getHexAddress()
+        gasTxFee += txFee * await (source as JEVMBlockchain).estimateGasLimit(input.assetId, hexAddress, input.address, input.amount)
+      }
+      txFee = gasTxFee
     }
-    return FeeManager.singleton
+    return [new FeeData(source, txFee, source.assetId, FeeType.BaseFee)]
   }
-
-  static registerAdapter (vmId: string, adapter: FeeQueryAdapter): void {
-    const manager: FeeManager = FeeManager.getSingleton()
-    if (manager.adapters[vmId] !== undefined) {
-      throw new FeeError(`an adapter is already registered for vm id: ${vmId}`)
+  if (!isCrossable(source) || !isCrossable(destination)) {
+    throw new FeeError('both chains must implement Crossable to do inter chain transfer')
+  }
+  const sourceChain: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
+  const destinationChain: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
+  const fees: FeeData[] = []
+  const exportFee: bigint = await sourceChain.queryExportFee(provider, inputs, destination.assetId)
+  fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
+  const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
+  if (requiresProxy) {
+    const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
+    fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), jvmChain.assetId, FeeType.ImportFee))
+    fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), jvmChain.assetId, FeeType.ExportFee))
+  }
+  const importFee: bigint = await destinationChain.queryImportFee(provider, inputs)
+  // export fee by default
+  let exportingFee: boolean = true
+  // if destination can pay for the import fee with utxos
+  // check if source can really export it and otherwise will pay for it in import tx
+  if (destinationChain.canPayImportFee()) {
+    let address: string = wallet.getAddress(source)
+    if (source.vmId === JEVM_ID) {
+      const evmWallet: JEVMWallet = wallet.getWallet(source) as JEVMWallet
+      address = evmWallet.getHexAddress()
     }
-    manager.adapters[vmId] = adapter
+    const sourceBalance: bigint = await source.queryBalance(provider, address, destination.assetId)
+    exportingFee = sourceBalance >= importFee
   }
-
-  static async calculate (provider: MCNProvider, source: Blockchain, destination: Blockchain): Promise<bigint> {
-    const manager: FeeManager = FeeManager.getSingleton()
-    const sourceAdapter: FeeQueryAdapter = manager.adapters[source.vmId]
-    if (sourceAdapter === undefined) {
-      throw new FeeError(`there is no adapter registered for vm id: ${source.vmId}`)
-    }
-    // intra chain transfer
-    if (source.id === destination.id) {
-      return await sourceAdapter.queryBaseFee(provider)
-    }
-    const destinationAdapter: FeeQueryAdapter = manager.adapters[destination.vmId]
-    if (destinationAdapter === undefined) {
-      throw new FeeError(`there is no adapter registered for vm id: ${destination.vmId}`)
-    }
-    // inter chain transfer (currently only cross chain transactions)
-    const exportFee: bigint = await sourceAdapter.queryExportFee(provider)
-    const importFee: bigint = await destinationAdapter.queryImportFee(provider)
-    return exportFee + importFee
-  }
-}
-
-export interface FeeQueryAdapter {
-
-  queryBaseFee: (provider: MCNProvider) => Promise<bigint>
-
-  queryExportFee: (provider: MCNProvider) => Promise<bigint>
-
-  queryImportFee: (provider: MCNProvider) => Promise<bigint>
-
-}
-
-class RelayVMFeeQueryAdapter implements FeeQueryAdapter {
-  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  async queryExportFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  async queryImportFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-}
-
-class JVMFeeQueryAdapter implements FeeQueryAdapter {
-  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  async queryExportFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  async queryImportFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
+  fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId, FeeType.ImportFee))
+  return fees
 }

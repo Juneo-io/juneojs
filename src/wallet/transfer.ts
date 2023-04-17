@@ -437,10 +437,12 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
 
   private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
     const sourceChain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
+    const destinationChain: Blockchain & Crossable = transfer.destinationChain as Blockchain & Crossable
     const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
     const api: JEVMAPI = provider.jevm[sourceChain.id]
     let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
     const gasPrice: bigint = await api.eth_baseFee()
+    let destinationFee: bigint = BigInt(0)
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
       const input: UserInput = transfer.userInputs[i]
       if (!JEVMBlockchain.isContractAddress(input.assetId)) {
@@ -466,10 +468,19 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         this.status = TransferStatus.Error
         return
       }
+      let withdrawAmount = input.amount
+      // exporting more value to pay for import fee in destination currency
+      // because jrc20 can only be in a JEVM chain then we can safely assume
+      // that there will be a JVM proxy transfer
+      if (destinationFee === BigInt(0) && destinationChain.assetId === assetId) {
+        const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
+        withdrawAmount += importFee
+        destinationFee += importFee
+      }
       const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Withdraw)
       this.receipts.push(receipt)
       const jrc20: JRC20ContractAdapter = contract
-      const data: string = jrc20.getWithdrawData(input.assetId, input.amount)
+      const data: string = jrc20.getWithdrawData(input.assetId, withdrawAmount)
       const gasLimit: bigint = await sourceChain.ethProvider.estimateGas({
         from: wallet.getHexAddress(),
         to: input.assetId,
@@ -499,9 +510,8 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         return
       }
     }
-    const destinationChain: Blockchain & Crossable = transfer.destinationChain as Blockchain & Crossable
     if (destinationChain.vmId === JEVM_ID) {
-      void this.proxyJVMTransfer(provider, transfer, transfer.destinationChain as JEVMBlockchain)
+      void this.proxyJVMTransfer(provider, transfer, transfer.destinationChain as JEVMBlockchain, destinationFee)
       return
     }
     const exportFee: bigint = await sourceChain.queryExportFee(provider, transfer.userInputs, destinationChain.assetId)
@@ -532,13 +542,15 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     this.status = validStatus ? TransferStatus.Done : TransferStatus.Timeout
   }
 
-  private async proxyJVMTransfer (provider: MCNProvider, transfer: Transfer, destination: JEVMBlockchain): Promise<void> {
+  private async proxyJVMTransfer (provider: MCNProvider, transfer: Transfer, destination: JEVMBlockchain, destinationFee: bigint): Promise<void> {
     const signer: JuneoWallet = transfer.signer
     const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
     const toJVMUserInputs: UserInput[] = []
     transfer.userInputs.forEach(input => {
       toJVMUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount, signer.getAddress(jvmChain), jvmChain))
     })
+    // adding future import fee
+    toJVMUserInputs.push(new UserInput(destination.assetId, transfer.sourceChain, destinationFee, signer.getAddress(jvmChain), jvmChain))
     await this.executeJEVMTransfer(provider, new Transfer(transfer.sourceChain, jvmChain, toJVMUserInputs, signer))
     // if first cross failed then abort
     if (this.status !== TransferStatus.Done) {

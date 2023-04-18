@@ -550,7 +550,9 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       toJVMUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount, signer.getAddress(jvmChain), jvmChain))
     })
     // adding future import fee
-    toJVMUserInputs.push(new UserInput(destination.assetId, transfer.sourceChain, destinationFee, signer.getAddress(jvmChain), jvmChain))
+    if (destinationFee > BigInt(0)) {
+      toJVMUserInputs.push(new UserInput(destination.assetId, transfer.sourceChain, destinationFee, signer.getAddress(jvmChain), jvmChain))
+    }
     await this.executeJEVMTransfer(provider, new Transfer(transfer.sourceChain, jvmChain, toJVMUserInputs, signer))
     // if first cross failed then abort
     if (this.status !== TransferStatus.Done) {

@@ -627,17 +627,17 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const sourceChain: Blockchain = transfer.sourceChain
     const api: JEVMAPI = provider.jevm[evmChain.id]
     const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
-    const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
-    this.receipts.push(receipt)
+    const importReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
+    this.receipts.push(importReceipt)
     const importTransaction: string = jevm.buildJEVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()], fee, provider.mcn.id
     ).signTransaction([wallet]).toCHex()
     const transactionId: string = (await api.issueTx(importTransaction)).txID
-    receipt.transactionId = transactionId
-    const transactionStatus: string = await new JEVMTransactionStatusFetcher(api,
+    importReceipt.transactionId = transactionId
+    const importTransactionStatus: string = await new JEVMTransactionStatusFetcher(api,
       StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
-    receipt.transactionStatus = transactionStatus
-    if (transactionStatus !== JEVMTransactionStatus.Accepted) {
+    importReceipt.transactionStatus = importTransactionStatus
+    if (importTransactionStatus !== JEVMTransactionStatus.Accepted) {
       return false
     }
     // checking if one of the imported assets has a jrc20 contract address
@@ -660,8 +660,8 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
           return false
         }
-        const receipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Deposit)
-        this.receipts.push(receipt)
+        const depositReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Deposit)
+        this.receipts.push(depositReceipt)
         const jrc20: JRC20ContractAdapter = contract
         const data: string = jrc20.getDepositData(contractAddress, input.assetId, input.amount)
         const gasLimit: bigint = await evmChain.ethProvider.estimateGas({
@@ -680,13 +680,13 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
           gasPrice,
           data
         }
-        const transaction: string = await wallet.evmWallet.signTransaction(transactionData)
-        const transactionHash: string = await api.eth_sendRawTransaction(transaction)
-        receipt.transactionId = transactionHash
-        const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+        const depositTransaction: string = await wallet.evmWallet.signTransaction(transactionData)
+        const transactionHash: string = await api.eth_sendRawTransaction(depositTransaction)
+        depositReceipt.transactionId = transactionHash
+        const depositTransactionStatus: string = await new EVMTransactionStatusFetcher(api,
           StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
-        receipt.transactionStatus = transactionStatus
-        if (transactionStatus !== EVMTransactionStatus.Success) {
+        depositReceipt.transactionStatus = depositTransactionStatus
+        if (depositTransactionStatus !== EVMTransactionStatus.Success) {
           return false
         }
       }

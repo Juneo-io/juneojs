@@ -11,7 +11,7 @@ export class JRC20Asset {
   }
 }
 
-export class AssetBalance {
+export class AssetValue {
   value: bigint
   readonly decimals: number
 

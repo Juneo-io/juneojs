@@ -27,15 +27,21 @@ export class AssetBalance {
       return `0.${stringValue.padStart(this.decimals, '0')}`
     } else {
       let readableValue: string = stringValue.substring(0, length - this.decimals)
-      readableValue += '.'
-      readableValue += stringValue.substring(length - this.decimals, length)
+      if (this.decimals > 0) {
+        readableValue += '.'
+        readableValue += stringValue.substring(length - this.decimals, length).padEnd(this.decimals, '0')
+      }
       return readableValue
     }
   }
 
   getReadableValueRounded (decimals: number = 2): string {
     const readableValue: string = this.getReadableValue()
-    const index: number = readableValue.indexOf('.')
-    return readableValue.substring(0, index + decimals + 1)
+    if (this.decimals < 1) {
+      return readableValue
+    }
+    let index: number = readableValue.indexOf('.')
+    index += decimals + 1
+    return readableValue.substring(0, index)
   }
 }

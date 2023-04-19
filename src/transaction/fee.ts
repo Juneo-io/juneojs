@@ -26,18 +26,26 @@ export class FeeData {
 
 export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
-    let txFee: bigint = await source.queryBaseFee(provider)
-    if (source.vmId === JEVM_ID) {
-      let gasTxFee: bigint = BigInt(0)
-      for (let i: number = 0; i < inputs.length; i++) {
-        const input: UserInput = inputs[i]
-        const hexAddress: string = (wallet.getWallet(source) as JEVMWallet).getHexAddress()
-        gasTxFee += txFee * await (source as JEVMBlockchain).estimateGasLimit(input.assetId, hexAddress, input.address, input.amount)
-      }
-      txFee = gasTxFee
-    }
-    return [new FeeData(source, txFee, source.assetId, FeeType.BaseFee)]
+    return await calculateIntraChainTransferFee(provider, wallet, source, inputs)
   }
+  return await calculateInterChainTransferFee(provider, wallet, source, destination, inputs)
+}
+
+async function calculateIntraChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, chain: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
+  let txFee: bigint = await chain.queryBaseFee(provider)
+  if (chain.vmId === JEVM_ID) {
+    let gasTxFee: bigint = BigInt(0)
+    for (let i: number = 0; i < inputs.length; i++) {
+      const input: UserInput = inputs[i]
+      const hexAddress: string = (wallet.getWallet(chain) as JEVMWallet).getHexAddress()
+      gasTxFee += txFee * await (chain as JEVMBlockchain).estimateGasLimit(input.assetId, hexAddress, input.address, input.amount)
+    }
+    txFee = gasTxFee
+  }
+  return [new FeeData(chain, txFee, chain.assetId, FeeType.BaseFee)]
+}
+
+async function calculateInterChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (!isCrossable(source) || !isCrossable(destination)) {
     throw new FeeError('both chains must implement Crossable to do inter chain transfer')
   }

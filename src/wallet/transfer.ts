@@ -1,6 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, RELAYVM_ID, type JVMBlockchain, type RelayBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, FeeData, FeeType } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, RelayTransactionStatusFetcher, RelayTransactionStatus, parseUtxoSet, type FeeData, calculateFee } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -55,49 +55,16 @@ export class TransferManager {
     for (const key in intraTransfersInputs) {
       const inputs: UserInput[] = intraTransfersInputs[key]
       const source: Blockchain = inputs[0].sourceChain
-      let txFee: bigint = await source.queryBaseFee(this.provider)
-      if (source.vmId === JEVM_ID) {
-        let gasTxFee: bigint = BigInt(0)
-        for (let i: number = 0; i < inputs.length; i++) {
-          const input: UserInput = inputs[i]
-          const hexAddress: string = (this.wallet.getWallet(source) as JEVMWallet).getHexAddress()
-          gasTxFee += txFee * await (source as JEVMBlockchain).estimateGasLimit(input.assetId, hexAddress, input.address, input.amount)
-        }
-        txFee = gasTxFee
-      }
-      const feeData: FeeData = new FeeData(source, txFee, source.assetId, FeeType.BaseFee)
-      summaries.push(new TransferSummary(TransferType.Base, inputs, source, [feeData]))
+      const fee: FeeData[] = await calculateFee(this.provider, this.wallet, source, source, inputs)
+      summaries.push(new TransferSummary(TransferType.Base, inputs, source, fee))
     }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       // because of previously sorting should always be safe casting here
       const source: Blockchain & Crossable = inputs[0].sourceChain as unknown as Blockchain & Crossable
       const destination: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
-      const fees: FeeData[] = []
-      const exportFee: bigint = await source.queryExportFee(this.provider, inputs, destination.assetId)
-      fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
-      const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
-      if (requiresProxy) {
-        const jvmChain: JVMBlockchain = this.provider.jvm.chain as JVMBlockchain
-        fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(this.provider), jvmChain.assetId, FeeType.ImportFee))
-        fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(this.provider), jvmChain.assetId, FeeType.ExportFee))
-      }
-      const importFee: bigint = await destination.queryImportFee(this.provider, inputs)
-      // export fee by default
-      let exportingFee: boolean = true
-      // if destination can pay for the import fee with utxos
-      // check if source can really export it and otherwise will pay for it in import tx
-      if (destination.canPayImportFee()) {
-        let address: string = this.wallet.getAddress(source)
-        if (source.vmId === JEVM_ID) {
-          const evmWallet: JEVMWallet = this.wallet.getWallet(source) as JEVMWallet
-          address = evmWallet.getHexAddress()
-        }
-        const sourceBalance: bigint = await source.queryBalance(this.provider, address, destination.assetId)
-        exportingFee = sourceBalance >= importFee
-      }
-      fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId, FeeType.ImportFee))
-      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fees))
+      const fee: FeeData[] = await calculateFee(this.provider, this.wallet, source, destination, inputs)
+      summaries.push(new TransferSummary(TransferType.Cross, inputs, source, fee))
     }
     return summaries
   }

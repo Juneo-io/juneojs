@@ -1,5 +1,5 @@
 import { MCNProvider, JuneoWallet } from "../dist"
-import { StakeManager, StakeReward } from "../dist/wallet/stake"
+import { StakeManager, StakeReward, Stakes } from "../dist/wallet/stake"
 import { now } from "../dist/utils"
 
 async function main () {
@@ -22,10 +22,12 @@ async function main () {
     manager.delegate(nodeId, stakeAmount, startTime, endTime)
     // if you want to validate instead of delegate use manager.validate instead
 
-    // get the pending rewards for the wallet of this manager
-    const pending: StakeReward[] = await manager.pendingRewards()
+    // get the stakes object for the wallet of this manager
+    const pending: Stakes = manager.pendingRewards()
     // can be empty if no delegation or validation exists
-    pending.forEach(reward => {
+    // or if not all stakes have been fetched yet
+    // this can be checked with pending.fetched
+    pending.currentStakes.forEach(reward => {
         // the type of staking (validation/delegation)
         console.log(reward.stakeType)
         // the reward of this stake
@@ -40,6 +42,12 @@ async function main () {
         console.log(reward.startTime)
         console.log(reward.endTime)
     })
+    // Those are the stakes that have a start time that is in the future
+    // They will start validating/delegating soon
+    // Warning they are PendingReward have less fields values than StakeReward
+    pending.futureStakes
+    // whether all stakes have been fetched or there are some new ones that will be added
+    pending.fetched
 }
 
 main().catch((error) => {

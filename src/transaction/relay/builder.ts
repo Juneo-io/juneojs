@@ -1,13 +1,13 @@
 import { type Blockchain } from '../../chain/chain'
-import { InputError } from '../../utils'
+import { InputError, TransactionError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
 import { UserInput, type TransferableInput } from '../input'
 import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
-import { Address, AssetId, BlockchainId, NodeId } from '../types'
+import { Address, AssetId, BlockchainId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
-import { AddDelegatorTransaction, AddValidatorTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
-import { Validator } from './validation'
+import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
+import { SupernetAuth, Validator } from './validation'
 
 export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
@@ -202,6 +202,71 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
     memo,
     validator,
     stake,
+    rewardsOwner
+  )
+}
+
+export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+  endTime: bigint, stakeAmount: bigint, supernetId: string | SupernetId, supernetAuthAddresses: string[], changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
+  const signersAddresses: Address[] = []
+  sendersAddresses.forEach(senderAddress => {
+    signersAddresses.push(new Address(senderAddress))
+  })
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new FeeData(chain, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new FeeData(chain, fee), changeAddress)
+  const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
+  const supernetAuthIndices: number[] = []
+  for (let i: number = 0; i < supernetAuthAddresses.length; i++) {
+    const authAddress: Address = new Address(supernetAuthAddresses[i])
+    let found: boolean = false
+    for (let j: number = 0; j < signersAddresses.length; j++) {
+      const signerAddress: Address = signersAddresses[j]
+      if (authAddress.matches(signerAddress)) {
+        supernetAuthIndices.push(j)
+        found = true
+        break
+      }
+    }
+    if (!found) {
+      throw new TransactionError(`missing signer address for auth address: ${supernetAuthAddresses[i]}`)
+    }
+  }
+  return new AddSupernetValidatorTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
+    validator,
+    typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
+    new SupernetAuth(supernetAuthIndices)
+  )
+}
+
+export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain,
+  supernetAuthAddresses: string[], supernetAuthThreshold: number, changeAddress: string, networkId: number, memo: string = ''): CreateSupernetTransaction {
+  const signersAddresses: Address[] = []
+  sendersAddresses.forEach(senderAddress => {
+    signersAddresses.push(new Address(senderAddress))
+  })
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new FeeData(chain, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new FeeData(chain, fee), changeAddress)
+  const authAddresses: Address[] = []
+  supernetAuthAddresses.forEach(authAddress => {
+    authAddresses.push(new Address(authAddress))
+  })
+  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
+    BigInt(0),
+    BigInt(0),
+    supernetAuthThreshold,
+    authAddresses
+  )
+  return new CreateSupernetTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
     rewardsOwner
   )
 }

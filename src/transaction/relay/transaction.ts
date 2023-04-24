@@ -4,12 +4,14 @@ import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
-import { BlockchainIdSize, BlockchainId } from '../types'
-import { Validator, Secp256k1OutputOwners } from './validation'
+import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize } from '../types'
+import { Validator, Secp256k1OutputOwners, type SupernetAuth } from './validation'
 
-const ExportTransactionTypeId: number = 0x00000012
+const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
+const ExportTransactionTypeId: number = 0x00000012
 const AddValidatorTransactionTypeId: number = 0x0000000c
+const AddSupernetValidatorTransactionType: number = 0x0000000d
 const AddDelegatorTransactionTypeId: number = 0x0000000e
 
 export enum RelayTransactionStatus {
@@ -101,7 +103,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     })
     const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + 44 + 4 + stakeBytesSize + rewardsOwnerBytes.length + 4
+      baseTransaction.length + Validator.Size + 4 + stakeBytesSize + rewardsOwnerBytes.length + 4
     )
     buffer.write(baseTransaction)
     buffer.write(this.validator.serialize())
@@ -199,7 +201,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     })
     const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + 44 + 4 + stakeBytesSize + rewardsOwnerBytes.length
+      baseTransaction.length + Validator.Size + 4 + stakeBytesSize + rewardsOwnerBytes.length
     )
     buffer.write(baseTransaction)
     buffer.write(this.validator.serialize())
@@ -262,5 +264,61 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
       stakes,
       rewardsOwner
     )
+  }
+}
+
+export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
+  validator: Validator
+  supernetId: SupernetId
+  supernetAuth: SupernetAuth
+
+  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[],
+    memo: string, validator: Validator, supernetId: SupernetId, supernetAuth: SupernetAuth) {
+    super(AddSupernetValidatorTransactionType, networkId, blockchainId, outputs, inputs, memo)
+    this.validator = validator
+    this.supernetId = supernetId
+    this.supernetAuth = supernetAuth
+  }
+
+  getUnsignedInputs (): TransferableInput[] {
+    return this.inputs
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + Validator.Size + SupernetIdSize + supernetAuthBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.validator.serialize())
+    buffer.write(this.supernetId.serialize())
+    buffer.write(supernetAuthBytes)
+    return buffer
+  }
+}
+
+export class CreateSupernetTransaction extends AbstractBaseTransaction {
+  rewardsOwner: Secp256k1OutputOwners
+
+  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[],
+    inputs: TransferableInput[], memo: string, rewardsOwner: Secp256k1OutputOwners) {
+    super(CreateSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.rewardsOwner = rewardsOwner
+  }
+
+  getUnsignedInputs (): TransferableInput[] {
+    return this.inputs
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + rewardsOwnerBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(rewardsOwnerBytes)
+    return buffer
   }
 }

@@ -3,6 +3,7 @@ import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput } from '
 import { Address, AddressSize, NodeId, NodeIdSize } from '../types'
 
 export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
+export const SubnetAuthTypeId: number = 0x0000000a
 
 export class Validator implements Serializable {
   static Size: number = 44
@@ -101,5 +102,29 @@ export class Secp256k1OutputOwners implements TransactionOutput {
       addresses.push(address)
     }
     return new Secp256k1OutputOwners(locktime, threshold, addresses)
+  }
+}
+
+export class SupernetAuth implements Serializable {
+  readonly typeId: number = SubnetAuthTypeId
+  addressIndices: number[]
+
+  constructor (addressIndices: number[]) {
+    this.addressIndices = addressIndices
+    this.addressIndices.sort((a: number, b: number) => {
+      return a - b
+    })
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      4 + 4 + this.addressIndices.length * 4
+    )
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt32(this.addressIndices.length)
+    this.addressIndices.forEach(indice => {
+      buffer.writeUInt32(indice)
+    })
+    return buffer
   }
 }

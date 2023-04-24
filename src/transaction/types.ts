@@ -7,6 +7,7 @@ export const AddressSize: number = 20
 export const AssetIdSize: number = 32
 export const TransactionIdSize: number = 32
 export const BlockchainIdSize: number = 32
+export const SupernetIdSize: number = 32
 export const SignatureSize: number = SignatureLength
 export const NodeIdSize: number = 20
 
@@ -108,5 +109,18 @@ export class NodeId extends BytesData {
     }
     super(buffer)
     this.nodeId = parsedNodeId
+  }
+}
+
+export class SupernetId extends BytesData {
+  supernetId: string
+
+  constructor (supernetId: string) {
+    const buffer: JuneoBuffer = encoding.decodeCB58(supernetId)
+    if (buffer.length !== SupernetIdSize) {
+      throw new TypeError(`supernet id is not ${SupernetIdSize} bytes long`)
+    }
+    super(buffer)
+    this.supernetId = supernetId
   }
 }

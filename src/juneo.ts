@@ -14,7 +14,7 @@ export class MCNProvider {
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
-  constructor (mcn: MCN = params.BelgradeNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+  constructor (mcn: MCN = params.SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
     this.info = new InfoAPI(client)
     this.relay = new RelayAPI(client, this.mcn.primary.relay)

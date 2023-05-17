@@ -5,6 +5,29 @@ import { MCN, PrimarySupernet, StakeConfig } from './network'
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
+const SocotraAddress: string = 'https://api1.socotra1.mcnpoc5.xyz:9650'
+
+export const SocotraJUNEAssetId: string = '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2'
+
+export const SocotraPlatformChain: RelayBlockchain = new RelayBlockchain(
+  'Platform-Chain', '11111111111111111111111111111111LpoYY', SocotraJUNEAssetId, ['P']
+)
+export const SocotraJVMChain: JVMBlockchain = new JVMBlockchain(
+  'JVM-Chain', '2FVEDA4X6coH7TfrJa5hACzJCzRWipmChXD5xaiLX5PuT85bEp', SocotraJUNEAssetId, ['JVM']
+)
+export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
+  'JUNE-Chain', '2Yo2YDwvWHQTwUtTLQTAoimNBGshmbYByk1tQfWpdAY9oQgJyj', SocotraJUNEAssetId, BigInt(220001), SocotraAddress, ['JUNE']
+)
+export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet('11111111111111111111111111111111LpoYY', [
+  SocotraPlatformChain, SocotraJVMChain, SocotraJUNEChain
+], SocotraPlatformChain, SocotraJVMChain)
+
+export const SocotraStakeConfig: StakeConfig = new StakeConfig(
+  // 80%, 1, 100000, 0.01, 14 days, 365 days
+  0.8, 1_000000000, 1000000_000000000, 10000000, 2 * 7 * 24 * 3600, 365 * 24 * 3600
+)
+export const SocotraNetwork: MCN = new MCN(SocotraAddress, 2, 'socotra', SocotraStakeConfig, SocotraPrimarySupernet)
+
 export const BelgradeJUNEAssetId: string = 'dcND1oFSYQBKvLhsfJgFnLPnKuWntXY34GQdYRffThZbfZ7JD'
 export const BelgradeUSDC1AssetId: string = 'f2aFbTdjMLPeLTbi8EzqjJwx95zF9jhdG4zQ6JWRgTAmihCZv'
 export const BelgradeBUSD1AssetId: string = '2h4isjyZaNpKf5qFt5gBfAZGXcWRVgUqVaNYE9LRFNrF4rqKwx'
@@ -49,7 +72,6 @@ export const BelgradeStakeConfig: StakeConfig = new StakeConfig(
 )
 
 export const BelgradeNetwork: MCN = new MCN(BelgradeAddress, 1, 'june', BelgradeStakeConfig, BelgradePrimarySupernet)
-// TODO Update when testnet is online
-export const TestNetwork: MCN = BelgradeNetwork
+export const TestNetwork: MCN = SocotraNetwork
 // TODO Update when mainnet is online
 export const MainNetwork: MCN = TestNetwork

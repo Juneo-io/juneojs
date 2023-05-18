@@ -1,4 +1,4 @@
-import { type RelayAPI } from '../../api/relay'
+import { type PlatformAPI } from '../../api/platform'
 import { JuneoBuffer } from '../../utils/bytes'
 import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
@@ -14,7 +14,7 @@ const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d
 const AddDelegatorTransactionTypeId: number = 0x0000000e
 
-export enum RelayTransactionStatus {
+export enum PlatformTransactionStatus {
   Committed = 'Committed',
   Aborted = 'Aborted',
   Processing = 'Processing',
@@ -22,16 +22,16 @@ export enum RelayTransactionStatus {
   Unknown = 'Unknown'
 }
 
-export class RelayTransactionStatusFetcher {
-  relayApi: RelayAPI
+export class PlatformTransactionStatusFetcher {
+  platformApi: PlatformAPI
   delay: number
   private attempts: number = 0
   maxAttempts: number
   transactionId: string
-  currentStatus: string = RelayTransactionStatus.Unknown
+  currentStatus: string = PlatformTransactionStatus.Unknown
 
-  constructor (relayApi: RelayAPI, delay: number, maxAttempts: number, transactionId: string) {
-    this.relayApi = relayApi
+  constructor (platformApi: PlatformAPI, delay: number, maxAttempts: number, transactionId: string) {
+    this.platformApi = platformApi
     this.delay = delay
     this.maxAttempts = maxAttempts
     this.transactionId = transactionId
@@ -44,18 +44,18 @@ export class RelayTransactionStatusFetcher {
   async fetch (): Promise<string> {
     while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
-      this.currentStatus = (await this.relayApi.getTxStatus(this.transactionId)).status
+      this.currentStatus = (await this.platformApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== RelayTransactionStatus.Unknown && this.currentStatus !== RelayTransactionStatus.Processing
+    return this.currentStatus !== PlatformTransactionStatus.Unknown && this.currentStatus !== PlatformTransactionStatus.Processing
   }
 }
 
-export class RelayExportTransaction extends AbstractExportTransaction {
+export class PlatformExportTransaction extends AbstractExportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
@@ -64,7 +64,7 @@ export class RelayExportTransaction extends AbstractExportTransaction {
   }
 }
 
-export class RelayImportTransaction extends AbstractImportTransaction {
+export class PlatformImportTransaction extends AbstractImportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     sourceChain: BlockchainId, importedInputs: TransferableInput[]) {

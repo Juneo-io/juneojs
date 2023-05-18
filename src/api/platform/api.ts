@@ -1,13 +1,13 @@
-import { type RelayBlockchain } from '../../chain'
+import { type PlatformBlockchain } from '../../chain'
 import { AbstractChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
 import { type GetBalanceResponse, type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetBlockResponse, type GetCurrentSupplyResponse, type GetCurrentValidatorsResponse, type GetHeightResponse, type GetMaxStakeAmountResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse, type GetRewardUTXOsResponse, type GetStakeResponse, type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse, type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
 
-const Service: string = 'relay'
+const Service: string = 'platform'
 
-export class RelayAPI extends AbstractChainAPI {
-  constructor (client: JuneoClient, chain: RelayBlockchain) {
+export class PlatformAPI extends AbstractChainAPI {
+  constructor (client: JuneoClient, chain: PlatformBlockchain) {
     super(client, Service, chain)
   }
 

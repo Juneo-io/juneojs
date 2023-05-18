@@ -1,12 +1,12 @@
 import { type GetTxResponse } from '../api/data'
-import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator, type GetPendingValidatorsResponse, type PendingValidator, type PendingDelegator } from '../api/relay/data'
-import { type RelayBlockchain } from '../chain'
+import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator, type GetPendingValidatorsResponse, type PendingValidator, type PendingDelegator } from '../api/platform/data'
+import { type PlatformBlockchain } from '../chain'
 import { type JuneoWallet, type MCNProvider } from '../juneo'
 import { Address, NodeId } from '../transaction/types'
 import { parseUtxoSet, type Utxo } from '../transaction/utxo'
-import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/relay/builder'
-import { AddDelegatorTransaction, AddValidatorTransaction, RelayTransactionStatus, RelayTransactionStatusFetcher } from '../transaction/relay/transaction'
-import { type Secp256k1OutputOwners, Validator } from '../transaction/relay/validation'
+import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
+import { AddDelegatorTransaction, AddValidatorTransaction, PlatformTransactionStatus, PlatformTransactionStatusFetcher } from '../transaction/platform/transaction'
+import { type Secp256k1OutputOwners, Validator } from '../transaction/platform/validation'
 import { TransactionReceipt } from './transfer'
 import { type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
@@ -67,17 +67,17 @@ export class StakeManager {
   }
 
   async fetchRewards (stakes: Stakes): Promise<void> {
-    const address: Address = new Address(this.wallet.getAddress(this.provider.mcn.primary.relay))
-    const pending: GetPendingValidatorsResponse = await this.provider.relay.getPendingValidators()
+    const address: Address = new Address(this.wallet.getAddress(this.provider.mcn.primary.platform))
+    const pending: GetPendingValidatorsResponse = await this.provider.platform.getPendingValidators()
     for (let i: number = 0; i < pending.validators.length; i++) {
       const validator: PendingValidator = pending.validators[i]
-      const validatorTx: GetTxResponse = await this.provider.relay.getTx(validator.txID)
+      const validatorTx: GetTxResponse = await this.provider.platform.getTx(validator.txID)
       const validatorTransaction: AddValidatorTransaction = AddValidatorTransaction.parse(validatorTx.tx)
       const validatorRewards: Secp256k1OutputOwners = validatorTransaction.rewardsOwner
       if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
         stakes.futureStakes.push(new PendingReward(
           StakeRewardType.Validation,
-          this.provider.mcn.primary.relay.assetId,
+          this.provider.mcn.primary.platform.assetId,
           validator.txID,
           BigInt(validator.startTime),
           BigInt(validator.endTime),
@@ -89,13 +89,13 @@ export class StakeManager {
     }
     for (let i: number = 0; i < pending.delegators.length; i++) {
       const delegator: PendingDelegator = pending.delegators[i]
-      const transaction: GetTxResponse = await this.provider.relay.getTx(delegator.txID)
+      const transaction: GetTxResponse = await this.provider.platform.getTx(delegator.txID)
       const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
       const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner
       if (delegatorRewards.addresses.length > 0 && address.matches(delegatorRewards.addresses[0])) {
         stakes.futureStakes.push(new PendingReward(
           StakeRewardType.Delegation,
-          this.provider.mcn.primary.relay.assetId,
+          this.provider.mcn.primary.platform.assetId,
           delegator.txID,
           BigInt(delegator.startTime),
           BigInt(delegator.endTime),
@@ -105,16 +105,16 @@ export class StakeManager {
         ))
       }
     }
-    const validators: GetCurrentValidatorsResponse = await this.provider.relay.getCurrentValidators()
+    const validators: GetCurrentValidatorsResponse = await this.provider.platform.getCurrentValidators()
     for (let i: number = 0; i < validators.validators.length; i++) {
       const validator: APIValidator = validators.validators[i]
-      const validatorTx: GetTxResponse = await this.provider.relay.getTx(validator.txID)
+      const validatorTx: GetTxResponse = await this.provider.platform.getTx(validator.txID)
       const validatorTransaction: AddValidatorTransaction = AddValidatorTransaction.parse(validatorTx.tx)
       const validatorRewards: Secp256k1OutputOwners = validatorTransaction.rewardsOwner
       if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
         stakes.currentStakes.push(new StakeReward(
           StakeRewardType.Validation,
-          this.provider.mcn.primary.relay.assetId,
+          this.provider.mcn.primary.platform.assetId,
           validator.txID,
           BigInt(validator.startTime),
           BigInt(validator.endTime),
@@ -130,13 +130,13 @@ export class StakeManager {
       }
       for (let j: number = 0; j < validator.delegators.length; j++) {
         const delegator: Delegator = validator.delegators[j]
-        const transaction: GetTxResponse = await this.provider.relay.getTx(delegator.txID)
+        const transaction: GetTxResponse = await this.provider.platform.getTx(delegator.txID)
         const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
         const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner
         if (delegatorRewards.addresses.length > 0 && address.matches(delegatorRewards.addresses[0])) {
           stakes.currentStakes.push(new StakeReward(
             StakeRewardType.Delegation,
-            this.provider.mcn.primary.relay.assetId,
+            this.provider.mcn.primary.platform.assetId,
             delegator.txID,
             BigInt(delegator.startTime),
             BigInt(delegator.endTime),
@@ -215,20 +215,20 @@ export class DelegationHandler implements ExecutableStakeHandler {
   }
 
   async execute (provider: MCNProvider, wallet: JuneoWallet, validator: Validator): Promise<void> {
-    const relay: RelayBlockchain = provider.mcn.primary.relay
-    const relayWallet: VMWallet = wallet.getWallet(relay)
-    const senders: string[] = [relayWallet.getAddress()]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
+    const platform: PlatformBlockchain = provider.mcn.primary.platform
+    const platformWallet: VMWallet = wallet.getWallet(platform)
+    const senders: string[] = [platformWallet.getAddress()]
+    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(senders))
     const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
-    this.receipt = new TransactionReceipt(relay.id, StakeTransaction.PrimaryDelegation)
+    this.receipt = new TransactionReceipt(platform.id, StakeTransaction.PrimaryDelegation)
     const addDelegatorTransaction: string = buildAddDelegatorTransaction(
-      utxoSet, senders, fee, relay, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
-      relay.assetId, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
-    ).signTransaction([relayWallet]).toCHex()
-    const transactionId = (await provider.relay.issueTx(addDelegatorTransaction)).txID
+      utxoSet, senders, fee, platform, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      platform.assetId, platformWallet.getAddress(), platformWallet.getAddress(), provider.mcn.id
+    ).signTransaction([platformWallet]).toCHex()
+    const transactionId = (await provider.platform.issueTx(addDelegatorTransaction)).txID
     this.receipt.transactionId = transactionId
-    this.receipt.transactionStatus = RelayTransactionStatus.Unknown
-    const transactionStatus: string = await new RelayTransactionStatusFetcher(provider.relay,
+    this.receipt.transactionStatus = PlatformTransactionStatus.Unknown
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
       StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
     this.receipt.transactionStatus = transactionStatus
   }
@@ -242,20 +242,20 @@ export class ValidationHandler implements ExecutableStakeHandler {
   }
 
   async execute (provider: MCNProvider, wallet: JuneoWallet, validator: Validator): Promise<void> {
-    const relay: RelayBlockchain = provider.mcn.primary.relay
-    const relayWallet: VMWallet = wallet.getWallet(relay)
-    const senders: string[] = [relayWallet.getAddress()]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.relay.getUTXOs(senders))
+    const platform: PlatformBlockchain = provider.mcn.primary.platform
+    const platformWallet: VMWallet = wallet.getWallet(platform)
+    const senders: string[] = [platformWallet.getAddress()]
+    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(senders))
     const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
-    this.receipt = new TransactionReceipt(relay.id, StakeTransaction.PrimaryDelegation)
+    this.receipt = new TransactionReceipt(platform.id, StakeTransaction.PrimaryDelegation)
     const addValidatorTransaction: string = buildAddValidatorTransaction(
-      utxoSet, senders, fee, relay, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
-      relay.assetId, ValidationShare, relayWallet.getAddress(), relayWallet.getAddress(), provider.mcn.id
-    ).signTransaction([relayWallet]).toCHex()
-    const transactionId = (await provider.relay.issueTx(addValidatorTransaction)).txID
+      utxoSet, senders, fee, platform, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      platform.assetId, ValidationShare, platformWallet.getAddress(), platformWallet.getAddress(), provider.mcn.id
+    ).signTransaction([platformWallet]).toCHex()
+    const transactionId = (await provider.platform.issueTx(addValidatorTransaction)).txID
     this.receipt.transactionId = transactionId
-    this.receipt.transactionStatus = RelayTransactionStatus.Unknown
-    const transactionStatus: string = await new RelayTransactionStatusFetcher(provider.relay,
+    this.receipt.transactionStatus = PlatformTransactionStatus.Unknown
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
       StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
     this.receipt.transactionStatus = transactionStatus
   }

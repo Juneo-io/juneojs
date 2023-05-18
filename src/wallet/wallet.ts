@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { JEVM_ID, type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
+import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
@@ -68,7 +68,7 @@ export class JuneoWallet {
       this.chainsWallets[chain.id] = this.buildJEVMWallet(chain)
     } else if (chain.vmId === JVM_ID) {
       this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
-    } else if (chain.vmId === RELAYVM_ID) {
+    } else if (chain.vmId === PLATFORMVM_ID) {
       this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
     } else {
       throw new WalletError('unsupported vm id')

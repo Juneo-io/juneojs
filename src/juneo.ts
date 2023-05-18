@@ -2,7 +2,7 @@ import { JuneoClient, InfoAPI } from './api'
 import { type GetTxFeeResponse } from './api/info/data'
 import { JEVMAPI } from './api/jevm'
 import { JVMAPI } from './api/jvm'
-import { RelayAPI } from './api/relay'
+import { PlatformAPI } from './api/platform'
 import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain } from './chain'
 import * as params from './chain/params'
 
@@ -10,14 +10,14 @@ export class MCNProvider {
   mcn: MCN
   info: InfoAPI
   private feesCache: GetTxFeeResponse | undefined
-  relay: RelayAPI
+  platform: PlatformAPI
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
   constructor (mcn: MCN = params.SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
     this.info = new InfoAPI(client)
-    this.relay = new RelayAPI(client, this.mcn.primary.relay)
+    this.platform = new PlatformAPI(client, this.mcn.primary.platform)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)
     for (let i: number = 0; i < this.mcn.supernets.length; i++) {
       const supernet: Supernet = this.mcn.supernets[i]

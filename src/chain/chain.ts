@@ -7,7 +7,7 @@ import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
 
-export const RELAYVM_ID: string = '11111111111111111111111111111111LpoYY'
+export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
 export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
@@ -70,9 +70,9 @@ export abstract class AbstractBlockchain implements Blockchain {
   abstract queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint>
 }
 
-export class RelayBlockchain extends AbstractBlockchain implements Crossable {
+export class PlatformBlockchain extends AbstractBlockchain implements Crossable {
   constructor (name: string, id: string, assetId: string, aliases?: string[]) {
-    super(name, id, RELAYVM_ID, assetId, aliases)
+    super(name, id, PLATFORMVM_ID, assetId, aliases)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -84,7 +84,7 @@ export class RelayBlockchain extends AbstractBlockchain implements Crossable {
   }
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
-    const balance: number = (await provider.relay.getBalance([address])).balances[assetId]
+    const balance: number = (await provider.platform.getBalance([address])).balances[assetId]
     return balance === undefined ? BigInt(0) : BigInt(balance)
   }
 

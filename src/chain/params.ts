@@ -1,5 +1,5 @@
 import { JRC20ContractAdapter } from '../solidity'
-import { RelayBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet, StakeConfig } from './network'
 
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
@@ -9,7 +9,7 @@ const SocotraAddress: string = 'https://api1.socotra1.mcnpoc5.xyz:9650'
 
 export const SocotraJUNEAssetId: string = '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2'
 
-export const SocotraPlatformChain: RelayBlockchain = new RelayBlockchain(
+export const SocotraPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain', '11111111111111111111111111111111LpoYY', SocotraJUNEAssetId, ['P']
 )
 export const SocotraJVMChain: JVMBlockchain = new JVMBlockchain(
@@ -38,7 +38,7 @@ export const BelgradeMBTC1AssetId: string = 'tFA26E4syGj9KEyA3hZemp7qMaQ6KqBB4h4
 const BelgradeAddress: string = 'https://api1.mcnpoc4.xyz:9650'
 const RelayChainName: string = 'Relay-Chain'
 const RelayChainId: string = '11111111111111111111111111111111LpoYY'
-export const BelgradeRelayChain: RelayBlockchain = new RelayBlockchain(RelayChainName, RelayChainId, BelgradeJUNEAssetId, ['Relay'])
+export const BelgradeRelayChain: PlatformBlockchain = new PlatformBlockchain(RelayChainName, RelayChainId, BelgradeJUNEAssetId, ['Relay'])
 export const BelgradeJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', 'PMarXk9qgoRszKv5zLsH7F66m8FetM2AiUk2NjYcwTiZJ3S7q', BelgradeJUNEAssetId, ['Asset'])
 export const BelgradeJUNEChain: JEVMBlockchain = new JEVMBlockchain('JUNE-Chain', '21Fsdh9v1PGLey87GVLnkH89icNzLWrgn3CH1vL6Tb7J7hu5w5',
   BelgradeJUNEAssetId, BigInt(330001), BelgradeAddress, ['JUNE'], {

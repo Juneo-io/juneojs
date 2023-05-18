@@ -6,12 +6,12 @@ import { UserInput, type TransferableInput } from '../input'
 import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
 import { Address, AssetId, BlockchainId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
-import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, RelayExportTransaction, RelayImportTransaction } from './transaction'
+import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
 import { SupernetAuth, Validator } from './validation'
 
-export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
+export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
-  networkId: number, memo: string = ''): RelayExportTransaction {
+  networkId: number, memo: string = ''): PlatformExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -57,7 +57,7 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
       changeOutputs.push(output)
     }
   })
-  return new RelayExportTransaction(
+  return new PlatformExportTransaction(
     networkId,
     new BlockchainId(sourceId),
     changeOutputs,
@@ -68,8 +68,8 @@ export function buildRelayExportTransaction (userInputs: UserInput[], utxoSet: U
   )
 }
 
-export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): RelayImportTransaction {
+export function buildPlatformImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
+  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): PlatformImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -102,7 +102,7 @@ export function buildRelayImportTransaction (userInputs: UserInput[], utxoSet: U
     }
   })
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs.concat(importedInputs), feeData, changeAddress)
-  return new RelayImportTransaction(
+  return new PlatformImportTransaction(
     networkId,
     new BlockchainId(destinationId),
     outputs,

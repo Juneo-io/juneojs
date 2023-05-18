@@ -9,7 +9,8 @@ import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../
 
 export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
-export const JEVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
+export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
+export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
 export interface Blockchain {
 

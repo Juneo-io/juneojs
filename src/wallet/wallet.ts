@@ -10,7 +10,7 @@ const JvmHdPath = "m/44'/9000'/0'/0/0"
 
 const JvmPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
-const DefaultHrp = 'june'
+const DefaultHrp = 'socotra'
 
 export function validatePrivateKey (data: string): boolean {
   if (encoding.isHex(data)) {

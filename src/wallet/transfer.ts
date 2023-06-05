@@ -1,4 +1,4 @@
-import { type Blockchain, JVM_ID, isCrossable, type Crossable, PLATFORMVM_ID, type JVMBlockchain, type PlatformBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract } from '../chain'
+import { type Blockchain, JVM_ID, isCrossable, type Crossable, PLATFORMVM_ID, type JVMBlockchain, type PlatformBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract, type JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, parseUtxoSet, type FeeData, calculateFee } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
@@ -424,10 +424,10 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       // temporary until all JRC20 contracts implement assetId method to retrieve it we must hardcode the data
       // TODO update it when implementation is done properly on all networks
       let assetId: string = ''
-      for (const key in sourceChain.jrc20Assets) {
-        const contractAddress: string = sourceChain.jrc20Assets[key]
-        if (contractAddress === input.assetId) {
-          assetId = key
+      for (let i: number = 0; i < sourceChain.jrc20Assets.length; i++) {
+        const jrc20: JRC20Asset = sourceChain.jrc20Assets[i]
+        if (jrc20.address === input.assetId) {
+          assetId = jrc20.assetId
           break
         }
       }
@@ -614,9 +614,10 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
       const input: UserInput = transfer.userInputs[i]
       let contractAddress: string = ''
-      for (const key in evmChain.jrc20Assets) {
-        if (key === input.assetId) {
-          contractAddress = evmChain.jrc20Assets[key]
+      for (let i: number = 0; i < evmChain.jrc20Assets.length; i++) {
+        const jrc20: JRC20Asset = evmChain.jrc20Assets[i]
+        if (jrc20.assetId === input.assetId) {
+          contractAddress = jrc20.address
           break
         }
       }

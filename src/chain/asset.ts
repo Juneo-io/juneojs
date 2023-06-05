@@ -1,13 +1,28 @@
 
-export class JRC20Asset {
-  id: string
-  chainId: string
-  contractAddress: string
+export interface EVMContract {
+  address: string
+}
 
-  constructor (id: string, chainId: string, contractAddress: string) {
-    this.id = id
-    this.chainId = chainId
-    this.contractAddress = contractAddress
+export class ERC20Asset implements EVMContract {
+  address: string
+  name: string
+  symbol: string
+  decimals: number
+
+  constructor (address: string, name: string, symbol: string, decimals: number) {
+    this.address = address
+    this.name = name
+    this.symbol = symbol
+    this.decimals = decimals
+  }
+}
+
+export class JRC20Asset extends ERC20Asset {
+  assetId: string
+
+  constructor (address: string, name: string, symbol: string, decimals: number, assetId: string) {
+    super(address, name, symbol, decimals)
+    this.assetId = assetId
   }
 }
 

@@ -5,7 +5,7 @@ import { MCN, PrimarySupernet, StakeConfig } from './network'
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
-const SocotraAddress: string = 'https://api1.socotra1.mcnpoc5.xyz:9650'
+const SocotraAddress: string = 'https://api.socotra-test.network:9650'
 
 export const SocotraJUNEAssetId: string = '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8DNp1R8ob8kHkbR'
 export const SocotraETH1AssetId: string = 'JeUvxJPXoL3EtVGSPwtyYXVymxGbpcBcaa2Kq7TCB43HsKMAS'
@@ -33,7 +33,25 @@ export const SocotraJVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM-Chain', '2RyfCyJ6ieAtwVpUD8a3Yb9fUbGLabQr8RBUEyDeStUAPfjNL6', SocotraJUNEAssetId, ['JVM']
 )
 export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
-  'JUNE-Chain', '2sKLzfKH6G6pJspijPAJECFekJLCi9h1P5WHEUFZgcUVBf82Mp', SocotraJUNEAssetId, BigInt(220001), SocotraAddress, ['JUNE']
+  'JUNE-Chain', '2sKLzfKH6G6pJspijPAJECFekJLCi9h1P5WHEUFZgcUVBf82Mp', SocotraJUNEAssetId, BigInt(220001), SocotraAddress, ['JUNE'], {
+    JeUvxJPXoL3EtVGSPwtyYXVymxGbpcBcaa2Kq7TCB43HsKMAS: '0x2d00000000000000000000000000000000000000',
+    '2pLiXK8pUNqS9DHTKpkiex6g6DRdSfxqJCoZsLM3zq62WtFje3': '0x2e00000000000000000000000000000000000000',
+    '2PR1Dn3w6QUcvVAsb2UTw7F6khcVBjC68SLgyW6MdoqtpaE7ox': '0x2f00000000000000000000000000000000000000',
+    saRTCAtLBo4d3WvJT3ibJmv9dpn3oQQ8gXgkB8ADsQwiFJh6L: '0x3000000000000000000000000000000000000000',
+    '2TBXB5U2rqPWqebfvjvXJNu27vig6s5mCgkdLYBJzE6jXnrNso': '0x3100000000000000000000000000000000000000',
+    '2vq3K3PxumUV7Uf9PgPoBfr1y8MDjAtMDRex8yTqYzfyrtVJJU': '0x3200000000000000000000000000000000000000',
+    '2NQFaeBwMcACKqsKqMoLzYmVAHMYeFREfYJq6dtQnsJ5tTyk42': '0x3300000000000000000000000000000000000000',
+    '2REm6DRSgbVyE4dypnzBU9WWUV4zW9VcsTMHiDha7GLV84ZXCy': '0x3400000000000000000000000000000000000000',
+    '25revVW7o2DgkhQPTkbGLNxscS6G9Mj6eTu7PCgKvzw3HM7pJv': '0x3500000000000000000000000000000000000000',
+    '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2': '0x3600000000000000000000000000000000000000',
+    VKJNVVGFPWwrpbYtdGanMhTdScZrRYWbgE1JVqzj2YGnU8ewv: '0x3700000000000000000000000000000000000000',
+    HiNZ8RV33htiXovM2P66DZADWyHuRyEwcyRYJcB8ivNMvsqP1: '0x3800000000000000000000000000000000000000',
+    bvyN7nY8NFpQc7BGQEfFRaBu9Wqj53NpDb9GZ2raAxsuN9GP5: '0x3900000000000000000000000000000000000000',
+    '2BvFezbxtuztCGJbGvz8Dx7woKqMLeZNZ6C6assFMFwGVcCpaH': '0x3a00000000000000000000000000000000000000',
+    '3sPY2qNyaGop5JNLaSr8GtWHrimtMMkYifACSRVZNKEyZowBg': '0x3b00000000000000000000000000000000000000',
+    G3mH67ubqNAJB6txHTHFtFzH56ynrhd2ynJrUk6RjT9iBzXbK: '0x3c00000000000000000000000000000000000000',
+    tDxKdhyn2b9dNLMdsSv3xEY8ihGf7991XSWxXMzWu1bLtAued: '0x3d00000000000000000000000000000000000000'
+  }
 )
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1AssetId, BigInt(220002), SocotraAddress, ['ETH1']
@@ -95,8 +113,8 @@ export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet('1111
 ], SocotraPlatformChain, SocotraJVMChain)
 
 export const SocotraStakeConfig: StakeConfig = new StakeConfig(
-  // 80%, 1, 100000, 0.01, 14 days, 365 days
-  0.8, 1_000000000, 1000000_000000000, 10000000, 2 * 7 * 24 * 3600, 365 * 24 * 3600
+  // 80%, 1, 100000, 0.01, 1 day, 365 days
+  0.8, 1_000000000, 1000000_000000000, 10000000, 24 * 3600, 365 * 24 * 3600
 )
 export const SocotraNetwork: MCN = new MCN(SocotraAddress, 2, 'socotra', SocotraStakeConfig, SocotraPrimarySupernet)
 

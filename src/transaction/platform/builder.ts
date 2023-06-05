@@ -7,7 +7,7 @@ import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
 import { Address, AssetId, BlockchainId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
 import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
-import { SupernetAuth, Validator } from './validation'
+import { Secp256k1OutputOwners, SupernetAuth, Validator } from './validation'
 
 export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
@@ -134,8 +134,7 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
       )
     )
   ]
-  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
-    stakeAmount,
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
     BigInt(0),
     1,
     [new Address(rewardAddress)]
@@ -181,8 +180,7 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
       )
     )
   ]
-  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
-    stakeAmount,
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
     BigInt(0),
     1,
     [new Address(rewardAddress)]

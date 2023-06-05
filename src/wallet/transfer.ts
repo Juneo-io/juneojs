@@ -511,7 +511,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
 
   private async proxyJVMTransfer (provider: MCNProvider, transfer: Transfer, destination: JEVMBlockchain, destinationFee: bigint): Promise<void> {
     const signer: JuneoWallet = transfer.signer
-    const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
+    const jvmChain: JVMBlockchain = provider.jvm.chain
     const toJVMUserInputs: UserInput[] = []
     transfer.userInputs.forEach(input => {
       toJVMUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount, signer.getAddress(jvmChain), jvmChain))

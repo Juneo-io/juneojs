@@ -7,8 +7,11 @@ import { type GetBalanceResponse, type GetBlockchainsResponse, type GetBlockchai
 const Service: string = 'platform'
 
 export class PlatformAPI extends AbstractChainAPI {
+  override chain: PlatformBlockchain
+
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
     super(client, Service, chain)
+    this.chain = chain
   }
 
   async getBalance (addresses: string[]): Promise<GetBalanceResponse> {

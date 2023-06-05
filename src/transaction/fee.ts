@@ -56,7 +56,7 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
   fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
   const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
   if (requiresProxy) {
-    const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
+    const jvmChain: JVMBlockchain = provider.jvm.chain
     fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), jvmChain.assetId, FeeType.ImportFee))
     fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), jvmChain.assetId, FeeType.ExportFee))
   }

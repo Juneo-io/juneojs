@@ -8,8 +8,11 @@ const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
 
 export class JVMAPI extends AbstractChainAPI {
+  override chain: JVMBlockchain
+
   constructor (client: JuneoClient, chain: JVMBlockchain) {
     super(client, Service, chain)
+    this.chain = chain
   }
 
   async buildGenesis (networkID: number, genesisData: JSON, encoding?: string): Promise<BuildGenesisResponse> {

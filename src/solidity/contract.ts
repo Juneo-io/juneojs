@@ -74,10 +74,10 @@ export class ERC20ContractAdapter implements ContractAdapter {
 export class JRC20ContractAdapter extends ERC20ContractAdapter {
   override async instanceOf (contractAddress: string): Promise<boolean> {
     const contract: ethers.Contract = this.getContract(contractAddress)
-    // checking if is JRC20 by calling nativeSupply read only function
-    // other main tokens interfaces should not be using nativeSupply
+    // checking if is JRC20 by calling nativeAssetId read only function
+    // other main tokens interfaces should not be using nativeAssetId
     try {
-      await contract.nativeSupply()
+      await contract.nativeAssetId()
     } catch (error) {
       return false
     }

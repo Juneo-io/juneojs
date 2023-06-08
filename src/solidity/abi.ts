@@ -16,5 +16,6 @@ export const ERC20ABI: string[] = [
 export const JRC20ABI: string[] = ERC20ABI.concat([
   'function deposit()',
   'function withdraw(uint256 value)',
-  'function nativeSupply() view returns (uint256)'
+  'function totalNativeSupply() view returns (uint256)',
+  'function nativeAssetId() view returns (uint256)'
 ])

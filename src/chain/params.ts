@@ -54,6 +54,7 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
     new JRC20Asset('0x3d00000000000000000000000000000000000000', 'R10', 'R10.a', 9, SocotraR10AssetId)
   ]
 )
+SocotraJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(SocotraJUNEChain.ethProvider))
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1AssetId, BigInt(220002), SocotraAddress, ['ETH1']
 )

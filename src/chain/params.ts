@@ -34,7 +34,7 @@ export const SocotraJVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM-Chain', '2RyfCyJ6ieAtwVpUD8a3Yb9fUbGLabQr8RBUEyDeStUAPfjNL6', SocotraJUNEAssetId, ['JVM']
 )
 export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
-  'JUNE-Chain', 'oyx3MBFhTdrEnn2NxS6tmgh1GEjDhY9fDmGEUqeGND5BEwUHm', SocotraJUNEAssetId, BigInt(220001), SocotraAddress, ['JUNE'], [
+  'JUNE-Chain', 'XnvNEobhmwEwCYkczwGxCjLqpnD8JuJnfmbyvBX4JfGttYoTj', SocotraJUNEAssetId, BigInt(220001), SocotraAddress, ['JUNE'], [
     new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Ethereum', 'ETH.e', 9, SocotraETH1AssetId),
     new JRC20Asset('0x2e00000000000000000000000000000000000000', 'mBitcoin', 'mBTC.a', 9, SocotraMBTC1AssetId),
     new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Doge', 'DOGE.b', 9, SocotraDOGE1AssetId),

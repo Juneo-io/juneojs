@@ -59,7 +59,7 @@ export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1AssetId, BigInt(220002), SocotraAddress, ['ETH1']
 )
 export const SocotraMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'MBTC1-Chain', '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o', SocotraMBTC1AssetId, BigInt(220003), SocotraAddress, ['MBTC1']
+  'mBTC1-Chain', '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o', SocotraMBTC1AssetId, BigInt(220003), SocotraAddress, ['mBTC1']
 )
 export const SocotraDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DOGE1-Chain', 'wb8QNS3zrwd94Mc1o7L2mqhL8CQiRAvkVLTXFkdnbX1LaESpn', SocotraDOGE1AssetId, BigInt(220004), SocotraAddress, ['DOGE1']

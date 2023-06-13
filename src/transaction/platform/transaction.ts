@@ -4,7 +4,7 @@ import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
-import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize } from '../types'
+import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId } from '../types'
 import { Validator, Secp256k1OutputOwners, type SupernetAuth } from './validation'
 
 const CreateSupernetTransactionTypeId: number = 0x00000010
@@ -13,6 +13,7 @@ const ExportTransactionTypeId: number = 0x00000012
 const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d
 const AddDelegatorTransactionTypeId: number = 0x0000000e
+const CreateChainTransactionTypeId: number = 0x0000000f
 
 export enum PlatformTransactionStatus {
   Committed = 'Committed',
@@ -319,6 +320,55 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     )
     buffer.write(baseTransaction)
     buffer.write(rewardsOwnerBytes)
+    return buffer
+  }
+}
+
+export class CreateChainTransaction extends AbstractBaseTransaction {
+  supernetId: SupernetId
+  name: string
+  chainAssetId: AssetId
+  vmId: DynamicId
+  fxIds: DynamicId[]
+  genesisData: string
+  supernetAuth: SupernetAuth
+
+  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
+    supernetId: SupernetId, name: string, chainAssetId: AssetId, vmId: DynamicId, fxIds: DynamicId[], genesisData: string, supernetAuth: SupernetAuth) {
+    super(CreateChainTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.supernetId = supernetId
+    this.name = name
+    this.chainAssetId = chainAssetId
+    this.vmId = vmId
+    this.fxIds = fxIds
+    this.genesisData = genesisData
+    this.supernetAuth = supernetAuth
+  }
+
+  getUnsignedInputs (): TransferableInput[] {
+    return this.inputs
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + SupernetIdSize + 2 + this.name.length + DynamicIdSize +
+      4 + DynamicIdSize * this.fxIds.length + 4 + this.genesisData.length + supernetAuthBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.supernetId.serialize())
+    buffer.writeUInt16(this.name.length)
+    buffer.writeString(this.name)
+    buffer.write(this.chainAssetId.serialize())
+    buffer.write(this.vmId.serialize())
+    buffer.writeUInt32(this.fxIds.length)
+    this.fxIds.forEach(fxId => {
+      buffer.write(fxId.serialize())
+    })
+    buffer.writeUInt32(this.genesisData.length)
+    buffer.writeString(this.genesisData)
+    buffer.write(supernetAuthBytes)
     return buffer
   }
 }

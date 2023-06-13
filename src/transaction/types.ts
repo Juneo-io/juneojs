@@ -8,6 +8,7 @@ export const AssetIdSize: number = 32
 export const TransactionIdSize: number = 32
 export const BlockchainIdSize: number = 32
 export const SupernetIdSize: number = 32
+export const DynamicIdSize: number = 32
 export const SignatureSize: number = SignatureLength
 export const NodeIdSize: number = 20
 
@@ -122,5 +123,19 @@ export class SupernetId extends BytesData {
     }
     super(buffer)
     this.supernetId = supernetId
+  }
+}
+
+export class DynamicId extends BytesData {
+  value: string
+
+  constructor (value: string) {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(DynamicIdSize)
+    if (value.length > buffer.length) {
+      throw new TypeError(`${value} is longer than ${DynamicIdSize} bytes`)
+    }
+    buffer.writeString(value)
+    super(buffer)
+    this.value = value
   }
 }

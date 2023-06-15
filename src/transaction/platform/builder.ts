@@ -205,14 +205,14 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
 }
 
 export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, stakeAmount: bigint, supernetId: string | SupernetId, supernetAuthAddresses: string[], changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
+  endTime: bigint, weight: bigint, supernetId: string | SupernetId, supernetAuthAddresses: string[], changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
     signersAddresses.push(new Address(senderAddress))
   })
   const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new FeeData(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new FeeData(chain, fee), changeAddress)
-  const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, stakeAmount)
+  const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, weight)
   const supernetAuthIndices: number[] = []
   for (let i: number = 0; i < supernetAuthAddresses.length; i++) {
     const authAddress: Address = new Address(supernetAuthAddresses[i])

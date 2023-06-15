@@ -1,4 +1,4 @@
-import { type Blockchain } from '../../chain/chain'
+import { type PlatformBlockchain } from '../../chain/chain'
 import { InputError, TransactionError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
@@ -113,7 +113,7 @@ export function buildPlatformImportTransaction (userInputs: UserInput[], utxoSet
   )
 }
 
-export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
   endTime: bigint, stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddValidatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
@@ -159,7 +159,7 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
 }
 
-export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
   endTime: bigint, stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddDelegatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
@@ -204,7 +204,7 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
 }
 
-export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain, nodeId: string | NodeId, startTime: bigint,
+export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
   endTime: bigint, stakeAmount: bigint, supernetId: string | SupernetId, supernetAuthAddresses: string[], changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
@@ -241,7 +241,7 @@ export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAd
   )
 }
 
-export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: Blockchain,
+export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain,
   supernetAuthAddresses: string[], supernetAuthThreshold: number, changeAddress: string, networkId: number, memo: string = ''): CreateSupernetTransaction {
   const signersAddresses: Address[] = []
   sendersAddresses.forEach(senderAddress => {
@@ -253,8 +253,7 @@ export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresse
   supernetAuthAddresses.forEach(authAddress => {
     authAddresses.push(new Address(authAddress))
   })
-  const rewardsOwner: Secp256k1Output = new Secp256k1Output(
-    BigInt(0),
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
     BigInt(0),
     supernetAuthThreshold,
     authAddresses

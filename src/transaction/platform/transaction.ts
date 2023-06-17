@@ -322,6 +322,47 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     buffer.write(rewardsOwnerBytes)
     return buffer
   }
+
+  static parse (data: string): CreateSupernetTransaction {
+    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
+    // start at 2 + 4 to skip codec and type id reading
+    let position: number = 6
+    const networkId: number = buffer.readUInt32(position)
+    position += 4
+    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
+    position += BlockchainIdSize
+    const outputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const outputs: TransferableOutput[] = []
+    for (let i: number = 0; i < outputsLength; i++) {
+      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
+      position += output.serialize().length
+      outputs.push(output)
+    }
+    const inputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const inputs: TransferableInput[] = []
+    for (let i: number = 0; i < inputsLength; i++) {
+      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
+      position += input.serialize().length
+      inputs.push(input)
+    }
+    const memoLength: number = buffer.readUInt32(position)
+    position += 4
+    const memo: string = memoLength > 0
+      ? String(buffer.read(position, memoLength))
+      : ''
+    position += memoLength
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
+    return new CreateSupernetTransaction(
+      networkId,
+      blockchainId,
+      outputs,
+      inputs,
+      memo,
+      rewardsOwner
+    )
+  }
 }
 
 export class CreateChainTransaction extends AbstractBaseTransaction {

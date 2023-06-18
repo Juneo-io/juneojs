@@ -1,5 +1,5 @@
 import { type PlatformBlockchain } from '../../chain/chain'
-import { InputError, TransactionError } from '../../utils'
+import { InputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
 import { UserInput, type TransferableInput } from '../input'
@@ -7,7 +7,7 @@ import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
 import { Address, AssetId, BlockchainId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
 import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
-import { Secp256k1OutputOwners, SupernetAuth, Validator } from './validation'
+import { Secp256k1OutputOwners, type SupernetAuth, Validator } from './validation'
 
 export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
@@ -189,27 +189,11 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
 }
 
 export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, weight: bigint, supernetId: string | SupernetId, supernetAuthAddresses: string[], changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
+  endTime: bigint, weight: bigint, supernetId: string | SupernetId, supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
   const signersAddresses: Address[] = Address.toAddresses(sendersAddresses)
   const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new FeeData(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new FeeData(chain, fee), changeAddress)
   const validator: Validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, startTime, endTime, weight)
-  const supernetAuthIndices: number[] = []
-  for (let i: number = 0; i < supernetAuthAddresses.length; i++) {
-    const authAddress: Address = new Address(supernetAuthAddresses[i])
-    let found: boolean = false
-    for (let j: number = 0; j < signersAddresses.length; j++) {
-      const signerAddress: Address = signersAddresses[j]
-      if (authAddress.matches(signerAddress)) {
-        supernetAuthIndices.push(j)
-        found = true
-        break
-      }
-    }
-    if (!found) {
-      throw new TransactionError(`missing signer address for auth address: ${supernetAuthAddresses[i]}`)
-    }
-  }
   return new AddSupernetValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
@@ -218,7 +202,7 @@ export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAd
     memo,
     validator,
     typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
-    new SupernetAuth(supernetAuthIndices)
+    supernetAuth
   )
 }
 

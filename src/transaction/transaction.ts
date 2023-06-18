@@ -2,7 +2,7 @@ import { JuneoBuffer, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet/wallet'
 import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
-import { sign } from './signature'
+import { type Signable, sign } from './signature'
 import { type BlockchainId, BlockchainIdSize } from './types'
 
 export const CodecId: number = 0
@@ -16,7 +16,7 @@ export interface UnsignedTransaction {
   inputs: TransferableInput[]
   memo: string
   signTransaction: (wallets: VMWallet[]) => JuneoBuffer
-  getUnsignedInputs: () => TransferableInput[]
+  getSignables: () => Signable[]
 }
 
 export abstract class AbstractBaseTransaction implements UnsignedTransaction, Serializable {
@@ -41,10 +41,10 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
     this.memo = memo
   }
 
-  abstract getUnsignedInputs (): TransferableInput[]
+  abstract getSignables (): Signable[]
 
   signTransaction (wallets: VMWallet[]): JuneoBuffer {
-    return sign(this.serialize(), this.getUnsignedInputs(), wallets)
+    return sign(this.serialize(), this.getSignables(), wallets)
   }
 
   serialize (): JuneoBuffer {
@@ -97,7 +97,7 @@ export class AbstractExportTransaction extends AbstractBaseTransaction {
     this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -136,7 +136,7 @@ export class AbstractImportTransaction extends AbstractBaseTransaction {
     this.importedInputs.sort(TransferableInput.comparator)
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs.concat(this.importedInputs)
   }
 

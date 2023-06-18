@@ -3,9 +3,10 @@ import { JuneoBuffer } from '../../utils/bytes'
 import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
+import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
-import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId } from '../types'
-import { Validator, Secp256k1OutputOwners, type SupernetAuth } from './validation'
+import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address } from '../types'
+import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
 const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
@@ -89,7 +90,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     this.shares = shares
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -187,7 +188,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     this.rewardsOwner = rewardsOwner
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -281,8 +282,8 @@ export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
     this.supernetAuth = supernetAuth
   }
 
-  getUnsignedInputs (): TransferableInput[] {
-    return this.inputs
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
   }
 
   serialize (): JuneoBuffer {
@@ -308,7 +309,11 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     this.rewardsOwner = rewardsOwner
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSupernetAuth (addresses: Address[]): SupernetAuth {
+    return new SupernetAuth(addresses, this.rewardsOwner)
+  }
+
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -386,8 +391,8 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     this.supernetAuth = supernetAuth
   }
 
-  getUnsignedInputs (): TransferableInput[] {
-    return this.inputs
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
   }
 
   serialize (): JuneoBuffer {

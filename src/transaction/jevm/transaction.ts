@@ -1,5 +1,5 @@
 import { type JEVMAPI } from '../../api/jevm/api'
-import { InputError, JuneoBuffer, sha256, type Serializable } from '../../utils'
+import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
 import { sleep } from '../../utils/time'
 import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput, type UserInput } from '../input'
@@ -158,7 +158,7 @@ export class EVMInput implements Serializable, Signable, Spendable {
       }
     }
     if (signatures.length < 1) {
-      throw new InputError('missing wallets to complete signatures')
+      throw new SignatureError('missing wallets to complete signatures')
     }
     return signatures
   }

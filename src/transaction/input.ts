@@ -1,5 +1,5 @@
 import { type Blockchain } from '../chain'
-import { InputError, JuneoBuffer, ParsingError, sha256, type Serializable } from '../utils'
+import { JuneoBuffer, ParsingError, sha256, type Serializable, SignatureError } from '../utils'
 import { type VMWallet } from '../wallet'
 import { type Signable } from './signature'
 import { type Address, AssetId, AssetIdSize, Signature, TransactionId, TransactionIdSize } from './types'
@@ -57,7 +57,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
 
   sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
     if (this.input.utxo === undefined) {
-      throw new InputError('cannot sign read only inputs')
+      throw new SignatureError('cannot sign read only inputs')
     }
     const indices: number[] = this.input.addressIndices
     const signatures: Signature[] = []
@@ -73,7 +73,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
       }
     }
     if (signatures.length < threshold) {
-      throw new InputError('missing wallets to complete signatures')
+      throw new SignatureError('missing wallets to complete signatures')
     }
     return signatures
   }

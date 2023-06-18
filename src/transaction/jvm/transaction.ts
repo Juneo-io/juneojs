@@ -2,6 +2,7 @@ import { type JVMAPI } from '../../api/jvm'
 import { sleep } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
+import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
 
@@ -55,7 +56,7 @@ export class BaseTransaction extends AbstractBaseTransaction {
     super(BaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 }

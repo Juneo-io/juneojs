@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID } from '../chain'
+import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
 import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
@@ -48,11 +48,19 @@ export class JuneoWallet {
     return this.getWallet(chain).getAddress()
   }
 
+  getEthAddress (chain: JEVMBlockchain): string {
+    return (this.getWallet(chain) as JEVMWallet).getHexAddress()
+  }
+
   getWallet (chain: Blockchain): VMWallet {
     if (this.chainsWallets[chain.id] === undefined) {
       this.setChainWallet(chain)
     }
     return this.chainsWallets[chain.id]
+  }
+
+  getEthWallet (chain: JEVMBlockchain): JEVMWallet {
+    return this.getWallet(chain) as JEVMWallet
   }
 
   getWallets (): VMWallet[] {

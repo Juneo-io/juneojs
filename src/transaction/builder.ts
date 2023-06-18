@@ -79,7 +79,7 @@ function isGatheringComplete (targets: Record<string, bigint>, gathereds: Record
   return true
 }
 
-function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
+export function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
   const indices: number[] = []
   for (let i: number = 0; i < signers.length; i++) {
     const signer: Address = signers[i]

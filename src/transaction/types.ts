@@ -33,6 +33,14 @@ export class Address extends BytesData {
     return JuneoBuffer.comparator(buffer, this.getBuffer()) === 0
   }
 
+  static toAddresses (values: string[]): Address[] {
+    const addresses: Address[] = []
+    values.forEach(value => {
+      addresses.push(new Address(value))
+    })
+    return addresses
+  }
+
   private static decodeAddress (address: string): JuneoBuffer {
     if (encoding.isHex(address)) {
       return encoding.decodeHex(address)

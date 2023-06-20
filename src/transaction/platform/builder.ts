@@ -4,9 +4,9 @@ import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { FeeData } from '../fee'
 import { UserInput, type TransferableInput } from '../input'
 import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
-import { Address, AssetId, BlockchainId, NodeId, SupernetId } from '../types'
+import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
-import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
+import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateChainTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
 import { Secp256k1OutputOwners, type SupernetAuth, Validator } from './validation'
 
 export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
@@ -222,5 +222,27 @@ export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresse
     inputs,
     memo,
     rewardsOwner
+  )
+}
+
+export function buildCreateChainTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain,
+  supernetId: string | SupernetId, name: string, chainAssetId: string | AssetId, vmId: string | DynamicId, fxIds: DynamicId[],
+  genesisData: string, supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''): CreateChainTransaction {
+  const signersAddresses: Address[] = Address.toAddresses(sendersAddresses)
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new FeeData(chain, fee)])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new FeeData(chain, fee), changeAddress)
+  return new CreateChainTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
+    typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
+    name,
+    typeof chainAssetId === 'string' ? new AssetId(chainAssetId) : chainAssetId,
+    typeof vmId === 'string' ? new DynamicId(vmId) : vmId,
+    fxIds,
+    genesisData,
+    supernetAuth
   )
 }

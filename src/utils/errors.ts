@@ -19,6 +19,7 @@ const INTRA_TRANSFER_CODE: string = 'IntraChain transfer error'
 const INTER_TRANSFER_CODE: string = 'InterChain transfer error'
 const FEE_CODE: string = 'Fee error'
 const SIGNATURE_CODE: string = 'Signature error'
+const GENESIS_CODE: string = 'Genesis error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -171,5 +172,12 @@ export class SignatureError extends JuneoError {
   constructor (message: string) {
     super(message, SIGNATURE_CODE)
     Object.setPrototypeOf(this, SignatureError.prototype)
+  }
+}
+
+export class GenesisError extends JuneoError {
+  constructor (message: string) {
+    super(message, GENESIS_CODE)
+    Object.setPrototypeOf(this, GenesisError.prototype)
   }
 }

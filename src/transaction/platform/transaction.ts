@@ -5,7 +5,7 @@ import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
-import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address } from '../types'
+import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address, AssetIdSize } from '../types'
 import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
 const CreateSupernetTransactionTypeId: number = 0x00000010
@@ -399,7 +399,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + SupernetIdSize + 2 + this.name.length + DynamicIdSize +
+      baseTransaction.length + SupernetIdSize + 2 + this.name.length + AssetIdSize + DynamicIdSize +
       4 + DynamicIdSize * this.fxIds.length + 4 + this.genesisData.length + supernetAuthBytes.length
     )
     buffer.write(baseTransaction)

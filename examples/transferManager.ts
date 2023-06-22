@@ -1,6 +1,6 @@
 import { MCNProvider } from "../dist"
-import { BelgradeJUNEAssetId, BelgradeJVMChain, Blockchain } from "../dist/chain"
-import { Address, UserInput } from "../dist/transaction"
+import { Blockchain, SocotraJUNEAssetId, SocotraJVMChain } from "../dist/chain"
+import { UserInput } from "../dist/transaction"
 import { TransferHandler, TransferManager } from "../dist/wallet/transfer"
 import { JuneoWallet } from "../dist/wallet/wallet"
 
@@ -12,15 +12,15 @@ async function main () {
     // transfer manager to handle user inputs
     const manager: TransferManager = new TransferManager(provider, wallet)
     // data used to create user inputs
-    const assetId: string = BelgradeJUNEAssetId
+    const assetId: string = SocotraJUNEAssetId
     // source chain of all inputs used in a transfer must be the same
-    const sourceChain: Blockchain = BelgradeJVMChain
+    const sourceChain: Blockchain = SocotraJVMChain
     const amount: bigint = BigInt(100)
     const targetAddress1: string = 'Asset-june1klee0j2h6te65za6ncdln34an9ml2zg9v3n78u'
     const targetAddress2: string = 'Asset-june1d646n8hnpmg6rqphzxyxj099gwj5smmxnggnmh'
     // if destination is the same as source chain it will create an intra chain transaction
     // if it is different it will create an inter chain transaction
-    const destinationChain: Blockchain = BelgradeJVMChain
+    const destinationChain: Blockchain = SocotraJVMChain
     // locktime value is optional it will default to 0
     const locktime: bigint = BigInt(0)
     // example user inputs

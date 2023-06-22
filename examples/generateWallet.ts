@@ -6,9 +6,9 @@ async function main() {
     let masterWallet: JuneoWallet = juneojs.JuneoWallet.generate()
     // generated mnemonic
     console.log(masterWallet.mnemonic)
-    const jvmChainAddress: string = masterWallet.getAddress(juneojs.chain.BelgradeJVMChain)
+    const jvmChainAddress: string = masterWallet.getAddress(juneojs.chain.SocotraJVMChain)
     console.log(jvmChainAddress)
-    const juneChainWallet: VMWallet = masterWallet.getWallet(juneojs.chain.BelgradeJUNEChain)
+    const juneChainWallet: VMWallet = masterWallet.getWallet(juneojs.chain.SocotraJUNEChain)
     // june chain jeth address
     console.log(juneChainWallet.getAddress())
     const juneEVMChainWallet: JEVMWallet = juneChainWallet as JEVMWallet

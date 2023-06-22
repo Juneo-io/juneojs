@@ -94,7 +94,9 @@ export class TransferManager {
     // if we want to parallelize this process it would require some rework on how
     // the utxos are fetched during transaction building but still
     // this may remain impossible in some cases (e.g. address with low utxo count)
-    void this.executeHandlers(handlers)
+    void this.executeHandlers(handlers).catch(error => {
+      throw new Error(error)
+    })
     return handlers
   }
 

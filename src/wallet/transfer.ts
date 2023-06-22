@@ -95,7 +95,7 @@ export class TransferManager {
     // the utxos are fetched during transaction building but still
     // this may remain impossible in some cases (e.g. address with low utxo count)
     void this.executeHandlers(handlers).catch(error => {
-      throw new Error(error)
+      throw error
     })
     return handlers
   }

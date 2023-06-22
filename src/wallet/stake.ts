@@ -46,7 +46,9 @@ export class StakeManager {
       this.provider,
       this.wallet,
       new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    )
+    ).catch(error => {
+      throw error
+    })
     return handler
   }
 
@@ -56,13 +58,17 @@ export class StakeManager {
       this.provider,
       this.wallet,
       new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    )
+    ).catch(error => {
+      throw error
+    })
     return handler
   }
 
   pendingRewards (): Stakes {
     const rewards: Stakes = new Stakes()
-    void this.fetchRewards(rewards)
+    void this.fetchRewards(rewards).catch(error => {
+      throw error
+    })
     return rewards
   }
 

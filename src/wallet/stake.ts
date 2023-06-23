@@ -213,7 +213,7 @@ interface ExecutableStakeHandler extends StakeHandler {
   execute: (provider: MCNProvider, wallet: JuneoWallet, validator: Validator) => Promise<void>
 }
 
-export class DelegationHandler implements ExecutableStakeHandler {
+class DelegationHandler implements ExecutableStakeHandler {
   private receipt: TransactionReceipt | undefined
 
   getReceipt (): TransactionReceipt | undefined {
@@ -240,7 +240,7 @@ export class DelegationHandler implements ExecutableStakeHandler {
   }
 }
 
-export class ValidationHandler implements ExecutableStakeHandler {
+class ValidationHandler implements ExecutableStakeHandler {
   private receipt: TransactionReceipt | undefined
 
   getReceipt (): TransactionReceipt | undefined {

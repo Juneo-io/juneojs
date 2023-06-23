@@ -44,9 +44,12 @@ export class MCNProvider {
   }
 }
 
-export * as api from './api'
-export * as chain from './chain'
-export * as transaction from './transaction'
-export * as utils from './utils'
+export * from './api'
+export * from './chain'
+export * from './transaction'
+export * from './utils'
 
-export { JuneoWallet, JVMWallet, JEVMWallet } from './wallet'
+export { StakeHandler, StakeReward, PendingReward, Stakes, StakeRewardType, StakeManager, StakeTransaction,
+  TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
+  JuneoWallet, VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet
+} from './wallet'

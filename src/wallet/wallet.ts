@@ -12,24 +12,6 @@ const JvmPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
 const DefaultHrp = 'socotra'
 
-export function validatePrivateKey (data: string): boolean {
-  if (encoding.isHex(data)) {
-    const hasPrefix: boolean = encoding.hasHexPrefix(data)
-    const length = hasPrefix ? data.substring(2).length : data.length
-    return length === PrivateKeyLength
-  }
-  if (data.includes(JvmPrivateKeyPrefix)) {
-    const split: string[] = data.split('-')
-    const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
-    return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
-  }
-  return false
-}
-
-export function encodeJuneoAddress (publicKey: string, hrp: string): string {
-  return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
-}
-
 export class JuneoWallet {
   hrp: string
   mnemonic: string | undefined
@@ -129,7 +111,7 @@ export class JuneoWallet {
       wallet.setMnemonic(data)
       return wallet
     }
-    if (validatePrivateKey(data)) {
+    if (JuneoWallet.validatePrivateKey(data)) {
       const wallet: JuneoWallet = new JuneoWallet(hrp)
       let privateKey: string = data
       // should only be hex or bs58 private key after validate
@@ -148,6 +130,20 @@ export class JuneoWallet {
     const mnemonic = bip39.generateMnemonic()
     const wallet = JuneoWallet.recover(mnemonic, hrp)
     return wallet
+  }
+  
+  static validatePrivateKey (data: string): boolean {
+    if (encoding.isHex(data)) {
+      const hasPrefix: boolean = encoding.hasHexPrefix(data)
+      const length = hasPrefix ? data.substring(2).length : data.length
+      return length === PrivateKeyLength
+    }
+    if (data.includes(JvmPrivateKeyPrefix)) {
+      const split: string[] = data.split('-')
+      const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
+      return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
+    }
+    return false
   }
 }
 
@@ -173,7 +169,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.address = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
   }
 
   getAddress (): string {
@@ -189,6 +185,10 @@ export abstract class AbstractVMWallet implements VMWallet {
 
   sign (buffer: JuneoBuffer): JuneoBuffer {
     return this.keyPair.sign(buffer)
+  }
+
+  static encodeJuneoAddress (publicKey: string, hrp: string): string {
+    return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
   }
 }
 

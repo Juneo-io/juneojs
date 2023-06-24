@@ -1,10 +1,9 @@
-import { JuneoWallet, MCNProvider, juneojs } from "../dist"
-import { Address, CreateChainTransaction, CreateSupernetTransaction, DynamicId, EVMAllocation, SupernetEVMGenesis, Utxo, buildCreateChainTransaction, parseUtxoSet } from "../dist/transaction"
-import { JuneoBuffer } from "../dist/utils"
+import { JuneoWallet, MCNProvider, Address, CreateChainTransaction, CreateSupernetTransaction,
+    DynamicId, EVMAllocation, SupernetEVMGenesis, Utxo, buildCreateChainTransaction, parseUtxoSet } from "../dist"
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()
-    const masterWallet: JuneoWallet = juneojs.JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const masterWallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     const sendersAddresses: string[] = [masterWallet.getAddress(provider.platform.chain)]
     const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(sendersAddresses))
     const fee: number = (await provider.getFees()).createBlockchainTxFee

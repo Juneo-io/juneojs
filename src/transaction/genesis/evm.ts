@@ -87,6 +87,7 @@ export class SupernetEVMGenesis extends EVMGenesis {
     const genesis: string = super.generate()
     const json: any = JSON.parse(genesis)
     json.config.supernetEVMTimestamp = 0
+    json.gasLimit = `0x${BigInt(this.feeConfig.gasLimit).toString(16).toUpperCase()}`
     json.config.feeConfig = this.feeConfig
     json.config.allowFeeRecipients = this.allowFeeRecipients
     return JSON.stringify(json)
@@ -99,7 +100,7 @@ export class SupernetEVMFeeConfig {
   minBaseFee: number
   targetGas: number
   baseFeeChangeDenominator: number
-  minBlockGastCost: number
+  minBlockGasCost: number
   maxBlockGasCost: number
   blockGasCostStep: number
 
@@ -112,7 +113,7 @@ export class SupernetEVMFeeConfig {
     this.minBaseFee = minBaseFee
     this.targetGas = targetGas
     this.baseFeeChangeDenominator = baseFeeChangeDenominator
-    this.minBlockGastCost = minBlockGasCost
+    this.minBlockGasCost = minBlockGasCost
     this.maxBlockGasCost = maxBlockGasCost
     this.blockGasCostStep = blockGasCostStep
   }

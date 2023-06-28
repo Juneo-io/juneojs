@@ -49,7 +49,8 @@ export * from './chain'
 export * from './transaction'
 export * from './utils'
 
-export { StakeHandler, StakeReward, PendingReward, Stakes, StakeRewardType, StakeManager, StakeTransaction,
-  TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
-  JuneoWallet, VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet
+export {
+  type StakeHandler, StakeReward, PendingReward, Stakes, StakeRewardType, StakeManager, StakeTransaction,
+  type TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
+  JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet
 } from './wallet'

@@ -131,7 +131,7 @@ export class JuneoWallet {
     const wallet = JuneoWallet.recover(mnemonic, hrp)
     return wallet
   }
-  
+
   static validatePrivateKey (data: string): boolean {
     if (encoding.isHex(data)) {
       const hasPrefix: boolean = encoding.hasHexPrefix(data)

@@ -1,5 +1,5 @@
 import { type GetTxResponse } from '../api/data'
-import { type GetCurrentValidatorsResponse, type Validator as APIValidator, type Delegator, type GetPendingValidatorsResponse, type PendingValidator, type PendingDelegator } from '../api/platform/data'
+import { type GetCurrentValidatorsResponse, type ValidatorData as APIValidator, type DelegatorData, type GetPendingValidatorsResponse, type PendingValidator, type PendingDelegator } from '../api/platform/data'
 import { type PlatformBlockchain } from '../chain'
 import { type JuneoWallet, type MCNProvider } from '../juneo'
 import { Address, NodeId } from '../transaction/types'
@@ -135,7 +135,7 @@ export class StakeManager {
         continue
       }
       for (let j: number = 0; j < validator.delegators.length; j++) {
-        const delegator: Delegator = validator.delegators[j]
+        const delegator: DelegatorData = validator.delegators[j]
         const transaction: GetTxResponse = await this.provider.platform.getTx(delegator.txID)
         const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
         const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner

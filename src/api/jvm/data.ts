@@ -25,6 +25,6 @@ export interface GetAssetDescriptionResponse {
   denomination: number
 }
 
-export interface GetBalanceResponse {
+export interface GetJVMBalanceResponse {
   balance: number
 }

@@ -1,5 +1,5 @@
 
-export interface GetBalanceResponse {
+export interface GetPlatformBalanceResponse {
   balance: number
   balances: Record<string, number>
   unlocked: number
@@ -22,10 +22,10 @@ export interface GetBlockResponse {
 }
 
 export interface GetBlockchainsResponse {
-  blockchains: Blockchain[]
+  blockchains: BlockchainData[]
 }
 
-export interface Blockchain {
+export interface BlockchainData {
   id: string
   name: string
   supernetID: string
@@ -42,10 +42,10 @@ export interface GetCurrentSupplyResponse {
 }
 
 export interface GetCurrentValidatorsResponse {
-  validators: Validator[]
+  validators: ValidatorData[]
 }
 
-export interface Validator {
+export interface ValidatorData {
   txID: string
   startTime: string
   endTime: string
@@ -61,7 +61,7 @@ export interface Validator {
   signer: Signer
   delegatorCount: string
   delegatorWeight: string
-  delegators: Delegator[]
+  delegators: DelegatorData[]
 }
 
 export interface RewardOwner {
@@ -75,7 +75,7 @@ export interface Signer {
   proofOfPossession: string
 }
 
-export interface Delegator {
+export interface DelegatorData {
   txID: string
   startTime: string
   endTime: string
@@ -141,10 +141,10 @@ export interface GetStakingAssetIDResponse {
 }
 
 export interface GetSupernetsResponse {
-  supernets: Supernet[]
+  supernets: SupernetData[]
 }
 
-export interface Supernet {
+export interface SupernetData {
   id: string
   controlKeys: string[]
   threshold: string

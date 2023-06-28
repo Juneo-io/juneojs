@@ -2,7 +2,7 @@ import { type JVMBlockchain } from '../../chain'
 import { AbstractChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
-import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetBalanceResponse } from './data'
+import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetJVMBalanceResponse } from './data'
 
 const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
@@ -35,7 +35,7 @@ export class JVMAPI extends AbstractChainAPI {
     return response.result
   }
 
-  async getBalance (address: string, assetID: string): Promise<GetBalanceResponse> {
+  async getBalance (address: string, assetID: string): Promise<GetJVMBalanceResponse> {
     const response: JsonRpcResponse = await this.call('getBalance', [{ address, assetID }])
     return response.result
   }

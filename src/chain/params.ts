@@ -12,7 +12,6 @@ export const SocotraJUNEAssetId: string = '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8D
 export const SocotraETH1AssetId: string = 'JeUvxJPXoL3EtVGSPwtyYXVymxGbpcBcaa2Kq7TCB43HsKMAS'
 export const SocotraMBTC1AssetId: string = '2pLiXK8pUNqS9DHTKpkiex6g6DRdSfxqJCoZsLM3zq62WtFje3'
 export const SocotraDOGE1AssetId: string = '2PR1Dn3w6QUcvVAsb2UTw7F6khcVBjC68SLgyW6MdoqtpaE7ox'
-export const SocotraTUSD1AssetId: string = 'saRTCAtLBo4d3WvJT3ibJmv9dpn3oQQ8gXgkB8ADsQwiFJh6L'
 export const SocotraUSDT1AssetId: string = '2TBXB5U2rqPWqebfvjvXJNu27vig6s5mCgkdLYBJzE6jXnrNso'
 export const SocotraDAI1AssetId: string = '2vq3K3PxumUV7Uf9PgPoBfr1y8MDjAtMDRex8yTqYzfyrtVJJU'
 export const SocotraEUROC1AssetId: string = '2NQFaeBwMcACKqsKqMoLzYmVAHMYeFREfYJq6dtQnsJ5tTyk42'
@@ -20,8 +19,6 @@ export const SocotraLTC1AssetId: string = '2REm6DRSgbVyE4dypnzBU9WWUV4zW9VcsTMHi
 export const SocotraXLM1AssetId: string = '25revVW7o2DgkhQPTkbGLNxscS6G9Mj6eTu7PCgKvzw3HM7pJv'
 export const SocotraBCH1AssetId: string = '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2'
 export const SocotraPAXG1AssetId: string = 'VKJNVVGFPWwrpbYtdGanMhTdScZrRYWbgE1JVqzj2YGnU8ewv'
-export const SocotraICP1AssetId: string = 'HiNZ8RV33htiXovM2P66DZADWyHuRyEwcyRYJcB8ivNMvsqP1'
-export const SocotraXIDR1AssetId: string = 'bvyN7nY8NFpQc7BGQEfFRaBu9Wqj53NpDb9GZ2raAxsuN9GP5'
 export const SocotraXSGD1AssetId: string = '2BvFezbxtuztCGJbGvz8Dx7woKqMLeZNZ6C6assFMFwGVcCpaH'
 export const SocotraETC1AssetId: string = '3sPY2qNyaGop5JNLaSr8GtWHrimtMMkYifACSRVZNKEyZowBg'
 export const SocotraR1000AssetId: string = 'G3mH67ubqNAJB6txHTHFtFzH56ynrhd2ynJrUk6RjT9iBzXbK'
@@ -38,7 +35,6 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
     new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Ethereum.e', 'ETH.e', 9, SocotraETH1AssetId),
     new JRC20Asset('0x2e00000000000000000000000000000000000000', 'mBitcoin.a', 'mBTC.a', 9, SocotraMBTC1AssetId),
     new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Doge.b', 'DOGE.b', 9, SocotraDOGE1AssetId),
-    new JRC20Asset('0x3000000000000000000000000000000000000000', 'TrueUSD.e', 'TUSD.e', 9, SocotraTUSD1AssetId),
     new JRC20Asset('0x3100000000000000000000000000000000000000', 'Tether USD.e', 'USDT.e', 9, SocotraUSDT1AssetId),
     new JRC20Asset('0x3200000000000000000000000000000000000000', 'Dai.e', 'DAI.e', 9, SocotraDAI1AssetId),
     new JRC20Asset('0x3300000000000000000000000000000000000000', 'Euro Coin.e', 'EUROC.e', 9, SocotraEUROC1AssetId),
@@ -46,8 +42,6 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
     new JRC20Asset('0x3500000000000000000000000000000000000000', 'Stellar.x', 'XLM.x', 9, SocotraXLM1AssetId),
     new JRC20Asset('0x3600000000000000000000000000000000000000', 'Bitcoin Cash.b', 'BCH.b', 9, SocotraBCH1AssetId),
     new JRC20Asset('0x3700000000000000000000000000000000000000', 'Pax Gold.e', 'PAXG.e', 9, SocotraPAXG1AssetId),
-    new JRC20Asset('0x3800000000000000000000000000000000000000', 'Internet Computer.x', 'ICP.x', 9, SocotraICP1AssetId),
-    new JRC20Asset('0x3900000000000000000000000000000000000000', 'XIDR.e', 'XIDR.e', 9, SocotraXIDR1AssetId),
     new JRC20Asset('0x3a00000000000000000000000000000000000000', 'XSGD.e', 'XSGD.e', 9, SocotraXSGD1AssetId),
     new JRC20Asset('0x3b00000000000000000000000000000000000000', 'Ethereum Classic.x', 'ETC.x', 9, SocotraETC1AssetId),
     new JRC20Asset('0x3c00000000000000000000000000000000000000', 'R1000.a', 'R1000.a', 9, SocotraR1000AssetId),
@@ -63,9 +57,6 @@ export const SocotraMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const SocotraDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DOGE1-Chain', 'wb8QNS3zrwd94Mc1o7L2mqhL8CQiRAvkVLTXFkdnbX1LaESpn', SocotraDOGE1AssetId, BigInt(220004), SocotraAddress, ['DOGE1']
-)
-export const SocotraTUSD1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'TUSD1-Chain', '2691pZxz1tU1mHQ6wDqzwCrVASnZ8K4GumhZs8a2teSEdVncMU', SocotraTUSD1AssetId, BigInt(220005), SocotraAddress, ['TUSD1']
 )
 export const SocotraUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain', 'xNScMRJEmvx8A34Df2gQkTSjLMqWDcPbaPYfPYJRuf1cjLHLM', SocotraUSDT1AssetId, BigInt(220006), SocotraAddress, ['USDT1']
@@ -88,12 +79,6 @@ export const SocotraBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
 export const SocotraPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
   'PAXG1-Chain', 'SRPjwo4SgDKFAonPLy9mmYzVRNAv5o8nUJ1GyMJ9S3ojr87bW', SocotraPAXG1AssetId, BigInt(220012), SocotraAddress, ['PAXG1']
 )
-export const SocotraICP1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'ICP1-Chain', '2t2xzE2d1A1GRzX6oX1HrRTAFoh7BEMyLk3mu2VuDzhDXqpxFm', SocotraICP1AssetId, BigInt(220013), SocotraAddress, ['ICP1']
-)
-export const SocotraXIDR1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'XIDR1-Chain', '2EtXarWUkB4FaQHyEAEFKemMDYMitQxR6yKEjUz1dvA4mxq4hq', SocotraXIDR1AssetId, BigInt(220014), SocotraAddress, ['XIDR1']
-)
 export const SocotraXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'XSGD1-Chain', '2u5LruuaCVuJ8qbasjZNh4ZKMhX96hFT3jQZvnvSCtY9faVViN', SocotraXSGD1AssetId, BigInt(220015), SocotraAddress, ['XSGD1']
 )
@@ -109,9 +94,9 @@ export const SocotraR10Chain: JEVMBlockchain = new JEVMBlockchain(
 
 export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet('11111111111111111111111111111111LpoYY', [
   SocotraPlatformChain, SocotraJVMChain, SocotraJUNEChain, SocotraETH1Chain, SocotraMBTC1Chain,
-  SocotraDOGE1Chain, SocotraTUSD1Chain, SocotraUSDT1Chain, SocotraDAI1Chain, SocotraEUROC1Chain,
-  SocotraLTC1Chain, SocotraXLM1Chain, SocotraBCH1Chain, SocotraPAXG1Chain, SocotraICP1Chain,
-  SocotraXIDR1Chain, SocotraXSGD1Chain, SocotraETC1Chain, SocotraR1000Chain, SocotraR10Chain
+  SocotraDOGE1Chain, SocotraUSDT1Chain, SocotraDAI1Chain, SocotraEUROC1Chain,
+  SocotraLTC1Chain, SocotraXLM1Chain, SocotraBCH1Chain, SocotraPAXG1Chain,
+  SocotraXSGD1Chain, SocotraETC1Chain, SocotraR1000Chain, SocotraR10Chain
 ], SocotraPlatformChain, SocotraJVMChain)
 
 export const SocotraStakeConfig: StakeConfig = new StakeConfig(

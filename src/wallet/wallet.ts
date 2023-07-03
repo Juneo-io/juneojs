@@ -126,8 +126,12 @@ export class JuneoWallet {
     throw new WalletError('invalid recovery data provided')
   }
 
-  static generate (hrp?: string): JuneoWallet {
-    const mnemonic = bip39.generateMnemonic()
+  static generate (hrp?: string, words: number = 12): JuneoWallet {
+    if (words !== 12 && words !== 24) {
+      throw new WalletError('words count must be 12 or 24')
+    }
+    const strength: number = words === 12 ? 128 : 256
+    const mnemonic = bip39.generateMnemonic(strength)
     const wallet = JuneoWallet.recover(mnemonic, hrp)
     return wallet
   }

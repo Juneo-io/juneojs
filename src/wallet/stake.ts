@@ -1,12 +1,10 @@
-import { type GetTxResponse } from '../api/data'
-import { type GetCurrentValidatorsResponse, type ValidatorData as APIValidator, type DelegatorData, type GetPendingValidatorsResponse, type PendingValidator, type PendingDelegator } from '../api/platform/data'
 import { type PlatformBlockchain } from '../chain'
 import { type JuneoWallet, type MCNProvider } from '../juneo'
-import { Address, NodeId } from '../transaction/types'
+import { NodeId } from '../transaction/types'
 import { parseUtxoSet, type Utxo } from '../transaction/utxo'
 import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
-import { AddDelegatorTransaction, AddValidatorTransaction, PlatformTransactionStatus, PlatformTransactionStatusFetcher } from '../transaction/platform/transaction'
-import { type Secp256k1OutputOwners, Validator } from '../transaction/platform/validation'
+import { PlatformTransactionStatus, PlatformTransactionStatusFetcher } from '../transaction/platform/transaction'
+import { Validator } from '../transaction/platform/validation'
 import { TransactionReceipt } from './transfer'
 import { type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
@@ -62,146 +60,6 @@ export class StakeManager {
       throw error
     })
     return handler
-  }
-
-  pendingRewards (): Stakes {
-    const rewards: Stakes = new Stakes()
-    void this.fetchRewards(rewards).catch(error => {
-      throw error
-    })
-    return rewards
-  }
-
-  async fetchRewards (stakes: Stakes): Promise<void> {
-    const address: Address = new Address(this.wallet.getAddress(this.provider.mcn.primary.platform))
-    const pending: GetPendingValidatorsResponse = await this.provider.platform.getPendingValidators()
-    for (let i: number = 0; i < pending.validators.length; i++) {
-      const validator: PendingValidator = pending.validators[i]
-      const validatorTx: GetTxResponse = await this.provider.platform.getTx(validator.txID)
-      const validatorTransaction: AddValidatorTransaction = AddValidatorTransaction.parse(validatorTx.tx)
-      const validatorRewards: Secp256k1OutputOwners = validatorTransaction.rewardsOwner
-      if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
-        stakes.futureStakes.push(new PendingReward(
-          StakeRewardType.Validation,
-          this.provider.mcn.primary.platform.assetId,
-          validator.txID,
-          BigInt(validator.startTime),
-          BigInt(validator.endTime),
-          BigInt(validator.stakeAmount),
-          validator.nodeID,
-          validator.connected
-        ))
-      }
-    }
-    for (let i: number = 0; i < pending.delegators.length; i++) {
-      const delegator: PendingDelegator = pending.delegators[i]
-      const transaction: GetTxResponse = await this.provider.platform.getTx(delegator.txID)
-      const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
-      const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner
-      if (delegatorRewards.addresses.length > 0 && address.matches(delegatorRewards.addresses[0])) {
-        stakes.futureStakes.push(new PendingReward(
-          StakeRewardType.Delegation,
-          this.provider.mcn.primary.platform.assetId,
-          delegator.txID,
-          BigInt(delegator.startTime),
-          BigInt(delegator.endTime),
-          BigInt(delegator.stakeAmount),
-          delegator.nodeID,
-          true
-        ))
-      }
-    }
-    const validators: GetCurrentValidatorsResponse = await this.provider.platform.getCurrentValidators()
-    for (let i: number = 0; i < validators.validators.length; i++) {
-      const validator: APIValidator = validators.validators[i]
-      const validatorTx: GetTxResponse = await this.provider.platform.getTx(validator.txID)
-      const validatorTransaction: AddValidatorTransaction = AddValidatorTransaction.parse(validatorTx.tx)
-      const validatorRewards: Secp256k1OutputOwners = validatorTransaction.rewardsOwner
-      if (validatorRewards.addresses.length > 0 && address.matches(validatorRewards.addresses[0])) {
-        stakes.currentStakes.push(new StakeReward(
-          StakeRewardType.Validation,
-          this.provider.mcn.primary.platform.assetId,
-          validator.txID,
-          BigInt(validator.startTime),
-          BigInt(validator.endTime),
-          BigInt(validator.stakeAmount),
-          validator.nodeID,
-          validator.connected,
-          validator.uptime,
-          BigInt(validator.potentialReward)
-        ))
-      }
-      if (validator.delegators === null) {
-        continue
-      }
-      for (let j: number = 0; j < validator.delegators.length; j++) {
-        const delegator: DelegatorData = validator.delegators[j]
-        const transaction: GetTxResponse = await this.provider.platform.getTx(delegator.txID)
-        const delegatorTransaction: AddDelegatorTransaction = AddDelegatorTransaction.parse(transaction.tx)
-        const delegatorRewards: Secp256k1OutputOwners = delegatorTransaction.rewardsOwner
-        if (delegatorRewards.addresses.length > 0 && address.matches(delegatorRewards.addresses[0])) {
-          stakes.currentStakes.push(new StakeReward(
-            StakeRewardType.Delegation,
-            this.provider.mcn.primary.platform.assetId,
-            delegator.txID,
-            BigInt(delegator.startTime),
-            BigInt(delegator.endTime),
-            BigInt(delegator.stakeAmount),
-            delegator.nodeID,
-            validator.connected,
-            validator.uptime,
-            BigInt(delegator.potentialReward)
-          ))
-        }
-      }
-    }
-    stakes.fetched = true
-  }
-}
-
-export enum StakeRewardType {
-  Validation = 'Validation',
-  Delegation = 'Delegation'
-}
-
-export class Stakes {
-  fetched: boolean = false
-  futureStakes: PendingReward[] = []
-  currentStakes: StakeReward[] = []
-}
-
-export class PendingReward {
-  stakeType: string
-  assetId: string
-  transactionId: string
-  startTime: bigint
-  endTime: bigint
-  stakeAmount: bigint
-  nodeId: string
-  nodeConnected: boolean
-
-  constructor (stakeType: string, assetId: string, transactionId: string, startTime: bigint,
-    endTime: bigint, stakeAmount: bigint, nodeId: string, nodeConnected: boolean) {
-    this.stakeType = stakeType
-    this.assetId = assetId
-    this.transactionId = transactionId
-    this.startTime = startTime
-    this.endTime = endTime
-    this.stakeAmount = stakeAmount
-    this.nodeId = nodeId
-    this.nodeConnected = nodeConnected
-  }
-}
-
-export class StakeReward extends PendingReward {
-  nodeUptime: string
-  potentialReward: bigint
-
-  constructor (stakeType: string, assetId: string, transactionId: string, startTime: bigint, endTime: bigint,
-    stakeAmount: bigint, nodeId: string, nodeConnected: boolean, nodeUptime: string, potentialReward: bigint) {
-    super(stakeType, assetId, transactionId, startTime, endTime, stakeAmount, nodeId, nodeConnected)
-    this.nodeUptime = nodeUptime
-    this.potentialReward = potentialReward
   }
 }
 

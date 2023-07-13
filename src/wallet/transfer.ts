@@ -94,15 +94,15 @@ export class TransferManager {
     // if we want to parallelize this process it would require some rework on how
     // the utxos are fetched during transaction building but still
     // this may remain impossible in some cases (e.g. address with low utxo count)
-    void this.executeHandlers(handlers).catch(error => {
-      throw error
-    })
+    void this.executeHandlers(handlers)
     return handlers
   }
 
   private async executeHandlers (handlers: ExecutableTransferHandler[]): Promise<void> {
     for (let i: number = 0; i < handlers.length; i++) {
-      await handlers[i].execute(this.provider)
+      await handlers[i].execute(this.provider).catch(error => {
+        throw error
+      })
     }
   }
 

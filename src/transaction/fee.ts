@@ -65,7 +65,7 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
   let exportingFee: boolean = true
   // if destination can pay for the import fee with utxos
   // check if source can really export it and otherwise will pay for it in import tx
-  if (destinationChain.canPayImportFee()) {
+  if (destinationChain.canPayImportFee() || requiresProxy) {
     let address: string = wallet.getAddress(source)
     if (source.vmId === JEVM_ID) {
       const evmWallet: JEVMWallet = wallet.getWallet(source) as JEVMWallet

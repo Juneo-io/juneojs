@@ -20,11 +20,17 @@ export class JVMAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getAddressTxs (address: string, assetID: string, cursor?: number, pageSize?: number): Promise<GetAddressTxsResponse> {
     const response: JsonRpcResponse = await this.call('getAddressTxs', [{ address, assetID, cursor, pageSize }])
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getAllBalances (address: string): Promise<GetAllBalancesResponse> {
     const response: JsonRpcResponse = await this.call('getAllBalances', [{ address }])
     return response.result
@@ -35,6 +41,9 @@ export class JVMAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getBalance (address: string, assetID: string): Promise<GetJVMBalanceResponse> {
     const response: JsonRpcResponse = await this.call('getBalance', [{ address, assetID }])
     return response.result
@@ -45,6 +54,9 @@ export class JVMAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
     const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
     return response.result

@@ -14,6 +14,9 @@ export class PlatformAPI extends AbstractChainAPI {
     this.chain = chain
   }
 
+  /**
+   * @deprecated
+   */
   async getBalance (addresses: string[]): Promise<GetPlatformBalanceResponse> {
     const response: JsonRpcResponse = await this.call('getBalance', [{ addresses }])
     return response.result
@@ -24,6 +27,9 @@ export class PlatformAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getBlockchains (): Promise<GetBlockchainsResponse> {
     const response: JsonRpcResponse = await this.call('getBlockchains')
     return response.result
@@ -49,6 +55,9 @@ export class PlatformAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getMaxStakeAmount (supernetID: string, nodeID: string, startTime: number, endTime: number): Promise<GetMaxStakeAmountResponse> {
     const response: JsonRpcResponse = await this.call('getMaxStakeAmount', [{ supernetID, nodeID, startTime, endTime }])
     return response.result
@@ -64,11 +73,17 @@ export class PlatformAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getRewardUTXOs (txID: string, encoding?: string): Promise<GetRewardUTXOsResponse> {
     const response: JsonRpcResponse = await this.call('getRewardUTXOs', [{ txID, encoding }])
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getStake (addresses: string[]): Promise<GetStakeResponse> {
     const response: JsonRpcResponse = await this.call('getStake', [{ addresses }])
     return response.result
@@ -79,6 +94,9 @@ export class PlatformAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getSupernets (ids: string[]): Promise<GetSupernetsResponse> {
     const response: JsonRpcResponse = await this.call('getSupernets', [{ ids }])
     return response.result

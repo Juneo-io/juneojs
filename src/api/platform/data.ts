@@ -1,4 +1,7 @@
 
+/**
+ * @deprecated
+ */
 export interface GetPlatformBalanceResponse {
   balance: number
   balances: Record<string, number>
@@ -11,6 +14,9 @@ export interface GetPlatformBalanceResponse {
   utxoIDs: UtxoID[]
 }
 
+/**
+ * @deprecated
+ */
 export interface UtxoID {
   txID: string
   outputIndex: number
@@ -21,10 +27,16 @@ export interface GetBlockResponse {
   encoding: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetBlockchainsResponse {
   blockchains: BlockchainData[]
 }
 
+/**
+ * @deprecated
+ */
 export interface BlockchainData {
   id: string
   name: string
@@ -89,6 +101,9 @@ export interface GetHeightResponse {
   height: number
 }
 
+/**
+ * @deprecated
+ */
 export interface GetMaxStakeAmountResponse {
   amount: number
 }
@@ -123,12 +138,18 @@ export interface PendingDelegator {
   nodeID: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetRewardUTXOsResponse {
   numFetched: number
   utxos: string[]
   encoding: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetStakeResponse {
   staked: number
   stakeds: Record<string, number>
@@ -140,10 +161,16 @@ export interface GetStakingAssetIDResponse {
   assetID: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetSupernetsResponse {
   supernets: SupernetData[]
 }
 
+/**
+ * @deprecated
+ */
 export interface SupernetData {
   id: string
   controlKeys: string[]

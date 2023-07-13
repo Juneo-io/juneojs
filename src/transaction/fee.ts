@@ -61,19 +61,6 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
     fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), jvmChain.assetId, FeeType.ExportFee))
   }
   const importFee: bigint = await destinationChain.queryImportFee(provider, inputs)
-  // export fee by default
-  let exportingFee: boolean = true
-  // if destination can pay for the import fee with utxos
-  // check if source can really export it and otherwise will pay for it in import tx
-  if (destinationChain.canPayImportFee() || requiresProxy) {
-    let address: string = wallet.getAddress(source)
-    if (source.vmId === JEVM_ID) {
-      const evmWallet: JEVMWallet = wallet.getWallet(source) as JEVMWallet
-      address = evmWallet.getHexAddress()
-    }
-    const sourceBalance: bigint = await source.queryBalance(provider, address, destination.assetId)
-    exportingFee = sourceBalance >= importFee
-  }
-  fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId, FeeType.ImportFee))
+  fees.push(new FeeData(destination, importFee, destination.assetId, FeeType.ImportFee))
   return fees
 }

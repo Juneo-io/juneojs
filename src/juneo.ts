@@ -50,6 +50,7 @@ export * from './transaction'
 export * from './utils'
 
 export {
+  UtxoBalance,
   type StakeHandler, StakeManager, StakeTransaction,
   type TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
   JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet

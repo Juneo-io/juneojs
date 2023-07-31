@@ -1,13 +1,13 @@
 import { type JVMBlockchain } from '../../chain'
-import { AbstractChainAPI } from '../api'
+import { AbstractUtxoChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
+import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetJVMBalanceResponse } from './data'
 
 const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
 
-export class JVMAPI extends AbstractChainAPI {
+export class JVMAPI extends AbstractUtxoChainAPI {
   override chain: JVMBlockchain
 
   constructor (client: JuneoClient, chain: JVMBlockchain) {
@@ -59,11 +59,6 @@ export class JVMAPI extends AbstractChainAPI {
    */
   async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
     const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
-    return response.result
-  }
-
-  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
     return response.result
   }
 

@@ -1,12 +1,12 @@
 import { type PlatformBlockchain } from '../../chain'
-import { AbstractChainAPI } from '../api'
+import { AbstractUtxoChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
+import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import { type GetPlatformBalanceResponse, type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetBlockResponse, type GetCurrentSupplyResponse, type GetCurrentValidatorsResponse, type GetHeightResponse, type GetMaxStakeAmountResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse, type GetRewardUTXOsResponse, type GetStakeResponse, type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse, type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
 
 const Service: string = 'platform'
 
-export class PlatformAPI extends AbstractChainAPI {
+export class PlatformAPI extends AbstractUtxoChainAPI {
   override chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
@@ -119,11 +119,6 @@ export class PlatformAPI extends AbstractChainAPI {
 
   async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
     const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
-    return response.result
-  }
-
-  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
     return response.result
   }
 

@@ -1,5 +1,6 @@
 import { type Blockchain } from '../chain/chain'
 import { JsonRpcRequest, type JsonRpcResponse, type JuneoClient } from './client'
+import { type UTXOIndex, type GetUTXOsResponse } from './data'
 
 const BaseEndpoint: string = '/ext'
 
@@ -35,5 +36,17 @@ export abstract class AbstractChainAPI extends AbstractAPI {
   constructor (client: JuneoClient, service: string, chain: Blockchain) {
     super(client, `/bc/${chain.id}`, service)
     this.chain = chain
+  }
+}
+
+export abstract class AbstractUtxoChainAPI extends AbstractChainAPI {
+  async getUTXOs (addresses: string[], limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
+    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, limit, startIndex, encoding }])
+    return response.result
+  }
+
+  async getUTXOsFrom (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
+    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
+    return response.result
   }
 }

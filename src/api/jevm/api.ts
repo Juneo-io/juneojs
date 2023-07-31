@@ -1,12 +1,12 @@
 import { type JEVMBlockchain } from '../../chain'
-import { AbstractChainAPI } from '../api'
+import { AbstractUtxoChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type UTXOIndex, type GetUTXOsResponse, type IssueTxResponse } from '../data'
+import { type IssueTxResponse } from '../data'
 import { type GetAtomicTxResponse, type GetAtomicTxStatusResponse } from './data'
 
 const Service: string = 'june'
 
-export class JEVMAPI extends AbstractChainAPI {
+export class JEVMAPI extends AbstractUtxoChainAPI {
   override chain: JEVMBlockchain
   private readonly juneEndpoint: string
   private readonly rpcEndpoint: string
@@ -25,11 +25,6 @@ export class JEVMAPI extends AbstractChainAPI {
 
   async getTxStatus (txID: string): Promise<GetAtomicTxStatusResponse> {
     const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'getAtomicTxStatus', [{ txID }])
-    return response.result
-  }
-
-  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
     return response.result
   }
 

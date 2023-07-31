@@ -551,7 +551,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
   private async executePlatformImport (provider: MCNProvider, transfer: Transfer, fee: bigint): Promise<boolean> {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
-    const importUtxo: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
+    const importUtxo: Utxo[] = parseUtxoSet(await provider.platform.getUTXOsFrom([wallet.getAddress()], sourceChain.id), sourceChain.id)
     const utxos: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs([wallet.getAddress()]))
     // put import utxos first to priorize usage of imported inputs
     const utxoSet: Utxo[] = importUtxo.concat(utxos)
@@ -573,7 +573,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: VMWallet = transfer.signer.getWallet(transfer.destinationChain)
     const sourceChain: Blockchain = transfer.sourceChain
     const utxos: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()]))
-    const importUtxo: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
+    const importUtxo: Utxo[] = parseUtxoSet(await provider.jvm.getUTXOsFrom([wallet.getAddress()], sourceChain.id), sourceChain.id)
     // put import utxos first to priorize usage of imported inputs
     const utxoSet: Utxo[] = importUtxo.concat(utxos)
     const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
@@ -595,7 +595,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const wallet: JEVMWallet = transfer.signer.getWallet(evmChain) as JEVMWallet
     const sourceChain: Blockchain = transfer.sourceChain
     const api: JEVMAPI = provider.jevm[evmChain.id]
-    const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOs([wallet.getAddress()], sourceChain.id), sourceChain.id)
+    const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOsFrom([wallet.getAddress()], sourceChain.id), sourceChain.id)
     const importReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
     this.receipts.push(importReceipt)
     const importTransaction: string = jevm.buildJEVMImportTransaction(

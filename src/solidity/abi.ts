@@ -19,3 +19,10 @@ export const JRC20ABI: string[] = ERC20ABI.concat([
   'function totalNativeSupply() view returns (uint256)',
   'function nativeAssetId() view returns (uint256)'
 ])
+
+export const WETHABI: string[] = ERC20ABI.concat([
+  'function deposit() payable',
+  'function withdraw(uint wad)',
+  'event Deposit(address indexed dst, uint wad)',
+  'event Withdrawal(address indexed src, uint wad)'
+])

@@ -105,3 +105,20 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
     return new ethers.Contract(contractAddress, abi.JRC20ABI, this.provider)
   }
 }
+
+export class WETHContractAdapter extends ERC20ContractAdapter {
+  getWithdrawData (contractAddress: string, value: bigint): string {
+    const contract: ethers.Contract = this.getContract(contractAddress)
+    return contract.interface.encodeFunctionData('withdraw', [value])
+  }
+
+  getDepositData (contractAddress: string): string {
+    const contract: ethers.Contract = this.getContract(contractAddress)
+    const data: string = contract.interface.encodeFunctionData('deposit')
+    return data
+  }
+
+  protected override getContract (contractAddress: string): ethers.Contract {
+    return new ethers.Contract(contractAddress, abi.WETHABI, this.provider)
+  }
+}

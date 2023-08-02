@@ -53,5 +53,6 @@ export {
   UtxoBalance,
   type StakeHandler, StakeManager, StakeTransaction,
   type TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
-  JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet
+  JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet,
+  WrapManager, WrapFeeType
 } from './wallet'

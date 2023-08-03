@@ -4,6 +4,9 @@
 # Compiled files
 dist/
 
+# Temporarily ignore tests
+tests/
+
 ### Node ###
 # Logs
 logs

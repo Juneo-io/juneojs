@@ -142,13 +142,13 @@ class UnwrappingHandler implements ExecutableWrapHandler {
     const gasLimit: bigint = await wrapping.chain.ethProvider.estimateGas({
       from: wallet.getEthAddress(wrapping.chain),
       to: wrapping.adapter.contractAddress,
-      value: BigInt(wrapping.amount),
+      value: BigInt(0),
       data
     })
     const transactionData: TransactionRequest = {
       from: evmWallet.address,
       to: wrapping.adapter.contractAddress,
-      value: wrapping.amount,
+      value: BigInt(0),
       nonce: Number(nonce++),
       chainId: wrapping.chain.chainId,
       gasLimit,

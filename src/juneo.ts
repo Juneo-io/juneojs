@@ -54,5 +54,5 @@ export {
   type StakeHandler, StakeManager, StakeTransaction,
   type TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
   JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet,
-  WrapManager, WrapFeeType, type WrapHandler
+  WrapManager, type WrapHandler
 } from './wallet'

@@ -1,15 +1,10 @@
 import { type ethers } from 'ethers'
-import { FeeData, TransactionReceipt, type JEVMBlockchain, type JuneoWallet, type MCNProvider, type JEVMAPI, type JEVMWallet, TransactionType, EVMTransactionStatusFetcher, EVMTransactionStatus } from '../juneo'
+import { FeeData, TransactionReceipt, type JEVMBlockchain, type JuneoWallet, type MCNProvider, type JEVMAPI, type JEVMWallet, TransactionType, EVMTransactionStatusFetcher, EVMTransactionStatus, FeeType } from '../juneo'
 import { type WETHContractAdapter } from '../solidity'
 import { type TransactionRequest } from 'ethers/types/providers'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600
-
-export enum WrapFeeType {
-  Wrap = 'Wrap fee',
-  Unwrap = 'Unwrap fee'
-}
 
 export class WrapManager {
   private readonly provider: MCNProvider
@@ -20,7 +15,8 @@ export class WrapManager {
     this.wallet = wallet
   }
 
-  async estimateWrapFee (chain: JEVMBlockchain, adapter: WETHContractAdapter, amount: bigint): Promise<FeeData> {
+  async estimateWrapFee (adapter: WETHContractAdapter, amount: bigint): Promise<FeeData> {
+    const chain: JEVMBlockchain = adapter.chain
     let txFee: bigint = await chain.queryBaseFee(this.provider)
     const hexAddress: string = this.wallet.getEthAddress(chain)
     const data: string = adapter.getDepositData()
@@ -30,10 +26,11 @@ export class WrapManager {
       value: BigInt(amount),
       data
     })
-    return new FeeData(chain, txFee, adapter.contractAddress, WrapFeeType.Wrap)
+    return new FeeData(chain, txFee, adapter.contractAddress, FeeType.Wrap)
   }
 
-  async estimateUnwrapFee (chain: JEVMBlockchain, adapter: WETHContractAdapter, amount: bigint): Promise<FeeData> {
+  async estimateUnwrapFee (adapter: WETHContractAdapter, amount: bigint): Promise<FeeData> {
+    const chain: JEVMBlockchain = adapter.chain
     let txFee: bigint = await chain.queryBaseFee(this.provider)
     const hexAddress: string = this.wallet.getEthAddress(chain)
     const data: string = adapter.getWithdrawData(amount)
@@ -43,18 +40,18 @@ export class WrapManager {
       value: BigInt(0),
       data
     })
-    return new FeeData(chain, txFee, adapter.contractAddress, WrapFeeType.Unwrap)
+    return new FeeData(chain, txFee, adapter.contractAddress, FeeType.Unwrap)
   }
 
-  async wrap (chain: JEVMBlockchain, adapter: WETHContractAdapter, amount: bigint): Promise<WrapHandler> {
-    const wrapping: Wrapping = new Wrapping(chain, adapter, amount)
+  async wrap (adapter: WETHContractAdapter, amount: bigint): Promise<WrapHandler> {
+    const wrapping: Wrapping = new Wrapping(adapter.chain, adapter, amount)
     const handler: WrappingHandler = new WrappingHandler()
     void handler.execute(this.provider, this.wallet, wrapping)
     return handler
   }
 
-  async unwrap (chain: JEVMBlockchain, adapter: WETHContractAdapter, amount: bigint): Promise<WrapHandler> {
-    const wrapping: Wrapping = new Wrapping(chain, adapter, amount)
+  async unwrap (adapter: WETHContractAdapter, amount: bigint): Promise<WrapHandler> {
+    const wrapping: Wrapping = new Wrapping(adapter.chain, adapter, amount)
     const handler: UnwrappingHandler = new UnwrappingHandler()
     void handler.execute(this.provider, this.wallet, wrapping)
     return handler

@@ -51,7 +51,7 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
 SocotraJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(SocotraJUNEChain.ethProvider))
 
 export const SocotraWJUNEContractAddress: string = '0x333e51E9908dcF4Ae79250757ecC3faa21f24554'
-export const SocotraWJUNEContractAdapter: WETHContractAdapter = new WETHContractAdapter(SocotraJUNEChain.ethProvider, SocotraWJUNEContractAddress)
+export const SocotraWJUNEContractAdapter: WETHContractAdapter = new WETHContractAdapter(SocotraJUNEChain, SocotraWJUNEContractAddress)
 
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1AssetId, BigInt(220002), SocotraAddress, ['ETH1']

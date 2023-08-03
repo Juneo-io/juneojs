@@ -35,7 +35,9 @@ export enum TransactionType {
   Export = 'Export transaction',
   Import = 'Import transaction',
   Withdraw = 'Withdraw transaction',
-  Deposit = 'Deposit transaction'
+  Deposit = 'Deposit transaction',
+  Wrap = 'Wrap transaction',
+  Unwrap = 'Unwrap transaction'
 }
 
 export class TransferManager {

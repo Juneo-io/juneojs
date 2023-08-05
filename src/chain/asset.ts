@@ -1,19 +1,32 @@
+import { WETHContractAdapter } from '../solidity'
+import { type JEVMBlockchain } from './chain'
 
 export interface EVMContract {
-  address: string
+  readonly address: string
 }
 
 export class ERC20Asset implements EVMContract {
-  address: string
-  name: string
-  symbol: string
-  decimals: number
+  readonly address: string
+  readonly name: string
+  readonly symbol: string
+  readonly decimals: number
 
   constructor (address: string, name: string, symbol: string, decimals: number) {
     this.address = address
     this.name = name
     this.symbol = symbol
     this.decimals = decimals
+  }
+}
+
+export class WrappedAsset extends ERC20Asset {
+  readonly chain: JEVMBlockchain
+  readonly adapter: WETHContractAdapter
+
+  constructor (address: string, name: string, symbol: string, decimals: number, chain: JEVMBlockchain) {
+    super(address, name, symbol, decimals)
+    this.chain = chain
+    this.adapter = new WETHContractAdapter(chain, address)
   }
 }
 

@@ -108,15 +108,11 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
 }
 
 export class WETHContractAdapter extends ERC20ContractAdapter {
-  readonly chain: JEVMBlockchain
-  readonly contractAddress: string
   private readonly contract: ethers.Contract
 
   constructor (chain: JEVMBlockchain, contractAddress: string) {
     super(chain.ethProvider)
-    this.chain = chain
-    this.contractAddress = contractAddress
-    this.contract = new ethers.Contract(this.contractAddress, abi.WETHABI, this.provider)
+    this.contract = new ethers.Contract(contractAddress, abi.WETHABI, this.provider)
   }
 
   getWithdrawData (value: bigint): string {

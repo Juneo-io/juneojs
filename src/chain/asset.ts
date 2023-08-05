@@ -1,4 +1,4 @@
-import { WETHContractAdapter } from '../solidity'
+import { WrappedContractAdapter } from '../solidity'
 import { type JEVMBlockchain } from './chain'
 
 export interface EVMContract {
@@ -21,12 +21,12 @@ export class ERC20Asset implements EVMContract {
 
 export class WrappedAsset extends ERC20Asset {
   readonly chain: JEVMBlockchain
-  readonly adapter: WETHContractAdapter
+  readonly adapter: WrappedContractAdapter
 
   constructor (address: string, name: string, symbol: string, decimals: number, chain: JEVMBlockchain) {
     super(address, name, symbol, decimals)
     this.chain = chain
-    this.adapter = new WETHContractAdapter(chain, address)
+    this.adapter = new WrappedContractAdapter(chain, address)
   }
 }
 

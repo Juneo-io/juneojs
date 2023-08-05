@@ -1,5 +1,5 @@
 import { type JVMBlockchain } from '../../chain'
-import { AbstractUtxoChainAPI } from '../api'
+import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetJVMBalanceResponse } from './data'
@@ -7,11 +7,11 @@ import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalan
 const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
 
-export class JVMAPI extends AbstractUtxoChainAPI {
-  override chain: JVMBlockchain
+export class JVMAPI extends AbstractUtxoAPI implements ChainAPI {
+  chain: JVMBlockchain
 
   constructor (client: JuneoClient, chain: JVMBlockchain) {
-    super(client, Service, chain)
+    super(client, `/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

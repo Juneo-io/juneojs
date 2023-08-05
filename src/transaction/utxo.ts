@@ -1,11 +1,11 @@
 import { TransferableOutput, type TransactionOutput } from './output'
 import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
 import { JuneoBuffer } from '../utils'
-import { type AbstractUtxoChainAPI, type GetUTXOsResponse } from '../api'
+import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 
 const UtxoRequestLimit: number = 1024
 
-export async function fetchUtxos (chain: AbstractUtxoChainAPI, addresses: string[], sourceChain?: string): Promise<Map<string, Utxo>> {
+export async function fetchUtxos (chain: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<Map<string, Utxo>> {
   // use a mapping to avoid duplicates because get utxos calls are not guaranteed
   // to provide unique utxos. There could be some duplicates because of start/end indexes
   // or even if one transaction changes one of the utxos between two calls.

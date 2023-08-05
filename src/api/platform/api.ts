@@ -1,16 +1,16 @@
 import { type PlatformBlockchain } from '../../chain'
-import { AbstractUtxoChainAPI } from '../api'
+import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import { type GetPlatformBalanceResponse, type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetBlockResponse, type GetCurrentSupplyResponse, type GetCurrentValidatorsResponse, type GetHeightResponse, type GetMaxStakeAmountResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse, type GetRewardUTXOsResponse, type GetStakeResponse, type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse, type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
 
 const Service: string = 'platform'
 
-export class PlatformAPI extends AbstractUtxoChainAPI {
-  override chain: PlatformBlockchain
+export class PlatformAPI extends AbstractUtxoAPI implements ChainAPI {
+  chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
-    super(client, Service, chain)
+    super(client, `/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

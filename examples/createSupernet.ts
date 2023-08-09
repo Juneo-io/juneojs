@@ -1,5 +1,5 @@
 import { JuneoWallet, MCNProvider, CreateSupernetTransaction, Utxo,
-    buildCreateSupernetTransaction, parseUtxoSet } from "../dist"
+    buildCreateSupernetTransaction, parseUtxoSet } from '../src'
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()

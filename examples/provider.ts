@@ -1,4 +1,4 @@
-import { JuneoClient, MCNProvider, SocotraNetwork } from "../dist"
+import { JuneoClient, MCNProvider, SocotraNetwork } from '../src'
 
 async function main () {
     // the provider is used to interact with a mcn we can instantiate it this way

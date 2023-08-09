@@ -1,4 +1,4 @@
-import { JuneoWallet, JEVMWallet, VMWallet, SocotraJVMChain, SocotraJUNEChain } from '../dist';
+import { JuneoWallet, JEVMWallet, VMWallet, SocotraJVMChain, SocotraJUNEChain } from '../src'
 
 async function main() {
     // recovering wallet from mnemonic

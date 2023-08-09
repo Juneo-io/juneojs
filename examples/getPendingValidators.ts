@@ -1,4 +1,4 @@
-import { MCNProvider } from "../dist";
+import { MCNProvider } from '../src'
 
 async function main(){
     const provider: MCNProvider = new MCNProvider()

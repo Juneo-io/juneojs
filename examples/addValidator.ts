@@ -1,6 +1,4 @@
-import { MCNProvider, JuneoWallet } from "../dist"
-import { StakeManager } from "../dist/wallet/stake"
-import { now } from "../dist/utils"
+import { MCNProvider, JuneoWallet, StakeManager, now } from '../src'
 
 async function main () {
     // provider to interact with the MCN

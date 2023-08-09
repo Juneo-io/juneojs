@@ -1,8 +1,5 @@
-import { MCNProvider } from "../dist"
-import { Blockchain, SocotraJVMChain, SocotraPlatformChain } from "../dist/chain"
-import { UserInput } from "../dist/transaction"
-import { TransferHandler, TransferManager } from "../dist/wallet/transfer"
-import { JuneoWallet } from "../dist/wallet/wallet"
+import { MCNProvider, Blockchain, SocotraJVMChain, SocotraPlatformChain, UserInput,
+    TransferHandler, TransferManager, JuneoWallet } from '../src'
 
 async function main () {
     // provider to interact with the MCN

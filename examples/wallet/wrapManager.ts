@@ -1,4 +1,4 @@
-import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset } from '../src'
+import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset } from '../../src'
 
 async function main () {
     // provider to interact with the MCN

@@ -5,18 +5,16 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 
 const UtxoRequestLimit: number = 1024
 
-export async function fetchUtxos (chain: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<Map<string, Utxo>> {
+export async function fetchUtxos (utxoSet: Map<string, Utxo>, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<void> {
   // use a mapping to avoid duplicates because get utxos calls are not guaranteed
   // to provide unique utxos. There could be some duplicates because of start/end indexes
   // or even if one transaction changes one of the utxos between two calls.
-  const utxoSet = new Map<string, Utxo>()
-  let utxoResponse: GetUTXOsResponse = await chain.getUTXOs(addresses, UtxoRequestLimit)
+  let utxoResponse: GetUTXOsResponse = await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
   parseUtxosIntoSet(utxoSet, utxoResponse.utxos, sourceChain)
   while (utxoResponse.numFetched === UtxoRequestLimit) {
-    utxoResponse = await chain.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
+    utxoResponse = await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
     parseUtxosIntoSet(utxoSet, utxoResponse.utxos, sourceChain)
   }
-  return utxoSet
 }
 
 function parseUtxosIntoSet (utxoSet: Map<string, Utxo>, utxos: string[], sourceChain?: string): void {

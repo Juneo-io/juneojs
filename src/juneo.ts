@@ -46,13 +46,7 @@ export class MCNProvider {
 
 export * from './api'
 export * from './chain'
+export * from './solidity'
 export * from './transaction'
 export * from './utils'
-
-export {
-  UtxoBalance,
-  type StakeHandler, StakeManager, StakeTransaction,
-  type TransferHandler, TransactionReceipt, Transfer, TransferSummary, TransferManager, TransactionType, TransferType, TransferStatus,
-  JuneoWallet, type VMWallet, AbstractVMWallet, JVMWallet, JEVMWallet,
-  WrapManager, type WrapHandler
-} from './wallet'
+export * from './wallet'

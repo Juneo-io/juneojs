@@ -1,21 +1,34 @@
 import { WrappedContractAdapter } from '../solidity'
 import { type JEVMBlockchain } from './chain'
 
-export interface EVMContract {
-  readonly address: string
-}
-
-export class ERC20Asset implements EVMContract {
-  readonly address: string
+export class TokenAsset {
+  readonly assetId: string
   readonly name: string
   readonly symbol: string
   readonly decimals: number
 
-  constructor (address: string, name: string, symbol: string, decimals: number) {
-    this.address = address
+  constructor (assetId: string, name: string, symbol: string, decimals: number) {
+    this.assetId = assetId
     this.name = name
     this.symbol = symbol
     this.decimals = decimals
+  }
+
+  getAssetValue (value: bigint): AssetValue {
+    return new AssetValue(value, this.decimals)
+  }
+}
+
+export interface EVMContract {
+  readonly address: string
+}
+
+export class ERC20Asset extends TokenAsset implements EVMContract {
+  readonly address
+
+  constructor (address: string, name: string, symbol: string, decimals: number) {
+    super(address, name, symbol, decimals)
+    this.address = address
   }
 }
 
@@ -36,6 +49,15 @@ export class JRC20Asset extends ERC20Asset {
   constructor (address: string, name: string, symbol: string, decimals: number, assetId: string) {
     super(address, name, symbol, decimals)
     this.assetId = assetId
+  }
+}
+
+export class JNTAsset extends TokenAsset {
+  mintable: boolean
+
+  constructor (assetId: string, name: string, symbol: string, decimals: number, mintable: boolean) {
+    super(assetId, name, symbol, decimals)
+    this.mintable = mintable
   }
 }
 

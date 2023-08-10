@@ -1,5 +1,5 @@
 import { JRC20ContractAdapter } from '../solidity'
-import { JRC20Asset, WrappedAsset } from './asset'
+import { JNTAsset, JRC20Asset, WrappedAsset } from './asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet, StakeConfig } from './network'
 
@@ -23,6 +23,22 @@ export const SocotraXSGD1AssetId: string = '2BvFezbxtuztCGJbGvz8Dx7woKqMLeZNZ6C6
 export const SocotraETC1AssetId: string = '3sPY2qNyaGop5JNLaSr8GtWHrimtMMkYifACSRVZNKEyZowBg'
 export const SocotraR1000AssetId: string = 'G3mH67ubqNAJB6txHTHFtFzH56ynrhd2ynJrUk6RjT9iBzXbK'
 export const SocotraR10AssetId: string = 'tDxKdhyn2b9dNLMdsSv3xEY8ihGf7991XSWxXMzWu1bLtAued'
+
+export const SocotraJUNEAsset: JNTAsset = new JNTAsset(SocotraJUNEAssetId, 'JUNE', 'JUNE', 9, false)
+export const SocotraETH1Asset: JNTAsset = new JNTAsset(SocotraETH1AssetId, 'ETH1', 'ETH1', 9, false)
+export const SocotraMBTC1Asset: JNTAsset = new JNTAsset(SocotraMBTC1AssetId, 'MBTC1', 'MBTC1', 9, false)
+export const SocotraDOGE1Asset: JNTAsset = new JNTAsset(SocotraDOGE1AssetId, 'DOGE1', 'DOGE1', 9, false)
+export const SocotraUSDT1Asset: JNTAsset = new JNTAsset(SocotraUSDT1AssetId, 'USDT1', 'USDT1', 9, false)
+export const SocotraDAI1Asset: JNTAsset = new JNTAsset(SocotraDAI1AssetId, 'DAI1', 'DAI1', 9, false)
+export const SocotraEUROC1Asset: JNTAsset = new JNTAsset(SocotraEUROC1AssetId, 'EUROC1', 'EUROC1', 9, false)
+export const SocotraLTC1Asset: JNTAsset = new JNTAsset(SocotraLTC1AssetId, 'LTC1', 'LTC1', 9, false)
+export const SocotraXLM1Asset: JNTAsset = new JNTAsset(SocotraXLM1AssetId, 'XLM1', 'XLM1', 9, false)
+export const SocotraBCH1Asset: JNTAsset = new JNTAsset(SocotraBCH1AssetId, 'BCH1', 'BCH1', 9, false)
+export const SocotraPAXG1Asset: JNTAsset = new JNTAsset(SocotraPAXG1AssetId, 'PAXG1', 'PAXG1', 9, false)
+export const SocotraXSGD1Asset: JNTAsset = new JNTAsset(SocotraXSGD1AssetId, 'XSGD1', 'XSGD1', 9, false)
+export const SocotraETC1Asset: JNTAsset = new JNTAsset(SocotraETC1AssetId, 'ETC1', 'ETC1', 9, false)
+export const SocotraR1000Asset: JNTAsset = new JNTAsset(SocotraR1000AssetId, 'R1000', 'R1000', 9, false)
+export const SocotraR10Asset: JNTAsset = new JNTAsset(SocotraR10AssetId, 'R10', 'R10', 9, false)
 
 export const SocotraPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain', '11111111111111111111111111111111LpoYY', SocotraJUNEAssetId, ['P']

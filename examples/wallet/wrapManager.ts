@@ -1,11 +1,9 @@
 import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset } from '../../src'
 
 async function main () {
-    // provider to interact with the MCN
     const provider: MCNProvider = new MCNProvider()
-    // recovering wallet used to sign transactions
-    const wallet: JuneoWallet = JuneoWallet.recover('urge cigar seminar remove curve glow force ritual yellow envelope promote glare')
-    // stake manager to handle staking
+    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    // wrap manager to handle wrapping
     const manager: WrapManager = new WrapManager(provider, wallet)
     // the wrapped asset we will wrap
     const asset: WrappedAsset = SocotraWJUNEAsset

@@ -2,13 +2,10 @@ import { MCNProvider, Blockchain, SocotraJUNEAssetId, SocotraJVMChain, UserInput
     TransferHandler, TransferManager, JuneoWallet } from '../../src'
 
 async function main () {
-    // provider to interact with the MCN
     const provider: MCNProvider = new MCNProvider()
-    // recovering wallet used to sign transactions
     const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // transfer manager to handle user inputs
     const manager: TransferManager = new TransferManager(provider, wallet)
-    // data used to create user inputs
     const assetId: string = SocotraJUNEAssetId
     // source chain of all inputs used in a transfer must be the same
     const sourceChain: Blockchain = SocotraJVMChain

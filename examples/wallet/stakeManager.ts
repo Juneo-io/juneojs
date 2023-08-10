@@ -1,9 +1,7 @@
 import { MCNProvider, JuneoWallet, StakeManager, now } from '../../src'
 
 async function main () {
-    // provider to interact with the MCN
     const provider: MCNProvider = new MCNProvider()
-    // recovering wallet used to sign transactions
     const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // stake manager to handle staking
     const manager: StakeManager = new StakeManager(provider, wallet)

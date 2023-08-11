@@ -600,8 +600,20 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = parseUtxoSet(await api.getUTXOsFrom([wallet.getAddress()], sourceChain.id), sourceChain.id)
     const importReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
     this.receipts.push(importReceipt)
+    const fixedUserInputs: UserInput[] = []
+    for (let i = 0; i < transfer.userInputs.length; i++) {
+      const input: UserInput = transfer.userInputs[i]
+      // the only case that could do such transaction is the transfer of a JRC20
+      // in that case we must import to self to be able to deposit and then
+      // call the ERC20 transfer function
+      if (input.assetId !== evmChain.assetId) {
+        fixedUserInputs.push(new UserInput(input.assetId, input.sourceChain, input.amount, wallet.getHexAddress(), input.destinationChain))
+      } else {
+        fixedUserInputs.push(input)
+      }
+    }
     const importTransaction: string = jevm.buildJEVMImportTransaction(
-      transfer.userInputs, utxoSet, [wallet.getAddress()], fee, provider.mcn.id
+      fixedUserInputs, utxoSet, [wallet.getAddress()], fee, provider.mcn.id
     ).signTransaction([wallet]).toCHex()
     const transactionId: string = (await api.issueTx(importTransaction)).txID
     importReceipt.transactionId = transactionId

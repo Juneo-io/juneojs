@@ -673,6 +673,31 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         if (depositTransactionStatus !== EVMTransactionStatus.Success) {
           return false
         }
+        // if we need to transfer the JRC20 to another destination than the sender
+        if (input.address !== wallet.getHexAddress()) {
+          const transferReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Send)
+          this.receipts.push(transferReceipt)
+          const gasLimit: bigint = await evmChain.estimateGasLimit(contractAddress, wallet.getHexAddress(), input.address, input.amount)
+          const transactionData: TransactionRequest = {
+            from: wallet.getHexAddress(),
+            to: contractAddress,
+            value: BigInt(0),
+            nonce: Number(nonce++),
+            chainId: evmChain.chainId,
+            gasLimit,
+            gasPrice,
+            data: await evmChain.getContractTransactionData(contractAddress, input.address, input.amount)
+          }
+          const transaction: string = await wallet.evmWallet.signTransaction(transactionData)
+          const transactionHash: string = await api.eth_sendRawTransaction(transaction)
+          transferReceipt.transactionId = transactionHash
+          const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+            StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+          transferReceipt.transactionStatus = transactionStatus
+          if (transactionStatus !== EVMTransactionStatus.Success) {
+            return false
+          }
+        }
       }
     }
     return true

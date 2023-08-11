@@ -1,6 +1,5 @@
-import { type ethers } from 'ethers'
+import { type ethers, type TransactionRequest } from 'ethers'
 import { FeeData, TransactionReceipt, type JEVMBlockchain, type JuneoWallet, type MCNProvider, type JEVMAPI, type JEVMWallet, TransactionType, EVMTransactionStatusFetcher, EVMTransactionStatus, FeeType, type WrappedAsset } from '../juneo'
-import { type TransactionRequest } from 'ethers/types/providers'
 
 const StatusFetcherDelay: number = 100
 const StatusFetcherMaxAttempts: number = 600

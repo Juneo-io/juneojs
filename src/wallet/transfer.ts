@@ -8,8 +8,7 @@ import * as jevm from '../transaction/jevm'
 import * as platform from '../transaction/platform'
 import { type JEVMAPI } from '../api/jevm'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
-import { type ethers } from 'ethers'
-import { type TransactionRequest } from 'ethers/types/providers'
+import { type ethers, type TransactionRequest } from 'ethers'
 import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
 
 const StatusFetcherDelay: number = 100

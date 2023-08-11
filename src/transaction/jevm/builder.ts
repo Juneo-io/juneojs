@@ -138,12 +138,8 @@ export function buildJEVMImportTransaction (userInputs: UserInput[], utxoSet: Ut
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const signersAddresses: Address[] = []
-  sendersAddresses.forEach(senderAddress => {
-    signersAddresses.push(new Address(senderAddress))
-  })
   const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
-  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
+  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData])
   const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData)
   return new JEVMImportTransaction(
     networkId,

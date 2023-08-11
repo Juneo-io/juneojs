@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { JEVM_ID, type Blockchain, JVM_ID, RELAYVM_ID } from '../chain'
+import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
 import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
@@ -10,25 +10,7 @@ const JvmHdPath = "m/44'/9000'/0'/0/0"
 
 const JvmPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
-const DefaultHrp = 'june'
-
-export function validatePrivateKey (data: string): boolean {
-  if (encoding.isHex(data)) {
-    const hasPrefix: boolean = encoding.hasHexPrefix(data)
-    const length = hasPrefix ? data.substring(2).length : data.length
-    return length === PrivateKeyLength
-  }
-  if (data.includes(JvmPrivateKeyPrefix)) {
-    const split: string[] = data.split('-')
-    const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
-    return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
-  }
-  return false
-}
-
-export function encodeJuneoAddress (publicKey: string, hrp: string): string {
-  return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
-}
+const DefaultHrp = 'socotra'
 
 export class JuneoWallet {
   hrp: string
@@ -48,11 +30,19 @@ export class JuneoWallet {
     return this.getWallet(chain).getAddress()
   }
 
+  getEthAddress (chain: JEVMBlockchain): string {
+    return (this.getWallet(chain) as JEVMWallet).getHexAddress()
+  }
+
   getWallet (chain: Blockchain): VMWallet {
     if (this.chainsWallets[chain.id] === undefined) {
       this.setChainWallet(chain)
     }
     return this.chainsWallets[chain.id]
+  }
+
+  getEthWallet (chain: JEVMBlockchain): JEVMWallet {
+    return this.getWallet(chain) as JEVMWallet
   }
 
   getWallets (): VMWallet[] {
@@ -68,7 +58,7 @@ export class JuneoWallet {
       this.chainsWallets[chain.id] = this.buildJEVMWallet(chain)
     } else if (chain.vmId === JVM_ID) {
       this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
-    } else if (chain.vmId === RELAYVM_ID) {
+    } else if (chain.vmId === PLATFORMVM_ID) {
       this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
     } else {
       throw new WalletError('unsupported vm id')
@@ -121,7 +111,7 @@ export class JuneoWallet {
       wallet.setMnemonic(data)
       return wallet
     }
-    if (validatePrivateKey(data)) {
+    if (JuneoWallet.validatePrivateKey(data)) {
       const wallet: JuneoWallet = new JuneoWallet(hrp)
       let privateKey: string = data
       // should only be hex or bs58 private key after validate
@@ -136,10 +126,28 @@ export class JuneoWallet {
     throw new WalletError('invalid recovery data provided')
   }
 
-  static generate (hrp?: string): JuneoWallet {
-    const mnemonic = bip39.generateMnemonic()
+  static generate (hrp?: string, words: number = 12): JuneoWallet {
+    if (words !== 12 && words !== 24) {
+      throw new WalletError('words count must be 12 or 24')
+    }
+    const strength: number = words === 12 ? 128 : 256
+    const mnemonic = bip39.generateMnemonic(strength)
     const wallet = JuneoWallet.recover(mnemonic, hrp)
     return wallet
+  }
+
+  static validatePrivateKey (data: string): boolean {
+    if (encoding.isHex(data)) {
+      const hasPrefix: boolean = encoding.hasHexPrefix(data)
+      const length = hasPrefix ? data.substring(2).length : data.length
+      return length === PrivateKeyLength
+    }
+    if (data.includes(JvmPrivateKeyPrefix)) {
+      const split: string[] = data.split('-')
+      const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
+      return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
+    }
+    return false
   }
 }
 
@@ -165,7 +173,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.address = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
   }
 
   getAddress (): string {
@@ -181,6 +189,10 @@ export abstract class AbstractVMWallet implements VMWallet {
 
   sign (buffer: JuneoBuffer): JuneoBuffer {
     return this.keyPair.sign(buffer)
+  }
+
+  static encodeJuneoAddress (publicKey: string, hrp: string): string {
+    return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
   }
 }
 

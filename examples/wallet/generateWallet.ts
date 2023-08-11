@@ -1,14 +1,13 @@
-import { juneojs, JuneoWallet } from '../dist';
-import { JEVMWallet, VMWallet } from '../dist/wallet';
+import { JuneoWallet, JEVMWallet, VMWallet, SocotraJVMChain, SocotraJUNEChain } from '../../src'
 
 async function main() {
     // generating new master wallet
-    let masterWallet: JuneoWallet = juneojs.JuneoWallet.generate()
+    let masterWallet: JuneoWallet = JuneoWallet.generate()
     // generated mnemonic
     console.log(masterWallet.mnemonic)
-    const jvmChainAddress: string = masterWallet.getAddress(juneojs.chain.BelgradeJVMChain)
+    const jvmChainAddress: string = masterWallet.getAddress(SocotraJVMChain)
     console.log(jvmChainAddress)
-    const juneChainWallet: VMWallet = masterWallet.getWallet(juneojs.chain.BelgradeJUNEChain)
+    const juneChainWallet: VMWallet = masterWallet.getWallet(SocotraJUNEChain)
     // june chain jeth address
     console.log(juneChainWallet.getAddress())
     const juneEVMChainWallet: JEVMWallet = juneChainWallet as JEVMWallet

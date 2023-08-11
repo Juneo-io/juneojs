@@ -4,15 +4,24 @@ export interface BuildGenesisResponse {
   encoding: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetAddressTxsResponse {
   txIDS: string[]
   cursor: number
 }
 
+/**
+ * @deprecated
+ */
 export interface GetAllBalancesResponse {
   balances: Balance[]
 }
 
+/**
+ * @deprecated
+ */
 export interface Balance {
   asset: string
   balance: number
@@ -25,6 +34,9 @@ export interface GetAssetDescriptionResponse {
   denomination: number
 }
 
-export interface GetBalanceResponse {
+/**
+ * @deprecated
+ */
+export interface GetJVMBalanceResponse {
   balance: number
 }

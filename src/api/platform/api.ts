@@ -1,17 +1,23 @@
-import { type RelayBlockchain } from '../../chain'
-import { AbstractChainAPI } from '../api'
+import { type PlatformBlockchain } from '../../chain'
+import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetTxResponse, type GetTxStatusResponse, type GetUTXOsResponse, type IssueTxResponse, type UTXOIndex } from '../data'
-import { type GetBalanceResponse, type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetBlockResponse, type GetCurrentSupplyResponse, type GetCurrentValidatorsResponse, type GetHeightResponse, type GetMaxStakeAmountResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse, type GetRewardUTXOsResponse, type GetStakeResponse, type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse, type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
+import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
+import { type GetPlatformBalanceResponse, type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetBlockResponse, type GetCurrentSupplyResponse, type GetCurrentValidatorsResponse, type GetHeightResponse, type GetMaxStakeAmountResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse, type GetRewardUTXOsResponse, type GetStakeResponse, type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse, type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
 
-const Service: string = 'relay'
+const Service: string = 'platform'
 
-export class RelayAPI extends AbstractChainAPI {
-  constructor (client: JuneoClient, chain: RelayBlockchain) {
-    super(client, Service, chain)
+export class PlatformAPI extends AbstractUtxoAPI implements ChainAPI {
+  chain: PlatformBlockchain
+
+  constructor (client: JuneoClient, chain: PlatformBlockchain) {
+    super(client, `/bc/${chain.id}`, Service)
+    this.chain = chain
   }
 
-  async getBalance (addresses: string[]): Promise<GetBalanceResponse> {
+  /**
+   * @deprecated
+   */
+  async getBalance (addresses: string[]): Promise<GetPlatformBalanceResponse> {
     const response: JsonRpcResponse = await this.call('getBalance', [{ addresses }])
     return response.result
   }
@@ -21,6 +27,9 @@ export class RelayAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getBlockchains (): Promise<GetBlockchainsResponse> {
     const response: JsonRpcResponse = await this.call('getBlockchains')
     return response.result
@@ -46,6 +55,9 @@ export class RelayAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getMaxStakeAmount (supernetID: string, nodeID: string, startTime: number, endTime: number): Promise<GetMaxStakeAmountResponse> {
     const response: JsonRpcResponse = await this.call('getMaxStakeAmount', [{ supernetID, nodeID, startTime, endTime }])
     return response.result
@@ -61,11 +73,17 @@ export class RelayAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getRewardUTXOs (txID: string, encoding?: string): Promise<GetRewardUTXOsResponse> {
     const response: JsonRpcResponse = await this.call('getRewardUTXOs', [{ txID, encoding }])
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getStake (addresses: string[]): Promise<GetStakeResponse> {
     const response: JsonRpcResponse = await this.call('getStake', [{ addresses }])
     return response.result
@@ -76,6 +94,9 @@ export class RelayAPI extends AbstractChainAPI {
     return response.result
   }
 
+  /**
+   * @deprecated
+   */
   async getSupernets (ids: string[]): Promise<GetSupernetsResponse> {
     const response: JsonRpcResponse = await this.call('getSupernets', [{ ids }])
     return response.result
@@ -98,11 +119,6 @@ export class RelayAPI extends AbstractChainAPI {
 
   async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
     const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
-    return response.result
-  }
-
-  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
     return response.result
   }
 

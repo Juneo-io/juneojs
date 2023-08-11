@@ -1,6 +1,10 @@
+import { SignatureError, sha256 } from '../../utils'
 import { JuneoBuffer, type Serializable } from '../../utils/bytes'
+import { type VMWallet } from '../../wallet'
+import { getSignersIndices } from '../builder'
 import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput } from '../output'
-import { Address, AddressSize, NodeId, NodeIdSize } from '../types'
+import { type Signable } from '../signature'
+import { Address, AddressSize, NodeId, NodeIdSize, Signature } from '../types'
 
 export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
 export const SubnetAuthTypeId: number = 0x0000000a
@@ -105,15 +109,36 @@ export class Secp256k1OutputOwners implements TransactionOutput {
   }
 }
 
-export class SupernetAuth implements Serializable {
+export class SupernetAuth implements Serializable, Signable {
   readonly typeId: number = SubnetAuthTypeId
   addressIndices: number[]
+  rewardsOwner: Secp256k1OutputOwners
 
-  constructor (addressIndices: number[]) {
-    this.addressIndices = addressIndices
+  constructor (addresses: Address[], rewardsOwner: Secp256k1OutputOwners) {
+    this.addressIndices = getSignersIndices(addresses, rewardsOwner.addresses)
     this.addressIndices.sort((a: number, b: number) => {
       return a - b
     })
+    this.rewardsOwner = rewardsOwner
+  }
+
+  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+    const signatures: Signature[] = []
+    const threshold: number = this.rewardsOwner.threshold
+    for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
+      const address: Address = this.rewardsOwner.addresses[i]
+      for (let j = 0; j < wallets.length; j++) {
+        const wallet: VMWallet = wallets[j]
+        if (address.matches(wallet.getAddress())) {
+          signatures.push(new Signature(wallet.sign(sha256(bytes))))
+          break
+        }
+      }
+    }
+    if (signatures.length < threshold) {
+      throw new SignatureError('missing wallets to complete supernet signatures')
+    }
+    return signatures
   }
 
   serialize (): JuneoBuffer {

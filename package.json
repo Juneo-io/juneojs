@@ -1,6 +1,6 @@
 {
   "name": "juneojs",
-  "version": "0.0.1",
+  "version": "0.0.15",
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
     "defi"
   ],
   "author": "Aleksander Waslet",
-  "license": "GPLv3",
+  "license": "BSD-3-Clause",
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
     "@types/create-hash": "^1.2.2",

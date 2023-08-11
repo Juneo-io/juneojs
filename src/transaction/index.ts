@@ -1,7 +1,8 @@
 
+export * from './genesis'
 export * from './jevm'
 export * from './jvm'
-export * from './relay'
+export * from './platform'
 export * from './builder'
 export * from './fee'
 export * from './input'

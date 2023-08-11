@@ -1,11 +1,12 @@
-import { type RelayAPI } from '../../api/relay'
+import { type PlatformAPI } from '../../api/platform'
 import { JuneoBuffer } from '../../utils/bytes'
 import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
+import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
-import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize } from '../types'
-import { Validator, Secp256k1OutputOwners, type SupernetAuth } from './validation'
+import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address, AssetIdSize } from '../types'
+import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
 const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
@@ -13,8 +14,9 @@ const ExportTransactionTypeId: number = 0x00000012
 const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d
 const AddDelegatorTransactionTypeId: number = 0x0000000e
+const CreateChainTransactionTypeId: number = 0x0000000f
 
-export enum RelayTransactionStatus {
+export enum PlatformTransactionStatus {
   Committed = 'Committed',
   Aborted = 'Aborted',
   Processing = 'Processing',
@@ -22,16 +24,16 @@ export enum RelayTransactionStatus {
   Unknown = 'Unknown'
 }
 
-export class RelayTransactionStatusFetcher {
-  relayApi: RelayAPI
+export class PlatformTransactionStatusFetcher {
+  platformApi: PlatformAPI
   delay: number
   private attempts: number = 0
   maxAttempts: number
   transactionId: string
-  currentStatus: string = RelayTransactionStatus.Unknown
+  currentStatus: string = PlatformTransactionStatus.Unknown
 
-  constructor (relayApi: RelayAPI, delay: number, maxAttempts: number, transactionId: string) {
-    this.relayApi = relayApi
+  constructor (platformApi: PlatformAPI, delay: number, maxAttempts: number, transactionId: string) {
+    this.platformApi = platformApi
     this.delay = delay
     this.maxAttempts = maxAttempts
     this.transactionId = transactionId
@@ -44,18 +46,18 @@ export class RelayTransactionStatusFetcher {
   async fetch (): Promise<string> {
     while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
-      this.currentStatus = (await this.relayApi.getTxStatus(this.transactionId)).status
+      this.currentStatus = (await this.platformApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== RelayTransactionStatus.Unknown && this.currentStatus !== RelayTransactionStatus.Processing
+    return this.currentStatus !== PlatformTransactionStatus.Unknown && this.currentStatus !== PlatformTransactionStatus.Processing
   }
 }
 
-export class RelayExportTransaction extends AbstractExportTransaction {
+export class PlatformExportTransaction extends AbstractExportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
@@ -64,7 +66,7 @@ export class RelayExportTransaction extends AbstractExportTransaction {
   }
 }
 
-export class RelayImportTransaction extends AbstractImportTransaction {
+export class PlatformImportTransaction extends AbstractImportTransaction {
   constructor (networkId: number, blockchainId: BlockchainId,
     outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
     sourceChain: BlockchainId, importedInputs: TransferableInput[]) {
@@ -88,7 +90,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     this.shares = shares
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -186,7 +188,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     this.rewardsOwner = rewardsOwner
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -280,8 +282,8 @@ export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
     this.supernetAuth = supernetAuth
   }
 
-  getUnsignedInputs (): TransferableInput[] {
-    return this.inputs
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
   }
 
   serialize (): JuneoBuffer {
@@ -307,7 +309,11 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     this.rewardsOwner = rewardsOwner
   }
 
-  getUnsignedInputs (): TransferableInput[] {
+  getSupernetAuth (addresses: Address[]): SupernetAuth {
+    return new SupernetAuth(addresses, this.rewardsOwner)
+  }
+
+  getSignables (): Signable[] {
     return this.inputs
   }
 
@@ -319,6 +325,96 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     )
     buffer.write(baseTransaction)
     buffer.write(rewardsOwnerBytes)
+    return buffer
+  }
+
+  static parse (data: string): CreateSupernetTransaction {
+    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
+    // start at 2 + 4 to skip codec and type id reading
+    let position: number = 6
+    const networkId: number = buffer.readUInt32(position)
+    position += 4
+    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
+    position += BlockchainIdSize
+    const outputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const outputs: TransferableOutput[] = []
+    for (let i: number = 0; i < outputsLength; i++) {
+      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
+      position += output.serialize().length
+      outputs.push(output)
+    }
+    const inputsLength: number = buffer.readUInt32(position)
+    position += 4
+    const inputs: TransferableInput[] = []
+    for (let i: number = 0; i < inputsLength; i++) {
+      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
+      position += input.serialize().length
+      inputs.push(input)
+    }
+    const memoLength: number = buffer.readUInt32(position)
+    position += 4
+    const memo: string = memoLength > 0
+      ? String(buffer.read(position, memoLength))
+      : ''
+    position += memoLength
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
+    return new CreateSupernetTransaction(
+      networkId,
+      blockchainId,
+      outputs,
+      inputs,
+      memo,
+      rewardsOwner
+    )
+  }
+}
+
+export class CreateChainTransaction extends AbstractBaseTransaction {
+  supernetId: SupernetId
+  name: string
+  chainAssetId: AssetId
+  vmId: DynamicId
+  fxIds: DynamicId[]
+  genesisData: string
+  supernetAuth: SupernetAuth
+
+  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
+    supernetId: SupernetId, name: string, chainAssetId: AssetId, vmId: DynamicId, fxIds: DynamicId[], genesisData: string, supernetAuth: SupernetAuth) {
+    super(CreateChainTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.supernetId = supernetId
+    this.name = name
+    this.chainAssetId = chainAssetId
+    this.vmId = vmId
+    this.fxIds = fxIds
+    this.genesisData = genesisData
+    this.supernetAuth = supernetAuth
+  }
+
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + SupernetIdSize + 2 + this.name.length + AssetIdSize + DynamicIdSize +
+      4 + DynamicIdSize * this.fxIds.length + 4 + this.genesisData.length + supernetAuthBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.supernetId.serialize())
+    buffer.writeUInt16(this.name.length)
+    buffer.writeString(this.name)
+    buffer.write(this.chainAssetId.serialize())
+    buffer.write(this.vmId.serialize())
+    buffer.writeUInt32(this.fxIds.length)
+    this.fxIds.forEach(fxId => {
+      buffer.write(fxId.serialize())
+    })
+    buffer.writeUInt32(this.genesisData.length)
+    buffer.writeString(this.genesisData)
+    buffer.write(supernetAuthBytes)
     return buffer
   }
 }

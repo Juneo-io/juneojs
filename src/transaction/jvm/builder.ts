@@ -19,12 +19,8 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
       throw new InputError('jvm base transaction cannot have different source/destination chain user inputs')
     }
   })
-  const signersAddresses: Address[] = []
-  sendersAddresses.forEach(senderAddress => {
-    signersAddresses.push(new Address(senderAddress))
-  })
   const feeData = new FeeData(userInputs[0].sourceChain, fee)
-  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
+  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData])
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
   return new BaseTransaction(
     networkId,
@@ -51,14 +47,10 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
       throw new InputError('jvm export transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const signersAddresses: Address[] = []
-  sendersAddresses.forEach(senderAddress => {
-    signersAddresses.push(new Address(senderAddress))
-  })
   const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
   const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
   const fees: FeeData[] = [sourceFeeData, destinationFeeData]
-  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
+  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), fees)
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
   userInputs.forEach(input => {
@@ -109,14 +101,10 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const signersAddresses: Address[] = []
-  sendersAddresses.forEach(senderAddress => {
-    signersAddresses.push(new Address(senderAddress))
-  })
   const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
-  buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData]).forEach(input => {
+  buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData]).forEach(input => {
     if (input.input.utxo === undefined) {
       throw new InputError('input cannot use read only utxo')
     }

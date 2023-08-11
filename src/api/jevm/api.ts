@@ -1,38 +1,33 @@
 import { type JEVMBlockchain } from '../../chain'
-import { AbstractChainAPI } from '../api'
+import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type UTXOIndex, type GetUTXOsResponse, type IssueTxResponse } from '../data'
+import { type IssueTxResponse } from '../data'
 import { type GetAtomicTxResponse, type GetAtomicTxStatusResponse } from './data'
 
 const Service: string = 'june'
 
-export class JEVMAPI extends AbstractChainAPI {
-  private readonly juneEndpoint: string
+export class JEVMAPI extends AbstractUtxoAPI implements ChainAPI {
+  chain: JEVMBlockchain
   private readonly rpcEndpoint: string
 
   constructor (client: JuneoClient, chain: JEVMBlockchain) {
-    super(client, Service, chain)
-    this.juneEndpoint = `/bc/${chain.id}/june`
+    super(client, `/bc/${chain.id}/june`, Service)
+    this.chain = chain
     this.rpcEndpoint = `/bc/${chain.id}/rpc`
   }
 
   async getTx (txID: string, encoding?: string): Promise<GetAtomicTxResponse> {
-    const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'getAtomicTx', [{ txID, encoding }])
+    const response: JsonRpcResponse = await this.call('getAtomicTx', [{ txID, encoding }])
     return response.result
   }
 
   async getTxStatus (txID: string): Promise<GetAtomicTxStatusResponse> {
-    const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'getAtomicTxStatus', [{ txID }])
-    return response.result
-  }
-
-  async getUTXOs (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
+    const response: JsonRpcResponse = await this.call('getAtomicTxStatus', [{ txID }])
     return response.result
   }
 
   async issueTx (tx: string, encoding?: string): Promise<IssueTxResponse> {
-    const response: JsonRpcResponse = await this.callAt(this.juneEndpoint, 'issueTx', [{ tx, encoding }])
+    const response: JsonRpcResponse = await this.call('issueTx', [{ tx, encoding }])
     return response.result
   }
 

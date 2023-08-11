@@ -7,7 +7,9 @@ export enum FeeType {
   Undefined = 'Undefined',
   BaseFee = 'Base fee',
   ExportFee = 'Export fee',
-  ImportFee = 'Import fee'
+  ImportFee = 'Import fee',
+  Wrap = 'Wrap fee',
+  Unwrap = 'Unwrap fee'
 }
 
 export class FeeData {
@@ -56,24 +58,11 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
   fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
   const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
   if (requiresProxy) {
-    const jvmChain: JVMBlockchain = provider.jvm.chain as JVMBlockchain
+    const jvmChain: JVMBlockchain = provider.jvm.chain
     fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), jvmChain.assetId, FeeType.ImportFee))
     fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), jvmChain.assetId, FeeType.ExportFee))
   }
   const importFee: bigint = await destinationChain.queryImportFee(provider, inputs)
-  // export fee by default
-  let exportingFee: boolean = true
-  // if destination can pay for the import fee with utxos
-  // check if source can really export it and otherwise will pay for it in import tx
-  if (destinationChain.canPayImportFee()) {
-    let address: string = wallet.getAddress(source)
-    if (source.vmId === JEVM_ID) {
-      const evmWallet: JEVMWallet = wallet.getWallet(source) as JEVMWallet
-      address = evmWallet.getHexAddress()
-    }
-    const sourceBalance: bigint = await source.queryBalance(provider, address, destination.assetId)
-    exportingFee = sourceBalance >= importFee
-  }
-  fees.push(new FeeData(exportingFee ? source : destination, importFee, destination.assetId, FeeType.ImportFee))
+  fees.push(new FeeData(destination, importFee, destination.assetId, FeeType.ImportFee))
   return fees
 }

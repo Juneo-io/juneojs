@@ -1,13 +1,63 @@
+import { WrappedContractAdapter } from '../solidity'
+import { type JEVMBlockchain } from './chain'
 
-export class JRC20Asset {
-  id: string
-  chainId: string
-  contractAddress: string
+export class TokenAsset {
+  readonly assetId: string
+  readonly name: string
+  readonly symbol: string
+  readonly decimals: number
 
-  constructor (id: string, chainId: string, contractAddress: string) {
-    this.id = id
-    this.chainId = chainId
-    this.contractAddress = contractAddress
+  constructor (assetId: string, name: string, symbol: string, decimals: number) {
+    this.assetId = assetId
+    this.name = name
+    this.symbol = symbol
+    this.decimals = decimals
+  }
+
+  getAssetValue (value: bigint): AssetValue {
+    return new AssetValue(value, this.decimals)
+  }
+}
+
+export interface EVMContract {
+  readonly address: string
+}
+
+export class ERC20Asset extends TokenAsset implements EVMContract {
+  readonly address
+
+  constructor (address: string, name: string, symbol: string, decimals: number) {
+    super(address, name, symbol, decimals)
+    this.address = address
+  }
+}
+
+export class WrappedAsset extends ERC20Asset {
+  readonly chain: JEVMBlockchain
+  readonly adapter: WrappedContractAdapter
+
+  constructor (address: string, name: string, symbol: string, decimals: number, chain: JEVMBlockchain) {
+    super(address, name, symbol, decimals)
+    this.chain = chain
+    this.adapter = new WrappedContractAdapter(chain, address)
+  }
+}
+
+export class JRC20Asset extends ERC20Asset {
+  assetId: string
+
+  constructor (address: string, name: string, symbol: string, decimals: number, assetId: string) {
+    super(address, name, symbol, decimals)
+    this.assetId = assetId
+  }
+}
+
+export class JNTAsset extends TokenAsset {
+  mintable: boolean
+
+  constructor (assetId: string, name: string, symbol: string, decimals: number, mintable: boolean) {
+    super(assetId, name, symbol, decimals)
+    this.mintable = mintable
   }
 }
 

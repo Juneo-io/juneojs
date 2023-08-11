@@ -1,7 +1,35 @@
 import { TransferableOutput, type TransactionOutput } from './output'
 import { AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
 import { JuneoBuffer } from '../utils'
-import { type GetUTXOsResponse } from '../api/data'
+import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
+
+const UtxoRequestLimit: number = 1024
+
+export async function fetchUtxos (utxoSet: Map<string, Utxo>, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<void> {
+  // use a mapping to avoid duplicates because get utxos calls are not guaranteed
+  // to provide unique utxos. There could be some duplicates because of start/end indexes
+  // or even if one transaction changes one of the utxos between two calls.
+  let utxoResponse: GetUTXOsResponse = (sourceChain === undefined)
+    ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
+    : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit)
+  utxoResponse.utxos.forEach(data => {
+    const utxo: Utxo = Utxo.parse(data)
+    utxo.sourceChain = sourceChain
+    utxoSet.set(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`, utxo)
+  })
+  while (utxoResponse.numFetched === UtxoRequestLimit) {
+    if (sourceChain === undefined) {
+      utxoResponse = await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
+    } else {
+      utxoResponse = await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
+    }
+    utxoResponse.utxos.forEach(data => {
+      const utxo: Utxo = Utxo.parse(data)
+      utxo.sourceChain = sourceChain
+      utxoSet.set(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`, utxo)
+    })
+  }
+}
 
 export function parseUtxoSet (data: GetUTXOsResponse, sourceChain?: string): Utxo[] {
   const utxos: string[] = data.utxos

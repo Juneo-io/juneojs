@@ -1,5 +1,8 @@
 
-export interface GetBalanceResponse {
+/**
+ * @deprecated
+ */
+export interface GetPlatformBalanceResponse {
   balance: number
   balances: Record<string, number>
   unlocked: number
@@ -11,6 +14,9 @@ export interface GetBalanceResponse {
   utxoIDs: UtxoID[]
 }
 
+/**
+ * @deprecated
+ */
 export interface UtxoID {
   txID: string
   outputIndex: number
@@ -21,11 +27,17 @@ export interface GetBlockResponse {
   encoding: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetBlockchainsResponse {
-  blockchains: Blockchain[]
+  blockchains: BlockchainData[]
 }
 
-export interface Blockchain {
+/**
+ * @deprecated
+ */
+export interface BlockchainData {
   id: string
   name: string
   supernetID: string
@@ -42,10 +54,10 @@ export interface GetCurrentSupplyResponse {
 }
 
 export interface GetCurrentValidatorsResponse {
-  validators: Validator[]
+  validators: ValidatorData[]
 }
 
-export interface Validator {
+export interface ValidatorData {
   txID: string
   startTime: string
   endTime: string
@@ -61,7 +73,7 @@ export interface Validator {
   signer: Signer
   delegatorCount: string
   delegatorWeight: string
-  delegators: Delegator[]
+  delegators: DelegatorData[]
 }
 
 export interface RewardOwner {
@@ -75,7 +87,7 @@ export interface Signer {
   proofOfPossession: string
 }
 
-export interface Delegator {
+export interface DelegatorData {
   txID: string
   startTime: string
   endTime: string
@@ -89,6 +101,9 @@ export interface GetHeightResponse {
   height: number
 }
 
+/**
+ * @deprecated
+ */
 export interface GetMaxStakeAmountResponse {
   amount: number
 }
@@ -123,12 +138,18 @@ export interface PendingDelegator {
   nodeID: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetRewardUTXOsResponse {
   numFetched: number
   utxos: string[]
   encoding: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetStakeResponse {
   staked: number
   stakeds: Record<string, number>
@@ -140,11 +161,17 @@ export interface GetStakingAssetIDResponse {
   assetID: string
 }
 
+/**
+ * @deprecated
+ */
 export interface GetSupernetsResponse {
-  supernets: Supernet[]
+  supernets: SupernetData[]
 }
 
-export interface Supernet {
+/**
+ * @deprecated
+ */
+export interface SupernetData {
   id: string
   controlKeys: string[]
   threshold: string

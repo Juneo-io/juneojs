@@ -221,6 +221,10 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
 
   async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
     const api: JEVMAPI = provider.jevm[this.id]
+    return await this.queryEVMBalance(api, address, assetId)
+  }
+
+  async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
     // native asset
     if (assetId === this.assetId) {
       return await api.eth_getBalance(address, 'latest')

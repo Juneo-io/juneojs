@@ -44,7 +44,7 @@ export class WrappedAsset extends ERC20Asset {
 }
 
 export class JRC20Asset extends ERC20Asset {
-  assetId: string
+  readonly assetId: string
 
   constructor (address: string, name: string, symbol: string, decimals: number, assetId: string) {
     super(address, name, symbol, decimals)
@@ -53,7 +53,7 @@ export class JRC20Asset extends ERC20Asset {
 }
 
 export class JNTAsset extends TokenAsset {
-  mintable: boolean
+  readonly mintable: boolean
 
   constructor (assetId: string, name: string, symbol: string, decimals: number, mintable: boolean) {
     super(assetId, name, symbol, decimals)

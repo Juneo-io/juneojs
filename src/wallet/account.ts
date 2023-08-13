@@ -18,9 +18,7 @@ export class MCNAccount {
     ]
     for (const key in provider.jevm) {
       const api: JEVMAPI = provider.jevm[key]
-      const account: NonceAccount = new NonceAccount(api.chain, api, [wallet.getEthAddress(api.chain)])
-      account.registerAssets(api.chain.jrc20Assets)
-      balances.push(account)
+      balances.push(new NonceAccount(api.chain, api, [wallet.getEthAddress(api.chain)]))
     }
     return new MCNAccount(balances)
   }
@@ -113,6 +111,7 @@ export class NonceAccount extends AbstractAccount {
     this.chain = chain
     this.api = api
     this.addresses = addresses
+    this.registerAssets(this.chain.jrc20Assets)
   }
 
   registerAssets (assets: TokenAsset[]): void {

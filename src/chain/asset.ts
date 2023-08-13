@@ -44,11 +44,11 @@ export class WrappedAsset extends ERC20Asset {
 }
 
 export class JRC20Asset extends ERC20Asset {
-  readonly assetId: string
+  readonly nativeAssetId: string
 
-  constructor (address: string, name: string, symbol: string, decimals: number, assetId: string) {
+  constructor (address: string, name: string, symbol: string, decimals: number, nativeAssetId: string) {
     super(address, name, symbol, decimals)
-    this.assetId = assetId
+    this.nativeAssetId = nativeAssetId
   }
 }
 

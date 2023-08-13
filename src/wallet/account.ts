@@ -122,6 +122,7 @@ export class NonceAccount extends AbstractAccount {
       if (asset.assetId === this.chain.assetId || this.assets.includes(asset)) {
         continue
       }
+      this.assets.push(asset)
     }
   }
 

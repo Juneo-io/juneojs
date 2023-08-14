@@ -49,11 +49,9 @@ export class ERC20ContractAdapter implements ContractAdapter {
     // checking if is ERC20 by calling decimals read only function
     // other main tokens interfaces should not be using decimals
     // IERC165 is not widespread enough to be used by ERC20 tokens
-    try {
-      await contract.decimals()
-    } catch (error) {
+    await contract.decimals().catch(() => {
       return false
-    }
+    })
     return true
   }
 
@@ -77,11 +75,9 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
     const contract: ethers.Contract = this.getContract(contractAddress)
     // checking if is JRC20 by calling nativeAssetId read only function
     // other main tokens interfaces should not be using nativeAssetId
-    try {
-      await contract.nativeAssetId()
-    } catch (error) {
+    await contract.nativeAssetId().catch(() => {
       return false
-    }
+    })
     return true
   }
 

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { isHex, validateBech32 } from '../utils'
+import { EVMError, isHex, validateBech32 } from '../utils'
 import { type MCNProvider } from '../juneo'
 import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
@@ -191,6 +191,8 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
         to: assetId,
         value: BigInt(0),
         data
+      }).catch(error => {
+        throw new EVMError(error.message)
       })
     }
   }

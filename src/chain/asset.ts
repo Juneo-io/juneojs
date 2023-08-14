@@ -1,6 +1,9 @@
 import { WrappedContractAdapter } from '../solidity'
 import { type JEVMBlockchain } from './chain'
 
+const RoundedValueDefaultDecimals = 2
+const EVMGasTokenDecimals = 18
+
 export class TokenAsset {
   readonly assetId: string
   readonly name: string
@@ -16,6 +19,12 @@ export class TokenAsset {
 
   getAssetValue (value: bigint): AssetValue {
     return new AssetValue(value, this.decimals)
+  }
+}
+
+export class EVMGasToken extends TokenAsset {
+  constructor (assetId: string, name: string, symbol: string) {
+    super(assetId, name, symbol, EVMGasTokenDecimals)
   }
 }
 
@@ -85,7 +94,7 @@ export class AssetValue {
     }
   }
 
-  getReadableValueRounded (decimals: number = 2): string {
+  getReadableValueRounded (decimals: number = RoundedValueDefaultDecimals): string {
     const readableValue: string = this.getReadableValue()
     if (this.decimals < 1) {
       return readableValue

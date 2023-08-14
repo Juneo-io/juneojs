@@ -1,5 +1,5 @@
-import { type JEVMAPI, type AbstractUtxoAPI } from '../api'
-import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain } from '../chain'
+import { type JEVMAPI, type AbstractUtxoAPI, type JVMAPI, type PlatformAPI } from '../api'
+import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../transaction'
 import { type JuneoWallet } from './wallet'
@@ -13,12 +13,12 @@ export class MCNAccount {
 
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
     const balances: ChainAccount[] = [
-      new UtxoAccount(provider.jvm.chain, provider.jvm, [wallet.getAddress(provider.jvm.chain)]),
-      new UtxoAccount(provider.platform.chain, provider.platform, [wallet.getAddress(provider.platform.chain)])
+      new JVMAccount(provider.jvm, [wallet.getAddress(provider.jvm.chain)]),
+      new PlatformAccount(provider.platform, [wallet.getAddress(provider.platform.chain)])
     ]
     for (const key in provider.jevm) {
       const api: JEVMAPI = provider.jevm[key]
-      balances.push(new NonceAccount(api.chain, api, [wallet.getEthAddress(api.chain)]))
+      balances.push(new NonceAccount(api, [wallet.getEthAddress(api.chain)]))
     }
     return new MCNAccount(balances)
   }
@@ -70,7 +70,7 @@ export class UtxoAccount extends AbstractAccount {
   addresses: string[]
   sourceChain?: string
 
-  constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string) {
+  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string) {
     super(chain)
     this.utxoApi = utxoApi
     this.addresses = addresses
@@ -99,6 +99,24 @@ export class UtxoAccount extends AbstractAccount {
   }
 }
 
+export class JVMAccount extends UtxoAccount {
+  override chain: JVMBlockchain
+
+  constructor (api: JVMAPI, addresses: string[]) {
+    super(api.chain, api, addresses)
+    this.chain = api.chain
+  }
+}
+
+export class PlatformAccount extends UtxoAccount {
+  override chain: PlatformBlockchain
+
+  constructor (api: PlatformAPI, addresses: string[]) {
+    super(api.chain, api, addresses)
+    this.chain = api.chain
+  }
+}
+
 export class NonceAccount extends AbstractAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
@@ -106,9 +124,9 @@ export class NonceAccount extends AbstractAccount {
   gasBalance: bigint = BigInt(0)
   assets: TokenAsset[] = []
 
-  constructor (chain: JEVMBlockchain, api: JEVMAPI, addresses: string[]) {
-    super(chain)
-    this.chain = chain
+  constructor (api: JEVMAPI, addresses: string[]) {
+    super(api.chain)
+    this.chain = api.chain
     this.api = api
     this.addresses = addresses
     this.registerAssets(this.chain.jrc20Assets)

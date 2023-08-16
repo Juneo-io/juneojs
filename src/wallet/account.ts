@@ -1,24 +1,43 @@
-import { type JEVMAPI, type AbstractUtxoAPI } from '../api'
-import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain } from '../chain'
-import { type MCNProvider } from '../juneo'
+import { type JEVMAPI, type AbstractUtxoAPI, type JVMAPI, type PlatformAPI } from '../api'
+import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain, JEVM_ID } from '../chain'
+import { AccountError, MCNOperation, WrapManager, type MCNProvider } from '../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../transaction'
-import { type JuneoWallet } from './wallet'
+import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 
 export class MCNAccount {
-  balances: ChainAccount[]
+  private readonly chainAccounts = new Map<string, ChainAccount>()
 
-  constructor (balances: ChainAccount[]) {
-    this.balances = balances
+  constructor (accounts: ChainAccount[]) {
+    accounts.forEach(account => {
+      this.chainAccounts.set(account.chain.id, account)
+    })
   }
+
+  getAccount (chainId: string): ChainAccount {
+    if (!this.chainAccounts.has(chainId)) {
+      throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
+    }
+    return this.chainAccounts.get(chainId) as ChainAccount
+  }
+
+  // estimate (chainId: string, operation: MCNOperation): bigint {
+  //   const account: ChainAccount = this.getAccount(chainId)
+  //   const chain: Blockchain = account.chain
+  //   if (operation === MCNOperation.Wrap && chain.vmId === JEVM_ID) {
+  //     const evmAccount: NonceAccount = account as NonceAccount
+  //     // evmAccount.wrapManager.estimateWrapFee(operation.asset)
+  //   }
+  //   return BigInt(0)
+  // }
 
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
     const balances: ChainAccount[] = [
-      new UtxoAccount(provider.jvm.chain, provider.jvm, [wallet.getAddress(provider.jvm.chain)]),
-      new UtxoAccount(provider.platform.chain, provider.platform, [wallet.getAddress(provider.platform.chain)])
+      new JVMAccount(provider.jvm, wallet),
+      new PlatformAccount(provider.platform, wallet)
     ]
     for (const key in provider.jevm) {
       const api: JEVMAPI = provider.jevm[key]
-      balances.push(new NonceAccount(api.chain, api, [wallet.getEthAddress(api.chain)]))
+      balances.push(new EVMAccount(api, wallet))
     }
     return new MCNAccount(balances)
   }
@@ -32,17 +51,19 @@ export enum BalancesFetchingStatus {
 
 export interface ChainAccount {
   chain: Blockchain
-  status: string
+  balancesStatus: string
   balances: Map<string, bigint>
 
   getBalance: (asset: TokenAsset) => AssetValue
+
+  hasBalance: (asset: TokenAsset) => boolean
 
   fetchBalances: () => Promise<void>
 }
 
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
-  status: string = BalancesFetchingStatus.Initializing
+  balancesStatus: string = BalancesFetchingStatus.Initializing
   balances = new Map<string, bigint>()
 
   constructor (chain: Blockchain) {
@@ -61,27 +82,33 @@ export abstract class AbstractAccount implements ChainAccount {
     return asset.getAssetValue(BigInt(this.balances.get(asset.assetId) as bigint))
   }
 
+  hasBalance (asset: TokenAsset): boolean {
+    return this.balances.has(asset.assetId)
+  }
+
   abstract fetchBalances (): Promise<void>
 }
 
 export class UtxoAccount extends AbstractAccount {
   utxoSet = new Map<string, Utxo>()
   utxoApi: AbstractUtxoAPI
-  addresses: string[]
+  wallet: JuneoWallet
+  chainWallet: VMWallet
   sourceChain?: string
 
-  constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string) {
+  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
     super(chain)
     this.utxoApi = utxoApi
-    this.addresses = addresses
+    this.wallet = wallet
+    this.chainWallet = wallet.getWallet(chain)
     this.sourceChain = sourceChain
   }
 
   async fetchBalances (): Promise<void> {
-    this.status = BalancesFetchingStatus.Fetching
-    await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
+    this.balancesStatus = BalancesFetchingStatus.Fetching
+    await fetchUtxos(this.utxoSet, this.utxoApi, [this.chainWallet.getAddress()], this.sourceChain)
     this.calculateBalances()
-    this.status = BalancesFetchingStatus.Done
+    this.balancesStatus = BalancesFetchingStatus.Done
   }
 
   private calculateBalances (): void {
@@ -99,49 +126,70 @@ export class UtxoAccount extends AbstractAccount {
   }
 }
 
-export class NonceAccount extends AbstractAccount {
+export class JVMAccount extends UtxoAccount {
+  override chain: JVMBlockchain
+
+  constructor (api: JVMAPI, wallet: JuneoWallet) {
+    super(api.chain, api, wallet)
+    this.chain = api.chain
+  }
+}
+
+export class PlatformAccount extends UtxoAccount {
+  override chain: PlatformBlockchain
+
+  constructor (api: PlatformAPI, wallet: JuneoWallet) {
+    super(api.chain, api, wallet)
+    this.chain = api.chain
+  }
+}
+
+export class EVMAccount extends AbstractAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
-  addresses: string[]
+  wallet: JuneoWallet
+  chainWallet: JEVMWallet
   gasBalance: bigint = BigInt(0)
-  assets: TokenAsset[] = []
+  registeredAssets: string[] = []
+  wrapManager: WrapManager
 
-  constructor (chain: JEVMBlockchain, api: JEVMAPI, addresses: string[]) {
-    super(chain)
-    this.chain = chain
+  constructor (api: JEVMAPI, wallet: JuneoWallet) {
+    super(api.chain)
+    this.chain = api.chain
     this.api = api
-    this.addresses = addresses
-    this.registerAssets(this.chain.jrc20Assets)
+    this.wallet = wallet
+    this.chainWallet = wallet.getEthWallet(this.chain)
+    this.wrapManager = new WrapManager(this.api, this.chainWallet)
   }
 
-  registerAssets (assets: TokenAsset[]): void {
+  registerAssets (assets: TokenAsset[] | string[]): void {
     for (let i = 0; i < assets.length; i++) {
-      const asset: TokenAsset = assets[i]
+      const assetId: string = typeof assets[i] === 'string'
+        ? assets[i] as string
+        : (assets[i] as TokenAsset).assetId
       // no need to register chain asset id as it is already calculated as gas balance
-      if (asset.assetId === this.chain.assetId || this.assets.includes(asset)) {
+      if (assetId === this.chain.assetId || this.registeredAssets.includes(assetId)) {
         continue
       }
-      this.assets.push(asset)
+      this.registeredAssets.push(assetId)
     }
   }
 
   async fetchBalances (): Promise<void> {
-    this.status = BalancesFetchingStatus.Fetching
+    this.balancesStatus = BalancesFetchingStatus.Fetching
     this.gasBalance = BigInt(0)
-    for (let i = 0; i < this.addresses.length; i++) {
-      const address: string = this.addresses[i]
-      this.gasBalance += await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
-      for (let j = 0; j < this.assets.length; j++) {
-        const assetId: string = this.assets[j].assetId
-        let amount: bigint = BigInt(0)
-        if (this.balances.has(assetId)) {
-          amount += this.balances.get(assetId) as bigint
-        }
-        amount += await this.chain.queryEVMBalance(this.api, address, assetId)
-        this.balances.set(assetId, amount)
+    const address: string = this.chainWallet.getHexAddress()
+    this.gasBalance += await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
+    for (let j = 0; j < this.registeredAssets.length; j++) {
+      const assetId: string = this.registeredAssets[j]
+      let amount: bigint = BigInt(0)
+      if (this.balances.has(assetId)) {
+        amount += this.balances.get(assetId) as bigint
       }
+      amount += await this.chain.queryEVMBalance(this.api, address, assetId)
+      this.balances.set(assetId, amount)
     }
     this.balances.set(this.chain.assetId, this.gasBalance)
-    this.status = BalancesFetchingStatus.Done
+    this.balancesStatus = BalancesFetchingStatus.Done
   }
 }

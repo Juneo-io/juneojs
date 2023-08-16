@@ -1,5 +1,7 @@
 import { WrappedContractAdapter } from '../solidity'
-import { type JEVMBlockchain } from './chain'
+
+const RoundedValueDefaultDecimals = 2
+const EVMGasTokenDecimals = 18
 
 export class TokenAsset {
   readonly assetId: string
@@ -19,6 +21,12 @@ export class TokenAsset {
   }
 }
 
+export class EVMGasToken extends TokenAsset {
+  constructor (assetId: string, name: string, symbol: string) {
+    super(assetId, name, symbol, EVMGasTokenDecimals)
+  }
+}
+
 export interface EVMContract {
   readonly address: string
 }
@@ -33,13 +41,11 @@ export class ERC20Asset extends TokenAsset implements EVMContract {
 }
 
 export class WrappedAsset extends ERC20Asset {
-  readonly chain: JEVMBlockchain
   readonly adapter: WrappedContractAdapter
 
-  constructor (address: string, name: string, symbol: string, decimals: number, chain: JEVMBlockchain) {
+  constructor (address: string, name: string, symbol: string, decimals: number) {
     super(address, name, symbol, decimals)
-    this.chain = chain
-    this.adapter = new WrappedContractAdapter(chain, address)
+    this.adapter = new WrappedContractAdapter(address)
   }
 }
 
@@ -85,7 +91,7 @@ export class AssetValue {
     }
   }
 
-  getReadableValueRounded (decimals: number = 2): string {
+  getReadableValueRounded (decimals: number = RoundedValueDefaultDecimals): string {
     const readableValue: string = this.getReadableValue()
     if (this.decimals < 1) {
       return readableValue

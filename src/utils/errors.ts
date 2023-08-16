@@ -21,6 +21,7 @@ const FEE_CODE: string = 'Fee error'
 const SIGNATURE_CODE: string = 'Signature error'
 const GENESIS_CODE: string = 'Genesis error'
 const EVM_CODE: string = 'EVM error'
+const ACCOUNT_CODE: string = 'Account error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -187,5 +188,12 @@ export class EVMError extends JuneoError {
   constructor (message: string) {
     super(message, EVM_CODE)
     Object.setPrototypeOf(this, EVMError.prototype)
+  }
+}
+
+export class AccountError extends JuneoError {
+  constructor (message: string) {
+    super(message, ACCOUNT_CODE)
+    Object.setPrototypeOf(this, AccountError.prototype)
   }
 }

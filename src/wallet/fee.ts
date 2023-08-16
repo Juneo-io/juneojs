@@ -1,44 +1,16 @@
-import { type Blockchain, JEVM_ID, type JEVMBlockchain, type Crossable, type JVMBlockchain, isCrossable } from '../chain'
-import { type JEVMWallet, type JuneoWallet, type MCNProvider } from '../juneo'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../chain'
+import { type MCNProvider } from '../juneo'
+import { type UserInput, FeeType, FeeData } from '../transaction'
 import { FeeError } from '../utils'
-import { type UserInput } from './input'
+import { type JuneoWallet, type JEVMWallet } from './wallet'
 
-export enum FeeType {
-  Undefined = 'Undefined',
-  BaseFee = 'Base fee',
-  ExportFee = 'Export fee',
-  ImportFee = 'Import fee',
-  Wrap = 'Wrap fee',
-  Unwrap = 'Unwrap fee'
-}
-
-export class FeeData {
-  chain: Blockchain
-  amount: bigint
-  assetId: string
-  type: string
-
-  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined) {
-    this.chain = chain
-    this.amount = amount
-    this.assetId = assetId
-    this.type = type
-  }
-}
-
-/**
- * @deprecated
- */
-export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
+export async function estimateOperation (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
     return await calculateIntraChainTransferFee(provider, wallet, source, inputs)
   }
   return await calculateInterChainTransferFee(provider, wallet, source, destination, inputs)
 }
 
-/**
- * @deprecated
- */
 async function calculateIntraChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, chain: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   let txFee: bigint = await chain.queryBaseFee(provider)
   if (chain.vmId === JEVM_ID) {
@@ -53,9 +25,6 @@ async function calculateIntraChainTransferFee (provider: MCNProvider, wallet: Ju
   return [new FeeData(chain, txFee, chain.assetId, FeeType.BaseFee)]
 }
 
-/**
- * @deprecated
- */
 async function calculateInterChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (!isCrossable(source) || !isCrossable(destination)) {
     throw new FeeError('both chains must implement Crossable to do inter chain transfer')

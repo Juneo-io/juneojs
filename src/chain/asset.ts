@@ -3,6 +3,10 @@ import { WrappedContractAdapter } from '../solidity'
 const RoundedValueDefaultDecimals = 2
 const EVMGasTokenDecimals = 18
 
+/**
+ * Representation of an asset on a chain with its common values
+ * such as an id, a name, a symbol and decimals.
+ */
 export class TokenAsset {
   readonly assetId: string
   readonly name: string
@@ -16,11 +20,20 @@ export class TokenAsset {
     this.decimals = decimals
   }
 
+  /**
+   * Get an AssetValue helper of this token set to a value.
+   * @param value The value, or amount of this asset to set.
+   * @returns A new AssetValue which can be used to display the provided value with the decimals of this token.
+   */
   getAssetValue (value: bigint): AssetValue {
     return new AssetValue(value, this.decimals)
   }
 }
 
+/**
+ * Representation of the gas token used to pay fees in an EVM.
+ * It is also known as the native asset of an EVM.
+ */
 export class EVMGasToken extends TokenAsset {
   constructor (assetId: string, name: string, symbol: string) {
     super(assetId, name, symbol, EVMGasTokenDecimals)
@@ -31,6 +44,9 @@ export interface EVMContract {
   readonly address: string
 }
 
+/**
+ * Representation of an ERC20 smart contract.
+ */
 export class ERC20Asset extends TokenAsset implements EVMContract {
   readonly address
 
@@ -40,6 +56,10 @@ export class ERC20Asset extends TokenAsset implements EVMContract {
   }
 }
 
+/**
+ * Representation of a wrapped gas token smart contract.
+ * Also known as wrapped native. In the Juneo network it is deployed as the wJUNE.
+ */
 export class WrappedAsset extends ERC20Asset {
   readonly adapter: WrappedContractAdapter
 
@@ -49,6 +69,9 @@ export class WrappedAsset extends ERC20Asset {
   }
 }
 
+/**
+ * Representation of a JRC20 smart contract.
+ */
 export class JRC20Asset extends ERC20Asset {
   readonly nativeAssetId: string
 
@@ -58,6 +81,9 @@ export class JRC20Asset extends ERC20Asset {
   }
 }
 
+/**
+ * Representation of a Juneo native asset.
+ */
 export class JNTAsset extends TokenAsset {
   readonly mintable: boolean
 
@@ -67,6 +93,10 @@ export class JNTAsset extends TokenAsset {
   }
 }
 
+/**
+ * Representation of the value of an asset. It uses the decimals of the asset to provide
+ * helper functions that are useful to display the properly formatted value to a user.
+ */
 export class AssetValue {
   value: bigint
   readonly decimals: number
@@ -76,6 +106,10 @@ export class AssetValue {
     this.decimals = decimals
   }
 
+  /**
+   * Get a human friendly representation of this value.
+   * @returns The complete value with its decimals separated by a dot.
+   */
   getReadableValue (): string {
     const stringValue: string = this.value.toString()
     const length: number = stringValue.length
@@ -91,6 +125,12 @@ export class AssetValue {
     }
   }
 
+  /**
+   * Get a human friendly representation of this value rounded to n decimals.
+   * @param decimals **Optional**. The amount of decimals to display. If none are provided defaults to a hardcoded value.
+   * @returns The value with its decimals separated by a dot. Decimals are rounded
+   * by the provided number.
+   */
   getReadableValueRounded (decimals: number = RoundedValueDefaultDecimals): string {
     const readableValue: string = this.getReadableValue()
     if (this.decimals < 1) {

@@ -6,7 +6,7 @@ import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jev
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
-import { type JRC20Asset } from './asset'
+import { type TokenAsset, type JRC20Asset } from './asset'
 
 export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -14,10 +14,10 @@ export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwS
 export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
 
 export interface Blockchain {
-
   name: string
   id: string
   vmId: string
+  asset: TokenAsset
   assetId: string
   aliases: string[]
 
@@ -28,17 +28,14 @@ export interface Blockchain {
   queryBalance: (provider: MCNProvider, address: string, assetId: string) => Promise<bigint>
 
   queryBaseFee: (provider: MCNProvider) => Promise<bigint>
-
 }
 
 export interface Crossable {
-
   queryExportFee: (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string) => Promise<bigint>
 
   queryImportFee: (provider: MCNProvider, userInputs: UserInput[]) => Promise<bigint>
 
   canPayImportFee: () => boolean
-
 }
 
 export function isCrossable (object: any): boolean {
@@ -52,14 +49,16 @@ export abstract class AbstractBlockchain implements Blockchain {
   name: string
   id: string
   vmId: string
+  asset: TokenAsset
   assetId: string
   aliases: string[]
 
-  constructor (name: string, id: string, vmId: string, assetId: string, aliases: string[] = []) {
+  constructor (name: string, id: string, vmId: string, asset: TokenAsset, aliases: string[] = []) {
     this.name = name
     this.id = id
     this.vmId = vmId
-    this.assetId = assetId
+    this.asset = asset
+    this.assetId = asset.assetId
     this.aliases = aliases
   }
 
@@ -73,8 +72,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class PlatformBlockchain extends AbstractBlockchain implements Crossable {
-  constructor (name: string, id: string, assetId: string, aliases?: string[]) {
-    super(name, id, PLATFORMVM_ID, assetId, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[]) {
+    super(name, id, PLATFORMVM_ID, asset, aliases)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -108,8 +107,8 @@ export class PlatformBlockchain extends AbstractBlockchain implements Crossable 
 }
 
 export class JVMBlockchain extends AbstractBlockchain implements Crossable {
-  constructor (name: string, id: string, assetId: string, aliases?: string[]) {
-    super(name, id, JVM_ID, assetId, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[]) {
+    super(name, id, JVM_ID, asset, aliases)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -166,8 +165,8 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, assetId: string, chainId: bigint, nodeAddress: string, aliases?: string[], jrc20Assets: JRC20Asset[] = []) {
-    super(name, id, JEVM_ID, assetId, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, nodeAddress: string, aliases?: string[], jrc20Assets: JRC20Asset[] = []) {
+    super(name, id, JEVM_ID, asset, aliases)
     this.chainId = chainId
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets

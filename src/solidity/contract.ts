@@ -1,7 +1,6 @@
 import { ethers } from 'ethers'
 import * as abi from './abi'
 import { AssetId } from '../transaction'
-import { type JEVMBlockchain } from '../chain'
 
 export class ContractHandler {
   private readonly adapters: ContractAdapter[] = []
@@ -103,12 +102,11 @@ export class JRC20ContractAdapter extends ERC20ContractAdapter {
   }
 }
 
-export class WrappedContractAdapter extends ERC20ContractAdapter {
+export class WrappedContractAdapter {
   private readonly contract: ethers.Contract
 
-  constructor (chain: JEVMBlockchain, contractAddress: string) {
-    super(chain.ethProvider)
-    this.contract = new ethers.Contract(contractAddress, abi.WrappedABI, this.provider)
+  constructor (contractAddress: string) {
+    this.contract = new ethers.Contract(contractAddress, abi.WrappedABI)
   }
 
   getWithdrawData (value: bigint): string {

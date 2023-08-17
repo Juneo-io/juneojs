@@ -194,11 +194,11 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async executeWrap (executable: ExecutableMCNOperation): Promise<void> {
-    await this.wrapManager.wrap(executable)
+    await this.wrapManager.executeWrap(executable)
   }
 
   async executeUnwrap (executable: ExecutableMCNOperation): Promise<void> {
-    await this.wrapManager.unwrap(executable)
+    await this.wrapManager.executeUnwrap(executable)
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

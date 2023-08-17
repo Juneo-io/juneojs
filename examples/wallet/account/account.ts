@@ -1,4 +1,4 @@
-import { AssetValue, BalancesFetchingStatus, ChainAccount, EVMAccount, JEVMBlockchain, JVMAccount, JuneoWallet,
+import { AssetValue, ChainAccount, EVMAccount, JEVMBlockchain, JVMAccount, JuneoWallet,
     MCNAccount, MCNProvider, SocotraJUNEAsset, SocotraJUNEChain, SocotraWJUNEAsset } from '../../../src'
 
 async function main () {
@@ -10,12 +10,8 @@ async function main () {
     // note that if you are trying to retrieve the account of a chain that is not registered
     // in the creation of the MCNAccount you will get an error
     const account: ChainAccount = mcnAccount.getAccount(SocotraJUNEChain.id)
-    // we can fetch the balances synchronously or asynchronously
-    // in that case each chain account has a status to track if
-    // it is done fetching or not
+    // we can fetch the balances
     await account.fetchBalances()
-    // this should always be true if used synchronously
-    console.log(account.balancesStatus === BalancesFetchingStatus.Done)
     // the returned balance will be an AssetValue which contains useful methods
     const balance: AssetValue = account.getBalance(SocotraJUNEAsset)
     // this is the value that must be used to create transactions

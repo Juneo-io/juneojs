@@ -64,15 +64,8 @@ export class MCNAccount {
   }
 }
 
-export enum BalancesFetchingStatus {
-  Initializing = 'Initializing',
-  Fetching = 'Fetching',
-  Done = 'Done'
-}
-
 export interface ChainAccount {
   chain: Blockchain
-  balancesStatus: string
   balances: Map<string, bigint>
 
   getBalance: (asset: TokenAsset) => AssetValue
@@ -84,7 +77,6 @@ export interface ChainAccount {
 
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
-  balancesStatus: string = BalancesFetchingStatus.Initializing
   balances = new Map<string, bigint>()
 
   constructor (chain: Blockchain) {
@@ -126,10 +118,8 @@ export class UtxoAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    this.balancesStatus = BalancesFetchingStatus.Fetching
     await fetchUtxos(this.utxoSet, this.utxoApi, [this.chainWallet.getAddress()], this.sourceChain)
     this.calculateBalances()
-    this.balancesStatus = BalancesFetchingStatus.Done
   }
 
   private calculateBalances (): void {
@@ -215,7 +205,6 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    this.balancesStatus = BalancesFetchingStatus.Fetching
     this.gasBalance = BigInt(0)
     const address: string = this.chainWallet.getHexAddress()
     this.gasBalance += await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
@@ -229,6 +218,5 @@ export class EVMAccount extends AbstractAccount {
       this.balances.set(assetId, amount)
     }
     this.balances.set(this.chain.assetId, this.gasBalance)
-    this.balancesStatus = BalancesFetchingStatus.Done
   }
 }

@@ -21,40 +21,40 @@ export class WrapManager {
     return new WrapManager(api, wallet.getEthWallet(chain))
   }
 
-  async estimateWrapFee (wrapping: Wrapping): Promise<FeeData> {
+  async estimateWrapFee (wrap: WrapOperation): Promise<FeeData> {
     const chain: JEVMBlockchain = this.api.chain
     let txFee: bigint = await this.api.eth_baseFee().catch(error => {
       throw error
     })
     const hexAddress: string = this.wallet.getHexAddress()
-    const data: string = wrapping.asset.adapter.getDepositData()
+    const data: string = wrap.asset.adapter.getDepositData()
     txFee *= await chain.ethProvider.estimateGas({
       from: hexAddress,
-      to: wrapping.asset.address,
-      value: BigInt(wrapping.amount),
+      to: wrap.asset.address,
+      value: BigInt(wrap.amount),
       data
     }).catch(error => {
       throw error
     })
-    return new FeeData(chain, txFee, wrapping.asset.address, FeeType.Wrap)
+    return new FeeData(chain, txFee, wrap.asset.address, FeeType.Wrap)
   }
 
-  async estimateUnwrapFee (wrapping: Wrapping): Promise<FeeData> {
+  async estimateUnwrapFee (unwrap: UnwrapOperation): Promise<FeeData> {
     const chain: JEVMBlockchain = this.api.chain
     let txFee: bigint = await this.api.eth_baseFee().catch(error => {
       throw error
     })
     const hexAddress: string = this.wallet.getHexAddress()
-    const data: string = wrapping.asset.adapter.getWithdrawData(wrapping.amount)
+    const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
     txFee *= await chain.ethProvider.estimateGas({
       from: hexAddress,
-      to: wrapping.asset.address,
+      to: unwrap.asset.address,
       value: BigInt(0),
       data
     }).catch(error => {
       throw error
     })
-    return new FeeData(chain, txFee, wrapping.asset.address, FeeType.Unwrap)
+    return new FeeData(chain, txFee, unwrap.asset.address, FeeType.Unwrap)
   }
 
   async wrap (operation: ExecutableMCNOperation): Promise<void> {

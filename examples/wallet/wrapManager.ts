@@ -1,4 +1,4 @@
-import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset, SocotraJUNEChain, JEVMBlockchain } from '../../src'
+import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset, SocotraJUNEChain, JEVMBlockchain, WrapOperation } from '../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -14,7 +14,7 @@ async function main () {
     const wrapAmount: bigint = BigInt("1000000000000000000")
     // start the wrapping will provide a handler for it
     // which can be used to track its status
-    manager.wrap(asset, wrapAmount)
+    manager.wrap(new WrapOperation(asset, wrapAmount))
     // to unwrap you can call manager.unwrap instead with the same parameters
 }
 

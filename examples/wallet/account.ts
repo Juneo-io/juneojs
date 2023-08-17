@@ -28,7 +28,6 @@ async function main () {
     console.log(balance.getReadableValueRounded(6))
 
     // if you only want one account you can instantiate it with chain accounts
-    const jvmChain: JVMBlockchain = provider.jvm.chain
     const jvmAccount: JVMAccount = new JVMAccount(provider.jvm, wallet)
     const customMasterAccount: MCNAccount = new MCNAccount([jvmAccount])
     // note that the JVM-Chain and Platform-Chain are both utxo accounts

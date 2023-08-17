@@ -1,8 +1,11 @@
 import { type JEVMAPI, type AbstractUtxoAPI, type JVMAPI, type PlatformAPI } from '../api'
 import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain, JEVM_ID } from '../chain'
-import { AccountError, MCNOperation, WrapManager, type MCNProvider } from '../juneo'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../transaction'
+import { type MCNProvider } from '../juneo'
+import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type FeeData } from '../transaction'
+import { AccountError } from '../utils'
+import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from './common'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
+import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -20,15 +23,33 @@ export class MCNAccount {
     return this.chainAccounts.get(chainId) as ChainAccount
   }
 
-  // estimate (chainId: string, operation: MCNOperation): bigint {
-  //   const account: ChainAccount = this.getAccount(chainId)
-  //   const chain: Blockchain = account.chain
-  //   if (operation === MCNOperation.Wrap && chain.vmId === JEVM_ID) {
-  //     const evmAccount: NonceAccount = account as NonceAccount
-  //     // evmAccount.wrapManager.estimateWrapFee(operation.asset)
-  //   }
-  //   return BigInt(0)
-  // }
+  async estimate (chainId: string, operation: MCNOperation): Promise<MCNOperationSummary> {
+    if (operation.type === MCNOperationType.Unsupported) {
+      throw new AccountError('unsupported operation')
+    }
+    const account: ChainAccount = this.getAccount(chainId)
+    const chain: Blockchain = account.chain
+    if (operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
+      return await (account as EVMAccount).estimateWrap(operation as WrapOperation)
+    } else if (operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
+      return await (account as EVMAccount).estimateUnwrap(operation as UnwrapOperation)
+    }
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${chainId}`)
+  }
+
+  async execute (chainId: string, executable: ExecutableMCNOperation): Promise<void> {
+    if (executable.operation.type === MCNOperationType.Unsupported) {
+      throw new AccountError('unsupported operation')
+    }
+    const account: ChainAccount = this.getAccount(chainId)
+    const chain: Blockchain = account.chain
+    if (executable.operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
+      await (account as EVMAccount).executeWrap(executable)
+    } else if (executable.operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
+      await (account as EVMAccount).executeUnwrap(executable)
+    }
+    throw new AccountError(`unsupported operation: ${executable.operation.type} for the chain with id: ${chainId}`)
+  }
 
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
     const balances: ChainAccount[] = [
@@ -151,7 +172,7 @@ export class EVMAccount extends AbstractAccount {
   chainWallet: JEVMWallet
   gasBalance: bigint = BigInt(0)
   registeredAssets: string[] = []
-  wrapManager: WrapManager
+  private readonly wrapManager: WrapManager
 
   constructor (api: JEVMAPI, wallet: JuneoWallet) {
     super(api.chain)
@@ -160,6 +181,24 @@ export class EVMAccount extends AbstractAccount {
     this.wallet = wallet
     this.chainWallet = wallet.getEthWallet(this.chain)
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
+  }
+
+  async estimateWrap (operation: WrapOperation): Promise<MCNOperationSummary> {
+    const fee: FeeData = await this.wrapManager.estimateWrapFee(operation)
+    return new MCNOperationSummary(operation.type, this.chain, [fee])
+  }
+
+  async estimateUnwrap (operation: UnwrapOperation): Promise<MCNOperationSummary> {
+    const fee: FeeData = await this.wrapManager.estimateUnwrapFee(operation)
+    return new MCNOperationSummary(operation.type, this.chain, [fee])
+  }
+
+  async executeWrap (executable: ExecutableMCNOperation): Promise<void> {
+    await this.wrapManager.wrap(executable)
+  }
+
+  async executeUnwrap (executable: ExecutableMCNOperation): Promise<void> {
+    await this.wrapManager.unwrap(executable)
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

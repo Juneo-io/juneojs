@@ -157,16 +157,70 @@ export class WrapManager {
     }
   }
 
-  async wrap (wrap: WrapOperation): Promise<WrapHandler> {
-    const handler: WrappingHandler = new WrappingHandler()
-    void handler.execute(this.api, this.wallet, wrap)
-    return handler
+  async wrap (asset: WrappedAsset, amount: bigint): Promise<TransactionReceipt> {
+    const chain: JEVMBlockchain = this.api.chain
+    const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Wrap)
+    const evmWallet: ethers.Wallet = this.wallet.evmWallet.connect(chain.ethProvider)
+    let nonce: bigint = await this.api.eth_getTransactionCount(this.wallet.getHexAddress(), 'latest')
+    const gasPrice: bigint = await this.api.eth_baseFee()
+    const data: string = asset.adapter.getDepositData()
+    const gasLimit: bigint = await chain.ethProvider.estimateGas({
+      from: this.wallet.getHexAddress(),
+      to: asset.address,
+      value: BigInt(amount),
+      data
+    })
+    const transactionData: TransactionRequest = {
+      from: this.wallet.getHexAddress(),
+      to: asset.address,
+      value: amount,
+      nonce: Number(nonce++),
+      chainId: chain.chainId,
+      gasLimit,
+      gasPrice,
+      data
+    }
+    const transaction: string = await evmWallet.signTransaction(transactionData)
+    const transactionHash: string = await this.api.eth_sendRawTransaction(transaction)
+    receipt.transactionId = transactionHash
+    receipt.transactionStatus = EVMTransactionStatus.Unknown
+    const transactionStatus: string = await new EVMTransactionStatusFetcher(this.api,
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
+    receipt.transactionStatus = transactionStatus
+    return receipt
   }
 
-  async unwrap (unwrap: UnwrapOperation): Promise<WrapHandler> {
-    const handler: UnwrappingHandler = new UnwrappingHandler()
-    void handler.execute(this.api, this.wallet, unwrap)
-    return handler
+  async unwrap (asset: WrappedAsset, amount: bigint): Promise<TransactionReceipt> {
+    const chain: JEVMBlockchain = this.api.chain
+    const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Unwrap)
+    const evmWallet: ethers.Wallet = this.wallet.evmWallet.connect(chain.ethProvider)
+    let nonce: bigint = await this.api.eth_getTransactionCount(this.wallet.getHexAddress(), 'latest')
+    const gasPrice: bigint = await this.api.eth_baseFee()
+    const data: string = asset.adapter.getWithdrawData(amount)
+    const gasLimit: bigint = await chain.ethProvider.estimateGas({
+      from: this.wallet.getHexAddress(),
+      to: asset.address,
+      value: BigInt(0),
+      data
+    })
+    const transactionData: TransactionRequest = {
+      from: this.wallet.getHexAddress(),
+      to: asset.address,
+      value: BigInt(0),
+      nonce: Number(nonce++),
+      chainId: chain.chainId,
+      gasLimit,
+      gasPrice,
+      data
+    }
+    const transaction: string = await evmWallet.signTransaction(transactionData)
+    const transactionHash: string = await this.api.eth_sendRawTransaction(transaction)
+    receipt.transactionId = transactionHash
+    receipt.transactionStatus = EVMTransactionStatus.Unknown
+    const transactionStatus: string = await new EVMTransactionStatusFetcher(this.api,
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
+    receipt.transactionStatus = transactionStatus
+    return receipt
   }
 }
 
@@ -186,94 +240,4 @@ export class WrapOperation extends Wrapping implements MCNOperation {
 
 export class UnwrapOperation extends Wrapping implements MCNOperation {
   type: MCNOperationType = MCNOperationType.Unwrap
-}
-
-export interface WrapHandler {
-  getReceipt: () => TransactionReceipt | undefined
-}
-
-interface ExecutableWrapHandler extends WrapHandler {
-  execute: (api: JEVMAPI, wallet: JEVMWallet, wrapping: Wrapping) => Promise<void>
-}
-
-class WrappingHandler implements ExecutableWrapHandler {
-  private receipt: TransactionReceipt | undefined
-
-  getReceipt (): TransactionReceipt | undefined {
-    return this.receipt
-  }
-
-  async execute (api: JEVMAPI, wallet: JEVMWallet, wrapping: Wrapping): Promise<void> {
-    const chain: JEVMBlockchain = wallet.getChain() as JEVMBlockchain
-    this.receipt = new TransactionReceipt(chain.id, TransactionType.Wrap)
-    const ethProvider: ethers.JsonRpcProvider = chain.ethProvider
-    const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
-    const gasPrice: bigint = await api.eth_baseFee()
-    const data: string = wrapping.asset.adapter.getDepositData()
-    const gasLimit: bigint = await chain.ethProvider.estimateGas({
-      from: wallet.getHexAddress(),
-      to: wrapping.asset.address,
-      value: BigInt(wrapping.amount),
-      data
-    })
-    const transactionData: TransactionRequest = {
-      from: wallet.getHexAddress(),
-      to: wrapping.asset.address,
-      value: wrapping.amount,
-      nonce: Number(nonce++),
-      chainId: chain.chainId,
-      gasLimit,
-      gasPrice,
-      data
-    }
-    const transaction: string = await evmWallet.signTransaction(transactionData)
-    const transactionHash: string = await api.eth_sendRawTransaction(transaction)
-    this.receipt.transactionId = transactionHash
-    this.receipt.transactionStatus = EVMTransactionStatus.Unknown
-    const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
-    this.receipt.transactionStatus = transactionStatus
-  }
-}
-
-class UnwrappingHandler implements ExecutableWrapHandler {
-  private receipt: TransactionReceipt | undefined
-
-  getReceipt (): TransactionReceipt | undefined {
-    return this.receipt
-  }
-
-  async execute (api: JEVMAPI, wallet: JEVMWallet, wrapping: Wrapping): Promise<void> {
-    const chain: JEVMBlockchain = wallet.getChain() as JEVMBlockchain
-    this.receipt = new TransactionReceipt(chain.id, TransactionType.Unwrap)
-    const ethProvider: ethers.JsonRpcProvider = chain.ethProvider
-    const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
-    const gasPrice: bigint = await api.eth_baseFee()
-    const data: string = wrapping.asset.adapter.getWithdrawData(wrapping.amount)
-    const gasLimit: bigint = await chain.ethProvider.estimateGas({
-      from: wallet.getHexAddress(),
-      to: wrapping.asset.address,
-      value: BigInt(0),
-      data
-    })
-    const transactionData: TransactionRequest = {
-      from: wallet.getHexAddress(),
-      to: wrapping.asset.address,
-      value: BigInt(0),
-      nonce: Number(nonce++),
-      chainId: chain.chainId,
-      gasLimit,
-      gasPrice,
-      data
-    }
-    const transaction: string = await evmWallet.signTransaction(transactionData)
-    const transactionHash: string = await api.eth_sendRawTransaction(transaction)
-    this.receipt.transactionId = transactionHash
-    this.receipt.transactionStatus = EVMTransactionStatus.Unknown
-    const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
-    this.receipt.transactionStatus = transactionStatus
-  }
 }

@@ -430,7 +430,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       for (let i: number = 0; i < sourceChain.jrc20Assets.length; i++) {
         const jrc20: JRC20Asset = sourceChain.jrc20Assets[i]
         if (jrc20.address === input.assetId) {
-          assetId = jrc20.assetId
+          assetId = jrc20.nativeAssetId
           break
         }
       }
@@ -631,7 +631,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       let contractAddress: string = ''
       for (let i: number = 0; i < evmChain.jrc20Assets.length; i++) {
         const jrc20: JRC20Asset = evmChain.jrc20Assets[i]
-        if (jrc20.assetId === input.assetId) {
+        if (jrc20.nativeAssetId === input.assetId) {
           contractAddress = jrc20.address
           break
         }

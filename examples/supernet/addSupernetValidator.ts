@@ -1,5 +1,5 @@
 import { MCNProvider, JuneoWallet, AddSupernetValidatorTransaction, Address, CreateSupernetTransaction,
-    NodeId, SupernetId, Utxo, buildAddSupernetValidatorTransaction, parseUtxoSet, now } from '../src'
+    NodeId, SupernetId, Utxo, buildAddSupernetValidatorTransaction, parseUtxoSet, now } from '../../src'
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()

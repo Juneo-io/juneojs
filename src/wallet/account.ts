@@ -3,7 +3,7 @@ import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain,
 import { type MCNProvider } from '../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type FeeData } from '../transaction'
 import { AccountError } from '../utils'
-import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from './common'
+import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from './operation'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
 

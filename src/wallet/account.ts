@@ -76,6 +76,7 @@ export interface ChainAccount {
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, bigint>()
+  protected fetching: boolean = false
   addresses: string[] = []
 
   constructor (chain: Blockchain) {
@@ -118,9 +119,15 @@ export class UtxoAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
+    if (this.fetching) {
+      return
+    }
+    this.fetching = true
     this.balances.clear()
+    this.utxoSet.clear()
     await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
     this.calculateBalances()
+    this.fetching = false
   }
 
   private calculateBalances (): void {
@@ -207,18 +214,19 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    this.gasBalance = BigInt(0)
+    if (this.fetching) {
+      return
+    }
+    this.fetching = true
+    this.balances.clear()
     const address: string = this.chainWallet.getHexAddress()
-    this.gasBalance += await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
+    this.gasBalance = await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
+    this.balances.set(this.chain.assetId, this.gasBalance)
     for (let j = 0; j < this.registeredAssets.length; j++) {
       const assetId: string = this.registeredAssets[j]
-      let amount: bigint = BigInt(0)
-      if (this.balances.has(assetId)) {
-        amount += this.balances.get(assetId) as bigint
-      }
-      amount += await this.chain.queryEVMBalance(this.api, address, assetId)
+      let amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
       this.balances.set(assetId, amount)
     }
-    this.balances.set(this.chain.assetId, this.gasBalance)
+    this.fetching = false
   }
 }

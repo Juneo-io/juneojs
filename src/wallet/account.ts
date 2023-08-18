@@ -39,9 +39,6 @@ export class MCNAccount {
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     const operation: MCNOperation = executable.summary.operation
-    if (operation.type === MCNOperationType.Unsupported) {
-      throw new AccountError('unsupported operation')
-    }
     const chain: Blockchain = executable.summary.chain
     const account: ChainAccount = this.getAccount(chain.id)
     if (operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
@@ -49,7 +46,6 @@ export class MCNAccount {
     } else if (operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
       await (account as EVMAccount).executeUnwrap(executable)
     }
-    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${chain.id}`)
   }
 
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
@@ -68,6 +64,7 @@ export class MCNAccount {
 export interface ChainAccount {
   chain: Blockchain
   balances: Map<string, bigint>
+  addresses: string[]
 
   getBalance: (asset: TokenAsset) => AssetValue
 
@@ -79,6 +76,7 @@ export interface ChainAccount {
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, bigint>()
+  addresses: string[] = []
 
   constructor (chain: Blockchain) {
     this.chain = chain
@@ -115,12 +113,13 @@ export class UtxoAccount extends AbstractAccount {
     this.utxoApi = utxoApi
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
+    this.addresses.push(this.chainWallet.getAddress())
     this.sourceChain = sourceChain
   }
 
   async fetchBalances (): Promise<void> {
     this.balances.clear()
-    await fetchUtxos(this.utxoSet, this.utxoApi, [this.chainWallet.getAddress()], this.sourceChain)
+    await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
     this.calculateBalances()
   }
 
@@ -172,6 +171,7 @@ export class EVMAccount extends AbstractAccount {
     this.api = api
     this.wallet = wallet
     this.chainWallet = wallet.getEthWallet(this.chain)
+    this.addresses.push(this.chainWallet.getHexAddress())
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
   }
 

@@ -4,6 +4,17 @@ import { type UserInput, FeeType, FeeData } from '../transaction'
 import { FeeError } from '../utils'
 import { type JuneoWallet, type JEVMWallet } from './wallet'
 
+export class EVMFeeData extends FeeData {
+  gasPrice: bigint
+  gasLimit: bigint
+
+  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined, gasPrice: bigint, gasLimit: bigint) {
+    super(chain, amount, assetId, type)
+    this.gasPrice = gasPrice
+    this.gasLimit = gasLimit
+  }
+}
+
 export async function estimateOperation (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
     return await calculateIntraChainTransferFee(provider, wallet, source, inputs)

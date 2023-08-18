@@ -37,18 +37,19 @@ export class MCNAccount {
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${chainId}`)
   }
 
-  async execute (chainId: string, executable: ExecutableMCNOperation): Promise<void> {
-    if (executable.operation.type === MCNOperationType.Unsupported) {
+  async execute (executable: ExecutableMCNOperation): Promise<void> {
+    const operation: MCNOperation = executable.summary.operation
+    if (operation.type === MCNOperationType.Unsupported) {
       throw new AccountError('unsupported operation')
     }
-    const account: ChainAccount = this.getAccount(chainId)
-    const chain: Blockchain = account.chain
-    if (executable.operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
+    const chain: Blockchain = executable.summary.chain
+    const account: ChainAccount = this.getAccount(chain.id)
+    if (operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
       await (account as EVMAccount).executeWrap(executable)
-    } else if (executable.operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
+    } else if (operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
       await (account as EVMAccount).executeUnwrap(executable)
     }
-    throw new AccountError(`unsupported operation: ${executable.operation.type} for the chain with id: ${chainId}`)
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${chain.id}`)
   }
 
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
@@ -64,15 +65,8 @@ export class MCNAccount {
   }
 }
 
-export enum BalancesFetchingStatus {
-  Initializing = 'Initializing',
-  Fetching = 'Fetching',
-  Done = 'Done'
-}
-
 export interface ChainAccount {
   chain: Blockchain
-  balancesStatus: string
   balances: Map<string, bigint>
 
   getBalance: (asset: TokenAsset) => AssetValue
@@ -84,7 +78,6 @@ export interface ChainAccount {
 
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
-  balancesStatus: string = BalancesFetchingStatus.Initializing
   balances = new Map<string, bigint>()
 
   constructor (chain: Blockchain) {
@@ -126,10 +119,9 @@ export class UtxoAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    this.balancesStatus = BalancesFetchingStatus.Fetching
+    this.balances.clear()
     await fetchUtxos(this.utxoSet, this.utxoApi, [this.chainWallet.getAddress()], this.sourceChain)
     this.calculateBalances()
-    this.balancesStatus = BalancesFetchingStatus.Done
   }
 
   private calculateBalances (): void {
@@ -185,12 +177,12 @@ export class EVMAccount extends AbstractAccount {
 
   async estimateWrap (operation: WrapOperation): Promise<MCNOperationSummary> {
     const fee: FeeData = await this.wrapManager.estimateWrapFee(operation)
-    return new MCNOperationSummary(operation.type, this.chain, [fee])
+    return new MCNOperationSummary(operation, this.chain, [fee])
   }
 
   async estimateUnwrap (operation: UnwrapOperation): Promise<MCNOperationSummary> {
     const fee: FeeData = await this.wrapManager.estimateUnwrapFee(operation)
-    return new MCNOperationSummary(operation.type, this.chain, [fee])
+    return new MCNOperationSummary(operation, this.chain, [fee])
   }
 
   async executeWrap (executable: ExecutableMCNOperation): Promise<void> {
@@ -215,7 +207,6 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    this.balancesStatus = BalancesFetchingStatus.Fetching
     this.gasBalance = BigInt(0)
     const address: string = this.chainWallet.getHexAddress()
     this.gasBalance += await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
@@ -229,6 +220,5 @@ export class EVMAccount extends AbstractAccount {
       this.balances.set(assetId, amount)
     }
     this.balances.set(this.chain.assetId, this.gasBalance)
-    this.balancesStatus = BalancesFetchingStatus.Done
   }
 }

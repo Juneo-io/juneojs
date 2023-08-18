@@ -75,7 +75,7 @@ export interface ChainAccount {
 
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
-  balances = new Map<string, bigint>()
+  balances = new Map()
   protected fetching: boolean = false
   addresses: string[] = []
 
@@ -100,6 +100,16 @@ export abstract class AbstractAccount implements ChainAccount {
   }
 
   abstract fetchBalances (): Promise<void>
+
+  protected async fetchBalancesAsynchronously (fetch: () => Promise<void>): Promise<void> {
+    if (this.fetching) {
+      return
+    }
+    this.fetching = true
+    this.balances.clear()
+    await fetch()
+    this.fetching = false
+  }
 }
 
 export class UtxoAccount extends AbstractAccount {
@@ -119,15 +129,11 @@ export class UtxoAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    if (this.fetching) {
-      return
-    }
-    this.fetching = true
-    this.balances.clear()
-    this.utxoSet.clear()
-    await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
-    this.calculateBalances()
-    this.fetching = false
+    await super.fetchBalancesAsynchronously(async () => {
+      this.utxoSet.clear()
+      await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
+      this.calculateBalances()
+    })
   }
 
   private calculateBalances (): void {
@@ -214,19 +220,15 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async fetchBalances (): Promise<void> {
-    if (this.fetching) {
-      return
-    }
-    this.fetching = true
-    this.balances.clear()
-    const address: string = this.chainWallet.getHexAddress()
-    this.gasBalance = await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
-    this.balances.set(this.chain.assetId, this.gasBalance)
-    for (let j = 0; j < this.registeredAssets.length; j++) {
-      const assetId: string = this.registeredAssets[j]
-      let amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
-      this.balances.set(assetId, amount)
-    }
-    this.fetching = false
+    await super.fetchBalancesAsynchronously(async () => {
+      const address: string = this.chainWallet.getHexAddress()
+      this.gasBalance = await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
+      this.balances.set(this.chain.assetId, this.gasBalance)
+      for (let j = 0; j < this.registeredAssets.length; j++) {
+        const assetId: string = this.registeredAssets[j]
+        const amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
+        this.balances.set(assetId, amount)
+      }
+    })
   }
 }

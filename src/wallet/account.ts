@@ -1,9 +1,9 @@
 import { type JEVMAPI, type AbstractUtxoAPI, type JVMAPI, type PlatformAPI } from '../api'
-import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain, JEVM_ID } from '../chain'
+import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type FeeData } from '../transaction'
 import { AccountError } from '../utils'
-import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from './operation'
+import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType, MCNOperationStatus } from './operation'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
 
@@ -28,23 +28,18 @@ export class MCNAccount {
       throw new AccountError('unsupported operation')
     }
     const account: ChainAccount = this.getAccount(chainId)
-    const chain: Blockchain = account.chain
-    if (operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
-      return await (account as EVMAccount).estimateWrap(operation as WrapOperation)
-    } else if (operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
-      return await (account as EVMAccount).estimateUnwrap(operation as UnwrapOperation)
-    }
-    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${chainId}`)
+    return await account.estimate(operation).catch(error => {
+      throw error
+    })
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
-    const operation: MCNOperation = executable.summary.operation
-    const chain: Blockchain = executable.summary.chain
-    const account: ChainAccount = this.getAccount(chain.id)
-    if (operation.type === MCNOperationType.Wrap && chain.vmId === JEVM_ID) {
-      await (account as EVMAccount).executeWrap(executable)
-    } else if (operation.type === MCNOperationType.Unwrap && chain.vmId === JEVM_ID) {
-      await (account as EVMAccount).executeUnwrap(executable)
+    executable.status = MCNOperationStatus.Executing
+    const account: ChainAccount = this.getAccount(executable.summary.chain.id)
+    await account.execute(executable)
+    // the only case it is not executing is if an error happened in that case we do not change it
+    if (executable.status === MCNOperationStatus.Executing) {
+      executable.status = MCNOperationStatus.Done
     }
   }
 
@@ -71,6 +66,10 @@ export interface ChainAccount {
   hasBalance: (asset: TokenAsset) => boolean
 
   fetchBalances: () => Promise<void>
+
+  estimate: (operation: MCNOperation) => Promise<MCNOperationSummary>
+
+  execute: (executable: ExecutableMCNOperation) => Promise<void>
 }
 
 export abstract class AbstractAccount implements ChainAccount {
@@ -110,6 +109,10 @@ export abstract class AbstractAccount implements ChainAccount {
     await fetch()
     this.fetching = false
   }
+
+  abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
+
+  abstract execute (executable: ExecutableMCNOperation): Promise<void>
 }
 
 export class UtxoAccount extends AbstractAccount {
@@ -134,6 +137,15 @@ export class UtxoAccount extends AbstractAccount {
       await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
       this.calculateBalances()
     })
+  }
+
+  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
+    // TODO implementation
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
+  }
+
+  async execute (executable: ExecutableMCNOperation): Promise<void> {
+    // TODO implementation
   }
 
   private calculateBalances (): void {
@@ -188,22 +200,26 @@ export class EVMAccount extends AbstractAccount {
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
   }
 
-  async estimateWrap (operation: WrapOperation): Promise<MCNOperationSummary> {
-    const fee: FeeData = await this.wrapManager.estimateWrapFee(operation)
-    return new MCNOperationSummary(operation, this.chain, [fee])
+  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
+    if (operation.type === MCNOperationType.Wrap) {
+      const wrapping: WrapOperation = operation as WrapOperation
+      const fee: FeeData = await this.wrapManager.estimateWrapFee(wrapping)
+      return new MCNOperationSummary(operation, this.chain, [fee])
+    } else if (operation.type === MCNOperationType.Unwrap) {
+      const wrapping: UnwrapOperation = operation as UnwrapOperation
+      const fee: FeeData = await this.wrapManager.estimateUnwrapFee(wrapping)
+      return new MCNOperationSummary(operation, this.chain, [fee])
+    }
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
-  async estimateUnwrap (operation: UnwrapOperation): Promise<MCNOperationSummary> {
-    const fee: FeeData = await this.wrapManager.estimateUnwrapFee(operation)
-    return new MCNOperationSummary(operation, this.chain, [fee])
-  }
-
-  async executeWrap (executable: ExecutableMCNOperation): Promise<void> {
-    await this.wrapManager.executeWrap(executable)
-  }
-
-  async executeUnwrap (executable: ExecutableMCNOperation): Promise<void> {
-    await this.wrapManager.executeUnwrap(executable)
+  async execute (executable: ExecutableMCNOperation): Promise<void> {
+    const operation: MCNOperation = executable.summary.operation
+    if (operation.type === MCNOperationType.Wrap) {
+      await this.wrapManager.executeWrap(executable)
+    } else if (operation.type === MCNOperationType.Unwrap) {
+      await this.wrapManager.executeUnwrap(executable)
+    }
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

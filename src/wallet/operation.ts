@@ -2,7 +2,7 @@ import { type ethers } from 'ethers'
 import { type Blockchain } from '../chain'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, type FeeData } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { type TransactionReceipt } from './common'
+import { type EVMTransactionData, TransactionReceipt, TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, sendEVMTransaction } from './common'
 
 export enum MCNOperationType {
   Transfer = 'Base transfer',
@@ -40,36 +40,25 @@ export class ExecutableMCNOperation {
     this.summary = summary
   }
 
-  async executeEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet): Promise<void> {
-    // if (this.status !== MCNOperationStatus.Executing) {
-    //     this.status = MCNOperationStatus.Executing
-    // }
-    // const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, TransactionType.Wrap)
-    // this.receipts.push(receipt)
-    // const transactionData: ethers.TransactionRequest = {
-    //   from: wallet.address,
-    //   to: wrapping.asset.address,
-    //   value: wrapping.amount,
-    //   nonce: Number(nonce++),
-    //   chainId: chain.chainId,
-    //   gasLimit: feeData.gasLimit,
-    //   gasPrice: feeData.gasPrice,
-    //   data
-    // }
-    // const transaction: string = await wallet.signTransaction(transactionData)
-    // const transactionHash: string = await api.eth_sendRawTransaction(transaction).catch(error => {
-    //   throw error
-    // })
-    // receipt.transactionId = transactionHash
-    // receipt.transactionStatus = EVMTransactionStatus.Unknown
-    // const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-    //   WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
-    // receipt.transactionStatus = transactionStatus
-    // if (transactionStatus === EVMTransactionStatus.Failure) {
-    //   this.status = MCNOperationStatus.Error
-    // } else {
-    //   this.status = MCNOperationStatus.Timeout
-    // }
+  async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type)
+    this.receipts.push(receipt)
+    receipt.transactionId = transactionHash
+    receipt.transactionStatus = EVMTransactionStatus.Unknown
+    const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash)
+      .fetch()
+      .catch(error => {
+        this.status = MCNOperationStatus.Error
+        throw error
+      })
+    receipt.transactionStatus = transactionStatus
+    if (transactionStatus === EVMTransactionStatus.Failure) {
+      this.status = MCNOperationStatus.Error
+    } else {
+      this.status = MCNOperationStatus.Timeout
+    }
+    return transactionStatus === EVMTransactionStatus.Success
   }
 }
 

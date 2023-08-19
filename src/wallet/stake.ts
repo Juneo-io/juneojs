@@ -5,7 +5,7 @@ import { parseUtxoSet, type Utxo } from '../transaction/utxo'
 import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
 import { PlatformTransactionStatus, PlatformTransactionStatusFetcher } from '../transaction/platform/transaction'
 import { Validator } from '../transaction/platform/validation'
-import { TransactionReceipt } from './transfer'
+import { TransactionReceipt } from './common'
 import { type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 

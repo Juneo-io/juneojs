@@ -1,8 +1,7 @@
-import { type ethers } from 'ethers'
 import { type Blockchain } from '../chain'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, type FeeData } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { type EVMTransactionData, TransactionReceipt, TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, sendEVMTransaction } from './common'
+import { TransactionReceipt, type TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts } from './common'
 
 export enum MCNOperationType {
   Transfer = 'Base transfer',

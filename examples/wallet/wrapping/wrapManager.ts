@@ -1,5 +1,5 @@
 import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset, SocotraJUNEChain,
-    JEVMBlockchain, TransactionReceipt, EVMTransactionStatus } from '../../../src'
+    JEVMBlockchain, EVMFeeData } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -13,15 +13,14 @@ async function main () {
     const asset: WrappedAsset = SocotraWJUNEAsset
     // the amount to wrap
     const wrapAmount: bigint = BigInt("1000000000000000000")
-    // start the wrapping
-    // it returns a TransactionReceipt which has information about the status of the transaction
-    const receipt: TransactionReceipt = await manager.wrap(asset, wrapAmount)
-    // the transaction id of this receipt will be a transaction hash because a wrap is an EVM transaction
-    console.log(receipt.transactionId)
-    console.log(receipt.transactionStatus)
-    // true if the transaction was accepted
-    console.log(receipt.transactionStatus === EVMTransactionStatus.Success)
+    // estimating the fee
+    const fee: EVMFeeData = await manager.estimateWrapFee(asset, wrapAmount)
+    // we can display those fee and optionnaly use them to execute the wrap
+    // it returns the hash of the transaction that was created
+    const transactionHash: string = await manager.wrap(asset, wrapAmount, fee)
     // to unwrap you can call manager.unwrap instead with the same parameters
+    // here the fee is not estimated before and used to call the unwrap function
+    // so it will estimate it internally and consume an unknown amount of gas
     await manager.unwrap(asset, wrapAmount)
 }
 

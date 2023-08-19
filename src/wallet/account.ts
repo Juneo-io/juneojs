@@ -203,11 +203,11 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation
-      const fee: FeeData = await this.wrapManager.estimateWrapFee(wrapping)
+      const fee: FeeData = await this.wrapManager.estimateWrapFee(wrapping.asset, wrapping.amount)
       return new MCNOperationSummary(operation, this.chain, [fee])
     } else if (operation.type === MCNOperationType.Unwrap) {
       const wrapping: UnwrapOperation = operation as UnwrapOperation
-      const fee: FeeData = await this.wrapManager.estimateUnwrapFee(wrapping)
+      const fee: FeeData = await this.wrapManager.estimateUnwrapFee(wrapping.asset, wrapping.amount)
       return new MCNOperationSummary(operation, this.chain, [fee])
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
@@ -216,9 +216,9 @@ export class EVMAccount extends AbstractAccount {
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     const operation: MCNOperation = executable.summary.operation
     if (operation.type === MCNOperationType.Wrap) {
-      await this.wrapManager.executeWrap(executable)
+      await this.wrapManager.executeWrapOperation(executable)
     } else if (operation.type === MCNOperationType.Unwrap) {
-      await this.wrapManager.executeUnwrap(executable)
+      await this.wrapManager.executeUnwrapOperation(executable)
     }
   }
 

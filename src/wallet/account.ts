@@ -3,6 +3,8 @@ import { type TokenAsset, type AssetValue, type Blockchain, type JEVMBlockchain,
 import { type MCNProvider } from '../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type FeeData } from '../transaction'
 import { AccountError } from '../utils'
+import { TransactionType } from './common'
+import { type EVMFeeData } from './fee'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType, MCNOperationStatus } from './operation'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
@@ -115,7 +117,7 @@ export abstract class AbstractAccount implements ChainAccount {
   abstract execute (executable: ExecutableMCNOperation): Promise<void>
 }
 
-export class UtxoAccount extends AbstractAccount {
+export abstract class UtxoAccount extends AbstractAccount {
   utxoSet = new Map<string, Utxo>()
   utxoApi: AbstractUtxoAPI
   wallet: JuneoWallet
@@ -139,14 +141,9 @@ export class UtxoAccount extends AbstractAccount {
     })
   }
 
-  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
-    // TODO implementation
-    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
-  }
+  abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
 
-  async execute (executable: ExecutableMCNOperation): Promise<void> {
-    // TODO implementation
-  }
+  abstract execute (executable: ExecutableMCNOperation): Promise<void>
 
   private calculateBalances (): void {
     this.utxoSet.forEach(utxo => {
@@ -170,6 +167,15 @@ export class JVMAccount extends UtxoAccount {
     super(api.chain, api, wallet)
     this.chain = api.chain
   }
+
+  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
+    // TODO implementation
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
+  }
+
+  async execute (executable: ExecutableMCNOperation): Promise<void> {
+    // TODO implementation
+  }
 }
 
 export class PlatformAccount extends UtxoAccount {
@@ -178,6 +184,15 @@ export class PlatformAccount extends UtxoAccount {
   constructor (api: PlatformAPI, wallet: JuneoWallet) {
     super(api.chain, api, wallet)
     this.chain = api.chain
+  }
+
+  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
+    // TODO implementation
+    throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
+  }
+
+  async execute (executable: ExecutableMCNOperation): Promise<void> {
+    // TODO implementation
   }
 }
 
@@ -216,9 +231,29 @@ export class EVMAccount extends AbstractAccount {
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     const operation: MCNOperation = executable.summary.operation
     if (operation.type === MCNOperationType.Wrap) {
-      await this.wrapManager.executeWrapOperation(executable)
+      const wrapping: WrapOperation = executable.summary.operation as WrapOperation
+      const fees: FeeData[] = executable.summary.fees
+      for (let i = 0; i < fees.length; i++) {
+        const transactionHash: string = await this.wrapManager.wrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
+        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash).catch(error => {
+          throw error
+        })
+        if (!success) {
+          break
+        }
+      }
     } else if (operation.type === MCNOperationType.Unwrap) {
-      await this.wrapManager.executeUnwrapOperation(executable)
+      const wrapping: UnwrapOperation = executable.summary.operation as UnwrapOperation
+      const fees: FeeData[] = executable.summary.fees
+      for (let i = 0; i < fees.length; i++) {
+        const transactionHash: string = await this.wrapManager.unwrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
+        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash).catch(error => {
+          throw error
+        })
+        if (!success) {
+          break
+        }
+      }
     }
   }
 

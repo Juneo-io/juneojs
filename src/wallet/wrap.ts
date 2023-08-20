@@ -2,9 +2,9 @@ import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
 import { type JEVMWallet, type JuneoWallet } from './wallet'
 import { type JEVMBlockchain, type WrappedAsset } from '../chain'
-import { type FeeData, FeeType } from '../transaction'
-import { TransactionType, EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './common'
-import { type MCNOperation, MCNOperationType, type ExecutableMCNOperation } from './operation'
+import { FeeType } from '../transaction'
+import { EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './common'
+import { type MCNOperation, MCNOperationType } from './operation'
 import { type EVMFeeData } from './fee'
 import { type MCNProvider } from '../juneo'
 
@@ -52,34 +52,6 @@ export class WrapManager {
       asset.address, BigInt(0), feeData, asset.adapter.getWithdrawData(amount)
     )
     return await sendEVMTransaction(this.api, this.wallet, transactionData)
-  }
-
-  async executeWrapOperation (executable: ExecutableMCNOperation): Promise<void> {
-    const wrapping: Wrapping = executable.summary.operation as Wrapping
-    const fees: FeeData[] = executable.summary.fees
-    for (let i = 0; i < fees.length; i++) {
-      const transactionHash: string = await this.wrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash).catch(error => {
-        throw error
-      })
-      if (!success) {
-        break
-      }
-    }
-  }
-
-  async executeUnwrapOperation (executable: ExecutableMCNOperation): Promise<void> {
-    const wrapping: Wrapping = executable.summary.operation as Wrapping
-    const fees: FeeData[] = executable.summary.fees
-    for (let i = 0; i < fees.length; i++) {
-      const transactionHash: string = await this.unwrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash).catch(error => {
-        throw error
-      })
-      if (!success) {
-        break
-      }
-    }
   }
 }
 

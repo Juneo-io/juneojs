@@ -8,7 +8,7 @@ import { type EVMFeeData } from './fee'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType, MCNOperationStatus } from './operation'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
-import { type ValidateOperation, type DelegateOperation, StakeManager } from './stake'
+import { type ValidateOperation, type DelegateOperation, StakeManager, StakingOperationSummary } from './stake'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -192,11 +192,17 @@ export class PlatformAccount extends UtxoAccount {
 
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Validate) {
+      const staking: ValidateOperation = operation as ValidateOperation
       const fee: FeeData = await this.stakeManager.estimateValidationFee()
-      return new MCNOperationSummary(operation, this.chain, [fee])
+      const stakePeriod: bigint = staking.endTime - staking.startTime
+      const potentialReward: bigint = this.stakeManager.estimateValidationReward(stakePeriod, staking.amount)
+      return new StakingOperationSummary(staking, this.chain, [fee], potentialReward)
     } else if (operation.type === MCNOperationType.Delegate) {
+      const staking: DelegateOperation = operation as DelegateOperation
       const fee: FeeData = await this.stakeManager.estimateDelegationFee()
-      return new MCNOperationSummary(operation, this.chain, [fee])
+      const stakePeriod: bigint = staking.endTime - staking.startTime
+      const potentialReward: bigint = this.stakeManager.estimateDelegationReward(stakePeriod, staking.amount)
+      return new StakingOperationSummary(staking, this.chain, [fee], potentialReward)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -208,7 +214,7 @@ export class PlatformAccount extends UtxoAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionId: string = await this.stakeManager.validate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
-        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.Validate, transactionId).catch(error => {
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryValidation, transactionId).catch(error => {
           throw error
         })
         if (!success) {
@@ -220,7 +226,7 @@ export class PlatformAccount extends UtxoAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionId: string = await this.stakeManager.delegate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
-        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.Delegate, transactionId).catch(error => {
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryDelegation, transactionId).catch(error => {
           throw error
         })
         if (!success) {

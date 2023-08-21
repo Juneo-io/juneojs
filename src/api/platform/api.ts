@@ -1,11 +1,13 @@
 import { type PlatformBlockchain } from '../../chain'
 import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { GetBlockResponse, GetHeightResponse, type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
-import { type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetCurrentSupplyResponse,
+import { type GetBlockResponse, type GetHeightResponse, type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
+import {
+  type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetCurrentSupplyResponse,
   type GetCurrentValidatorsResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse,
   type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse,
-  type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse } from './data'
+  type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse
+} from './data'
 
 const Service: string = 'platform'
 

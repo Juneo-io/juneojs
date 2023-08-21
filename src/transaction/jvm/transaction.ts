@@ -12,8 +12,6 @@ const ImportTransactionTypeId: number = 0x00000003
 
 export enum JVMTransactionStatus {
   Accepted = 'Accepted',
-  Processing = 'Processing',
-  Rejected = 'Rejected',
   Unknown = 'Unknown'
 }
 
@@ -39,14 +37,20 @@ export class JVMTransactionStatusFetcher {
   async fetch (): Promise<string> {
     while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(this.delay)
-      this.currentStatus = (await this.jvmApi.getTxStatus(this.transactionId)).status
+      await this.jvmApi.getTx(this.transactionId).then(() => {
+        this.currentStatus = JVMTransactionStatus.Accepted
+      }, error => {
+        if (error.message !== 'not found') {
+          return this.currentStatus
+        }
+      })
       this.attempts += 1
     }
     return this.currentStatus
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== JVMTransactionStatus.Unknown && this.currentStatus !== JVMTransactionStatus.Processing
+    return this.currentStatus !== JVMTransactionStatus.Unknown
   }
 }
 

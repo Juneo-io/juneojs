@@ -1,5 +1,5 @@
 import { DelegateOperation, ExecutableMCNOperation, JuneoWallet, MCNAccount, MCNOperationStatus,
-    MCNOperationSummary, MCNProvider, PlatformBlockchain, ValidateOperation, now } from "../../../src"
+    MCNOperationSummary, MCNProvider, PlatformBlockchain, StakingOperationSummary, ValidateOperation, now } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -26,6 +26,10 @@ async function main () {
     await mcnAccount.execute(executable)
     // check if the operation is successfull
     console.log(executable.status === MCNOperationStatus.Done)
+    // to retrieve the potential reward from the summary we must first convert it
+    // when estimating a validate or delegate operation it will always return a staking operation summary
+    const validateSummary: StakingOperationSummary = summary as StakingOperationSummary
+    console.log(validateSummary.potentialReward)
     // we can instantiate a delegate operation if we want to perform it instead of a validation
     const delegateOperation: DelegateOperation = new DelegateOperation(nodeId, stakeAmount, startTime, endTime)
     const delegationSummary: MCNOperationSummary = await mcnAccount.estimate(platformChain.id, delegateOperation)

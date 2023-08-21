@@ -1,5 +1,6 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, PLATFORMVM_ID, type JVMBlockchain, type PlatformBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract, type JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
+import { TransactionReceipt, TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts } from './common'
 import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, parseUtxoSet, type FeeData, calculateFee } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
@@ -10,9 +11,6 @@ import { type JEVMAPI } from '../api/jevm'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
 import { type ethers, type TransactionRequest } from 'ethers'
 import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
-
-const StatusFetcherDelay: number = 100
-const StatusFetcherMaxAttempts: number = 600
 
 export enum TransferStatus {
   Initializing = 'Initializing',
@@ -26,17 +24,6 @@ export enum TransferType {
   Base = 'Base transfer',
   Cross = 'Cross chain transfer',
   Bridge = 'Bridge transfer'
-}
-
-export enum TransactionType {
-  Base = 'Base transaction',
-  Send = 'Send transaction',
-  Export = 'Export transaction',
-  Import = 'Import transaction',
-  Withdraw = 'Withdraw transaction',
-  Deposit = 'Deposit transaction',
-  Wrap = 'Wrap transaction',
-  Unwrap = 'Unwrap transaction'
 }
 
 export class TransferManager {
@@ -178,32 +165,16 @@ export class Transfer {
   }
 }
 
-export class TransactionReceipt {
-  chainId: string
-  transactionType: string
-  transactionId: string | undefined
-  transactionStatus: string | undefined
-
-  constructor (chainId: string, transactionType: string) {
-    this.chainId = chainId
-    this.transactionType = transactionType
-  }
-}
-
 export interface TransferHandler {
-
   getStatus: () => string
 
   getTransfer: () => Transfer | undefined
 
   getCurrentReceipts: () => TransactionReceipt[]
-
 }
 
 interface ExecutableTransferHandler extends TransferHandler {
-
   execute: (provider: MCNProvider) => Promise<void>
-
 }
 
 class IntraChainTransferHandler implements ExecutableTransferHandler {
@@ -254,7 +225,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const transactionId = (await provider.jvm.issueTx(transaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     if (transactionStatus !== JVMTransactionStatus.Accepted) {
       this.status = TransferStatus.Timeout
@@ -292,7 +263,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
       const transactionHash: string = await api.eth_sendRawTransaction(transaction)
       receipt.transactionId = transactionHash
       const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-        StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+        WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
       receipt.transactionStatus = transactionStatus
       if (transactionStatus !== EVMTransactionStatus.Success) {
         this.status = TransferStatus.Timeout
@@ -360,7 +331,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId = (await provider.jvm.issueTx(exportTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     // export transaction did not go through so we cannot safely try to import we stop here
     if (transactionStatus !== JVMTransactionStatus.Accepted) {
@@ -394,7 +365,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId = (await provider.platform.issueTx(exportTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     // export transaction did not go through so we cannot safely try to import we stop here
     if (transactionStatus !== PlatformTransactionStatus.Committed) {
@@ -471,7 +442,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       const transactionHash: string = await api.eth_sendRawTransaction(transaction)
       receipt.transactionId = transactionHash
       const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-        StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+        WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
       receipt.transactionStatus = transactionStatus
       // asset id must be updated to its JVM id for next export/import tx
       input.assetId = assetId
@@ -501,7 +472,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId = (await api.issueTx(exportTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new JEVMTransactionStatusFetcher(api,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     // export transaction did not go through so we cannot safely try to import we stop here
     if (transactionStatus !== JEVMTransactionStatus.Accepted) {
@@ -565,7 +536,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId: string = (await provider.platform.issueTx(importTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     return transactionStatus === PlatformTransactionStatus.Committed
   }
@@ -586,7 +557,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId: string = (await provider.jvm.issueTx(importTransaction)).txID
     receipt.transactionId = transactionId
     const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     receipt.transactionStatus = transactionStatus
     return transactionStatus === JVMTransactionStatus.Accepted
   }
@@ -617,7 +588,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const transactionId: string = (await api.issueTx(importTransaction)).txID
     importReceipt.transactionId = transactionId
     const importTransactionStatus: string = await new JEVMTransactionStatusFetcher(api,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId).fetch()
     importReceipt.transactionStatus = importTransactionStatus
     if (importTransactionStatus !== JEVMTransactionStatus.Accepted) {
       return false
@@ -667,7 +638,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         const transactionHash: string = await api.eth_sendRawTransaction(depositTransaction)
         depositReceipt.transactionId = transactionHash
         const depositTransactionStatus: string = await new EVMTransactionStatusFetcher(api,
-          StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+          WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
         depositReceipt.transactionStatus = depositTransactionStatus
         if (depositTransactionStatus !== EVMTransactionStatus.Success) {
           return false
@@ -691,7 +662,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
           const transactionHash: string = await api.eth_sendRawTransaction(transaction)
           transferReceipt.transactionId = transactionHash
           const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-            StatusFetcherDelay, StatusFetcherMaxAttempts, transactionHash).fetch()
+            WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
           transferReceipt.transactionStatus = transactionStatus
           if (transactionStatus !== EVMTransactionStatus.Success) {
             return false

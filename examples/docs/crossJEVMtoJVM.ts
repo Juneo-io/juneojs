@@ -1,5 +1,5 @@
-import { MCNProvider, Blockchain, SocotraJVMChain, SocotraPlatformChain, UserInput,
-    TransferHandler, TransferManager, JuneoWallet } from '../src'
+import { MCNProvider, Blockchain, SocotraJUNEChain, SocotraJVMChain, UserInput,
+    TransferHandler, TransferManager, JuneoWallet } from '../../src'
 
 async function main () {
     // provider to interact with the MCN
@@ -9,14 +9,14 @@ async function main () {
     // transfer manager to handle user inputs
     const manager: TransferManager = new TransferManager(provider, wallet)
     // data used to create user inputs
-    const assetId: string = SocotraJVMChain.assetId
+    const assetId: string = SocotraJUNEChain.assetId
     // source chain of all inputs used in a transfer must be the same
-    const sourceChain: Blockchain = SocotraJVMChain
+    const sourceChain: Blockchain = SocotraJUNEChain
     const amount: bigint = BigInt(103 * (10**9)) // 103 JUNE
-    const targetAddress1: string = 'Relay-june1klee0j2h6te65za6ncdln34an9ml2zg9v3n78u'
+    const targetAddress1: string = 'Asset-june1klee0j2h6te65za6ncdln34an9ml2zg9v3n78u'
     // if destination is the same as source chain it will create an intra chain transaction
     // if it is different it will create an inter chain transaction
-    const destinationChain: Blockchain = SocotraPlatformChain
+    const destinationChain: Blockchain = SocotraJVMChain
     // locktime value is optional it will default to 0
     const locktime: bigint = BigInt(0)
     // example user inputs

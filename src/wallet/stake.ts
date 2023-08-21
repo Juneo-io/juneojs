@@ -1,18 +1,17 @@
-import { type PlatformBlockchain } from '../chain'
-import { type JuneoWallet, type MCNProvider } from '../juneo'
+import { type MCNProvider } from '../juneo'
+import { type MCNOperation, MCNOperationType } from './operation'
 import { NodeId } from '../transaction/types'
-import { parseUtxoSet, type Utxo } from '../transaction/utxo'
+import { fetchUtxos, type Utxo } from '../transaction/utxo'
 import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
-import { PlatformTransactionStatus, PlatformTransactionStatusFetcher } from '../transaction/platform/transaction'
 import { Validator } from '../transaction/platform/validation'
-import { TransactionReceipt } from './transfer'
-import { type VMWallet } from './wallet'
+import { FeeData, FeeType } from '../transaction/fee'
+import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
+import { type PlatformAPI } from '../api'
 
-const StatusFetcherDelay: number = 100
-const StatusFetcherMaxAttempts: number = 600
 const ValidationShare: number = 12_0000 // 12%
-const DelegationShare: number = 100_0000 - ValidationShare
+const BaseShare: number = 100_0000 // 100%
+const DelegationShare: number = BaseShare - ValidationShare
 
 export enum StakeTransaction {
   PrimaryDelegation = 'Primary delegation',
@@ -21,106 +20,93 @@ export enum StakeTransaction {
 
 export class StakeManager {
   private readonly provider: MCNProvider
-  private readonly wallet: JuneoWallet
+  private readonly api: PlatformAPI
+  private readonly wallet: VMWallet
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: VMWallet) {
     this.provider = provider
+    this.api = provider.platform
     this.wallet = wallet
   }
 
-  estimateValidation (stakePeriod: bigint, stakeAmount: bigint): bigint {
+  static from (provider: MCNProvider, wallet: JuneoWallet): StakeManager {
+    return new StakeManager(provider, wallet.getWallet(provider.platform.chain))
+  }
+
+  estimateValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
     return calculatePrimary(stakePeriod, now(), stakeAmount)
   }
 
-  estimateDelegation (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    let rewards: bigint = calculatePrimary(stakePeriod, now(), stakeAmount)
-    rewards = rewards * BigInt(DelegationShare) / BigInt(1000000)
-    return rewards
+  estimateDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
+    const rewards: bigint = calculatePrimary(stakePeriod, now(), stakeAmount)
+    return rewards * BigInt(DelegationShare) / BigInt(BaseShare)
   }
 
-  delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint): StakeHandler {
-    const handler: DelegationHandler = new DelegationHandler()
-    void handler.execute(
-      this.provider,
-      this.wallet,
-      new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    ).catch(error => {
-      throw error
-    })
-    return handler
+  async estimateValidationFee (): Promise<FeeData> {
+    const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkValidatorFee)
+    return new FeeData(this.api.chain, fee, this.api.chain.assetId, FeeType.ValidateFee)
   }
 
-  validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint): StakeHandler {
-    const handler: ValidationHandler = new ValidationHandler()
-    void handler.execute(
-      this.provider,
-      this.wallet,
-      new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    ).catch(error => {
-      throw error
-    })
-    return handler
-  }
-}
-
-export interface StakeHandler {
-  getReceipt: () => TransactionReceipt | undefined
-}
-
-interface ExecutableStakeHandler extends StakeHandler {
-  execute: (provider: MCNProvider, wallet: JuneoWallet, validator: Validator) => Promise<void>
-}
-
-class DelegationHandler implements ExecutableStakeHandler {
-  private receipt: TransactionReceipt | undefined
-
-  getReceipt (): TransactionReceipt | undefined {
-    return this.receipt
+  async estimateDelegationFee (): Promise<FeeData> {
+    const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkDelegatorFee)
+    return new FeeData(this.api.chain, fee, this.api.chain.assetId, FeeType.DelegateFee)
   }
 
-  async execute (provider: MCNProvider, wallet: JuneoWallet, validator: Validator): Promise<void> {
-    const platform: PlatformBlockchain = provider.mcn.primary.platform
-    const platformWallet: VMWallet = wallet.getWallet(platform)
-    const senders: string[] = [platformWallet.getAddress()]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(senders))
-    const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
-    this.receipt = new TransactionReceipt(platform.id, StakeTransaction.PrimaryDelegation)
-    const addDelegatorTransaction: string = buildAddDelegatorTransaction(
-      utxoSet, senders, fee, platform, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
-      platform.assetId, platformWallet.getAddress(), platformWallet.getAddress(), provider.mcn.id
-    ).signTransaction([platformWallet]).toCHex()
-    const transactionId = (await provider.platform.issueTx(addDelegatorTransaction)).txID
-    this.receipt.transactionId = transactionId
-    this.receipt.transactionStatus = PlatformTransactionStatus.Unknown
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
-    this.receipt.transactionStatus = transactionStatus
-  }
-}
-
-class ValidationHandler implements ExecutableStakeHandler {
-  private receipt: TransactionReceipt | undefined
-
-  getReceipt (): TransactionReceipt | undefined {
-    return this.receipt
-  }
-
-  async execute (provider: MCNProvider, wallet: JuneoWallet, validator: Validator): Promise<void> {
-    const platform: PlatformBlockchain = provider.mcn.primary.platform
-    const platformWallet: VMWallet = wallet.getWallet(platform)
-    const senders: string[] = [platformWallet.getAddress()]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(senders))
-    const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
-    this.receipt = new TransactionReceipt(platform.id, StakeTransaction.PrimaryDelegation)
+  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
+    if (typeof feeData === 'undefined') {
+      feeData = await this.estimateValidationFee()
+    }
+    if (typeof utxoSet === 'undefined') {
+      utxoSet = await fetchUtxos(this.api, [this.wallet.getAddress()])
+    }
+    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
     const addValidatorTransaction: string = buildAddValidatorTransaction(
-      utxoSet, senders, fee, platform, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
-      platform.assetId, ValidationShare, platformWallet.getAddress(), platformWallet.getAddress(), provider.mcn.id
-    ).signTransaction([platformWallet]).toCHex()
-    const transactionId = (await provider.platform.issueTx(addValidatorTransaction)).txID
-    this.receipt.transactionId = transactionId
-    this.receipt.transactionStatus = PlatformTransactionStatus.Unknown
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(provider.platform,
-      StatusFetcherDelay, StatusFetcherMaxAttempts, transactionId).fetch()
-    this.receipt.transactionStatus = transactionStatus
+      utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      this.api.chain.assetId, ValidationShare, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
+    ).signTransaction([this.wallet]).toCHex()
+    return (await this.api.issueTx(addValidatorTransaction)).txID
+  }
+
+  async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
+    if (typeof feeData === 'undefined') {
+      feeData = await this.estimateValidationFee()
+    }
+    if (typeof utxoSet === 'undefined') {
+      utxoSet = await fetchUtxos(this.api, [this.wallet.getAddress()])
+    }
+    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
+    const addDelegatorTransaction: string = buildAddDelegatorTransaction(
+      utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      this.api.chain.assetId, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
+    ).signTransaction([this.wallet]).toCHex()
+    return (await this.api.issueTx(addDelegatorTransaction)).txID
+  }
+}
+
+abstract class Staking implements MCNOperation {
+  type: MCNOperationType
+  nodeId: string
+  amount: bigint
+  startTime: bigint
+  endTime: bigint
+
+  constructor (type: MCNOperationType, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    this.type = type
+    this.nodeId = nodeId
+    this.amount = amount
+    this.startTime = startTime
+    this.endTime = endTime
+  }
+}
+
+export class ValidateOperation extends Staking {
+  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(MCNOperationType.Validate, nodeId, amount, startTime, endTime)
+  }
+}
+
+export class DelegateOperation extends Staking {
+  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(MCNOperationType.Delegate, nodeId, amount, startTime, endTime)
   }
 }

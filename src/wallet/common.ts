@@ -1,85 +1,82 @@
 import { type ethers } from 'ethers'
-import { type Blockchain } from '../chain'
-import { EVMTransactionStatus, EVMTransactionStatusFetcher, type FeeData } from '../transaction'
-import { type TransactionReceipt } from './transfer'
+import { EVMFeeData } from './fee'
 import { type JEVMAPI } from '../api'
+import { type FeeType } from '../transaction'
 
 export const WalletStatusFetcherDelay: number = 100
 export const WalletStatusFetcherMaxAttempts: number = 600
 
-export enum MCNOperationType {
-  Transfer = 'Base transfer',
-  Cross = 'Cross chain transfer',
-  Bridge = 'Bridge transfer',
-  Validate = 'Validate',
-  Delegate = 'Delegate',
-  Wrap = 'Wrap',
-  Unwrap = 'Unwrap',
-  Unsupported = 'Unsupported operation'
+export enum TransactionType {
+  Base = 'Base transaction',
+  Send = 'Send transaction',
+  Export = 'Export transaction',
+  Import = 'Import transaction',
+  Withdraw = 'Withdraw transaction',
+  Deposit = 'Deposit transaction',
+  Wrap = 'Wrap transaction',
+  Unwrap = 'Unwrap transaction',
+  Validate = 'Validate transaction',
+  Delegate = 'Delegate transaction'
 }
 
-export interface MCNOperation {
-  type: MCNOperationType
-}
+export class TransactionReceipt {
+  chainId: string
+  transactionType: string
+  transactionId: string | undefined
+  transactionStatus: string | undefined
 
-export class MCNOperationSummary {
-  operation: MCNOperation
-  chain: Blockchain
-  fees: FeeData[]
-
-  constructor (operation: MCNOperation, chain: Blockchain, fees: FeeData[]) {
-    this.operation = operation
-    this.chain = chain
-    this.fees = fees
+  constructor (chainId: string, transactionType: string) {
+    this.chainId = chainId
+    this.transactionType = transactionType
   }
 }
 
-export class ExecutableMCNOperation {
-  summary: MCNOperationSummary
-  status: MCNOperationStatus = MCNOperationStatus.Initializing
-  receipts: TransactionReceipt[] = []
+export class EVMTransactionData {
+  address: string
+  amount: bigint
+  fee: EVMFeeData
+  data: string
 
-  constructor (summary: MCNOperationSummary) {
-    this.summary = summary
-  }
-
-  async executeEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet): Promise<void> {
-    // if (this.status !== MCNOperationStatus.Executing) {
-    //     this.status = MCNOperationStatus.Executing
-    // }
-    // const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, TransactionType.Wrap)
-    // this.receipts.push(receipt)
-    // const transactionData: ethers.TransactionRequest = {
-    //   from: wallet.address,
-    //   to: wrapping.asset.address,
-    //   value: wrapping.amount,
-    //   nonce: Number(nonce++),
-    //   chainId: chain.chainId,
-    //   gasLimit: feeData.gasLimit,
-    //   gasPrice: feeData.gasPrice,
-    //   data
-    // }
-    // const transaction: string = await wallet.signTransaction(transactionData)
-    // const transactionHash: string = await api.eth_sendRawTransaction(transaction).catch(error => {
-    //   throw error
-    // })
-    // receipt.transactionId = transactionHash
-    // receipt.transactionStatus = EVMTransactionStatus.Unknown
-    // const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-    //   WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash).fetch()
-    // receipt.transactionStatus = transactionStatus
-    // if (transactionStatus === EVMTransactionStatus.Failure) {
-    //   this.status = MCNOperationStatus.Error
-    // } else {
-    //   this.status = MCNOperationStatus.Timeout
-    // }
+  constructor (address: string, amount: bigint, fee: EVMFeeData, data: string) {
+    this.address = address
+    this.amount = amount
+    this.fee = fee
+    this.data = data
   }
 }
 
-export enum MCNOperationStatus {
-  Initializing = 'Initializing',
-  Executing = 'Executing',
-  Done = 'Done',
-  Timeout = 'Timeout',
-  Error = 'Error'
+export async function estimateEVMTransaction (api: JEVMAPI, sender: string, address: string, amount: bigint, data: string, type: FeeType): Promise<EVMFeeData> {
+  const gasPrice: bigint = await api.eth_baseFee().catch(error => {
+    throw error
+  })
+  const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
+    from: sender,
+    to: address,
+    value: BigInt(amount),
+    chainId: api.chain.chainId,
+    gasPrice,
+    data
+  }).catch(error => {
+    throw error
+  })
+  return new EVMFeeData(api.chain, gasPrice * gasLimit, address, type, gasPrice, gasLimit)
+}
+
+export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, transactionData: EVMTransactionData): Promise<string> {
+  let nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'latest').catch(error => {
+    throw error
+  })
+  const transaction: string = await wallet.signTransaction({
+    from: wallet.address,
+    to: transactionData.address,
+    value: transactionData.amount,
+    nonce: Number(nonce++),
+    chainId: api.chain.chainId,
+    gasLimit: transactionData.fee.gasLimit,
+    gasPrice: transactionData.fee.gasPrice,
+    data: transactionData.data
+  })
+  return await api.eth_sendRawTransaction(transaction).catch(error => {
+    throw error
+  })
 }

@@ -118,7 +118,7 @@ export abstract class AbstractAccount implements ChainAccount {
 }
 
 export abstract class UtxoAccount extends AbstractAccount {
-  utxoSet = new Map<string, Utxo>()
+  utxoSet: Utxo[] = []
   utxoApi: AbstractUtxoAPI
   wallet: JuneoWallet
   chainWallet: VMWallet
@@ -135,8 +135,7 @@ export abstract class UtxoAccount extends AbstractAccount {
 
   async fetchBalances (): Promise<void> {
     await super.fetchBalancesAsynchronously(async () => {
-      this.utxoSet.clear()
-      await fetchUtxos(this.utxoSet, this.utxoApi, this.addresses, this.sourceChain)
+      this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
       this.calculateBalances()
     })
   }

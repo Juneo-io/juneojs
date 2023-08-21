@@ -5,30 +5,36 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 
 const UtxoRequestLimit: number = 1024
 
-export async function fetchUtxos (utxoSet: Map<string, Utxo>, utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<void> {
-  // use a mapping to avoid duplicates because get utxos calls are not guaranteed
-  // to provide unique utxos. There could be some duplicates because of start/end indexes
+export async function fetchUtxos (utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<Utxo[]> {
+  // use a set to avoid duplicates because getUtxos does not guarantee to provide unique
+  // utxos between multiple calls. There could be some duplicates because of start/end indexes
   // or even if one transaction changes one of the utxos between two calls.
-  let utxoResponse: GetUTXOsResponse = (sourceChain === undefined)
+  const utxoSet = new Set<string>()
+  const utxos: Utxo[] = []
+  let utxoResponse: GetUTXOsResponse = sourceChain === undefined
     ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
     : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit)
   utxoResponse.utxos.forEach(data => {
     const utxo: Utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
-    utxoSet.set(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`, utxo)
+    utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+    utxos.push(utxo)
   })
   while (utxoResponse.numFetched === UtxoRequestLimit) {
-    if (sourceChain === undefined) {
-      utxoResponse = await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
-    } else {
-      utxoResponse = await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
-    }
+    utxoResponse = sourceChain === undefined
+      ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
+      : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
     utxoResponse.utxos.forEach(data => {
       const utxo: Utxo = Utxo.parse(data)
       utxo.sourceChain = sourceChain
-      utxoSet.set(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`, utxo)
+      const key: string = `${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`
+      if (!utxoSet.has(key)) {
+        utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+        utxos.push(utxo)
+      }
     })
   }
+  return utxos
 }
 
 export function parseUtxoSet (data: GetUTXOsResponse, sourceChain?: string): Utxo[] {

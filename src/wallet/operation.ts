@@ -1,7 +1,7 @@
 import { type Blockchain } from '../chain'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, type FeeData, PlatformTransactionStatus } from '../transaction'
 import { type PlatformAPI, type JEVMAPI } from '../api'
-import { TransactionReceipt, type TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts } from './common'
+import { TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout } from './common'
 
 export enum MCNOperationType {
   Transfer = 'Base transfer',
@@ -44,9 +44,8 @@ export class ExecutableMCNOperation {
     this.receipts.push(receipt)
     receipt.transactionId = transactionHash
     receipt.transactionStatus = EVMTransactionStatus.Unknown
-    const transactionStatus: string = await new EVMTransactionStatusFetcher(api,
-      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionHash)
-      .fetch()
+    const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash)
+      .fetch(WalletStatusFetcherTimeout)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error
@@ -65,9 +64,8 @@ export class ExecutableMCNOperation {
     this.receipts.push(receipt)
     receipt.transactionId = transactionId
     receipt.transactionStatus = PlatformTransactionStatus.Unknown
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api,
-      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId)
-      .fetch()
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId)
+      .fetch(WalletStatusFetcherTimeout)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error

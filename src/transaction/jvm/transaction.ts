@@ -3,7 +3,7 @@ import { sleep } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
 import { type BlockchainId } from '../types'
 
 const BaseTransactionTypeId: number = 0x00000000
@@ -12,31 +12,26 @@ const ImportTransactionTypeId: number = 0x00000003
 
 export enum JVMTransactionStatus {
   Accepted = 'Accepted',
+  Processing = 'Processing',
   Unknown = 'Unknown'
 }
 
-export class JVMTransactionStatusFetcher {
+export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
   jvmApi: JVMAPI
-  delay: number
   private attempts: number = 0
-  maxAttempts: number
   transactionId: string
   currentStatus: string = JVMTransactionStatus.Unknown
 
-  constructor (jvmApi: JVMAPI, delay: number, maxAttempts: number, transactionId: string) {
+  constructor (jvmApi: JVMAPI, transactionId: string) {
     this.jvmApi = jvmApi
-    this.delay = delay
-    this.maxAttempts = maxAttempts
     this.transactionId = transactionId
   }
 
-  getAttemptsCount (): number {
-    return this.attempts
-  }
-
-  async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(this.delay)
+  async fetch (timeout: number): Promise<string> {
+    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+    this.currentStatus = JVMTransactionStatus.Processing
+    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
+      await sleep(TransactionStatusFetchDelay)
       await this.jvmApi.getTx(this.transactionId).then(() => {
         this.currentStatus = JVMTransactionStatus.Accepted
       }, error => {
@@ -50,7 +45,7 @@ export class JVMTransactionStatusFetcher {
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== JVMTransactionStatus.Unknown
+    return this.currentStatus !== JVMTransactionStatus.Unknown && this.currentStatus !== JVMTransactionStatus.Processing
   }
 }
 

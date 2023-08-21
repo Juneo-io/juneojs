@@ -1,6 +1,6 @@
 import { type Blockchain } from '../chain'
-import { EVMTransactionStatus, EVMTransactionStatusFetcher, type FeeData } from '../transaction'
-import { type JEVMAPI } from '../api'
+import { EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, type FeeData, PlatformTransactionStatus } from '../transaction'
+import { type PlatformAPI, type JEVMAPI } from '../api'
 import { TransactionReceipt, type TransactionType, WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts } from './common'
 
 export enum MCNOperationType {
@@ -54,10 +54,31 @@ export class ExecutableMCNOperation {
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === EVMTransactionStatus.Failure) {
       this.status = MCNOperationStatus.Error
-    } else {
+    } else if (transactionStatus !== EVMTransactionStatus.Success) {
       this.status = MCNOperationStatus.Timeout
     }
     return transactionStatus === EVMTransactionStatus.Success
+  }
+
+  async addTrackedPlatformTransaction (api: PlatformAPI, type: TransactionType, transactionId: string): Promise<boolean> {
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type)
+    this.receipts.push(receipt)
+    receipt.transactionId = transactionId
+    receipt.transactionStatus = PlatformTransactionStatus.Unknown
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api,
+      WalletStatusFetcherDelay, WalletStatusFetcherMaxAttempts, transactionId)
+      .fetch()
+      .catch(error => {
+        this.status = MCNOperationStatus.Error
+        throw error
+      })
+    receipt.transactionStatus = transactionStatus
+    if (transactionStatus === PlatformTransactionStatus.Dropped || transactionStatus === PlatformTransactionStatus.Aborted) {
+      this.status = MCNOperationStatus.Error
+    } else if (transactionStatus !== PlatformTransactionStatus.Committed) {
+      this.status = MCNOperationStatus.Timeout
+    }
+    return transactionStatus === PlatformTransactionStatus.Committed
   }
 }
 

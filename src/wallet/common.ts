@@ -14,7 +14,9 @@ export enum TransactionType {
   Withdraw = 'Withdraw transaction',
   Deposit = 'Deposit transaction',
   Wrap = 'Wrap transaction',
-  Unwrap = 'Unwrap transaction'
+  Unwrap = 'Unwrap transaction',
+  Validate = 'Validate transaction',
+  Delegate = 'Delegate transaction'
 }
 
 export class TransactionReceipt {

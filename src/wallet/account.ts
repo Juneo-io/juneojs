@@ -8,6 +8,7 @@ import { type EVMFeeData } from './fee'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType, MCNOperationStatus } from './operation'
 import { type JEVMWallet, type VMWallet, type JuneoWallet } from './wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from './wrap'
+import { type ValidateOperation, type DelegateOperation, StakeManager } from './stake'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -48,7 +49,7 @@ export class MCNAccount {
   static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
     const balances: ChainAccount[] = [
       new JVMAccount(provider.jvm, wallet),
-      new PlatformAccount(provider.platform, wallet)
+      new PlatformAccount(provider, wallet)
     ]
     for (const key in provider.jevm) {
       const api: JEVMAPI = provider.jevm[key]
@@ -179,19 +180,54 @@ export class JVMAccount extends UtxoAccount {
 
 export class PlatformAccount extends UtxoAccount {
   override chain: PlatformBlockchain
+  api: PlatformAPI
+  private readonly stakeManager: StakeManager
 
-  constructor (api: PlatformAPI, wallet: JuneoWallet) {
-    super(api.chain, api, wallet)
-    this.chain = api.chain
+  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+    super(provider.platform.chain, provider.platform, wallet)
+    this.chain = provider.platform.chain
+    this.api = provider.platform
+    this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
-    // TODO implementation
+    if (operation.type === MCNOperationType.Validate) {
+      const fee: FeeData = await this.stakeManager.estimateValidationFee()
+      return new MCNOperationSummary(operation, this.chain, [fee])
+    } else if (operation.type === MCNOperationType.Delegate) {
+      const fee: FeeData = await this.stakeManager.estimateDelegationFee()
+      return new MCNOperationSummary(operation, this.chain, [fee])
+    }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
-    // TODO implementation
+    const operation: MCNOperation = executable.summary.operation
+    if (operation.type === MCNOperationType.Validate) {
+      const staking: ValidateOperation = operation as ValidateOperation
+      const fees: FeeData[] = executable.summary.fees
+      for (let i = 0; i < fees.length; i++) {
+        const transactionId: string = await this.stakeManager.validate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.Validate, transactionId).catch(error => {
+          throw error
+        })
+        if (!success) {
+          break
+        }
+      }
+    } else if (operation.type === MCNOperationType.Delegate) {
+      const staking: DelegateOperation = operation as DelegateOperation
+      const fees: FeeData[] = executable.summary.fees
+      for (let i = 0; i < fees.length; i++) {
+        const transactionId: string = await this.stakeManager.delegate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.Delegate, transactionId).catch(error => {
+          throw error
+        })
+        if (!success) {
+          break
+        }
+      }
+    }
   }
 }
 
@@ -230,7 +266,7 @@ export class EVMAccount extends AbstractAccount {
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     const operation: MCNOperation = executable.summary.operation
     if (operation.type === MCNOperationType.Wrap) {
-      const wrapping: WrapOperation = executable.summary.operation as WrapOperation
+      const wrapping: WrapOperation = operation as WrapOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.wrapManager.wrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
@@ -242,7 +278,7 @@ export class EVMAccount extends AbstractAccount {
         }
       }
     } else if (operation.type === MCNOperationType.Unwrap) {
-      const wrapping: UnwrapOperation = executable.summary.operation as UnwrapOperation
+      const wrapping: UnwrapOperation = operation as UnwrapOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.wrapManager.unwrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)

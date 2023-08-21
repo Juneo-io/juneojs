@@ -9,7 +9,9 @@ export enum FeeType {
   ExportFee = 'Export fee',
   ImportFee = 'Import fee',
   Wrap = 'Wrap fee',
-  Unwrap = 'Unwrap fee'
+  Unwrap = 'Unwrap fee',
+  ValidateFee = 'Validate fee',
+  DelegateFee = 'Delegate fee'
 }
 
 export class FeeData {

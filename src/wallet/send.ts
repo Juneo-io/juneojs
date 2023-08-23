@@ -1,6 +1,6 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
-import { type Blockchain, JEVMBlockchain, type TokenAsset } from '../chain'
+import { type Blockchain, JEVMBlockchain } from '../chain'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './common'
 import { FeeType, type EVMFeeData, FeeData } from './fee'
@@ -62,20 +62,20 @@ export class SendManager {
 
 abstract class Send implements MCNOperation {
   type: MCNOperationType
-  asset: TokenAsset
+  assetId: string
   amount: bigint
   address: string
 
-  constructor (type: MCNOperationType, asset: TokenAsset, amount: bigint, address: string) {
+  constructor (type: MCNOperationType, assetId: string, amount: bigint, address: string) {
     this.type = type
-    this.asset = asset
+    this.assetId = assetId
     this.amount = amount
     this.address = address
   }
 }
 
 export class SendOperation extends Send {
-  constructor (asset: TokenAsset, amount: bigint, address: string) {
-    super(MCNOperationType.Send, asset, amount, address)
+  constructor (assetId: string, amount: bigint, address: string) {
+    super(MCNOperationType.Send, assetId, amount, address)
   }
 }

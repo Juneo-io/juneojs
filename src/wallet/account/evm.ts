@@ -34,7 +34,7 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.asset.assetId, send.amount, send.address)
+      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
       return new MCNOperationSummary(operation, this.chain, [fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation
@@ -54,7 +54,7 @@ export class EVMAccount extends AbstractAccount {
       const send: SendOperation = operation as SendOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
-        const transactionHash: string = await this.sendManager.sendEVM(this.chain.id, send.asset.assetId, send.amount, send.address, fees[i] as EVMFeeData)
+        const transactionHash: string = await this.sendManager.sendEVM(this.chain.id, send.assetId, send.amount, send.address, fees[i] as EVMFeeData)
         const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash).catch(error => {
           throw error
         })

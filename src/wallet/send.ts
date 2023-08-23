@@ -1,10 +1,11 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
-import { type Blockchain, JEVMBlockchain } from '../chain'
+import { type Blockchain, JEVMBlockchain, type TokenAsset } from '../chain'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './common'
 import { type EVMFeeData } from './fee'
 import { FeeType, UserInput, type Utxo, buildJVMBaseTransaction, fetchUtxos, FeeData } from '../transaction'
+import { type MCNOperation, MCNOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class SendManager {
@@ -56,5 +57,25 @@ export class SendManager {
       utxoSet, [wallet.getAddress()], feeData.amount, wallet.getAddress(), this.provider.mcn.id, api.chain.id
     ).signTransaction([wallet]).toCHex()
     return (await api.issueTx(transaction)).txID
+  }
+}
+
+abstract class Send implements MCNOperation {
+  type: MCNOperationType
+  asset: TokenAsset
+  amount: bigint
+  address: string
+
+  constructor (type: MCNOperationType, asset: TokenAsset, amount: bigint, address: string) {
+    this.type = type
+    this.asset = asset
+    this.amount = amount
+    this.address = address
+  }
+}
+
+export class SendOperation extends Send {
+  constructor (asset: TokenAsset, amount: bigint, address: string) {
+    super(MCNOperationType.Send, asset, amount, address)
   }
 }

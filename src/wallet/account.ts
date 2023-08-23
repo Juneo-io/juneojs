@@ -40,7 +40,9 @@ export class MCNAccount {
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     executable.status = MCNOperationStatus.Executing
     const account: ChainAccount = this.getAccount(executable.summary.chain.id)
-    await account.execute(executable)
+    await account.execute(executable).catch(error => {
+      throw error
+    })
     // the only case it is not executing is if an error happened in that case we do not change it
     if (executable.status === MCNOperationStatus.Executing) {
       executable.status = MCNOperationStatus.Done
@@ -64,9 +66,11 @@ export interface ChainAccount {
   balances: Map<string, bigint>
   addresses: string[]
 
+  hasBalance: (asset: TokenAsset) => boolean
+
   getBalance: (asset: TokenAsset) => AssetValue
 
-  hasBalance: (asset: TokenAsset) => boolean
+  getValue: (assetId: string) => bigint
 
   fetchBalances: () => Promise<void>
 
@@ -85,20 +89,24 @@ export abstract class AbstractAccount implements ChainAccount {
     this.chain = chain
   }
 
+  hasBalance (asset: TokenAsset): boolean {
+    return this.balances.has(asset.assetId)
+  }
+
   /**
    * Gets the balance from this account of an asset.
    * @param asset The asset from which to get the balance.
    * @returns An AssetValue containing the value of the balance of the provided asset.
    */
   getBalance (asset: TokenAsset): AssetValue {
-    if (!this.balances.has(asset.assetId)) {
-      return asset.getAssetValue(BigInt(0))
-    }
-    return asset.getAssetValue(BigInt(this.balances.get(asset.assetId) as bigint))
+    return asset.getAssetValue(this.getValue(asset.assetId))
   }
 
-  hasBalance (asset: TokenAsset): boolean {
-    return this.balances.has(asset.assetId)
+  getValue (assetId: string): bigint {
+    if (!this.balances.has(assetId)) {
+      return BigInt(0)
+    }
+    return BigInt(this.balances.get(assetId) as bigint)
   }
 
   abstract fetchBalances (): Promise<void>

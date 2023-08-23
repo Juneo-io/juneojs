@@ -11,6 +11,7 @@ import { type JEVMAPI } from '../api/jevm'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
 import { type ethers, type TransactionRequest } from 'ethers'
 import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
+import { JVMAccount, PlatformAccount } from './account'
 
 export enum TransferStatus {
   Initializing = 'Initializing',
@@ -316,7 +317,9 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
-      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      const balance: JVMAccount = new JVMAccount(provider, transfer.signer)
+      await balance.fetchBalances()
+      const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
@@ -349,7 +352,9 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
-      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getAddress(), destinationChain.assetId)
+      const balance: PlatformAccount = new PlatformAccount(provider, transfer.signer)
+      await balance.fetchBalances()
+      const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
@@ -454,7 +459,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importFee: bigint = await destinationChain.queryImportFee(provider, transfer.userInputs)
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
-      const sourceBalance: bigint = await sourceChain.queryBalance(provider, wallet.getHexAddress(), destinationChain.assetId)
+      const sourceBalance: bigint = await sourceChain.queryEVMBalance(api, wallet.getHexAddress(), destinationChain.assetId)
       exportingFee = sourceBalance >= importFee
     }
     const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)

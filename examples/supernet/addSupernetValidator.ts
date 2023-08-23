@@ -1,11 +1,11 @@
 import { MCNProvider, JuneoWallet, AddSupernetValidatorTransaction, Address, CreateSupernetTransaction,
-    NodeId, SupernetId, Utxo, buildAddSupernetValidatorTransaction, parseUtxoSet, now } from '../../src'
+    NodeId, SupernetId, Utxo, buildAddSupernetValidatorTransaction, now, fetchUtxos } from '../../src'
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()
     const masterWallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     const sendersAddresses: string[] = [masterWallet.getAddress(provider.platform.chain)]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(sendersAddresses))
+    const utxoSet: Utxo[] = await fetchUtxos(provider.platform, sendersAddresses)
     const fee: number = (await provider.getFees()).addSupernetValidatorFee
     const nodeId: string = 'NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr'
     const startTime: bigint = now() + BigInt(30)

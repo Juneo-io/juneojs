@@ -1,7 +1,6 @@
 import { type ethers } from 'ethers'
-import { EVMFeeData } from './fee'
+import { type FeeType, EVMFeeData } from './fee'
 import { type JEVMAPI } from '../api'
-import { type FeeType } from '../transaction'
 
 export const WalletStatusFetcherTimeout: number = 60000
 
@@ -27,6 +26,18 @@ export class TransactionReceipt {
   constructor (chainId: string, transactionType: string) {
     this.chainId = chainId
     this.transactionType = transactionType
+  }
+}
+
+export class Spending {
+  chainId: string
+  amount: bigint
+  assetId: string
+
+  constructor (chainId: string, amount: bigint, assetId: string) {
+    this.chainId = chainId
+    this.amount = amount
+    this.assetId = assetId
   }
 }
 

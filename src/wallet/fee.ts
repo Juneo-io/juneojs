@@ -1,21 +1,44 @@
 import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { type UserInput, FeeType, FeeData } from '../transaction'
+import { type UserInput } from '../transaction'
 import { FeeError } from '../utils'
 import { type JuneoWallet, type JEVMWallet } from './wallet'
+import { Spending } from './common'
+
+export enum FeeType {
+  Undefined = 'Undefined',
+  BaseFee = 'Base fee',
+  ExportFee = 'Export fee',
+  ImportFee = 'Import fee',
+  Wrap = 'Wrap fee',
+  Unwrap = 'Unwrap fee',
+  ValidateFee = 'Validate fee',
+  DelegateFee = 'Delegate fee'
+}
+
+export class FeeData extends Spending {
+  chain: Blockchain
+  type: string
+
+  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string) {
+    super(chain.id, amount, assetId)
+    this.chain = chain
+    this.type = type
+  }
+}
 
 export class EVMFeeData extends FeeData {
   gasPrice: bigint
   gasLimit: bigint
 
-  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined, gasPrice: bigint, gasLimit: bigint) {
+  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string, gasPrice: bigint, gasLimit: bigint) {
     super(chain, amount, assetId, type)
     this.gasPrice = gasPrice
     this.gasLimit = gasLimit
   }
 }
 
-export async function estimateOperation (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
+export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
     return await calculateIntraChainTransferFee(provider, wallet, source, inputs)
   }

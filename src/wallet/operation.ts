@@ -1,7 +1,11 @@
 import { type Blockchain } from '../chain'
-import { EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, type FeeData, PlatformTransactionStatus, JVMTransactionStatus, JVMTransactionStatusFetcher } from '../transaction'
+import {
+  EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, PlatformTransactionStatus,
+  JVMTransactionStatus, JVMTransactionStatusFetcher
+} from '../transaction'
+import { type FeeData } from './fee'
 import { type PlatformAPI, type JEVMAPI, type JVMAPI } from '../api'
-import { TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout } from './common'
+import { TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending } from './common'
 
 export enum MCNOperationType {
   Send = 'Send',
@@ -22,11 +26,13 @@ export class MCNOperationSummary {
   operation: MCNOperation
   chain: Blockchain
   fees: FeeData[]
+  spendings: Spending[]
 
-  constructor (operation: MCNOperation, chain: Blockchain, fees: FeeData[]) {
+  constructor (operation: MCNOperation, chain: Blockchain, fees: FeeData[], spendings: Spending[]) {
     this.operation = operation
     this.chain = chain
     this.fees = fees
+    this.spendings = spendings
   }
 }
 

@@ -4,8 +4,8 @@ import { type Utxo } from '../utxo'
 import { BaseTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 import { Address, BlockchainId } from '../types'
 import { type UserOutput, type TransferableOutput } from '../output'
-import { InputError } from '../../utils/errors'
-import { FeeData } from '../fee'
+import { InputError } from '../../utils'
+import { TransactionFee } from '../transaction'
 
 export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[],
   sendersAddresses: string[], fee: bigint, changeAddress: string,
@@ -19,7 +19,7 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
       throw new InputError('jvm base transaction cannot have different source/destination chain user inputs')
     }
   })
-  const feeData = new FeeData(userInputs[0].sourceChain, fee)
+  const feeData = new TransactionFee(userInputs[0].sourceChain, fee)
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData])
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
   return new BaseTransaction(
@@ -47,9 +47,9 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
       throw new InputError('jvm export transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
-  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
-  const fees: FeeData[] = [sourceFeeData, destinationFeeData]
+  const sourceFeeData: TransactionFee = new TransactionFee(userInputs[0].sourceChain, sourceFee)
+  const destinationFeeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, destinationFee)
+  const fees: TransactionFee[] = [sourceFeeData, destinationFeeData]
   const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), fees)
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
@@ -101,7 +101,7 @@ export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utx
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
+  const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
   buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData]).forEach(input => {

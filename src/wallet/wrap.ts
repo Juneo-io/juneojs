@@ -2,9 +2,8 @@ import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
 import { type JEVMWallet, type JuneoWallet } from './wallet'
 import { type JEVMBlockchain, type WrappedAsset } from '../chain'
-import { EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './common'
+import { type EVMFeeData, FeeType, EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './transaction'
 import { type MCNOperation, MCNOperationType } from './operation'
-import { type EVMFeeData, FeeType } from './fee'
 import { type MCNProvider } from '../juneo'
 
 export class WrapManager {

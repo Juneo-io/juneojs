@@ -1,63 +1,8 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type MCNProvider } from '../../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
-import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType, MCNOperationStatus } from '../operation'
+import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
 import { type VMWallet, type JuneoWallet } from '../wallet'
-import { EVMAccount } from './evm'
-import { JVMAccount } from './jvm'
-import { PlatformAccount } from './platform'
-
-export class MCNAccount {
-  private readonly chainAccounts = new Map<string, ChainAccount>()
-
-  constructor (accounts: ChainAccount[]) {
-    accounts.forEach(account => {
-      this.chainAccounts.set(account.chain.id, account)
-    })
-  }
-
-  getAccount (chainId: string): ChainAccount {
-    if (!this.chainAccounts.has(chainId)) {
-      throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
-    }
-    return this.chainAccounts.get(chainId) as ChainAccount
-  }
-
-  async estimate (chainId: string, operation: MCNOperation): Promise<MCNOperationSummary> {
-    if (operation.type === MCNOperationType.Unsupported) {
-      throw new AccountError('unsupported operation')
-    }
-    const account: ChainAccount = this.getAccount(chainId)
-    return await account.estimate(operation).catch(error => {
-      throw error
-    })
-  }
-
-  async execute (executable: ExecutableMCNOperation): Promise<void> {
-    executable.status = MCNOperationStatus.Executing
-    const account: ChainAccount = this.getAccount(executable.summary.chain.id)
-    await account.execute(executable).catch(error => {
-      throw error
-    })
-    // the only case it is not executing is if an error happened in that case we do not change it
-    if (executable.status === MCNOperationStatus.Executing) {
-      executable.status = MCNOperationStatus.Done
-    }
-  }
-
-  static from (provider: MCNProvider, wallet: JuneoWallet): MCNAccount {
-    const balances: ChainAccount[] = [
-      new JVMAccount(provider, wallet),
-      new PlatformAccount(provider, wallet)
-    ]
-    for (const chainId in provider.jevm) {
-      balances.push(new EVMAccount(provider, chainId, wallet))
-    }
-    return new MCNAccount(balances)
-  }
-}
 
 export interface ChainAccount {
   chain: Blockchain

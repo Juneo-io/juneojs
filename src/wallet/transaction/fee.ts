@@ -1,9 +1,9 @@
-import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../chain'
-import { type MCNProvider } from '../juneo'
-import { type UserInput } from '../transaction'
-import { FeeError } from '../utils'
-import { type JuneoWallet, type JEVMWallet } from './wallet'
-import { Spending } from './common'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../../chain'
+import { type MCNProvider } from '../../juneo'
+import { type UserInput } from '../../transaction'
+import { FeeError } from '../../utils'
+import { Spending } from './transaction'
+import { type JuneoWallet, type JEVMWallet } from '../wallet'
 
 export enum FeeType {
   Undefined = 'Undefined',

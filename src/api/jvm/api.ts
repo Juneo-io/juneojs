@@ -1,8 +1,8 @@
 import { type JVMBlockchain } from '../../chain'
 import { AbstractUtxoAPI, type ChainAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
-import { type BuildGenesisResponse, type GetAddressTxsResponse, type GetAllBalancesResponse, type GetAssetDescriptionResponse, type GetJVMBalanceResponse } from './data'
+import { type GetBlockResponse, type GetHeightResponse, type GetTxResponse, type IssueTxResponse } from '../data'
+import { type BuildGenesisResponse, type GetAssetDescriptionResponse } from './data'
 
 const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
@@ -20,45 +20,28 @@ export class JVMAPI extends AbstractUtxoAPI implements ChainAPI {
     return response.result
   }
 
-  /**
-   * @deprecated
-   */
-  async getAddressTxs (address: string, assetID: string, cursor?: number, pageSize?: number): Promise<GetAddressTxsResponse> {
-    const response: JsonRpcResponse = await this.call('getAddressTxs', [{ address, assetID, cursor, pageSize }])
-    return response.result
-  }
-
-  /**
-   * @deprecated
-   */
-  async getAllBalances (address: string): Promise<GetAllBalancesResponse> {
-    const response: JsonRpcResponse = await this.call('getAllBalances', [{ address }])
-    return response.result
-  }
-
   async getAssetDescription (assetID: string): Promise<GetAssetDescriptionResponse> {
     const response: JsonRpcResponse = await this.call('getAssetDescription', [{ assetID }])
     return response.result
   }
 
-  /**
-   * @deprecated
-   */
-  async getBalance (address: string, assetID: string): Promise<GetJVMBalanceResponse> {
-    const response: JsonRpcResponse = await this.call('getBalance', [{ address, assetID }])
+  async getBlock (blockID: string, encoding?: string): Promise<GetBlockResponse> {
+    const response: JsonRpcResponse = await this.call('getBlock', [{ blockID, encoding }])
+    return response.result
+  }
+
+  async getBlockByHeight (height: number, encoding?: string): Promise<GetBlockResponse> {
+    const response: JsonRpcResponse = await this.call('getBlockByHeight', [{ height, encoding }])
+    return response.result
+  }
+
+  async getHeight (): Promise<GetHeightResponse> {
+    const response: JsonRpcResponse = await this.call('getHeight')
     return response.result
   }
 
   async getTx (txID: string, encoding?: string): Promise<GetTxResponse> {
     const response: JsonRpcResponse = await this.call('getTx', [{ txID, encoding }])
-    return response.result
-  }
-
-  /**
-   * @deprecated
-   */
-  async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
-    const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
     return response.result
   }
 

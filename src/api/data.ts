@@ -1,4 +1,13 @@
 
+export interface GetBlockResponse {
+  block: string
+  encoding: string
+}
+
+export interface GetHeightResponse {
+  height: number
+}
+
 export interface GetUTXOsResponse {
   numFetched: number
   utxos: string[]

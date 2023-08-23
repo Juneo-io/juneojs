@@ -16,6 +16,11 @@ async function main () {
     // the time to end the delegation with start time is staking period
     // staking period has a minimal and maximal value
     const endTime: bigint = now() + BigInt(86400 * 15)
+    // getting an estimation for the expected reward of a validation
+    const validationReward: bigint = manager.estimateValidationReward(endTime - startTime, stakeAmount)
+    // the expected reward of a delegation returns the amount perceived by the delegator
+    // which is the same reward as the validation but with the delegation fee of the validator deducted
+    const delegationReward: bigint = manager.estimateDelegationReward(endTime - startTime, stakeAmount)
     // estimating the fee
     const fee: FeeData = await manager.estimateDelegationFee()
     // we can display those fee and optionnaly use them to execute the staking

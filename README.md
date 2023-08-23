@@ -15,3 +15,5 @@ JuneoJS can be installed via npm:
 `npm i juneojs`
 
 ## Usage
+
+For usage you can currently see the examples folder. Documentation for the library is planned to be released later.

@@ -4,7 +4,7 @@ import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
 import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address, AssetIdSize } from '../types'
 import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
@@ -24,28 +24,21 @@ export enum PlatformTransactionStatus {
   Unknown = 'Unknown'
 }
 
-export class PlatformTransactionStatusFetcher {
+export class PlatformTransactionStatusFetcher implements TransactionStatusFetcher {
   platformApi: PlatformAPI
-  delay: number
   private attempts: number = 0
-  maxAttempts: number
   transactionId: string
   currentStatus: string = PlatformTransactionStatus.Unknown
 
-  constructor (platformApi: PlatformAPI, delay: number, maxAttempts: number, transactionId: string) {
+  constructor (platformApi: PlatformAPI, transactionId: string) {
     this.platformApi = platformApi
-    this.delay = delay
-    this.maxAttempts = maxAttempts
     this.transactionId = transactionId
   }
 
-  getAttemptsCount (): number {
-    return this.attempts
-  }
-
-  async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(this.delay)
+  async fetch (timeout: number): Promise<string> {
+    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
+      await sleep(TransactionStatusFetchDelay)
       this.currentStatus = (await this.platformApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }

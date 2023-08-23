@@ -25,8 +25,6 @@ export interface Blockchain {
 
   validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>
 
-  queryBalance: (provider: MCNProvider, address: string, assetId: string) => Promise<bigint>
-
   queryBaseFee: (provider: MCNProvider) => Promise<bigint>
 }
 
@@ -67,8 +65,6 @@ export abstract class AbstractBlockchain implements Blockchain {
   abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
 
   abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
-
-  abstract queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint>
 }
 
 export class PlatformBlockchain extends AbstractBlockchain implements Crossable {
@@ -82,11 +78,6 @@ export class PlatformBlockchain extends AbstractBlockchain implements Crossable 
 
   async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
-  }
-
-  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
-    const balance: number = (await provider.platform.getBalance([address])).balances[assetId]
-    return balance === undefined ? BigInt(0) : BigInt(balance)
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
@@ -117,10 +108,6 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
   async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
-  }
-
-  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
-    return BigInt((await provider.jvm.getBalance(address, assetId)).balance)
   }
 
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
@@ -218,11 +205,6 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     }
     const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
     return contract !== null
-  }
-
-  async queryBalance (provider: MCNProvider, address: string, assetId: string): Promise<bigint> {
-    const api: JEVMAPI = provider.jevm[this.id]
-    return await this.queryEVMBalance(api, address, assetId)
   }
 
   async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {

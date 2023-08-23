@@ -1,5 +1,5 @@
 import { type MCNProvider } from '../juneo'
-import { type MCNOperation, MCNOperationType } from './operation'
+import { type MCNOperation, MCNOperationType, MCNOperationSummary } from './operation'
 import { NodeId } from '../transaction/types'
 import { fetchUtxos, type Utxo } from '../transaction/utxo'
 import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
@@ -8,15 +8,11 @@ import { FeeData, FeeType } from '../transaction/fee'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
+import { type PlatformBlockchain } from '../chain'
 
 const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
 const DelegationShare: number = BaseShare - ValidationShare
-
-export enum StakeTransaction {
-  PrimaryDelegation = 'Primary delegation',
-  PrimaryValidation = 'Primary validation'
-}
 
 export class StakeManager {
   private readonly provider: MCNProvider
@@ -64,7 +60,9 @@ export class StakeManager {
       utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       this.api.chain.assetId, ValidationShare, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
     ).signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addValidatorTransaction)).txID
+    return (await this.api.issueTx(addValidatorTransaction).catch(error => {
+      throw error
+    })).txID
   }
 
   async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
@@ -79,7 +77,9 @@ export class StakeManager {
       utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       this.api.chain.assetId, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
     ).signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addDelegatorTransaction)).txID
+    return (await this.api.issueTx(addDelegatorTransaction).catch(error => {
+      throw error
+    })).txID
   }
 }
 
@@ -108,5 +108,14 @@ export class ValidateOperation extends Staking {
 export class DelegateOperation extends Staking {
   constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
     super(MCNOperationType.Delegate, nodeId, amount, startTime, endTime)
+  }
+}
+
+export class StakingOperationSummary extends MCNOperationSummary {
+  potentialReward: bigint
+
+  constructor (operation: Staking, chain: PlatformBlockchain, fees: FeeData[], potentialReward: bigint) {
+    super(operation, chain, fees)
+    this.potentialReward = potentialReward
   }
 }

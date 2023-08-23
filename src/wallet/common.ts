@@ -3,8 +3,7 @@ import { EVMFeeData } from './fee'
 import { type JEVMAPI } from '../api'
 import { type FeeType } from '../transaction'
 
-export const WalletStatusFetcherDelay: number = 100
-export const WalletStatusFetcherMaxAttempts: number = 600
+export const WalletStatusFetcherTimeout: number = 60000
 
 export enum TransactionType {
   Base = 'Base transaction',
@@ -15,8 +14,8 @@ export enum TransactionType {
   Deposit = 'Deposit transaction',
   Wrap = 'Wrap transaction',
   Unwrap = 'Unwrap transaction',
-  Validate = 'Validate transaction',
-  Delegate = 'Delegate transaction'
+  PrimaryValidation = 'Primary validation',
+  PrimaryDelegation = 'Primary delegation',
 }
 
 export class TransactionReceipt {

@@ -2,34 +2,6 @@
 /**
  * @deprecated
  */
-export interface GetPlatformBalanceResponse {
-  balance: number
-  balances: Record<string, number>
-  unlocked: number
-  unlockeds: Record<string, number>
-  lockedStakeable: number
-  lockedStakeables: Record<string, number>
-  lockedNotStakeable: number
-  lockedNotStakeables: Record<string, number>
-  utxoIDs: UtxoID[]
-}
-
-/**
- * @deprecated
- */
-export interface UtxoID {
-  txID: string
-  outputIndex: number
-}
-
-export interface GetBlockResponse {
-  block: string
-  encoding: string
-}
-
-/**
- * @deprecated
- */
 export interface GetBlockchainsResponse {
   blockchains: BlockchainData[]
 }
@@ -97,17 +69,6 @@ export interface DelegatorData {
   potentialReward: string
 }
 
-export interface GetHeightResponse {
-  height: number
-}
-
-/**
- * @deprecated
- */
-export interface GetMaxStakeAmountResponse {
-  amount: number
-}
-
 export interface GetMinStakeResponse {
   minValidatorStake: number
   minDelegatorStake: number
@@ -136,25 +97,6 @@ export interface PendingDelegator {
   endTime: string
   stakeAmount: string
   nodeID: string
-}
-
-/**
- * @deprecated
- */
-export interface GetRewardUTXOsResponse {
-  numFetched: number
-  utxos: string[]
-  encoding: string
-}
-
-/**
- * @deprecated
- */
-export interface GetStakeResponse {
-  staked: number
-  stakeds: Record<string, number>
-  stakedOutputs: string[]
-  encoding: string
 }
 
 export interface GetStakingAssetIDResponse {

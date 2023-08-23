@@ -5,7 +5,7 @@ import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput, type UserInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
-import { CodecId } from '../transaction'
+import { CodecId, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
 import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
 
 const ImportTransactionTypeId: number = 0
@@ -20,26 +20,19 @@ export enum JEVMTransactionStatus {
 
 export class JEVMTransactionStatusFetcher {
   jevmApi: JEVMAPI
-  delay: number
   private attempts: number = 0
-  maxAttempts: number
   transactionId: string
   currentStatus: string = JEVMTransactionStatus.Unknown
 
-  constructor (jevmApi: JEVMAPI, delay: number, maxAttempts: number, transactionId: string) {
+  constructor (jevmApi: JEVMAPI, transactionId: string) {
     this.jevmApi = jevmApi
-    this.delay = delay
-    this.maxAttempts = maxAttempts
     this.transactionId = transactionId
   }
 
-  getAttemptsCount (): number {
-    return this.attempts
-  }
-
-  async fetch (): Promise<string> {
-    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(this.delay)
+  async fetch (timeout: number): Promise<string> {
+    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
+      await sleep(TransactionStatusFetchDelay)
       this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
@@ -58,29 +51,22 @@ export enum EVMTransactionStatus {
   Unknown = 'Unknown'
 }
 
-export class EVMTransactionStatusFetcher {
+export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
   jevmApi: JEVMAPI
-  delay: number
   private attempts: number = 0
-  maxAttempts: number
   transactionHash: string
   currentStatus: string = EVMTransactionStatus.Unknown
 
-  constructor (jevmApi: JEVMAPI, delay: number, maxAttempts: number, transactionHash: string) {
+  constructor (jevmApi: JEVMAPI, transactionHash: string) {
     this.jevmApi = jevmApi
-    this.delay = delay
-    this.maxAttempts = maxAttempts
     this.transactionHash = transactionHash
   }
 
-  getAttemptsCount (): number {
-    return this.attempts
-  }
-
-  async fetch (): Promise<string> {
+  async fetch (timeout: number): Promise<string> {
+    const maxAttempts: number = timeout / TransactionStatusFetchDelay
     this.currentStatus = EVMTransactionStatus.Pending
-    while (this.attempts < this.maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(this.delay)
+    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
+      await sleep(TransactionStatusFetchDelay)
       const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
       if (receipt === null) {
         this.attempts += 1

@@ -6,6 +6,11 @@ import { type Signable, sign } from './signature'
 import { type BlockchainId, BlockchainIdSize } from './types'
 
 export const CodecId: number = 0
+export const TransactionStatusFetchDelay: number = 100
+
+export interface TransactionStatusFetcher {
+  fetch: (timeout: number) => Promise<string>
+}
 
 export interface UnsignedTransaction {
   codecId: number

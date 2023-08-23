@@ -3,9 +3,8 @@ import {
   EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, PlatformTransactionStatus,
   JVMTransactionStatus, JVMTransactionStatusFetcher
 } from '../transaction'
-import { type FeeData } from './fee'
 import { type PlatformAPI, type JEVMAPI, type JVMAPI } from '../api'
-import { TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending } from './common'
+import { type FeeData, TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending } from './transaction'
 
 export enum MCNOperationType {
   Send = 'Send',

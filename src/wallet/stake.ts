@@ -1,12 +1,11 @@
 import { type MCNProvider } from '../juneo'
 import { type MCNOperation, MCNOperationType, MCNOperationSummary } from './operation'
 import { NodeId, fetchUtxos, type Utxo, Validator, buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction'
-import { FeeData, FeeType } from './fee'
+import { type Spending, FeeData, FeeType } from './transaction'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
 import { type PlatformBlockchain } from '../chain'
-import { type Spending } from './common'
 
 const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%

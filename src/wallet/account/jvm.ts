@@ -1,7 +1,7 @@
 import { type JVMAPI } from '../../api'
 import { type JVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type FeeData } from '../../transaction'
+import { type FeeData } from '../fee'
 import { AccountError } from '../../utils'
 import { TransactionType } from '../common'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'

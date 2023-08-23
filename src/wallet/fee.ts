@@ -1,8 +1,33 @@
 import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { type UserInput, FeeType, FeeData } from '../transaction'
+import { type UserInput } from '../transaction'
 import { FeeError } from '../utils'
 import { type JuneoWallet, type JEVMWallet } from './wallet'
+
+export enum FeeType {
+  Undefined = 'Undefined',
+  BaseFee = 'Base fee',
+  ExportFee = 'Export fee',
+  ImportFee = 'Import fee',
+  Wrap = 'Wrap fee',
+  Unwrap = 'Unwrap fee',
+  ValidateFee = 'Validate fee',
+  DelegateFee = 'Delegate fee'
+}
+
+export class FeeData {
+  chain: Blockchain
+  amount: bigint
+  assetId: string
+  type: string
+
+  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined) {
+    this.chain = chain
+    this.amount = amount
+    this.assetId = assetId
+    this.type = type
+  }
+}
 
 export class EVMFeeData extends FeeData {
   gasPrice: bigint

@@ -3,6 +3,9 @@ import { type JEVMWallet, type JuneoWallet, type MCNProvider } from '../juneo'
 import { FeeError } from '../utils'
 import { type UserInput } from './input'
 
+/**
+ * @deprecated
+ */
 export enum FeeType {
   Undefined = 'Undefined',
   BaseFee = 'Base fee',
@@ -14,6 +17,9 @@ export enum FeeType {
   DelegateFee = 'Delegate fee'
 }
 
+/**
+ * @deprecated
+ */
 export class FeeData {
   chain: Blockchain
   amount: bigint

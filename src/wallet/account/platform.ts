@@ -1,7 +1,7 @@
 import { type PlatformAPI } from '../../api'
 import { type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type FeeData } from '../../transaction'
+import { type FeeData } from '../fee'
 import { AccountError } from '../../utils'
 import { TransactionType } from '../common'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType } from '../operation'

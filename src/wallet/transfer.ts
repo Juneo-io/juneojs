@@ -1,7 +1,7 @@
 import { type Blockchain, JVM_ID, isCrossable, type Crossable, PLATFORMVM_ID, type JVMBlockchain, type PlatformBlockchain, JEVM_ID, JEVMBlockchain, NativeAssetCallContract, type JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { TransactionReceipt, TransactionType, WalletStatusFetcherTimeout } from './common'
-import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, parseUtxoSet, type FeeData, calculateFee } from '../transaction'
+import { JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, parseUtxoSet } from '../transaction'
 import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
@@ -12,6 +12,7 @@ import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatu
 import { type ethers, type TransactionRequest } from 'ethers'
 import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
 import { JVMAccount, PlatformAccount } from './account'
+import { type FeeData, calculateFee } from './fee'
 
 export enum TransferStatus {
   Initializing = 'Initializing',

@@ -4,10 +4,10 @@ import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
 import { type Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
-import { type FeeData } from './fee'
+import { type TransactionFee } from './transaction'
 
 export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
-  signersAddresses: Address[], fees: FeeData[]): TransferableInput[] {
+  signersAddresses: Address[], fees: TransactionFee[]): TransferableInput[] {
   const targetAmounts: Record<string, bigint> = {}
   fees.forEach(fee => {
     if (fee.amount > 0) {
@@ -95,7 +95,7 @@ export function getSignersIndices (signers: Address[], addresses: Address[]): nu
 }
 
 export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[],
-  fee: FeeData, changeAddress: string): UserOutput[] {
+  fee: TransactionFee, changeAddress: string): UserOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
   spentAmounts[fee.assetId] = fee.amount

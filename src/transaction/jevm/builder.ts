@@ -1,13 +1,13 @@
-import { InputError, OutputError } from '../../utils/errors'
+import { InputError, OutputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
-import { FeeData } from '../fee'
 import { type Spendable, type TransferableInput, UserInput } from '../input'
 import { type UserOutput } from '../output'
+import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId } from '../types'
 import { type Utxo } from '../utxo'
 import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } from './transaction'
 
-export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: FeeData[]): EVMInput[] {
+export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: TransactionFee[]): EVMInput[] {
   const inputs: EVMInput[] = []
   const values: Record<string, bigint> = {}
   // merging inputs
@@ -37,7 +37,7 @@ export function buildTransactionEVMInputs (userInputs: UserInput[], signer: stri
   return inputs
 }
 
-export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: TransferableInput[], feeData: FeeData): EVMOutput[] {
+export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: TransferableInput[], feeData: TransactionFee): EVMOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
   spentAmounts[feeData.assetId] = feeData.amount
@@ -94,9 +94,9 @@ export function buildJEVMExportTransaction (userInputs: UserInput[], signer: str
       throw new InputError('jevm export transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const sourceFeeData: FeeData = new FeeData(userInputs[0].sourceChain, sourceFee)
-  const destinationFeeData: FeeData = new FeeData(userInputs[0].destinationChain, destinationFee)
-  const fees: FeeData[] = [sourceFeeData, destinationFeeData]
+  const sourceFeeData: TransactionFee = new TransactionFee(userInputs[0].sourceChain, sourceFee)
+  const destinationFeeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, destinationFee)
+  const fees: TransactionFee[] = [sourceFeeData, destinationFeeData]
   const inputs: EVMInput[] = buildTransactionEVMInputs(userInputs, signer, nonce, fees)
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
@@ -138,7 +138,7 @@ export function buildJEVMImportTransaction (userInputs: UserInput[], utxoSet: Ut
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
   })
-  const feeData: FeeData = new FeeData(userInputs[0].destinationChain, fee)
+  const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
   const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData])
   const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData)
   return new JEVMImportTransaction(

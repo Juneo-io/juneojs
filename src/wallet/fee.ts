@@ -40,7 +40,7 @@ export class EVMFeeData extends FeeData {
   }
 }
 
-export async function estimateOperation (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
+export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
     return await calculateIntraChainTransferFee(provider, wallet, source, inputs)
   }

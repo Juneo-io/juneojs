@@ -1,6 +1,6 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { MCNProvider } from '../../juneo'
+import { type MCNProvider } from '../../juneo'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
 import { AccountError } from '../../utils'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType, MCNOperationStatus } from '../operation'

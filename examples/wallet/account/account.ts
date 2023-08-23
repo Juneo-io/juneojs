@@ -24,12 +24,12 @@ async function main () {
     console.log(balance.getReadableValueRounded(6))
 
     // if you only want one account you can instantiate it with chain accounts
-    const jvmAccount: JVMAccount = new JVMAccount(provider.jvm, wallet)
+    const jvmAccount: JVMAccount = new JVMAccount(provider, wallet)
     const customMasterAccount: MCNAccount = new MCNAccount([jvmAccount])
     // note that the JVM-Chain and Platform-Chain are both utxo accounts
     // and EVM chains are using nonce accounts
     const juneChain: JEVMBlockchain = SocotraJUNEChain
-    const juneAccount: EVMAccount = new EVMAccount(provider.jevm[juneChain.id], wallet)
+    const juneAccount: EVMAccount = new EVMAccount(provider, juneChain.id, wallet)
     // in utxo accounts you do not need to register assets but for nonce accounts
     // if you want to keep track of the balance of an ERC20 for example you need
     // to register them manually before fetching the balances using registerAssets

@@ -1,14 +1,12 @@
 import { type MCNProvider } from '../juneo'
 import { type MCNOperation, MCNOperationType, MCNOperationSummary } from './operation'
-import { NodeId } from '../transaction/types'
-import { fetchUtxos, type Utxo } from '../transaction/utxo'
-import { buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction/platform/builder'
-import { Validator } from '../transaction/platform/validation'
+import { NodeId, fetchUtxos, type Utxo, Validator, buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction'
 import { FeeData, FeeType } from './fee'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
 import { type PlatformBlockchain } from '../chain'
+import { type Spending } from './common'
 
 const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
@@ -114,8 +112,8 @@ export class DelegateOperation extends Staking {
 export class StakingOperationSummary extends MCNOperationSummary {
   potentialReward: bigint
 
-  constructor (operation: Staking, chain: PlatformBlockchain, fees: FeeData[], potentialReward: bigint) {
-    super(operation, chain, fees)
+  constructor (operation: Staking, chain: PlatformBlockchain, fees: FeeData[], spendings: Spending[], potentialReward: bigint) {
+    super(operation, chain, fees, spendings)
     this.potentialReward = potentialReward
   }
 }

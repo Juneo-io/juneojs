@@ -3,7 +3,7 @@ import { type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type FeeData } from '../fee'
 import { AccountError } from '../../utils'
-import { TransactionType } from '../common'
+import { Spending, TransactionType } from '../common'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType } from '../operation'
 import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation } from '../stake'
 import { type JuneoWallet } from '../wallet'
@@ -27,13 +27,13 @@ export class PlatformAccount extends UtxoAccount {
       const fee: FeeData = await this.stakeManager.estimateValidationFee()
       const stakePeriod: bigint = staking.endTime - staking.startTime
       const potentialReward: bigint = this.stakeManager.estimateValidationReward(stakePeriod, staking.amount)
-      return new StakingOperationSummary(staking, this.chain, [fee], potentialReward)
+      return new StakingOperationSummary(staking, this.chain, [fee], [new Spending(this.chain.id, staking.amount, this.chain.assetId), fee], potentialReward)
     } else if (operation.type === MCNOperationType.Delegate) {
       const staking: DelegateOperation = operation as DelegateOperation
       const fee: FeeData = await this.stakeManager.estimateDelegationFee()
       const stakePeriod: bigint = staking.endTime - staking.startTime
       const potentialReward: bigint = this.stakeManager.estimateDelegationReward(stakePeriod, staking.amount)
-      return new StakingOperationSummary(staking, this.chain, [fee], potentialReward)
+      return new StakingOperationSummary(staking, this.chain, [fee], [new Spending(this.chain.id, staking.amount, this.chain.assetId), fee], potentialReward)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }

@@ -3,6 +3,7 @@ import { type MCNProvider } from '../juneo'
 import { type UserInput } from '../transaction'
 import { FeeError } from '../utils'
 import { type JuneoWallet, type JEVMWallet } from './wallet'
+import { Spending } from './common'
 
 export enum FeeType {
   Undefined = 'Undefined',
@@ -15,16 +16,13 @@ export enum FeeType {
   DelegateFee = 'Delegate fee'
 }
 
-export class FeeData {
+export class FeeData extends Spending {
   chain: Blockchain
-  amount: bigint
-  assetId: string
   type: string
 
-  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined) {
+  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string) {
+    super(chain.id, amount, assetId)
     this.chain = chain
-    this.amount = amount
-    this.assetId = assetId
     this.type = type
   }
 }
@@ -33,7 +31,7 @@ export class EVMFeeData extends FeeData {
   gasPrice: bigint
   gasLimit: bigint
 
-  constructor (chain: Blockchain, amount: bigint, assetId: string = chain.assetId, type: string = FeeType.Undefined, gasPrice: bigint, gasLimit: bigint) {
+  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string, gasPrice: bigint, gasLimit: bigint) {
     super(chain, amount, assetId, type)
     this.gasPrice = gasPrice
     this.gasLimit = gasLimit

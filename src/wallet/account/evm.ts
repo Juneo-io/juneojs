@@ -2,7 +2,7 @@ import { type JEVMAPI } from '../../api'
 import { type JEVMBlockchain, type TokenAsset } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
-import { TransactionType } from '../common'
+import { Spending, TransactionType } from '../common'
 import { type FeeData, type EVMFeeData } from '../fee'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
@@ -35,15 +35,15 @@ export class EVMAccount extends AbstractAccount {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
-      return new MCNOperationSummary(operation, this.chain, [fee])
+      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation
       const fee: FeeData = await this.wrapManager.estimateWrapFee(wrapping.asset, wrapping.amount)
-      return new MCNOperationSummary(operation, this.chain, [fee])
+      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, wrapping.amount, wrapping.asset.assetId), fee])
     } else if (operation.type === MCNOperationType.Unwrap) {
       const wrapping: UnwrapOperation = operation as UnwrapOperation
       const fee: FeeData = await this.wrapManager.estimateUnwrapFee(wrapping.asset, wrapping.amount)
-      return new MCNOperationSummary(operation, this.chain, [fee])
+      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, wrapping.amount, wrapping.asset.assetId), fee])
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }

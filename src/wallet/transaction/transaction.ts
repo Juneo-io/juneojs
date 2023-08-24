@@ -17,12 +17,14 @@ export enum TransactionType {
 export class TransactionReceipt {
   chainId: string
   transactionType: string
-  transactionId: string | undefined
-  transactionStatus: string | undefined
+  transactionStatus: string
+  transactionId: string
 
-  constructor (chainId: string, transactionType: string) {
+  constructor (chainId: string, transactionType: string, transactionStatus: string, transactionId: string) {
     this.chainId = chainId
+    this.transactionStatus = transactionStatus
     this.transactionType = transactionType
+    this.transactionId = transactionId
   }
 }
 

@@ -221,7 +221,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const utxoSet: Utxo[] = await fetchUtxos(provider.jvm, senders)
     const fee: bigint = await transfer.sourceChain.queryBaseFee(provider)
     const chainId: string = transfer.sourceChain.id
-    const receipt: TransactionReceipt = new TransactionReceipt(chainId, TransactionType.Base)
+    const receipt: TransactionReceipt = new TransactionReceipt(chainId, TransactionType.Base, '???', '???')
     this.receipts.push(receipt)
     const transaction: string = jvm.buildJVMBaseTransaction(
       transfer.userInputs, utxoSet, senders, fee,
@@ -249,7 +249,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const gasPrice: bigint = await api.eth_baseFee()
     this.status = TransferStatus.Sending
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
-      const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Send)
+      const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Send, '???', '???')
       this.receipts.push(receipt)
       const input: UserInput = transfer.userInputs[i]
       const isContract: boolean = JEVMBlockchain.isContractAddress(input.assetId)
@@ -327,7 +327,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
+    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export, '???', '???')
     this.receipts.push(receipt)
     const exportTransaction: string = jvm.buildJVMExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
@@ -362,7 +362,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
+    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export, '???', '???')
     this.receipts.push(receipt)
     const exportTransaction: string = platform.buildPlatformExportTransaction(
       transfer.userInputs, utxoSet, senders, transfer.signer.getAddress(destinationChain),
@@ -424,7 +424,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         withdrawAmount += importFee
         destinationFee += importFee
       }
-      const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Withdraw)
+      const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Withdraw, '???', '???')
       this.receipts.push(receipt)
       const jrc20: JRC20ContractAdapter = contract
       const data: string = jrc20.getWithdrawData(input.assetId, withdrawAmount)
@@ -467,7 +467,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       const sourceBalance: bigint = await sourceChain.queryEVMBalance(api, wallet.getHexAddress(), destinationChain.assetId)
       exportingFee = sourceBalance >= importFee
     }
-    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export)
+    const receipt: TransactionReceipt = new TransactionReceipt(sourceChain.id, TransactionType.Export, '???', '???')
     this.receipts.push(receipt)
     const exportTransaction: string = jevm.buildJEVMExportTransaction(
       transfer.userInputs, wallet.getHexAddress(), nonce, transfer.signer.getAddress(destinationChain),
@@ -531,7 +531,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const utxos: Utxo[] = await fetchUtxos(provider.platform, [wallet.getAddress()])
     // put import utxos first to priorize usage of imported inputs
     const utxoSet: Utxo[] = importUtxo.concat(utxos)
-    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import, '???', '???')
     this.receipts.push(receipt)
     const importTransaction: string = platform.buildPlatformImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
@@ -551,7 +551,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const importUtxo: Utxo[] = await fetchUtxos(provider.jvm, [wallet.getAddress()], sourceChain.id)
     // put import utxos first to priorize usage of imported inputs
     const utxoSet: Utxo[] = importUtxo.concat(utxos)
-    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import)
+    const receipt: TransactionReceipt = new TransactionReceipt(transfer.destinationChain.id, TransactionType.Import, '???', '???')
     this.receipts.push(receipt)
     const importTransaction: string = jvm.buildJVMImportTransaction(
       transfer.userInputs, utxoSet, [wallet.getAddress()],
@@ -570,7 +570,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const sourceChain: Blockchain = transfer.sourceChain
     const api: JEVMAPI = provider.jevm[evmChain.id]
     const utxoSet: Utxo[] = await fetchUtxos(api, [wallet.getAddress()], sourceChain.id)
-    const importReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import)
+    const importReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Import, '???', '???')
     this.receipts.push(importReceipt)
     const fixedUserInputs: UserInput[] = []
     for (let i = 0; i < transfer.userInputs.length; i++) {
@@ -615,7 +615,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         if (contract === null || !(contract instanceof JRC20ContractAdapter)) {
           return false
         }
-        const depositReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Deposit)
+        const depositReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Deposit, '???', '???')
         this.receipts.push(depositReceipt)
         const jrc20: JRC20ContractAdapter = contract
         const data: string = jrc20.getDepositData(contractAddress, input.assetId, input.amount)
@@ -645,7 +645,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
         }
         // if we need to transfer the JRC20 to another destination than the sender
         if (input.address !== wallet.getHexAddress()) {
-          const transferReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Send)
+          const transferReceipt: TransactionReceipt = new TransactionReceipt(evmChain.id, TransactionType.Send, '???', '???')
           this.receipts.push(transferReceipt)
           const gasLimit: bigint = await evmChain.estimateGasLimit(contractAddress, wallet.getHexAddress(), input.address, input.amount)
           const transactionData: TransactionRequest = {

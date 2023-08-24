@@ -37,12 +37,12 @@ export class StakeManager {
 
   async estimateValidationFee (): Promise<FeeData> {
     const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkValidatorFee)
-    return new FeeData(this.api.chain, fee, this.api.chain.assetId, FeeType.ValidateFee)
+    return new FeeData(this.api.chain, fee, FeeType.ValidateFee)
   }
 
   async estimateDelegationFee (): Promise<FeeData> {
     const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkDelegatorFee)
-    return new FeeData(this.api.chain, fee, this.api.chain.assetId, FeeType.DelegateFee)
+    return new FeeData(this.api.chain, fee, FeeType.DelegateFee)
   }
 
   async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {

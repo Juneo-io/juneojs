@@ -30,7 +30,7 @@ export async function estimateEVMTransaction (api: JEVMAPI, sender: string, addr
   }).catch(error => {
     throw error
   })
-  return new EVMFeeData(api.chain, gasPrice * gasLimit, address, type, gasPrice, gasLimit)
+  return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit)
 }
 
 export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, transactionData: EVMTransactionData): Promise<string> {

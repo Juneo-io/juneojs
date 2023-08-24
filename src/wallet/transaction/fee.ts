@@ -1,4 +1,4 @@
-import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain } from '../../chain'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain, type AssetValue } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type UserInput } from '../../transaction'
 import { FeeError } from '../../utils'
@@ -20,10 +20,14 @@ export class FeeData extends Spending {
   chain: Blockchain
   type: string
 
-  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string) {
-    super(chain.id, amount, assetId)
+  constructor (chain: Blockchain, amount: bigint, type: string) {
+    super(chain.id, amount, chain.assetId)
     this.chain = chain
     this.type = type
+  }
+
+  getAssetValue (): AssetValue {
+    return this.chain.asset.getAssetValue(this.amount)
   }
 }
 
@@ -31,8 +35,8 @@ export class EVMFeeData extends FeeData {
   gasPrice: bigint
   gasLimit: bigint
 
-  constructor (chain: Blockchain, amount: bigint, assetId: string, type: string, gasPrice: bigint, gasLimit: bigint) {
-    super(chain, amount, assetId, type)
+  constructor (chain: Blockchain, amount: bigint, type: string, gasPrice: bigint, gasLimit: bigint) {
+    super(chain, amount, type)
     this.gasPrice = gasPrice
     this.gasLimit = gasLimit
   }
@@ -56,7 +60,7 @@ async function calculateIntraChainTransferFee (provider: MCNProvider, wallet: Ju
     }
     txFee = gasTxFee
   }
-  return [new FeeData(chain, txFee, chain.assetId, FeeType.BaseFee)]
+  return [new FeeData(chain, txFee, FeeType.BaseFee)]
 }
 
 async function calculateInterChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
@@ -67,14 +71,14 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
   const destinationChain: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
   const fees: FeeData[] = []
   const exportFee: bigint = await sourceChain.queryExportFee(provider, inputs, destination.assetId)
-  fees.push(new FeeData(source, exportFee, source.assetId, FeeType.ExportFee))
+  fees.push(new FeeData(source, exportFee, FeeType.ExportFee))
   const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
   if (requiresProxy) {
     const jvmChain: JVMBlockchain = provider.jvm.chain
-    fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), jvmChain.assetId, FeeType.ImportFee))
-    fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), jvmChain.assetId, FeeType.ExportFee))
+    fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), FeeType.ImportFee))
+    fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), FeeType.ExportFee))
   }
   const importFee: bigint = await destinationChain.queryImportFee(provider, inputs)
-  fees.push(new FeeData(destination, importFee, destination.assetId, FeeType.ImportFee))
+  fees.push(new FeeData(destination, importFee, FeeType.ImportFee))
   return fees
 }

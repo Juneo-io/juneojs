@@ -1,11 +1,11 @@
 import { JuneoWallet, MCNProvider, CreateSupernetTransaction, Utxo,
-    buildCreateSupernetTransaction, parseUtxoSet } from '../../src'
+    buildCreateSupernetTransaction, fetchUtxos } from '../../src'
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()
     const masterWallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     const sendersAddresses: string[] = [masterWallet.getAddress(provider.platform.chain)]
-    const utxoSet: Utxo[] = parseUtxoSet(await provider.platform.getUTXOs(sendersAddresses))
+    const utxoSet: Utxo[] = await fetchUtxos(provider.platform, sendersAddresses)
     const fee: number = (await provider.getFees()).createSupernetTxFee
     const createSupernetTx: CreateSupernetTransaction = buildCreateSupernetTransaction(
         utxoSet, sendersAddresses, BigInt(fee), provider.platform.chain,

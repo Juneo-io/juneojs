@@ -37,17 +37,6 @@ export async function fetchUtxos (utxoApi: AbstractUtxoAPI, addresses: string[],
   return utxos
 }
 
-export function parseUtxoSet (data: GetUTXOsResponse, sourceChain?: string): Utxo[] {
-  const utxos: string[] = data.utxos
-  const utxoSet: Utxo[] = []
-  utxos.forEach(next => {
-    const utxo: Utxo = Utxo.parse(next)
-    utxo.sourceChain = sourceChain
-    utxoSet.push(utxo)
-  })
-  return utxoSet
-}
-
 export class Utxo {
   transactionId: TransactionId
   utxoIndex: number

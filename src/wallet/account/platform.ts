@@ -44,9 +44,7 @@ export class PlatformAccount extends UtxoAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionId: string = await this.stakeManager.validate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
-        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryValidation, transactionId).catch(error => {
-          throw error
-        })
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryValidation, transactionId)
         if (!success) {
           break
         }
@@ -56,9 +54,7 @@ export class PlatformAccount extends UtxoAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionId: string = await this.stakeManager.delegate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i], this.utxoSet)
-        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryDelegation, transactionId).catch(error => {
-          throw error
-        })
+        const success: boolean = await executable.addTrackedPlatformTransaction(this.api, TransactionType.PrimaryDelegation, transactionId)
         if (!success) {
           break
         }

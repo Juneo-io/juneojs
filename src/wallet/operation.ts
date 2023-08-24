@@ -45,10 +45,8 @@ export class ExecutableMCNOperation {
   }
 
   async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type)
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, EVMTransactionStatus.Pending, transactionHash)
     this.receipts.push(receipt)
-    receipt.transactionId = transactionHash
-    receipt.transactionStatus = EVMTransactionStatus.Unknown
     const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash)
       .fetch(WalletStatusFetcherTimeout)
       .catch(error => {
@@ -65,10 +63,8 @@ export class ExecutableMCNOperation {
   }
 
   async addTrackedPlatformTransaction (api: PlatformAPI, type: TransactionType, transactionId: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type)
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, PlatformTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
-    receipt.transactionId = transactionId
-    receipt.transactionStatus = PlatformTransactionStatus.Unknown
     const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId)
       .fetch(WalletStatusFetcherTimeout)
       .catch(error => {
@@ -85,10 +81,8 @@ export class ExecutableMCNOperation {
   }
 
   async addTrackedJVMTransaction (api: JVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type)
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JVMTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
-    receipt.transactionId = transactionId
-    receipt.transactionStatus = JVMTransactionStatus.Unknown
     const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId)
       .fetch(WalletStatusFetcherTimeout)
       .catch(error => {

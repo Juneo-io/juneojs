@@ -31,17 +31,6 @@ export class FeeData extends Spending {
   }
 }
 
-export class EVMFeeData extends FeeData {
-  gasPrice: bigint
-  gasLimit: bigint
-
-  constructor (chain: Blockchain, amount: bigint, type: string, gasPrice: bigint, gasLimit: bigint) {
-    super(chain, amount, type)
-    this.gasPrice = gasPrice
-    this.gasLimit = gasLimit
-  }
-}
-
 export async function calculateFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
   if (source.id === destination.id) {
     return await calculateIntraChainTransferFee(provider, wallet, source, inputs)

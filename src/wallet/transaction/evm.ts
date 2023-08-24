@@ -1,53 +1,62 @@
 import { type ethers } from 'ethers'
-import { type FeeType, EVMFeeData } from './fee'
+import { FeeData, type FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
+import { JEVMBlockchain } from '../../chain'
 
 export class EVMTransactionData {
-  address: string
-  amount: bigint
-  fee: EVMFeeData
+  from: string
+  to: string
+  value: bigint
   data: string
 
-  constructor (address: string, amount: bigint, fee: EVMFeeData, data: string) {
-    this.address = address
-    this.amount = amount
-    this.fee = fee
+  constructor (from: string, to: string, value: bigint, data: string) {
+    this.from = from
+    this.to = to
+    this.value = value
     this.data = data
   }
 }
 
-export async function estimateEVMTransaction (api: JEVMAPI, sender: string, address: string, amount: bigint, data: string, type: FeeType): Promise<EVMFeeData> {
-  const gasPrice: bigint = await api.eth_baseFee().catch(error => {
-    throw error
-  })
-  const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
-    from: sender,
-    to: address,
-    value: BigInt(amount),
-    chainId: api.chain.chainId,
-    gasPrice,
-    data
-  }).catch(error => {
-    throw error
-  })
-  return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit)
+export class EVMFeeData extends FeeData {
+  gasPrice: bigint
+  gasLimit: bigint
+  data: EVMTransactionData
+
+  constructor (chain: JEVMBlockchain, amount: bigint, type: string, gasPrice: bigint, gasLimit: bigint, data: EVMTransactionData) {
+    super(chain, amount, type)
+    this.gasPrice = gasPrice
+    this.gasLimit = gasLimit
+    this.data = data
+  }
 }
 
-export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, transactionData: EVMTransactionData): Promise<string> {
-  let nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'latest').catch(error => {
-    throw error
-  })
+export async function estimateEVMTransaction (api: JEVMAPI, assetId: string, from: string, to: string, value: bigint, data: string, type: FeeType): Promise<EVMFeeData> {
+  const gasPrice: bigint = await api.eth_baseFee()
+  const gasLimit: bigint = assetId === api.chain.assetId
+    ? JEVMBlockchain.SendEtherGasLimit
+    : await api.chain.ethProvider.estimateGas({
+      from,
+      to,
+      value,
+      chainId: api.chain.chainId,
+      gasPrice,
+      data
+    })
+  const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
+  return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+}
+
+export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, feeData: EVMFeeData): Promise<string> {
+  let nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'pending')
   const transaction: string = await wallet.signTransaction({
     from: wallet.address,
-    to: transactionData.address,
-    value: transactionData.amount,
+    to: feeData.data.to,
+    value: feeData.data.value,
     nonce: Number(nonce++),
     chainId: api.chain.chainId,
-    gasLimit: transactionData.fee.gasLimit,
-    gasPrice: transactionData.fee.gasPrice,
-    data: transactionData.data
+    gasLimit: feeData.gasLimit,
+    gasPrice: feeData.gasPrice,
+    data: feeData.data.data
   })
-  return await api.eth_sendRawTransaction(transaction).catch(error => {
-    throw error
-  })
+  return await api.eth_sendRawTransaction(transaction)
 }

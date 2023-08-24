@@ -28,17 +28,13 @@ export class MCNAccount {
       throw new AccountError('unsupported operation')
     }
     const account: ChainAccount = this.getAccount(chainId)
-    return await account.estimate(operation).catch(error => {
-      throw error
-    })
+    return await account.estimate(operation)
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     executable.status = MCNOperationStatus.Executing
     const account: ChainAccount = this.getAccount(executable.summary.chain.id)
-    await account.execute(executable).catch(error => {
-      throw error
-    })
+    await account.execute(executable)
     // the only case it is not executing is if an error happened in that case we do not change it
     if (executable.status === MCNOperationStatus.Executing) {
       executable.status = MCNOperationStatus.Done

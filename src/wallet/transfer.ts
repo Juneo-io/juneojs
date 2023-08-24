@@ -243,7 +243,7 @@ class IntraChainTransferHandler implements ExecutableTransferHandler {
     const ethProvider: ethers.JsonRpcProvider = chain.ethProvider
     const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
     const api: JEVMAPI = provider.jevm[chain.id]
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'pending')
     const gasPrice: bigint = await api.eth_baseFee()
     this.status = TransferStatus.Sending
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
@@ -385,7 +385,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     const destinationChain: Blockchain & Crossable = transfer.destinationChain as Blockchain & Crossable
     const wallet: JEVMWallet = transfer.signer.getWallet(sourceChain) as JEVMWallet
     const api: JEVMAPI = provider.jevm[sourceChain.id]
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'pending')
     const gasPrice: bigint = await api.eth_baseFee()
     let destinationFee: bigint = BigInt(0)
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
@@ -594,7 +594,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     }
     // checking if one of the imported assets has a jrc20 contract address
     // to move it out from shared memory and wrap it as an erc20 token
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'latest')
+    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'pending')
     const gasPrice: bigint = await api.eth_baseFee()
     for (let i: number = 0; i < transfer.userInputs.length; i++) {
       const input: UserInput = transfer.userInputs[i]

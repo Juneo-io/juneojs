@@ -210,11 +210,11 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
     // native asset
     if (assetId === this.assetId) {
-      return await api.eth_getBalance(address, 'latest')
+      return await api.eth_getBalance(address, 'pending')
     }
-    // shared memory asset
+    // jnt asset
     if (AssetId.validate(assetId)) {
-      return await api.eth_getAssetBalance(address, 'latest', assetId)
+      return await api.eth_getAssetBalance(address, 'pending', assetId)
     }
     // from here should only be solidity smart contract
     const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)

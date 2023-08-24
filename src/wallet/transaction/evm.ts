@@ -30,7 +30,7 @@ export async function estimateEVMTransaction (api: JEVMAPI, sender: string, addr
 }
 
 export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, transactionData: EVMTransactionData): Promise<string> {
-  let nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'latest')
+  let nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'pending')
   const transaction: string = await wallet.signTransaction({
     from: wallet.address,
     to: transactionData.address,

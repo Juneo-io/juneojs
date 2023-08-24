@@ -33,7 +33,9 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
+      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address).catch(error => {
+        throw error
+      })
       return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation

@@ -2,7 +2,7 @@ import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
 import { type JEVMWallet, type JuneoWallet } from './wallet'
 import { type JEVMBlockchain, type WrappedAsset } from '../chain'
-import { type EVMFeeData, FeeType, EVMTransactionData, estimateEVMTransaction, sendEVMTransaction } from './transaction'
+import { type EVMFeeData, FeeType, estimateEVMTransaction, sendEVMTransaction } from './transaction'
 import { type MCNOperation, MCNOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
 
@@ -22,13 +22,13 @@ export class WrapManager {
 
   async estimateWrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMTransaction(
-      this.api, this.wallet.address, asset.address, BigInt(amount), asset.adapter.getDepositData(), FeeType.Wrap
+      this.api, asset.assetId, this.wallet.address, asset.address, BigInt(amount), asset.adapter.getDepositData(), FeeType.Wrap
     )
   }
 
   async estimateUnwrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMTransaction(
-      this.api, this.wallet.address, asset.address, BigInt(0), asset.adapter.getWithdrawData(amount), FeeType.Unwrap
+      this.api, asset.assetId, this.wallet.address, asset.address, BigInt(0), asset.adapter.getWithdrawData(amount), FeeType.Unwrap
     )
   }
 
@@ -36,20 +36,14 @@ export class WrapManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateWrapFee(asset, amount)
     }
-    const transactionData: EVMTransactionData = new EVMTransactionData(
-      asset.address, amount, feeData, asset.adapter.getDepositData()
-    )
-    return await sendEVMTransaction(this.api, this.wallet, transactionData)
+    return await sendEVMTransaction(this.api, this.wallet, feeData)
   }
 
   async unwrap (asset: WrappedAsset, amount: bigint, feeData?: EVMFeeData): Promise<string> {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateUnwrapFee(asset, amount)
     }
-    const transactionData: EVMTransactionData = new EVMTransactionData(
-      asset.address, BigInt(0), feeData, asset.adapter.getWithdrawData(amount)
-    )
-    return await sendEVMTransaction(this.api, this.wallet, transactionData)
+    return await sendEVMTransaction(this.api, this.wallet, feeData)
   }
 }
 

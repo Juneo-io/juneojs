@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { EVMError, isHex, validateBech32 } from '../utils'
+import { ChainError, isHex, validateBech32 } from '../utils'
 import { type MCNProvider } from '../juneo'
 import { AssetId, type UserInput } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
@@ -20,6 +20,7 @@ export interface Blockchain {
   asset: TokenAsset
   assetId: string
   aliases: string[]
+  registeredAssets: TokenAsset[]
 
   validateAddress: (address: string, hrp?: string) => boolean
 
@@ -50,14 +51,30 @@ export abstract class AbstractBlockchain implements Blockchain {
   asset: TokenAsset
   assetId: string
   aliases: string[]
+  registeredAssets: TokenAsset[]
 
-  constructor (name: string, id: string, vmId: string, asset: TokenAsset, aliases: string[] = []) {
+  constructor (name: string, id: string, vmId: string, asset: TokenAsset, aliases: string[] = [], registeredAssets: TokenAsset[] = []) {
     this.name = name
     this.id = id
     this.vmId = vmId
     this.asset = asset
     this.assetId = asset.assetId
     this.aliases = aliases
+    this.registeredAssets = registeredAssets
+    this.registerAssets([asset])
+  }
+
+  registerAssets (assets: TokenAsset[]): void {
+    this.registeredAssets.push(...assets)
+  }
+
+  getAsset (assetId: string): TokenAsset {
+    this.registeredAssets.forEach(asset => {
+      if (assetId === asset.assetId) {
+        return asset
+      }
+    })
+    throw new ChainError(`unregistered asset id: ${assetId}`)
   }
 
   abstract validateAddress (address: string, hrp?: string): boolean
@@ -68,8 +85,8 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class PlatformBlockchain extends AbstractBlockchain implements Crossable {
-  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[]) {
-    super(name, id, PLATFORMVM_ID, asset, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
+    super(name, id, PLATFORMVM_ID, asset, aliases, registeredAssets)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -98,8 +115,8 @@ export class PlatformBlockchain extends AbstractBlockchain implements Crossable 
 }
 
 export class JVMBlockchain extends AbstractBlockchain implements Crossable {
-  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[]) {
-    super(name, id, JVM_ID, asset, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
+    super(name, id, JVM_ID, asset, aliases, registeredAssets)
   }
 
   validateAddress (address: string, hrp?: string): boolean {
@@ -152,8 +169,8 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, nodeAddress: string, aliases?: string[], jrc20Assets: JRC20Asset[] = []) {
-    super(name, id, JEVM_ID, asset, aliases)
+  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
+    super(name, id, JEVM_ID, asset, aliases, registeredAssets)
     this.chainId = chainId
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
@@ -163,6 +180,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     ])
   }
 
+  /**
+   * @deprecated
+   */
   async estimateGasLimit (assetId: string, from: string, to: string, amount: bigint): Promise<bigint> {
     if (assetId === this.assetId) {
       return JEVMBlockchain.SendEtherGasLimit
@@ -177,12 +197,13 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
         to: assetId,
         value: BigInt(0),
         data
-      }).catch(error => {
-        throw new EVMError(error.message)
       })
     }
   }
 
+  /**
+   * @deprecated
+   */
   async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
     const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
     if (contract === null) {
@@ -196,6 +217,9 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     return ethers.isAddress(address)
   }
 
+  /**
+   * @deprecated
+   */
   async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     if (assetId === this.assetId) {
       return true

@@ -39,6 +39,12 @@ export const SocotraXSGD1Asset: JNTAsset = new JNTAsset(SocotraXSGD1AssetId, 'XS
 export const SocotraETC1Asset: JNTAsset = new JNTAsset(SocotraETC1AssetId, 'ETC1', 'ETC1', 9, false)
 export const SocotraR1000Asset: JNTAsset = new JNTAsset(SocotraR1000AssetId, 'R1000', 'R1000', 9, false)
 export const SocotraR10Asset: JNTAsset = new JNTAsset(SocotraR10AssetId, 'R10', 'R10', 9, false)
+// JUNE is omitted here because it should be registered by default as the chain asset
+const jntAssets: JNTAsset[] = [
+  SocotraETH1Asset, SocotraMBTC1Asset, SocotraDOGE1Asset, SocotraUSDT1Asset, SocotraDAI1Asset,
+  SocotraEUROC1Asset, SocotraLTC1Asset, SocotraXLM1Asset, SocotraBCH1Asset, SocotraPAXG1Asset,
+  SocotraXSGD1Asset, SocotraETC1Asset, SocotraR1000Asset, SocotraR10Asset
+]
 
 export const SocotraJUNEGasToken: EVMGasToken = new EVMGasToken(SocotraJUNEAssetId, 'JUNE', 'JUNE')
 export const SocotraETH1GasToken: EVMGasToken = new EVMGasToken(SocotraETH1AssetId, 'ETH1', 'ETH1')
@@ -57,31 +63,34 @@ export const SocotraR1000GasToken: EVMGasToken = new EVMGasToken(SocotraR1000Ass
 export const SocotraR10GasToken: EVMGasToken = new EVMGasToken(SocotraR10AssetId, 'R10', 'R10')
 
 export const SocotraPlatformChain: PlatformBlockchain = new PlatformBlockchain(
-  'Platform-Chain', '11111111111111111111111111111111LpoYY', SocotraJUNEAsset, ['P']
+  'Platform-Chain', '11111111111111111111111111111111LpoYY', SocotraJUNEAsset, ['P'], jntAssets
 )
 export const SocotraJVMChain: JVMBlockchain = new JVMBlockchain(
-  'JVM-Chain', '2RyfCyJ6ieAtwVpUD8a3Yb9fUbGLabQr8RBUEyDeStUAPfjNL6', SocotraJUNEAsset, ['JVM']
+  'JVM-Chain', '2RyfCyJ6ieAtwVpUD8a3Yb9fUbGLabQr8RBUEyDeStUAPfjNL6', SocotraJUNEAsset, ['JVM'], jntAssets
 )
+const jrc20Assets: JRC20Asset[] = [
+  new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Ethereum.e', 'ETH.e', 9, SocotraETH1AssetId),
+  new JRC20Asset('0x2e00000000000000000000000000000000000000', 'mBitcoin.a', 'mBTC.a', 9, SocotraMBTC1AssetId),
+  new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Doge.b', 'DOGE.b', 9, SocotraDOGE1AssetId),
+  new JRC20Asset('0x3100000000000000000000000000000000000000', 'Tether USD.e', 'USDT.e', 9, SocotraUSDT1AssetId),
+  new JRC20Asset('0x3200000000000000000000000000000000000000', 'Dai.e', 'DAI.e', 9, SocotraDAI1AssetId),
+  new JRC20Asset('0x3300000000000000000000000000000000000000', 'Euro Coin.e', 'EUROC.e', 9, SocotraEUROC1AssetId),
+  new JRC20Asset('0x3400000000000000000000000000000000000000', 'Litecoin.b', 'LTC.b', 9, SocotraLTC1AssetId),
+  new JRC20Asset('0x3500000000000000000000000000000000000000', 'Stellar.x', 'XLM.x', 9, SocotraXLM1AssetId),
+  new JRC20Asset('0x3600000000000000000000000000000000000000', 'Bitcoin Cash.b', 'BCH.b', 9, SocotraBCH1AssetId),
+  new JRC20Asset('0x3700000000000000000000000000000000000000', 'Pax Gold.e', 'PAXG.e', 9, SocotraPAXG1AssetId),
+  new JRC20Asset('0x3a00000000000000000000000000000000000000', 'XSGD.e', 'XSGD.e', 9, SocotraXSGD1AssetId),
+  new JRC20Asset('0x3b00000000000000000000000000000000000000', 'Ethereum Classic.x', 'ETC.x', 9, SocotraETC1AssetId),
+  new JRC20Asset('0x3c00000000000000000000000000000000000000', 'R1000.a', 'R1000.a', 9, SocotraR1000AssetId),
+  new JRC20Asset('0x3d00000000000000000000000000000000000000', 'R10.a', 'R10.a', 9, SocotraR10AssetId)
+]
+export const SocotraWJUNEAsset: WrappedAsset = new WrappedAsset('0x333e51E9908dcF4Ae79250757ecC3faa21f24554', 'Wrapped JUNE', 'wJUNE', 18)
 export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain', 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5', SocotraJUNEGasToken, BigInt(220001), SocotraAddress, ['JUNE'], [
-    new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Ethereum.e', 'ETH.e', 9, SocotraETH1AssetId),
-    new JRC20Asset('0x2e00000000000000000000000000000000000000', 'mBitcoin.a', 'mBTC.a', 9, SocotraMBTC1AssetId),
-    new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Doge.b', 'DOGE.b', 9, SocotraDOGE1AssetId),
-    new JRC20Asset('0x3100000000000000000000000000000000000000', 'Tether USD.e', 'USDT.e', 9, SocotraUSDT1AssetId),
-    new JRC20Asset('0x3200000000000000000000000000000000000000', 'Dai.e', 'DAI.e', 9, SocotraDAI1AssetId),
-    new JRC20Asset('0x3300000000000000000000000000000000000000', 'Euro Coin.e', 'EUROC.e', 9, SocotraEUROC1AssetId),
-    new JRC20Asset('0x3400000000000000000000000000000000000000', 'Litecoin.b', 'LTC.b', 9, SocotraLTC1AssetId),
-    new JRC20Asset('0x3500000000000000000000000000000000000000', 'Stellar.x', 'XLM.x', 9, SocotraXLM1AssetId),
-    new JRC20Asset('0x3600000000000000000000000000000000000000', 'Bitcoin Cash.b', 'BCH.b', 9, SocotraBCH1AssetId),
-    new JRC20Asset('0x3700000000000000000000000000000000000000', 'Pax Gold.e', 'PAXG.e', 9, SocotraPAXG1AssetId),
-    new JRC20Asset('0x3a00000000000000000000000000000000000000', 'XSGD.e', 'XSGD.e', 9, SocotraXSGD1AssetId),
-    new JRC20Asset('0x3b00000000000000000000000000000000000000', 'Ethereum Classic.x', 'ETC.x', 9, SocotraETC1AssetId),
-    new JRC20Asset('0x3c00000000000000000000000000000000000000', 'R1000.a', 'R1000.a', 9, SocotraR1000AssetId),
-    new JRC20Asset('0x3d00000000000000000000000000000000000000', 'R10.a', 'R10.a', 9, SocotraR10AssetId)
-  ]
+    SocotraWJUNEAsset, ...jrc20Assets
+  ], jrc20Assets
 )
 SocotraJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(SocotraJUNEChain.ethProvider))
-export const SocotraWJUNEAsset: WrappedAsset = new WrappedAsset('0x333e51E9908dcF4Ae79250757ecC3faa21f24554', 'Wrapped JUNE', 'wJUNE', 18)
 
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1GasToken, BigInt(220002), SocotraAddress, ['ETH1']

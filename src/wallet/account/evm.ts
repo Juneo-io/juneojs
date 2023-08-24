@@ -33,9 +33,7 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address).catch(error => {
-        throw error
-      })
+      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
       return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation
@@ -56,9 +54,7 @@ export class EVMAccount extends AbstractAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.sendManager.sendEVM(this.chain.id, send.assetId, send.amount, send.address, fees[i] as EVMFeeData)
-        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash).catch(error => {
-          throw error
-        })
+        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash)
         if (!success) {
           break
         }
@@ -68,9 +64,7 @@ export class EVMAccount extends AbstractAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.wrapManager.wrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
-        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash).catch(error => {
-          throw error
-        })
+        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash)
         if (!success) {
           break
         }
@@ -80,9 +74,7 @@ export class EVMAccount extends AbstractAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.wrapManager.unwrap(wrapping.asset, wrapping.amount, fees[i] as EVMFeeData)
-        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash).catch(error => {
-          throw error
-        })
+        const success: boolean = await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
         if (!success) {
           break
         }

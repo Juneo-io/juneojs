@@ -94,9 +94,7 @@ export class TransferManager {
 
   private async executeHandlers (handlers: ExecutableTransferHandler[]): Promise<void> {
     for (let i: number = 0; i < handlers.length; i++) {
-      await handlers[i].execute(this.provider).catch(error => {
-        throw error
-      })
+      await handlers[i].execute(this.provider)
     }
   }
 

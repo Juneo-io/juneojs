@@ -57,9 +57,7 @@ export class StakeManager {
       utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       this.api.chain.assetId, ValidationShare, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
     ).signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addValidatorTransaction).catch(error => {
-      throw error
-    })).txID
+    return (await this.api.issueTx(addValidatorTransaction)).txID
   }
 
   async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
@@ -74,9 +72,7 @@ export class StakeManager {
       utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       this.api.chain.assetId, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
     ).signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addDelegatorTransaction).catch(error => {
-      throw error
-    })).txID
+    return (await this.api.issueTx(addDelegatorTransaction)).txID
   }
 }
 

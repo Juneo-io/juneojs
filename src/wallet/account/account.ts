@@ -1,8 +1,8 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
+import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type UnsignedTransaction } from '../../transaction'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
-import { type Spending } from '../transaction'
+import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
 
 export interface ChainAccount {
@@ -106,6 +106,31 @@ export abstract class UtxoAccount extends AbstractAccount {
   abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
 
   abstract execute (executable: ExecutableMCNOperation): Promise<void>
+
+  protected override spend (spendings: UtxoSpending[]): void {
+    super.spend(spendings)
+    const utxoSet: Utxo[] = []
+    spendings.forEach(spending => {
+      spending.utxos.forEach(spend => {
+        this.utxoSet.forEach(utxo => {
+          if (spend.transactionId !== utxo.transactionId && spend.utxoIndex !== utxo.utxoIndex) {
+            utxoSet.push(utxo)
+          }
+        })
+      })
+    })
+    this.utxoSet = utxoSet
+  }
+
+  protected getUtxos (transaction: UnsignedTransaction): Utxo[] {
+    const utxos: Utxo[] = []
+    transaction.inputs.forEach(transferable => {
+      // should be Utxo here because transaction should be from builder
+      // undefined should only be the case if it is an input from parsing bytes
+      utxos.push(transferable.input.utxo as Utxo)
+    })
+    return utxos
+  }
 
   private calculateBalances (): void {
     this.utxoSet.forEach(utxo => {

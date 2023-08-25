@@ -3,7 +3,7 @@ import { type JEVMAPI, type JVMAPI } from '../api'
 import { JEVMBlockchain } from '../chain'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { FeeType, type EVMFeeData, estimateEVMTransaction, sendEVMTransaction, UtxoFeeData } from './transaction'
-import { UserInput, type Utxo, buildJVMBaseTransaction, type UnsignedTransaction } from '../transaction'
+import { UserInput, type Utxo, buildJVMBaseTransaction, type UnsignedTransaction, fetchUtxos } from '../transaction'
 import { type MCNOperation, MCNOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
 
@@ -35,17 +35,20 @@ export class SendManager {
     return await sendEVMTransaction(api, wallet, feeData)
   }
 
-  async estimateSendJVM (assetId: string, amount: bigint, address: string, utxoSet: Utxo[]): Promise<UtxoFeeData> {
+  async estimateSendJVM (assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
     const fee: bigint = BigInt((await this.provider.info.getTxFee()).txFee)
     const api: JVMAPI = this.provider.jvm
     const wallet: VMWallet = this.wallet.getWallet(api.chain)
+    if (typeof utxoSet === 'undefined') {
+      utxoSet = await fetchUtxos(api, [wallet.getAddress()])
+    }
     const transaction: UnsignedTransaction = buildJVMBaseTransaction([new UserInput(assetId, api.chain, amount, address, api.chain)],
       utxoSet, [wallet.getAddress()], fee, wallet.getAddress(), this.provider.mcn.id, api.chain.id
     )
     return new UtxoFeeData(api.chain, fee, FeeType.BaseFee, transaction)
   }
 
-  async sendJVM (assetId: string, amount: bigint, address: string, utxoSet: Utxo[], feeData?: UtxoFeeData): Promise<string> {
+  async sendJVM (assetId: string, amount: bigint, address: string, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateSendJVM(assetId, amount, address, utxoSet)
     }

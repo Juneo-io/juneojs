@@ -1,7 +1,7 @@
 import { type JVMAPI } from '../../api'
 import { type JVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { Spending, TransactionType, type FeeData } from '../transaction'
+import { TransactionType, type FeeData, type UtxoFeeData, UtxoSpending } from '../transaction'
 import { AccountError } from '../../utils'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
@@ -23,19 +23,20 @@ export class JVMAccount extends UtxoAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendJVM()
-      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
+      const fee: UtxoFeeData = await this.sendManager.estimateSendJVM(send.assetId, send.amount, send.address, super.utxoSet)
+      return new MCNOperationSummary(operation, this.chain, [fee], [new UtxoSpending(this.chain.id, send.amount, send.assetId, super.getUtxos(fee.transaction)), fee])
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
+    super.spend(executable.summary.spendings as UtxoSpending[])
     const operation: MCNOperation = executable.summary.operation
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
-        const transactionHash: string = await this.sendManager.sendJVM(send.assetId, send.amount, send.address, fees[i])
+        const transactionHash: string = await this.sendManager.sendJVM(send.assetId, send.amount, send.address, fees[i] as UtxoFeeData, super.utxoSet)
         const success: boolean = await executable.addTrackedJVMTransaction(this.api, TransactionType.Send, transactionHash)
         if (!success) {
           break

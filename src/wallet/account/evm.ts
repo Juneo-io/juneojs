@@ -48,6 +48,7 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
+    super.spend(executable.summary.spendings)
     const operation: MCNOperation = executable.summary.operation
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation

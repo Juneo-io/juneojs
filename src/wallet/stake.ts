@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../juneo'
 import { type MCNOperation, MCNOperationType, MCNOperationSummary } from './operation'
-import { NodeId, fetchUtxos, type Utxo, Validator, buildAddDelegatorTransaction, buildAddValidatorTransaction } from '../transaction'
-import { type Spending, FeeData, FeeType } from './transaction'
+import { NodeId, fetchUtxos, type Utxo, Validator, buildAddDelegatorTransaction, buildAddValidatorTransaction, type UnsignedTransaction } from '../transaction'
+import { type Spending, FeeType, UtxoFeeData } from './transaction'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
@@ -35,43 +35,45 @@ export class StakeManager {
     return rewards * BigInt(DelegationShare) / BigInt(BaseShare)
   }
 
-  async estimateValidationFee (): Promise<FeeData> {
+  async estimateValidationFee (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
     const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkValidatorFee)
-    return new FeeData(this.api.chain, fee, FeeType.ValidateFee)
-  }
-
-  async estimateDelegationFee (): Promise<FeeData> {
-    const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkDelegatorFee)
-    return new FeeData(this.api.chain, fee, FeeType.DelegateFee)
-  }
-
-  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
-    if (typeof feeData === 'undefined') {
-      feeData = await this.estimateValidationFee()
-    }
+    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
     if (typeof utxoSet === 'undefined') {
       utxoSet = await fetchUtxos(this.api, [this.wallet.getAddress()])
     }
-    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    const addValidatorTransaction: string = buildAddValidatorTransaction(
-      utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+    const transaction: UnsignedTransaction = buildAddValidatorTransaction(
+      utxoSet, [this.wallet.getAddress()], fee, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
       this.api.chain.assetId, ValidationShare, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
-    ).signTransaction([this.wallet]).toCHex()
+    )
+    return new UtxoFeeData(this.api.chain, fee, FeeType.ValidateFee, transaction)
+  }
+
+  async estimateDelegationFee (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+    const fee: bigint = BigInt((await this.provider.getFees()).addPrimaryNetworkDelegatorFee)
+    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
+    if (typeof utxoSet === 'undefined') {
+      utxoSet = await fetchUtxos(this.api, [this.wallet.getAddress()])
+    }
+    const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
+      utxoSet, [this.wallet.getAddress()], fee, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+      this.api.chain.assetId, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
+    )
+    return new UtxoFeeData(this.api.chain, fee, FeeType.DelegateFee, transaction)
+  }
+
+  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
+    if (typeof feeData === 'undefined') {
+      feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
+    }
+    const addValidatorTransaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(addValidatorTransaction)).txID
   }
 
-  async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: FeeData, utxoSet?: Utxo[]): Promise<string> {
+  async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
     if (typeof feeData === 'undefined') {
-      feeData = await this.estimateValidationFee()
+      feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
     }
-    if (typeof utxoSet === 'undefined') {
-      utxoSet = await fetchUtxos(this.api, [this.wallet.getAddress()])
-    }
-    const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    const addDelegatorTransaction: string = buildAddDelegatorTransaction(
-      utxoSet, [this.wallet.getAddress()], feeData.amount, this.api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
-      this.api.chain.assetId, this.wallet.getAddress(), this.wallet.getAddress(), this.provider.mcn.id
-    ).signTransaction([this.wallet]).toCHex()
+    const addDelegatorTransaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(addDelegatorTransaction)).txID
   }
 }
@@ -107,7 +109,7 @@ export class DelegateOperation extends Staking {
 export class StakingOperationSummary extends MCNOperationSummary {
   potentialReward: bigint
 
-  constructor (operation: Staking, chain: PlatformBlockchain, fees: FeeData[], spendings: Spending[], potentialReward: bigint) {
+  constructor (operation: Staking, chain: PlatformBlockchain, fees: UtxoFeeData[], spendings: Spending[], potentialReward: bigint) {
     super(operation, chain, fees, spendings)
     this.potentialReward = potentialReward
   }

@@ -1,4 +1,4 @@
-import { MCNProvider, JuneoWallet, StakeManager, now, FeeData, fetchUtxos, Utxo } from '../../../src'
+import { MCNProvider, JuneoWallet, StakeManager, now, fetchUtxos, Utxo, UtxoFeeData } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -22,7 +22,7 @@ async function main () {
     // which is the same reward as the validation but with the delegation fee of the validator deducted
     const delegationReward: bigint = manager.estimateDelegationReward(endTime - startTime, stakeAmount)
     // estimating the fee
-    const fee: FeeData = await manager.estimateDelegationFee()
+    const fee: UtxoFeeData = await manager.estimateDelegationFee(nodeId, stakeAmount, startTime, endTime)
     // we can display those fee and optionnaly use them to execute the staking
     // it returns the id of the transaction that was created
     // try to delegate with currently available utxos in the relay chain
@@ -36,7 +36,7 @@ async function main () {
     // here we fetch all utxos of the address of the wallet used to instantiate the stake manager
     // so it will be able to sign each consumed utxo properly
     const utxos: Utxo[] = await fetchUtxos(provider.platform, [wallet.getAddress(provider.platform.chain)])
-    const validateFee: FeeData = await manager.estimateValidationFee()
+    const validateFee: UtxoFeeData = await manager.estimateValidationFee(nodeId, stakeAmount, startTime, endTime, utxos)
     await manager.validate(nodeId, stakeAmount, startTime, endTime, validateFee, utxos)
 }
 

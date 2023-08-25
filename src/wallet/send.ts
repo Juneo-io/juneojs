@@ -3,10 +3,9 @@ import { type JEVMAPI, type JVMAPI } from '../api'
 import { type Blockchain, JEVMBlockchain } from '../chain'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { FeeType, type EVMFeeData, FeeData, estimateEVMTransaction, sendEVMTransaction } from './transaction'
-import { UserInput, type Utxo, buildJVMBaseTransaction, fetchUtxos, type BaseTransaction } from '../transaction'
+import { UserInput, type Utxo, buildJVMBaseTransaction, fetchUtxos } from '../transaction'
 import { type MCNOperation, MCNOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
-import { type JuneoBuffer } from '../utils'
 
 export class SendManager {
   private readonly provider: MCNProvider
@@ -49,11 +48,10 @@ export class SendManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateSendJVM()
     }
-    const transaction: BaseTransaction = buildJVMBaseTransaction([new UserInput(assetId, api.chain, amount, address, api.chain)],
+    const transaction: string = buildJVMBaseTransaction([new UserInput(assetId, api.chain, amount, address, api.chain)],
       utxoSet, [wallet.getAddress()], feeData.amount, wallet.getAddress(), this.provider.mcn.id, api.chain.id
-    )
-    const buffer: JuneoBuffer = transaction.signTransaction([wallet])
-    return (await api.issueTx(buffer.toCHex())).txID
+    ).signTransaction([wallet]).toCHex()
+    return (await api.issueTx(transaction)).txID
   }
 }
 

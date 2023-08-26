@@ -65,5 +65,7 @@ export class PlatformAccount extends UtxoAccount {
         }
       }
     }
+    // balances fetching is needed to get new utxos creating from this operation
+    await super.fetchBalances()
   }
 }

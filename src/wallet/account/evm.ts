@@ -98,15 +98,22 @@ export class EVMAccount extends AbstractAccount {
     }
   }
 
+  async fetchBalance (assetId: string): Promise<void> {
+    if (!this.balances.has(assetId)) {
+      // prefer using function instead of pushing it directly to cover more cases
+      this.registerAssets([assetId])
+    }
+    const address: string = this.chainWallet.getHexAddress()
+    const amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
+    this.balances.set(assetId, amount)
+  }
+
   async fetchBalances (): Promise<void> {
     await super.fetchBalancesAsynchronously(async () => {
-      const address: string = this.chainWallet.getHexAddress()
-      this.gasBalance = await this.chain.queryEVMBalance(this.api, address, this.chain.assetId)
-      this.balances.set(this.chain.assetId, this.gasBalance)
+      await this.fetchBalance(this.chain.assetId)
+      this.gasBalance = this.getValue(this.chain.assetId)
       for (let j = 0; j < this.registeredAssets.length; j++) {
-        const assetId: string = this.registeredAssets[j]
-        const amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
-        this.balances.set(assetId, amount)
+        await this.fetchBalance(this.registeredAssets[j])
       }
     })
   }

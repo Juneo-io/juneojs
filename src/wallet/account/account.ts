@@ -16,6 +16,8 @@ export interface ChainAccount {
 
   getValue: (assetId: string) => bigint
 
+  fetchBalance: (assetId: string) => Promise<void>
+
   fetchBalances: () => Promise<void>
 
   estimate: (operation: MCNOperation) => Promise<MCNOperationSummary>
@@ -52,6 +54,8 @@ export abstract class AbstractAccount implements ChainAccount {
     }
     return BigInt(this.balances.get(assetId) as bigint)
   }
+
+  abstract fetchBalance (assetId: string): Promise<void>
 
   abstract fetchBalances (): Promise<void>
 
@@ -94,6 +98,12 @@ export abstract class UtxoAccount extends AbstractAccount {
     this.chainWallet = wallet.getWallet(chain)
     this.addresses.push(this.chainWallet.getAddress())
     this.sourceChain = sourceChain
+  }
+
+  async fetchBalance (assetId: string): Promise<void> {
+    // there is currently no other way to do it only with utxos
+    // a seperated indexing of each asset is needed to be able to do it
+    await this.fetchBalances()
   }
 
   async fetchBalances (): Promise<void> {

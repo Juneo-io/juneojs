@@ -1,6 +1,9 @@
+import { type JVMAPI } from '../../api'
 import { type Blockchain } from '../../chain'
-import { type Utxo, type UnsignedTransaction } from '../../transaction'
-import { FeeData } from './fee'
+import { type MCNProvider } from '../../juneo'
+import { type Utxo, type UnsignedTransaction, buildJVMBaseTransaction, UserInput, fetchUtxos } from '../../transaction'
+import { type JuneoWallet } from '../wallet'
+import { FeeData, FeeType } from './fee'
 import { Spending } from './transaction'
 
 export class UtxoFeeData extends FeeData {
@@ -19,4 +22,16 @@ export class UtxoSpending extends Spending {
     super(chainId, amount, assetId)
     this.utxos = utxos
   }
+}
+
+export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet: JuneoWallet, assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+  const fee: bigint = BigInt((await provider.info.getTxFee()).txFee)
+  const api: JVMAPI = provider.jvm
+  if (typeof utxoSet === 'undefined') {
+    utxoSet = await fetchUtxos(api, [wallet.getAddress(api.chain)])
+  }
+  const transaction: UnsignedTransaction = buildJVMBaseTransaction([new UserInput(assetId, api.chain, amount, address, api.chain)],
+    utxoSet, [wallet.getAddress(api.chain)], fee, wallet.getAddress(api.chain), provider.mcn.id, api.chain.id
+  )
+  return new UtxoFeeData(api.chain, fee, FeeType.BaseFee, transaction)
 }

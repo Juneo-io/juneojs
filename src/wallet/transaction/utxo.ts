@@ -1,8 +1,8 @@
-import { type JVMAPI } from '../../api'
+import { type PlatformAPI, type JVMAPI } from '../../api'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type Utxo, type UnsignedTransaction, buildJVMBaseTransaction, UserInput, fetchUtxos } from '../../transaction'
-import { type JuneoWallet } from '../wallet'
+import { type Utxo, type UnsignedTransaction, buildJVMBaseTransaction, UserInput, fetchUtxos, type Validator, buildAddValidatorTransaction, buildAddDelegatorTransaction } from '../../transaction'
+import { type VMWallet, type JuneoWallet } from '../wallet'
 import { FeeData, FeeType } from './fee'
 import { Spending } from './transaction'
 
@@ -34,4 +34,30 @@ export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet:
     utxoSet, [wallet.getAddress(api.chain)], fee, wallet.getAddress(api.chain), provider.mcn.id, api.chain.id
   )
   return new UtxoFeeData(api.chain, fee, FeeType.BaseFee, transaction)
+}
+
+export async function estimatePlatformAddValidatorTransaction (provider: MCNProvider, wallet: VMWallet, validator: Validator, share: number, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+  const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkValidatorFee)
+  const api: PlatformAPI = provider.platform
+  if (typeof utxoSet === 'undefined') {
+    utxoSet = await fetchUtxos(api, [wallet.getAddress()])
+  }
+  const transaction: UnsignedTransaction = buildAddValidatorTransaction(
+    utxoSet, [wallet.getAddress()], fee, api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+    api.chain.assetId, share, wallet.getAddress(), wallet.getAddress(), provider.mcn.id
+  )
+  return new UtxoFeeData(api.chain, fee, FeeType.ValidateFee, transaction)
+}
+
+export async function estimatePlatformAddDelegatorTransaction (provider: MCNProvider, wallet: VMWallet, validator: Validator, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+  const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
+  const api: PlatformAPI = provider.platform
+  if (typeof utxoSet === 'undefined') {
+    utxoSet = await fetchUtxos(api, [wallet.getAddress()])
+  }
+  const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
+    utxoSet, [wallet.getAddress()], fee, api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
+    api.chain.assetId, wallet.getAddress(), wallet.getAddress(), provider.mcn.id
+  )
+  return new UtxoFeeData(api.chain, fee, FeeType.DelegateFee, transaction)
 }

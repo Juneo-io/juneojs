@@ -81,6 +81,8 @@ export class EVMAccount extends AbstractAccount {
         }
       }
     }
+    // should not be needed but in some cases this can be usefull e.g. sending to self
+    await this.fetchBalances()
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

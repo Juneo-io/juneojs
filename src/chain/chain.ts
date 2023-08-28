@@ -71,11 +71,12 @@ export abstract class AbstractBlockchain implements Blockchain {
   }
 
   getAsset (assetId: string): TokenAsset {
-    this.registeredAssets.forEach(asset => {
+    for (let i = 0; i < this.registeredAssets.length; i++) {
+      const asset: TokenAsset = this.registeredAssets[i]
       if (assetId === asset.assetId) {
         return asset
       }
-    })
+    }
     throw new ChainError(`unregistered asset id: ${assetId}`)
   }
 

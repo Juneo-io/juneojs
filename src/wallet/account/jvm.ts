@@ -25,7 +25,7 @@ export class JVMAccount extends UtxoAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      await this.sendManager.estimateSendJVM(send.assetId, send.amount, send.address, super.utxoSet).then(fee => {
+      return await this.sendManager.estimateSendJVM(send.assetId, send.amount, send.address, super.utxoSet).then(fee => {
         return new MCNOperationSummary(operation, this.chain, [fee], [new UtxoSpending(this.chain.id, send.amount, send.assetId, super.getUtxos(fee.transaction)), fee])
       }, async () => {
         const fee: FeeData = new FeeData(this.chain, BigInt((await this.info.getTxFee()).txFee), FeeType.BaseFee)

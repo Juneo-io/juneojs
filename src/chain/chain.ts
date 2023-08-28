@@ -22,6 +22,8 @@ export interface Blockchain {
   aliases: string[]
   registeredAssets: TokenAsset[]
 
+  getAsset: (assetId: string) => TokenAsset
+
   validateAddress: (address: string, hrp?: string) => boolean
 
   validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>

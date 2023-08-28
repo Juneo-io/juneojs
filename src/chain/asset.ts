@@ -3,11 +3,25 @@ import { WrappedContractAdapter } from '../solidity'
 const RoundedValueDefaultDecimals = 2
 const EVMGasTokenDecimals = 18
 
+export interface TypedToken {
+  type: string
+}
+
+export enum TokenType {
+  Generic = 'generic',
+  Gas = 'gas',
+  ERC20 = 'erc20',
+  Wrapped = 'wrapped',
+  JRC20 = 'jrc20',
+  JNT = 'jnt',
+}
+
 /**
  * Representation of an asset on a chain with its common values
  * such as an id, a name, a symbol and decimals.
  */
-export class TokenAsset {
+export class TokenAsset implements TypedToken {
+  readonly type: string = TokenType.Generic
   readonly assetId: string
   readonly name: string
   readonly symbol: string
@@ -35,6 +49,8 @@ export class TokenAsset {
  * It is also known as the native asset of an EVM.
  */
 export class EVMGasToken extends TokenAsset {
+  override readonly type: string = TokenType.Gas
+
   constructor (assetId: string, name: string, symbol: string) {
     super(assetId, name, symbol, EVMGasTokenDecimals)
   }
@@ -48,6 +64,7 @@ export interface EVMContract {
  * Representation of an ERC20 smart contract.
  */
 export class ERC20Asset extends TokenAsset implements EVMContract {
+  override readonly type: string = TokenType.ERC20
   readonly address
 
   constructor (address: string, name: string, symbol: string, decimals: number) {
@@ -61,6 +78,7 @@ export class ERC20Asset extends TokenAsset implements EVMContract {
  * Also known as wrapped native. In the Juneo network it is deployed as the wJUNE.
  */
 export class WrappedAsset extends ERC20Asset {
+  override readonly type: string = TokenType.Wrapped
   readonly adapter: WrappedContractAdapter
 
   constructor (address: string, name: string, symbol: string, decimals: number) {
@@ -73,6 +91,7 @@ export class WrappedAsset extends ERC20Asset {
  * Representation of a JRC20 smart contract.
  */
 export class JRC20Asset extends ERC20Asset {
+  override readonly type: string = TokenType.ERC20
   readonly nativeAssetId: string
 
   constructor (address: string, name: string, symbol: string, decimals: number, nativeAssetId: string) {
@@ -85,6 +104,7 @@ export class JRC20Asset extends ERC20Asset {
  * Representation of a Juneo native asset.
  */
 export class JNTAsset extends TokenAsset {
+  override readonly type: string = TokenType.JNT
   readonly mintable: boolean
 
   constructor (assetId: string, name: string, symbol: string, decimals: number, mintable: boolean) {

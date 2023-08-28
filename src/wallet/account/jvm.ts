@@ -1,36 +1,25 @@
-import { type InfoAPI, type JVMAPI } from '../../api'
-import { type JVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { TransactionType, FeeData, type UtxoFeeData, UtxoSpending, FeeType, Spending } from '../transaction'
+import { TransactionType, type FeeData, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'
+import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
 
 export class JVMAccount extends UtxoAccount {
-  override chain: JVMBlockchain
-  api: JVMAPI
-  private readonly info: InfoAPI
+  provider: MCNProvider
   private readonly sendManager: SendManager
 
   constructor (provider: MCNProvider, wallet: JuneoWallet) {
     super(provider.jvm.chain, provider.jvm, wallet)
     this.chain = provider.jvm.chain
-    this.api = provider.jvm
-    this.info = provider.info
+    this.provider = provider
     this.sendManager = new SendManager(provider, wallet)
   }
 
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
-      const send: SendOperation = operation as SendOperation
-      return await this.sendManager.estimateSendJVM(send.assetId, send.amount, send.address, super.utxoSet).then(fee => {
-        return new MCNOperationSummary(operation, this.chain, [fee], [new UtxoSpending(this.chain.id, send.amount, send.assetId, super.getUtxos(fee.transaction)), fee])
-      }, async () => {
-        const fee: FeeData = new FeeData(this.chain, BigInt((await this.info.getTxFee()).txFee), FeeType.BaseFee)
-        return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
-      })
+      return await estimateJVMSendOperation(this.provider, this.wallet, operation as SendOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -43,7 +32,7 @@ export class JVMAccount extends UtxoAccount {
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
         const transactionHash: string = await this.sendManager.sendJVM(send.assetId, send.amount, send.address, fees[i] as UtxoFeeData, super.utxoSet)
-        const success: boolean = await executable.addTrackedJVMTransaction(this.api, TransactionType.Send, transactionHash)
+        const success: boolean = await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
         if (!success) {
           break
         }

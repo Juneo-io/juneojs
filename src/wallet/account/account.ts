@@ -132,7 +132,7 @@ export abstract class UtxoAccount extends AbstractAccount {
     this.utxoSet = utxoSet
   }
 
-  protected getUtxos (transaction: UnsignedTransaction): Utxo[] {
+  getTransactionUtxos (transaction: UnsignedTransaction): Utxo[] {
     const utxos: Utxo[] = []
     transaction.inputs.forEach(transferable => {
       // should be Utxo here because transaction should be from builder

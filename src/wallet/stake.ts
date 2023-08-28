@@ -7,7 +7,7 @@ import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
 import { type PlatformBlockchain } from '../chain'
 
-const ValidationShare: number = 12_0000 // 12%
+export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
 const DelegationShare: number = BaseShare - ValidationShare
 
@@ -26,11 +26,11 @@ export class StakeManager {
     return new StakeManager(provider, wallet.getWallet(provider.platform.chain))
   }
 
-  estimateValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
+  static estimateValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
     return calculatePrimary(stakePeriod, now(), stakeAmount)
   }
 
-  estimateDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
+  static estimateDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
     const rewards: bigint = calculatePrimary(stakePeriod, now(), stakeAmount)
     return rewards * BigInt(DelegationShare) / BigInt(BaseShare)
   }

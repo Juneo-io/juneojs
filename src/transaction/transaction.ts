@@ -5,6 +5,7 @@ import { TransferableInput } from './input'
 import { TransferableOutput } from './output'
 import { type Signable, sign } from './signature'
 import { type BlockchainId, BlockchainIdSize } from './types'
+import { type Utxo } from './utxo'
 
 export const CodecId: number = 0
 export const TransactionStatusFetchDelay: number = 100
@@ -33,8 +34,9 @@ export interface UnsignedTransaction {
   outputs: TransferableOutput[]
   inputs: TransferableInput[]
   memo: string
-  signTransaction: (wallets: VMWallet[]) => JuneoBuffer
   getSignables: () => Signable[]
+  getUtxos: () => Utxo[]
+  signTransaction: (wallets: VMWallet[]) => JuneoBuffer
 }
 
 export abstract class AbstractBaseTransaction implements UnsignedTransaction, Serializable {
@@ -60,6 +62,16 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
   }
 
   abstract getSignables (): Signable[]
+
+  getUtxos (): Utxo[] {
+    const utxos: Utxo[] = []
+    this.inputs.forEach(transferable => {
+      // should be Utxo here because transaction should be from builder
+      // undefined should only be the case if it is an input from parsing bytes
+      utxos.push(transferable.input.utxo as Utxo)
+    })
+    return utxos
+  }
 
   signTransaction (wallets: VMWallet[]): JuneoBuffer {
     return sign(this.serialize(), this.getSignables(), wallets)

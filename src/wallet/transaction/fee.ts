@@ -1,8 +1,8 @@
 import { type Blockchain, JEVM_ID, type JEVMBlockchain, isCrossable, type Crossable, type JVMBlockchain, type AssetValue } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type UserInput } from '../../transaction'
+import { type UnsignedTransaction, type UserInput } from '../../transaction'
 import { FeeError } from '../../utils'
-import { Spending } from './transaction'
+import { type Spending, UtxoSpending } from './transaction'
 import { type JuneoWallet, type JEVMWallet } from '../wallet'
 
 export enum FeeType {
@@ -16,14 +16,42 @@ export enum FeeType {
   DelegateFee = 'Delegate fee'
 }
 
-export class FeeData extends Spending {
+export interface FeeData {
   chain: Blockchain
   type: string
+  getAssetValue: () => AssetValue
+}
+
+export class BaseFeeData implements FeeData, Spending {
+  chain: Blockchain
+  type: string
+  chainId: string
+  amount: bigint
+  assetId: string
 
   constructor (chain: Blockchain, amount: bigint, type: string) {
-    super(chain.id, amount, chain.assetId)
     this.chain = chain
     this.type = type
+    this.chainId = chain.id
+    this.amount = amount
+    this.assetId = chain.assetId
+  }
+
+  getAssetValue (): AssetValue {
+    return this.chain.asset.getAssetValue(this.amount)
+  }
+}
+
+export class UtxoFeeData extends UtxoSpending implements FeeData {
+  chain: Blockchain
+  type: string
+  transaction: UnsignedTransaction
+
+  constructor (chain: Blockchain, amount: bigint, type: string, transaction: UnsignedTransaction) {
+    super(chain.id, amount, chain.assetId, transaction.getUtxos())
+    this.chain = chain
+    this.type = type
+    this.transaction = transaction
   }
 
   getAssetValue (): AssetValue {
@@ -49,7 +77,7 @@ async function calculateIntraChainTransferFee (provider: MCNProvider, wallet: Ju
     }
     txFee = gasTxFee
   }
-  return [new FeeData(chain, txFee, FeeType.BaseFee)]
+  return [new BaseFeeData(chain, txFee, FeeType.BaseFee)]
 }
 
 async function calculateInterChainTransferFee (provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, destination: Blockchain, inputs: UserInput[]): Promise<FeeData[]> {
@@ -60,14 +88,14 @@ async function calculateInterChainTransferFee (provider: MCNProvider, wallet: Ju
   const destinationChain: Blockchain & Crossable = inputs[0].destinationChain as unknown as Blockchain & Crossable
   const fees: FeeData[] = []
   const exportFee: bigint = await sourceChain.queryExportFee(provider, inputs, destination.assetId)
-  fees.push(new FeeData(source, exportFee, FeeType.ExportFee))
+  fees.push(new BaseFeeData(source, exportFee, FeeType.ExportFee))
   const requiresProxy: boolean = source.vmId === JEVM_ID && destination.vmId === JEVM_ID
   if (requiresProxy) {
     const jvmChain: JVMBlockchain = provider.jvm.chain
-    fees.push(new FeeData(jvmChain, await jvmChain.queryImportFee(provider), FeeType.ImportFee))
-    fees.push(new FeeData(jvmChain, await jvmChain.queryExportFee(provider), FeeType.ExportFee))
+    fees.push(new BaseFeeData(jvmChain, await jvmChain.queryImportFee(provider), FeeType.ImportFee))
+    fees.push(new BaseFeeData(jvmChain, await jvmChain.queryExportFee(provider), FeeType.ExportFee))
   }
   const importFee: bigint = await destinationChain.queryImportFee(provider, inputs)
-  fees.push(new FeeData(destination, importFee, FeeType.ImportFee))
+  fees.push(new BaseFeeData(destination, importFee, FeeType.ImportFee))
   return fees
 }

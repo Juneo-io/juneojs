@@ -2,7 +2,7 @@ import { type JEVMAPI } from '../../api'
 import { type JEVMBlockchain, type TokenAsset } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
-import { Spending, TransactionType, type FeeData, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
+import { BaseSpending, TransactionType, type FeeData, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JEVMWallet, type JuneoWallet } from '../wallet'
@@ -33,8 +33,8 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
-      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
+      const fee: EVMFeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
+      return new MCNOperationSummary(operation, this.chain, [fee], [new BaseSpending(this.chain.id, send.amount, send.assetId), fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       return await estimateEVMWrapOperation(this.api, this.chainWallet.getHexAddress(), operation as WrapOperation)
     } else if (operation.type === MCNOperationType.Unwrap) {

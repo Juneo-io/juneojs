@@ -6,7 +6,7 @@ import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
-import { Spending } from '../transaction'
+import { type Spending, BaseSpending } from '../transaction'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -60,7 +60,7 @@ export class MCNAccount {
     spendings.forEach(spending => {
       const key: string = `${spending.chainId}_${spending.assetId}`
       if (!values.has(key)) {
-        values.set(key, new Spending(spending.chainId, spending.amount, spending.assetId))
+        values.set(key, new BaseSpending(spending.chainId, spending.amount, spending.assetId))
       } else {
         (values.get(key) as Spending).amount += spending.amount
       }

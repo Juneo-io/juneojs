@@ -1,3 +1,4 @@
+import { type Utxo } from '../../transaction'
 
 export const WalletStatusFetcherTimeout: number = 60000
 
@@ -28,7 +29,13 @@ export class TransactionReceipt {
   }
 }
 
-export class Spending {
+export interface Spending {
+  chainId: string
+  amount: bigint
+  assetId: string
+}
+
+export class BaseSpending implements Spending {
   chainId: string
   amount: bigint
   assetId: string
@@ -37,5 +44,14 @@ export class Spending {
     this.chainId = chainId
     this.amount = amount
     this.assetId = assetId
+  }
+}
+
+export class UtxoSpending extends BaseSpending {
+  utxos: Utxo[]
+
+  constructor (chainId: string, amount: bigint, assetId: string, utxos: Utxo[]) {
+    super(chainId, amount, assetId)
+    this.utxos = utxos
   }
 }

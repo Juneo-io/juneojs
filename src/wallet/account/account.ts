@@ -1,6 +1,6 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type UnsignedTransaction } from '../../transaction'
+import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
@@ -130,16 +130,6 @@ export abstract class UtxoAccount extends AbstractAccount {
       })
     })
     this.utxoSet = utxoSet
-  }
-
-  getTransactionUtxos (transaction: UnsignedTransaction): Utxo[] {
-    const utxos: Utxo[] = []
-    transaction.inputs.forEach(transferable => {
-      // should be Utxo here because transaction should be from builder
-      // undefined should only be the case if it is an input from parsing bytes
-      utxos.push(transferable.input.utxo as Utxo)
-    })
-    return utxos
   }
 
   private calculateBalances (): void {

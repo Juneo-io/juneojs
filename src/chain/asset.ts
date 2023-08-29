@@ -91,7 +91,7 @@ export class WrappedAsset extends ERC20Asset {
  * Representation of a JRC20 smart contract.
  */
 export class JRC20Asset extends ERC20Asset {
-  override readonly type: string = TokenType.ERC20
+  override readonly type: string = TokenType.JRC20
   readonly nativeAssetId: string
 
   constructor (address: string, name: string, symbol: string, decimals: number, nativeAssetId: string) {

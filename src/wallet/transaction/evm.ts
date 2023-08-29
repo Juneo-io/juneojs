@@ -1,7 +1,13 @@
 import { type ethers } from 'ethers'
-import { FeeData, type FeeType } from './fee'
+import { FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
 import { JEVMBlockchain } from '../../chain'
+import { MCNOperationSummary } from '../operation'
+import { type UnwrapOperation, type WrapOperation } from '../wrap'
+import { Spending } from './transaction'
+
+const DefaultWrapEstimate: bigint = BigInt(55_000)
+const DefaultUnwrapEstimate: bigint = BigInt(45_000)
 
 export class EVMTransactionData {
   from: string
@@ -59,4 +65,28 @@ export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, f
     data: feeData.data.data
   })
   return await api.eth_sendRawTransaction(transaction)
+}
+
+export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap: WrapOperation): Promise<MCNOperationSummary> {
+  const chain: JEVMBlockchain = api.chain
+  const data: string = wrap.asset.adapter.getDepositData()
+  const type: FeeType = FeeType.Wrap
+  return await estimateEVMTransaction(api, wrap.asset.assetId, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
+    return new MCNOperationSummary(wrap, chain, [fee], [new Spending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+  }, async () => {
+    const fee: FeeData = new FeeData(chain, DefaultWrapEstimate, type)
+    return new MCNOperationSummary(wrap, chain, [fee], [new Spending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+  })
+}
+
+export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, unwrap: UnwrapOperation): Promise<MCNOperationSummary> {
+  const chain: JEVMBlockchain = api.chain
+  const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
+  const type: FeeType = FeeType.Unwrap
+  return await estimateEVMTransaction(api, unwrap.asset.assetId, from, unwrap.asset.address, BigInt(0), data, type).then(fee => {
+    return new MCNOperationSummary(unwrap, chain, [fee], [new Spending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+  }, async () => {
+    const fee: FeeData = new FeeData(chain, DefaultUnwrapEstimate, type)
+    return new MCNOperationSummary(unwrap, chain, [fee], [new Spending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+  })
 }

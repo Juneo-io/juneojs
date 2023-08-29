@@ -72,10 +72,10 @@ export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
   return await estimateEVMTransaction(api, wrap.asset.assetId, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
-    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
   }, async () => {
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate, type)
-    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
   })
 }
 

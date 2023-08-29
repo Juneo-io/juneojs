@@ -168,13 +168,15 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
   static readonly AtomicBaseCost: bigint = BigInt(10_000)
   static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
   chainId: bigint
+  baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
   contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
+  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, baseFee: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
     super(name, id, JEVM_ID, asset, aliases, registeredAssets)
     this.chainId = chainId
+    this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
     this.contractHandler = new ContractHandler()

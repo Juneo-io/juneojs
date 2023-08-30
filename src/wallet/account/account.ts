@@ -4,7 +4,7 @@ import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } fr
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
-import { Balance } from './balance'
+import { Balance, type BalanceListener } from './balance'
 
 export interface ChainAccount {
   chain: Blockchain
@@ -16,6 +16,8 @@ export interface ChainAccount {
   getBalance: (asset: TokenAsset) => AssetValue
 
   getValue: (assetId: string) => bigint
+
+  addBalanceListener: (assetId: string, listener: BalanceListener) => void
 
   fetchBalance: (assetId: string) => Promise<void>
 
@@ -54,6 +56,13 @@ export abstract class AbstractAccount implements ChainAccount {
       return BigInt(0)
     }
     return (this.balances.get(assetId) as Balance).getValue()
+  }
+
+  addBalanceListener (assetId: string, listener: BalanceListener): void {
+    if (!this.balances.has(assetId)) {
+      this.balances.set(assetId, new Balance())
+    }
+    (this.balances.get(assetId) as Balance).registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
@@ -144,13 +153,12 @@ export abstract class UtxoAccount extends AbstractAccount {
       }
       values.set(assetId, amount)
     })
-    for (const key in values) {
-      const value: bigint = values.get(key) as bigint
+    values.forEach((value, key) => {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())
       }
       const balance: Balance = this.balances.get(key) as Balance
       balance.update(value)
-    }
+    })
   }
 }

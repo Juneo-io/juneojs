@@ -50,22 +50,15 @@ export class SendManager {
   }
 }
 
-abstract class Send implements MCNOperation {
-  type: MCNOperationType
+export class SendOperation implements MCNOperation {
+  type: MCNOperationType = MCNOperationType.Send
   assetId: string
   amount: bigint
   address: string
 
-  constructor (type: MCNOperationType, assetId: string, amount: bigint, address: string) {
-    this.type = type
+  constructor (assetId: string, amount: bigint, address: string) {
     this.assetId = assetId
     this.amount = amount
     this.address = address
-  }
-}
-
-export class SendOperation extends Send {
-  constructor (assetId: string, amount: bigint, address: string) {
-    super(MCNOperationType.Send, assetId, amount, address)
   }
 }

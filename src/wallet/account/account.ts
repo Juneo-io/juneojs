@@ -151,13 +151,12 @@ export abstract class UtxoAccount extends AbstractAccount {
       }
       values.set(assetId, amount)
     })
-    for (const key in values) {
-      const value: bigint = values.get(key) as bigint
+    values.forEach((value, key) => {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())
       }
       const balance: Balance = this.balances.get(key) as Balance
       balance.update(value)
-    }
+    })
   }
 }

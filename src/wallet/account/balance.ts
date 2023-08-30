@@ -1,6 +1,5 @@
 
 export enum BalanceStatus {
-  Initializing = 'Initializing',
   Updating = 'Updating',
   Done = 'Done',
 }
@@ -20,7 +19,7 @@ export interface BalanceListener {
 
 export class Balance {
   private readonly listeners: BalanceListener[] = []
-  private status: BalanceStatus = BalanceStatus.Initializing
+  private status: BalanceStatus = BalanceStatus.Done
   private value: bigint = BigInt(0)
 
   registerEvents (listener: BalanceListener): void {

@@ -17,6 +17,8 @@ export interface ChainAccount {
 
   getValue: (assetId: string) => bigint
 
+  addBalanceListener: (assetId: string, listener: BalanceListener) => void
+
   fetchBalance: (assetId: string) => Promise<void>
 
   fetchAllBalances: () => Promise<void>

@@ -106,7 +106,7 @@ export class EVMAccount extends AbstractAccount {
   }
 
   async fetchAllBalances (): Promise<void> {
-    const fetchers: Promise<void>[] = []
+    const fetchers: Array<Promise<void>> = []
     // guarantee gas balance
     fetchers.push(this.fetchBalance(this.chain.assetId))
     for (let j = 0; j < this.registeredAssets.length; j++) {

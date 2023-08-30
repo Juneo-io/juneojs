@@ -15,13 +15,12 @@ const TRANSACTION_CODE: string = 'Transaction error'
 const INPUT_CODE: string = 'Input error'
 const OUTPUT_CODE: string = 'Output error'
 const TRANSFER_CODE: string = 'Transfer error'
-const INTRA_TRANSFER_CODE: string = 'IntraChain transfer error'
-const INTER_TRANSFER_CODE: string = 'InterChain transfer error'
 const FEE_CODE: string = 'Fee error'
 const SIGNATURE_CODE: string = 'Signature error'
 const GENESIS_CODE: string = 'Genesis error'
 const ACCOUNT_CODE: string = 'Account error'
 const CHAIN_CODE: string = 'Chain error'
+const CROSS_CODE: string = 'Cross error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -149,20 +148,6 @@ export class TransferError extends JuneoError {
   }
 }
 
-export class IntraChainTransferError extends JuneoError {
-  constructor (message: string) {
-    super(message, INTRA_TRANSFER_CODE)
-    Object.setPrototypeOf(this, IntraChainTransferError.prototype)
-  }
-}
-
-export class InterChainTransferError extends JuneoError {
-  constructor (message: string) {
-    super(message, INTER_TRANSFER_CODE)
-    Object.setPrototypeOf(this, InterChainTransferError.prototype)
-  }
-}
-
 export class FeeError extends JuneoError {
   constructor (message: string) {
     super(message, FEE_CODE)
@@ -195,5 +180,12 @@ export class ChainError extends JuneoError {
   constructor (message: string) {
     super(message, CHAIN_CODE)
     Object.setPrototypeOf(this, ChainError.prototype)
+  }
+}
+
+export class CrossError extends JuneoError {
+  constructor (message: string) {
+    super(message, CROSS_CODE)
+    Object.setPrototypeOf(this, CrossError.prototype)
   }
 }

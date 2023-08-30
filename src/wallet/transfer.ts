@@ -6,7 +6,7 @@ import { type MCNProvider } from '../juneo'
 import {
   JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, fetchUtxos
 } from '../transaction'
-import { InterChainTransferError, TransferError } from '../utils'
+import { TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
 import * as jevm from '../transaction/jevm'
@@ -203,7 +203,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       await this.executeJEVMTransfer(provider, this.transfer)
     } else {
       this.status = TransferStatus.Error
-      throw new InterChainTransferError('unsupported export vm id')
+      throw new TransferError('unsupported export vm id')
     }
   }
 
@@ -415,7 +415,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     } else if (transfer.destinationChain.vmId === JEVM_ID) {
       return await this.executeJEVMImport(provider, transfer, importFee)
     } else {
-      throw new InterChainTransferError('unsupported import vm id')
+      throw new TransferError('unsupported import vm id')
     }
   }
 

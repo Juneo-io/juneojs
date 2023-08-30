@@ -6,8 +6,8 @@ import { MCNOperationSummary } from '../operation'
 import { type UnwrapOperation, type WrapOperation } from '../wrap'
 import { BaseSpending } from './transaction'
 
-const DefaultWrapEstimate: bigint = BigInt('55000000000000')
-const DefaultUnwrapEstimate: bigint = BigInt('45000000000000')
+const DefaultWrapEstimate: bigint = BigInt(55_000)
+const DefaultUnwrapEstimate: bigint = BigInt(45_000)
 
 export class EVMTransactionData {
   from: string

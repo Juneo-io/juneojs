@@ -8,6 +8,7 @@ import { SendManager, type SendOperation } from '../send'
 import { type JEVMWallet, type JuneoWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
 import { AbstractAccount } from './account'
+import { Balance } from './balance'
 
 export class EVMAccount extends AbstractAccount {
   override chain: JEVMBlockchain
@@ -99,9 +100,10 @@ export class EVMAccount extends AbstractAccount {
       // prefer using function instead of pushing it directly to cover more cases
       this.registerAssets([assetId])
     }
+    const balance: Balance = new Balance()
+    this.balances.set(assetId, balance)
     const address: string = this.chainWallet.getHexAddress()
-    const amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
-    this.balances.set(assetId, amount)
+    await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }
 
   async fetchBalances (): Promise<void> {

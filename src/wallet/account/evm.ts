@@ -15,7 +15,6 @@ export class EVMAccount extends AbstractAccount {
   api: JEVMAPI
   wallet: JuneoWallet
   chainWallet: JEVMWallet
-  gasBalance: bigint = BigInt(0)
   registeredAssets: string[] = []
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
@@ -79,7 +78,7 @@ export class EVMAccount extends AbstractAccount {
       }
     }
     // should not be needed but in some cases this can be usefull e.g. sending to self
-    await this.fetchBalances()
+    await this.fetchAllBalances()
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {
@@ -99,20 +98,20 @@ export class EVMAccount extends AbstractAccount {
     if (!this.balances.has(assetId)) {
       // prefer using function instead of pushing it directly to cover more cases
       this.registerAssets([assetId])
+      this.balances.set(assetId, new Balance())
     }
-    const balance: Balance = new Balance()
-    this.balances.set(assetId, balance)
+    const balance: Balance = this.balances.get(assetId) as Balance
     const address: string = this.chainWallet.getHexAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }
 
-  async fetchBalances (): Promise<void> {
-    await super.fetchBalancesAsynchronously(async () => {
-      await this.fetchBalance(this.chain.assetId)
-      this.gasBalance = this.getValue(this.chain.assetId)
-      for (let j = 0; j < this.registeredAssets.length; j++) {
-        await this.fetchBalance(this.registeredAssets[j])
-      }
-    })
+  async fetchAllBalances (): Promise<void> {
+    const fetchers: Promise<void>[] = []
+    // guarantee gas balance
+    fetchers.push(this.fetchBalance(this.chain.assetId))
+    for (let j = 0; j < this.registeredAssets.length; j++) {
+      fetchers.push(this.fetchBalance(this.registeredAssets[j]))
+    }
+    await Promise.all(fetchers)
   }
 }

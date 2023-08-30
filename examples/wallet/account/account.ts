@@ -11,7 +11,7 @@ async function main () {
     // in the creation of the MCNAccount you will get an error
     const account: ChainAccount = mcnAccount.getAccount(SocotraJUNEChain.id)
     // we can fetch the balances
-    await account.fetchBalances()
+    await account.fetchAllBalances()
     // the returned balance will be an AssetValue which contains useful methods
     const balance: AssetValue = account.getBalance(SocotraJUNEAsset)
     // this is the value that must be used to create transactions

@@ -2,19 +2,19 @@ import { type JEVMAPI } from '../../api'
 import { type JEVMBlockchain, type TokenAsset } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
-import { Spending, TransactionType, type FeeData, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
+import { BaseSpending, TransactionType, type FeeData, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
 import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MCNOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JEVMWallet, type JuneoWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
 import { AbstractAccount } from './account'
+import { Balance } from './balance'
 
 export class EVMAccount extends AbstractAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
   wallet: JuneoWallet
   chainWallet: JEVMWallet
-  gasBalance: bigint = BigInt(0)
   registeredAssets: string[] = []
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
@@ -33,8 +33,8 @@ export class EVMAccount extends AbstractAccount {
   async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: FeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
-      return new MCNOperationSummary(operation, this.chain, [fee], [new Spending(this.chain.id, send.amount, send.assetId), fee])
+      const fee: EVMFeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
+      return new MCNOperationSummary(operation, this.chain, [fee], [new BaseSpending(this.chain.id, send.amount, send.assetId), fee])
     } else if (operation.type === MCNOperationType.Wrap) {
       return await estimateEVMWrapOperation(this.api, this.chainWallet.getHexAddress(), operation as WrapOperation)
     } else if (operation.type === MCNOperationType.Unwrap) {
@@ -78,7 +78,7 @@ export class EVMAccount extends AbstractAccount {
       }
     }
     // should not be needed but in some cases this can be usefull e.g. sending to self
-    await this.fetchBalances()
+    await this.fetchAllBalances()
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {
@@ -98,19 +98,20 @@ export class EVMAccount extends AbstractAccount {
     if (!this.balances.has(assetId)) {
       // prefer using function instead of pushing it directly to cover more cases
       this.registerAssets([assetId])
+      this.balances.set(assetId, new Balance())
     }
+    const balance: Balance = this.balances.get(assetId) as Balance
     const address: string = this.chainWallet.getHexAddress()
-    const amount: bigint = await this.chain.queryEVMBalance(this.api, address, assetId)
-    this.balances.set(assetId, amount)
+    await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }
 
-  async fetchBalances (): Promise<void> {
-    await super.fetchBalancesAsynchronously(async () => {
-      await this.fetchBalance(this.chain.assetId)
-      this.gasBalance = this.getValue(this.chain.assetId)
-      for (let j = 0; j < this.registeredAssets.length; j++) {
-        await this.fetchBalance(this.registeredAssets[j])
-      }
-    })
+  async fetchAllBalances (): Promise<void> {
+    const fetchers: Array<Promise<void>> = []
+    // guarantee gas balance
+    fetchers.push(this.fetchBalance(this.chain.assetId))
+    for (let j = 0; j < this.registeredAssets.length; j++) {
+      fetchers.push(this.fetchBalance(this.registeredAssets[j]))
+    }
+    await Promise.all(fetchers)
   }
 }

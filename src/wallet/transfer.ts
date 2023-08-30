@@ -321,7 +321,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
       const balance: JVMAccount = new JVMAccount(provider, transfer.signer)
-      await balance.fetchBalances()
+      await balance.fetchAllBalances()
       const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }
@@ -356,7 +356,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     let exportingFee: boolean = true
     if (destinationChain.canPayImportFee()) {
       const balance: PlatformAccount = new PlatformAccount(provider, transfer.signer)
-      await balance.fetchBalances()
+      await balance.fetchAllBalances()
       const sourceBalance: bigint = balance.getBalance(destinationChain.asset).value
       exportingFee = sourceBalance >= importFee
     }

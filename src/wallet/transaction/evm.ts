@@ -1,13 +1,13 @@
 import { type ethers } from 'ethers'
-import { FeeData, FeeType } from './fee'
+import { BaseFeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
 import { JEVMBlockchain } from '../../chain'
 import { MCNOperationSummary } from '../operation'
 import { type UnwrapOperation, type WrapOperation } from '../wrap'
-import { Spending } from './transaction'
+import { BaseSpending } from './transaction'
 
-const DefaultWrapEstimate: bigint = BigInt(55_000)
-const DefaultUnwrapEstimate: bigint = BigInt(45_000)
+const DefaultWrapEstimate: bigint = BigInt('55000000000000')
+const DefaultUnwrapEstimate: bigint = BigInt('45000000000000')
 
 export class EVMTransactionData {
   from: string
@@ -23,7 +23,7 @@ export class EVMTransactionData {
   }
 }
 
-export class EVMFeeData extends FeeData {
+export class EVMFeeData extends BaseFeeData {
   gasPrice: bigint
   gasLimit: bigint
   data: EVMTransactionData
@@ -72,10 +72,13 @@ export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
   return await estimateEVMTransaction(api, wrap.asset.assetId, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
-    return new MCNOperationSummary(wrap, chain, [fee], [new Spending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
   }, async () => {
-    const fee: FeeData = new FeeData(chain, DefaultWrapEstimate, type)
-    return new MCNOperationSummary(wrap, chain, [fee], [new Spending(chain.id, wrap.amount, wrap.asset.assetId), fee])
+    const gasPrice: bigint = await api.eth_baseFee().catch(() => {
+      return chain.baseFee
+    })
+    const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate * gasPrice, type)
+    return new MCNOperationSummary(wrap, chain, [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
   })
 }
 
@@ -84,9 +87,12 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
   const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
   const type: FeeType = FeeType.Unwrap
   return await estimateEVMTransaction(api, unwrap.asset.assetId, from, unwrap.asset.address, BigInt(0), data, type).then(fee => {
-    return new MCNOperationSummary(unwrap, chain, [fee], [new Spending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+    return new MCNOperationSummary(unwrap, chain, [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
   }, async () => {
-    const fee: FeeData = new FeeData(chain, DefaultUnwrapEstimate, type)
-    return new MCNOperationSummary(unwrap, chain, [fee], [new Spending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+    const gasPrice: bigint = await api.eth_baseFee().catch(() => {
+      return chain.baseFee
+    })
+    const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
+    return new MCNOperationSummary(unwrap, chain, [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
   })
 }

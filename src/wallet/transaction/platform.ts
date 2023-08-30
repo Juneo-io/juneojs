@@ -6,18 +6,17 @@ import { type PlatformAccount } from '../account'
 import { MCNOperationSummary } from '../operation'
 import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation, ValidationShare } from '../stake'
 import { type VMWallet, type JuneoWallet } from '../wallet'
-import { FeeData, FeeType } from './fee'
-import { Spending } from './transaction'
-import { UtxoFeeData, UtxoSpending } from './utxo'
+import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
+import { BaseSpending, UtxoSpending } from './transaction'
 
-async function getPlatformAddValidatorFee (provider: MCNProvider): Promise<FeeData> {
+async function getPlatformAddValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkValidatorFee)
-  return new FeeData(provider.platform.chain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platform.chain, fee, FeeType.ValidateFee)
 }
 
-async function getPlatformAddDelegatorFee (provider: MCNProvider): Promise<FeeData> {
+async function getPlatformAddDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
-  return new FeeData(provider.platform.chain, fee, FeeType.DelegateFee)
+  return new BaseFeeData(provider.platform.chain, fee, FeeType.DelegateFee)
 }
 
 export async function estimatePlatformAddValidatorTransaction (provider: MCNProvider, wallet: VMWallet, validator: Validator, share: number, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
@@ -25,12 +24,12 @@ export async function estimatePlatformAddValidatorTransaction (provider: MCNProv
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [wallet.getAddress()])
   }
-  const fee: FeeData = await getPlatformAddValidatorFee(provider)
+  const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddValidatorTransaction(
     utxoSet, [wallet.getAddress()], fee.amount, api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
     api.chain.assetId, share, wallet.getAddress(), wallet.getAddress(), provider.mcn.id
   )
-  return UtxoFeeData.from(fee, transaction)
+  return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
 export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: JuneoWallet, validate: ValidateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
@@ -39,11 +38,11 @@ export async function estimatePlatformValidateOperation (provider: MCNProvider, 
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet).then(fee => {
     return new StakingOperationSummary(validate, chain, [fee],
-      [new UtxoSpending(chain.id, validate.amount, chain.assetId, account.getTransactionUtxos(fee.transaction)), fee], potentialReward
+      [new UtxoSpending(chain.id, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
     )
   }, async () => {
-    const fee: FeeData = await getPlatformAddValidatorFee(provider)
-    return new MCNOperationSummary(validate, chain, [fee], [new Spending(chain.id, validate.amount, chain.assetId), fee])
+    const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
+    return new MCNOperationSummary(validate, chain, [fee], [new BaseSpending(chain.id, validate.amount, chain.assetId), fee])
   })
 }
 
@@ -52,12 +51,12 @@ export async function estimatePlatformAddDelegatorTransaction (provider: MCNProv
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [wallet.getAddress()])
   }
-  const fee: FeeData = await getPlatformAddDelegatorFee(provider)
+  const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
     utxoSet, [wallet.getAddress()], fee.amount, api.chain, validator.nodeId, validator.startTime, validator.endTime, validator.weight,
     api.chain.assetId, wallet.getAddress(), wallet.getAddress(), provider.mcn.id
   )
-  return UtxoFeeData.from(fee, transaction)
+  return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
 export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: JuneoWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
@@ -66,10 +65,10 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet).then(fee => {
     return new StakingOperationSummary(delegate, chain, [fee],
-      [new UtxoSpending(chain.id, delegate.amount, chain.assetId, account.getTransactionUtxos(fee.transaction)), fee], potentialReward
+      [new UtxoSpending(chain.id, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
     )
   }, async () => {
-    const fee: FeeData = await getPlatformAddDelegatorFee(provider)
-    return new MCNOperationSummary(delegate, chain, [fee], [new Spending(chain.id, delegate.amount, chain.assetId), fee])
+    const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
+    return new MCNOperationSummary(delegate, chain, [fee], [new BaseSpending(chain.id, delegate.amount, chain.assetId), fee])
   })
 }

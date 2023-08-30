@@ -1,13 +1,14 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output, type UnsignedTransaction } from '../../transaction'
+import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
+import { Balance } from './balance'
 
 export interface ChainAccount {
   chain: Blockchain
-  balances: Map<string, bigint>
+  balances: Map<string, Balance>
   addresses: string[]
 
   hasBalance: (asset: TokenAsset) => boolean
@@ -18,7 +19,7 @@ export interface ChainAccount {
 
   fetchBalance: (assetId: string) => Promise<void>
 
-  fetchBalances: () => Promise<void>
+  fetchAllBalances: () => Promise<void>
 
   estimate: (operation: MCNOperation) => Promise<MCNOperationSummary>
 
@@ -27,7 +28,7 @@ export interface ChainAccount {
 
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
-  balances = new Map<string, bigint>()
+  balances = new Map<string, Balance>()
   protected fetching: boolean = false
   addresses: string[] = []
 
@@ -52,14 +53,14 @@ export abstract class AbstractAccount implements ChainAccount {
     if (!this.balances.has(assetId)) {
       return BigInt(0)
     }
-    return BigInt(this.balances.get(assetId) as bigint)
+    return (this.balances.get(assetId) as Balance).getValue()
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
 
-  abstract fetchBalances (): Promise<void>
+  abstract fetchAllBalances (): Promise<void>
 
-  protected async fetchBalancesAsynchronously (fetch: () => Promise<void>): Promise<void> {
+  protected async fetchAllBalancesAsynchronously (fetch: () => Promise<void>): Promise<void> {
     if (this.fetching) {
       return
     }
@@ -75,11 +76,9 @@ export abstract class AbstractAccount implements ChainAccount {
 
   protected spend (spendings: Spending[]): void {
     spendings.forEach(spending => {
-      let amount: bigint = BigInt(0)
       if (this.balances.has(spending.assetId)) {
-        amount += this.balances.get(spending.assetId) as bigint
+        (this.balances.get(spending.assetId) as Balance).spend(spending.amount)
       }
-      this.balances.set(spending.assetId, amount - spending.amount)
     })
   }
 }
@@ -103,11 +102,11 @@ export abstract class UtxoAccount extends AbstractAccount {
   async fetchBalance (assetId: string): Promise<void> {
     // there is currently no other way to do it only with utxos
     // a seperated indexing of each asset is needed to be able to do it
-    await this.fetchBalances()
+    await this.fetchAllBalances()
   }
 
-  async fetchBalances (): Promise<void> {
-    await super.fetchBalancesAsynchronously(async () => {
+  async fetchAllBalances (): Promise<void> {
+    await super.fetchAllBalancesAsynchronously(async () => {
       this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
       this.calculateBalances()
     })
@@ -132,27 +131,26 @@ export abstract class UtxoAccount extends AbstractAccount {
     this.utxoSet = utxoSet
   }
 
-  getTransactionUtxos (transaction: UnsignedTransaction): Utxo[] {
-    const utxos: Utxo[] = []
-    transaction.inputs.forEach(transferable => {
-      // should be Utxo here because transaction should be from builder
-      // undefined should only be the case if it is an input from parsing bytes
-      utxos.push(transferable.input.utxo as Utxo)
-    })
-    return utxos
-  }
-
   private calculateBalances (): void {
+    const values = new Map<string, bigint>()
     this.utxoSet.forEach(utxo => {
       const assetId: string = utxo.assetId.assetId
       let amount: bigint = BigInt(0)
       if (utxo.output.typeId === Secp256k1OutputTypeId) {
         amount = (utxo.output as Secp256k1Output).amount
       }
-      if (this.balances.has(assetId)) {
-        amount += this.balances.get(assetId) as bigint
+      if (values.has(assetId)) {
+        amount += values.get(assetId) as bigint
       }
-      this.balances.set(assetId, amount)
+      values.set(assetId, amount)
     })
+    for (const key in values) {
+      const value: bigint = values.get(key) as bigint
+      if (!this.balances.has(key)) {
+        this.balances.set(key, new Balance())
+      }
+      const balance: Balance = this.balances.get(key) as Balance
+      balance.update(value)
+    }
   }
 }

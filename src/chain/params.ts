@@ -86,53 +86,53 @@ const jrc20Assets: JRC20Asset[] = [
 ]
 export const SocotraWJUNEAsset: WrappedAsset = new WrappedAsset('0x333e51E9908dcF4Ae79250757ecC3faa21f24554', 'Wrapped JUNE', 'wJUNE', 18)
 export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
-  'JUNE-Chain', 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5', SocotraJUNEGasToken, BigInt(220001), SocotraAddress, ['JUNE'], [
+  'JUNE-Chain', 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5', SocotraJUNEGasToken, BigInt(220001), BigInt(48), SocotraAddress, ['JUNE'], [
     SocotraWJUNEAsset, ...jrc20Assets
   ], jrc20Assets
 )
 SocotraJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(SocotraJUNEChain.ethProvider))
 
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1GasToken, BigInt(220002), SocotraAddress, ['ETH1']
+  'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1GasToken, BigInt(220002), BigInt(1), SocotraAddress, ['ETH1']
 )
 export const SocotraMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'mBTC1-Chain', '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o', SocotraMBTC1GasToken, BigInt(220003), SocotraAddress, ['mBTC1']
+  'mBTC1-Chain', '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o', SocotraMBTC1GasToken, BigInt(220003), BigInt(18), SocotraAddress, ['mBTC1']
 )
 export const SocotraDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'DOGE1-Chain', 'wb8QNS3zrwd94Mc1o7L2mqhL8CQiRAvkVLTXFkdnbX1LaESpn', SocotraDOGE1GasToken, BigInt(220004), SocotraAddress, ['DOGE1']
+  'DOGE1-Chain', 'wb8QNS3zrwd94Mc1o7L2mqhL8CQiRAvkVLTXFkdnbX1LaESpn', SocotraDOGE1GasToken, BigInt(220004), BigInt(5952), SocotraAddress, ['DOGE1']
 )
 export const SocotraUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'USDT1-Chain', 'xNScMRJEmvx8A34Df2gQkTSjLMqWDcPbaPYfPYJRuf1cjLHLM', SocotraUSDT1GasToken, BigInt(220006), SocotraAddress, ['USDT1']
+  'USDT1-Chain', 'xNScMRJEmvx8A34Df2gQkTSjLMqWDcPbaPYfPYJRuf1cjLHLM', SocotraUSDT1GasToken, BigInt(220006), BigInt(476), SocotraAddress, ['USDT1']
 )
 export const SocotraDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'DAI1-Chain', 'XgN1Q8XeEuj9SU5UtM2LtNWsufgrz6amVs8BwGcJZM7ZuarNq', SocotraDAI1GasToken, BigInt(220007), SocotraAddress, ['DAI1']
+  'DAI1-Chain', 'XgN1Q8XeEuj9SU5UtM2LtNWsufgrz6amVs8BwGcJZM7ZuarNq', SocotraDAI1GasToken, BigInt(220007), BigInt(476), SocotraAddress, ['DAI1']
 )
 export const SocotraEUROC1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'EUROC1-Chain', '2biwSVXZ8KMkwJbYnC4M6khf759pgr49ZPL4M1k8zvYjeQmG82', SocotraEUROC1GasToken, BigInt(220008), SocotraAddress, ['EUROC1']
+  'EUROC1-Chain', '2biwSVXZ8KMkwJbYnC4M6khf759pgr49ZPL4M1k8zvYjeQmG82', SocotraEUROC1GasToken, BigInt(220008), BigInt(476), SocotraAddress, ['EUROC1']
 )
 export const SocotraLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'LTC1-Chain', 'fawNQXm5Q8AzyvuvASN1NfvYuqqmvr55WQeD8ZibJz6Q12WP4', SocotraLTC1GasToken, BigInt(220009), SocotraAddress, ['LTC1']
+  'LTC1-Chain', 'fawNQXm5Q8AzyvuvASN1NfvYuqqmvr55WQeD8ZibJz6Q12WP4', SocotraLTC1GasToken, BigInt(220009), BigInt(5), SocotraAddress, ['LTC1']
 )
 export const SocotraXLM1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'XLM1-Chain', '2deaJGmohHKGJNeeCc76AdBpjxYgGQvqg7egYFnrUTm8PLKihd', SocotraXLM1GasToken, BigInt(220010), SocotraAddress, ['XLM1']
+  'XLM1-Chain', '2deaJGmohHKGJNeeCc76AdBpjxYgGQvqg7egYFnrUTm8PLKihd', SocotraXLM1GasToken, BigInt(220010), BigInt(4762), SocotraAddress, ['XLM1']
 )
 export const SocotraBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'BCH1-Chain', '29n3FwMYBxUGtH97BeheVfr2HTxmK2u8XvCuWyaHSKMmMeisVv', SocotraBCH1GasToken, BigInt(220011), SocotraAddress, ['BCH1']
+  'BCH1-Chain', '29n3FwMYBxUGtH97BeheVfr2HTxmK2u8XvCuWyaHSKMmMeisVv', SocotraBCH1GasToken, BigInt(220011), BigInt(4), SocotraAddress, ['BCH1']
 )
 export const SocotraPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'PAXG1-Chain', 'SRPjwo4SgDKFAonPLy9mmYzVRNAv5o8nUJ1GyMJ9S3ojr87bW', SocotraPAXG1GasToken, BigInt(220012), SocotraAddress, ['PAXG1']
+  'PAXG1-Chain', 'SRPjwo4SgDKFAonPLy9mmYzVRNAv5o8nUJ1GyMJ9S3ojr87bW', SocotraPAXG1GasToken, BigInt(220012), BigInt(1), SocotraAddress, ['PAXG1']
 )
 export const SocotraXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'XSGD1-Chain', '2u5LruuaCVuJ8qbasjZNh4ZKMhX96hFT3jQZvnvSCtY9faVViN', SocotraXSGD1GasToken, BigInt(220015), SocotraAddress, ['XSGD1']
+  'XSGD1-Chain', '2u5LruuaCVuJ8qbasjZNh4ZKMhX96hFT3jQZvnvSCtY9faVViN', SocotraXSGD1GasToken, BigInt(220015), BigInt(627), SocotraAddress, ['XSGD1']
 )
 export const SocotraETC1Chain: JEVMBlockchain = new JEVMBlockchain(
-  'ETC1-Chain', '2T2erzcpLjaeiYqFX7HWG6EenkR3vpk6pdY1HLEZmK4P9UJ8xS', SocotraETC1GasToken, BigInt(220016), SocotraAddress, ['ETC1']
+  'ETC1-Chain', '2T2erzcpLjaeiYqFX7HWG6EenkR3vpk6pdY1HLEZmK4P9UJ8xS', SocotraETC1GasToken, BigInt(220016), BigInt(24), SocotraAddress, ['ETC1']
 )
 export const SocotraR1000Chain: JEVMBlockchain = new JEVMBlockchain(
-  'R1000-Chain', '2eWMraHV8fMZmCGcHTcS8aurRWXcyrerWYooJZm6PE5ayLhYnh', SocotraR1000GasToken, BigInt(220017), SocotraAddress, ['R1000']
+  'R1000-Chain', '2eWMraHV8fMZmCGcHTcS8aurRWXcyrerWYooJZm6PE5ayLhYnh', SocotraR1000GasToken, BigInt(220017), BigInt(476), SocotraAddress, ['R1000']
 )
 export const SocotraR10Chain: JEVMBlockchain = new JEVMBlockchain(
-  'R10-Chain', '4KZj9sbft2PT2yZCoS7ntSxhnSsw3Jjwv8xDmD2thmgLmQ8W3', SocotraR10GasToken, BigInt(220018), SocotraAddress, ['R10']
+  'R10-Chain', '4KZj9sbft2PT2yZCoS7ntSxhnSsw3Jjwv8xDmD2thmgLmQ8W3', SocotraR10GasToken, BigInt(220018), BigInt(476), SocotraAddress, ['R10']
 )
 
 export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet('11111111111111111111111111111111LpoYY', [

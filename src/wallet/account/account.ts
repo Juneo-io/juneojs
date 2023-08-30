@@ -127,17 +127,29 @@ export abstract class UtxoAccount extends AbstractAccount {
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
-    const utxoSet: Utxo[] = []
-    spendings.forEach(spending => {
-      spending.utxos.forEach(spend => {
-        this.utxoSet.forEach(utxo => {
-          if (spend.transactionId !== utxo.transactionId && spend.utxoIndex !== utxo.utxoIndex) {
-            utxoSet.push(utxo)
+    const utxos: Utxo[] = []
+    this.utxoSet.forEach(utxo => {
+      let spent: boolean = false
+      for (let i = 0; i < spendings.length; i++) {
+        const spending: UtxoSpending = spendings[i]
+        for (let j = 0; j < spending.utxos.length; j++) {
+          const spend: Utxo = spending.utxos[j]
+          const sameTransaction: boolean = spend.transactionId.transactionId === utxo.transactionId.transactionId
+          const sameIndex: boolean = spend.utxoIndex === utxo.utxoIndex
+          if (sameTransaction && sameIndex) {
+            spent = true
+            break
           }
-        })
-      })
+        }
+        if (spent) {
+          break
+        }
+      }
+      if (!spent) {
+        utxos.push(utxo)
+      }
     })
-    this.utxoSet = utxoSet
+    this.utxoSet = utxos
   }
 
   private calculateBalances (): void {

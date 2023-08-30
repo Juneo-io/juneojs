@@ -4,7 +4,7 @@ import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } fr
 import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
-import { Balance } from './balance'
+import { Balance, type BalanceListener } from './balance'
 
 export interface ChainAccount {
   chain: Blockchain
@@ -54,6 +54,13 @@ export abstract class AbstractAccount implements ChainAccount {
       return BigInt(0)
     }
     return (this.balances.get(assetId) as Balance).getValue()
+  }
+
+  addBalanceListener (assetId: string, listener: BalanceListener): void {
+    if (!this.balances.has(assetId)) {
+      this.balances.set(assetId, new Balance())
+    }
+    (this.balances.get(assetId) as Balance).registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>

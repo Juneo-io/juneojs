@@ -254,35 +254,83 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     }
   }
 
+  /**
+   * @deprecated
+   */
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
     return await provider.jevm[this.id].eth_baseFee()
   }
 
+  /**
+   * @deprecated
+   */
   async queryExportFee (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string): Promise<bigint> {
+    const assets: string[] = []
+    userInputs.forEach(input => {
+      assets.push(input.assetId)
+    })
     const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      userInputs, this.assetId, importFeeAssetId
+      assets, this.assetId, importFeeAssetId
     )
     const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    return await this.calculateAtomicCost(provider, BigInt(size), BigInt(signaturesCount))
+    return await this.calculateAtomicCost_(provider, BigInt(size), BigInt(signaturesCount))
   }
 
+  /**
+   * @deprecated
+   */
   async queryImportFee (provider: MCNProvider, userInputs: UserInput[]): Promise<bigint> {
     const mergedInputs: boolean = false
+    const assets: string[] = []
+    userInputs.forEach(input => {
+      assets.push(input.assetId)
+    })
     const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
-      userInputs, this.assetId, mergedInputs
+      assets, this.assetId, mergedInputs
     )
     const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
-    return await this.calculateAtomicCost(provider, BigInt(size), BigInt(signaturesCount))
+    return await this.calculateAtomicCost_(provider, BigInt(size), BigInt(signaturesCount))
   }
 
-  private async calculateAtomicCost (provider: MCNProvider, size: bigint, signaturesCount: bigint): Promise<bigint> {
-    const gasUsed: bigint = size + JEVMBlockchain.AtomicSignatureCost * signaturesCount + JEVMBlockchain.AtomicBaseCost
+  /**
+   * @deprecated
+   */
+  private async calculateAtomicCost_ (provider: MCNProvider, size: bigint, signaturesCount: bigint): Promise<bigint> {
+    const gasUsed: bigint = this.calculateAtomicGas(size, signaturesCount)
     const baseFee: bigint = await this.queryBaseFee(provider)
     return gasUsed * baseFee / JEVMBlockchain.AtomicDenomination
   }
 
+  /**
+   * @deprecated
+   */
   canPayImportFee (): boolean {
     return false
+  }
+
+  private calculateAtomicGas (size: bigint, signaturesCount: bigint): bigint {
+    return size + JEVMBlockchain.AtomicSignatureCost * signaturesCount + JEVMBlockchain.AtomicBaseCost
+  }
+
+  estimateAtomicExportGas (exportedAssets: string[], importFeeAssetId: string): bigint {
+    const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
+      exportedAssets, this.assetId, importFeeAssetId
+    )
+    const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
+    return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
+  }
+
+  estimateAtomicImportGas (importedAssets: string[]): bigint {
+    const mergedInputs: boolean = false
+    const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
+      importedAssets, this.assetId, mergedInputs
+    )
+    const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
+    return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
+  }
+
+  calculateAtomicCost (gas: bigint, baseFee: bigint): bigint {
+    return gas * baseFee / JEVMBlockchain.AtomicDenomination
   }
 
   static isContractAddress (assetId: string): boolean {

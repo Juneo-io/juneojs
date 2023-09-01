@@ -6,14 +6,14 @@ import { type MCNProvider } from '../juneo'
 import {
   JVMTransactionStatus, JVMTransactionStatusFetcher, UserInput, type Utxo, PlatformTransactionStatusFetcher, PlatformTransactionStatus, fetchUtxos
 } from '../transaction'
-import { InterChainTransferError, IntraChainTransferError, TransferError } from '../utils'
+import { TransferError } from '../utils'
 import { type JEVMWallet, type JuneoWallet, type VMWallet } from './wallet'
 import * as jvm from '../transaction/jvm'
 import * as jevm from '../transaction/jevm'
 import * as platform from '../transaction/platform'
 import { type JEVMAPI } from '../api/jevm'
 import { EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher } from '../transaction/jevm'
-import { type ethers, type TransactionRequest } from 'ethers'
+import { type TransactionRequest } from 'ethers'
 import { type ContractAdapter, JRC20ContractAdapter } from '../solidity'
 import { JVMAccount, PlatformAccount } from './account'
 import { TransactionReceipt, TransactionType, WalletStatusFetcherTimeout, type FeeData, calculateFee } from './transaction'
@@ -65,16 +65,8 @@ export class TransferManager {
 
   transfer (userInputs: UserInput[]): TransferHandler[] {
     const transfersInputs: Array<Record<string, UserInput[]>> = this.sortInputs(userInputs)
-    const intraTransfersInputs: Record<string, UserInput[]> = transfersInputs[0]
     const interTransfersInputs: Record<string, UserInput[]> = transfersInputs[1]
     const handlers: ExecutableTransferHandler[] = []
-    for (const key in intraTransfersInputs) {
-      const inputs: UserInput[] = intraTransfersInputs[key]
-      const intraTransfer: Transfer = new Transfer(
-        inputs[0].sourceChain, inputs[0].destinationChain, inputs, this.wallet
-      )
-      handlers.push(new IntraChainTransferHandler(intraTransfer))
-    }
     for (const key in interTransfersInputs) {
       const inputs: UserInput[] = interTransfersInputs[key]
       const interTransfer: Transfer = new Transfer(
@@ -181,101 +173,6 @@ interface ExecutableTransferHandler extends TransferHandler {
   execute: (provider: MCNProvider) => Promise<void>
 }
 
-class IntraChainTransferHandler implements ExecutableTransferHandler {
-  private status: string = TransferStatus.Initializing
-  private readonly transfer: Transfer
-  private readonly receipts: TransactionReceipt[] = []
-
-  constructor (transfer: Transfer) {
-    this.transfer = transfer
-  }
-
-  getStatus (): string {
-    return this.status
-  }
-
-  getTransfer (): Transfer | undefined {
-    return this.transfer
-  }
-
-  getCurrentReceipts (): TransactionReceipt[] {
-    return this.receipts
-  }
-
-  async execute (provider: MCNProvider): Promise<void> {
-    if (this.transfer.sourceChain.vmId === JVM_ID) {
-      await this.executeJVMTransfer(provider, this.transfer)
-    } else if (this.transfer.sourceChain.vmId === JEVM_ID) {
-      await this.executeJEVMTransfer(provider, this.transfer)
-    } else {
-      this.status = TransferStatus.Error
-      throw new IntraChainTransferError('unsupported vm id')
-    }
-  }
-
-  private async executeJVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
-    const wallet: VMWallet = transfer.signer.getWallet(transfer.sourceChain)
-    const senders: string[] = [wallet.getAddress()]
-    const utxoSet: Utxo[] = await fetchUtxos(provider.jvm, senders)
-    const fee: bigint = await transfer.sourceChain.queryBaseFee(provider)
-    const chainId: string = transfer.sourceChain.id
-    const receipt: TransactionReceipt = new TransactionReceipt(chainId, TransactionType.Base, '???', '???')
-    this.receipts.push(receipt)
-    const transaction: string = jvm.buildJVMBaseTransaction(
-      transfer.userInputs, utxoSet, senders, fee,
-      wallet.getAddress(), provider.mcn.id, chainId
-    ).signTransaction([wallet]).toCHex()
-    this.status = TransferStatus.Sending
-    const transactionId = (await provider.jvm.issueTx(transaction)).txID
-    receipt.transactionId = transactionId
-    const transactionStatus: string = await new JVMTransactionStatusFetcher(provider.jvm, transactionId).fetch(WalletStatusFetcherTimeout)
-    receipt.transactionStatus = transactionStatus
-    if (transactionStatus !== JVMTransactionStatus.Accepted) {
-      this.status = TransferStatus.Timeout
-    } else {
-      this.status = TransferStatus.Done
-    }
-  }
-
-  private async executeJEVMTransfer (provider: MCNProvider, transfer: Transfer): Promise<void> {
-    const chain: JEVMBlockchain = transfer.sourceChain as JEVMBlockchain
-    const wallet: JEVMWallet = transfer.signer.getWallet(chain) as JEVMWallet
-    const ethProvider: ethers.JsonRpcProvider = chain.ethProvider
-    const evmWallet: ethers.Wallet = wallet.evmWallet.connect(ethProvider)
-    const api: JEVMAPI = provider.jevm[chain.id]
-    let nonce: bigint = await api.eth_getTransactionCount(wallet.getHexAddress(), 'pending')
-    const gasPrice: bigint = await api.eth_baseFee()
-    this.status = TransferStatus.Sending
-    for (let i: number = 0; i < transfer.userInputs.length; i++) {
-      const receipt: TransactionReceipt = new TransactionReceipt(chain.id, TransactionType.Send, '???', '???')
-      this.receipts.push(receipt)
-      const input: UserInput = transfer.userInputs[i]
-      const isContract: boolean = JEVMBlockchain.isContractAddress(input.assetId)
-      const gasLimit: bigint = await chain.estimateGasLimit(input.assetId, wallet.getHexAddress(), input.address, input.amount)
-      const transactionData: TransactionRequest = {
-        from: evmWallet.address,
-        to: isContract ? input.assetId : input.address,
-        value: isContract ? BigInt(0) : input.amount,
-        nonce: Number(nonce++),
-        chainId: chain.chainId,
-        gasLimit,
-        gasPrice,
-        data: isContract ? await chain.getContractTransactionData(input.assetId, input.address, input.amount) : '0x'
-      }
-      const transaction: string = await evmWallet.signTransaction(transactionData)
-      const transactionHash: string = await api.eth_sendRawTransaction(transaction)
-      receipt.transactionId = transactionHash
-      const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash).fetch(WalletStatusFetcherTimeout)
-      receipt.transactionStatus = transactionStatus
-      if (transactionStatus !== EVMTransactionStatus.Success) {
-        this.status = TransferStatus.Timeout
-        return
-      }
-    }
-    this.status = TransferStatus.Done
-  }
-}
-
 class InterChainTransferHandler implements ExecutableTransferHandler {
   private status: string = TransferStatus.Initializing
   private readonly transfer: Transfer
@@ -306,7 +203,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
       await this.executeJEVMTransfer(provider, this.transfer)
     } else {
       this.status = TransferStatus.Error
-      throw new InterChainTransferError('unsupported export vm id')
+      throw new TransferError('unsupported export vm id')
     }
   }
 
@@ -518,7 +415,7 @@ class InterChainTransferHandler implements ExecutableTransferHandler {
     } else if (transfer.destinationChain.vmId === JEVM_ID) {
       return await this.executeJEVMImport(provider, transfer, importFee)
     } else {
-      throw new InterChainTransferError('unsupported import vm id')
+      throw new TransferError('unsupported import vm id')
     }
   }
 

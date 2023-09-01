@@ -31,7 +31,6 @@ export interface ChainAccount {
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, Balance>()
-  protected fetching: boolean = false
   addresses: string[] = []
 
   constructor (chain: Blockchain) {
@@ -69,16 +68,6 @@ export abstract class AbstractAccount implements ChainAccount {
 
   abstract fetchAllBalances (): Promise<void>
 
-  protected async fetchAllBalancesAsynchronously (fetch: () => Promise<void>): Promise<void> {
-    if (this.fetching) {
-      return
-    }
-    this.fetching = true
-    this.balances.clear()
-    await fetch()
-    this.fetching = false
-  }
-
   abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
 
   abstract execute (executable: ExecutableMCNOperation): Promise<void>
@@ -98,6 +87,7 @@ export abstract class UtxoAccount extends AbstractAccount {
   wallet: JuneoWallet
   chainWallet: VMWallet
   sourceChain?: string
+  protected fetching: boolean = false
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
     super(chain)
@@ -115,10 +105,17 @@ export abstract class UtxoAccount extends AbstractAccount {
   }
 
   async fetchAllBalances (): Promise<void> {
-    await super.fetchAllBalancesAsynchronously(async () => {
-      this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
-      this.calculateBalances()
+    if (this.fetching) {
+      return
+    }
+    this.fetching = true
+    // force all balances to 0 in order to prevent desync
+    this.balances.forEach((balance) => {
+      balance.update(BigInt(0))
     })
+    this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
+    this.calculateBalances()
+    this.fetching = false
   }
 
   abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
@@ -127,17 +124,29 @@ export abstract class UtxoAccount extends AbstractAccount {
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
-    const utxoSet: Utxo[] = []
-    spendings.forEach(spending => {
-      spending.utxos.forEach(spend => {
-        this.utxoSet.forEach(utxo => {
-          if (spend.transactionId !== utxo.transactionId && spend.utxoIndex !== utxo.utxoIndex) {
-            utxoSet.push(utxo)
+    const utxos: Utxo[] = []
+    this.utxoSet.forEach(utxo => {
+      let spent: boolean = false
+      for (let i = 0; i < spendings.length; i++) {
+        const spending: UtxoSpending = spendings[i]
+        for (let j = 0; j < spending.utxos.length; j++) {
+          const spend: Utxo = spending.utxos[j]
+          const sameTransaction: boolean = spend.transactionId.transactionId === utxo.transactionId.transactionId
+          const sameIndex: boolean = spend.utxoIndex === utxo.utxoIndex
+          if (sameTransaction && sameIndex) {
+            spent = true
+            break
           }
-        })
-      })
+        }
+        if (spent) {
+          break
+        }
+      }
+      if (!spent) {
+        utxos.push(utxo)
+      }
     })
-    this.utxoSet = utxoSet
+    this.utxoSet = utxos
   }
 
   private calculateBalances (): void {

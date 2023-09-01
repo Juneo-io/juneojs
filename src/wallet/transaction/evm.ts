@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
-import { BaseFeeData, FeeType } from './fee'
+import { BaseFeeData, type FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { JEVMBlockchain } from '../../chain'
+import { type Blockchain, JEVMBlockchain } from '../../chain'
 import { MCNOperationSummary } from '../operation'
 import { type UnwrapOperation, type WrapOperation } from '../wrap'
 import { BaseSpending } from './transaction'
@@ -95,4 +95,16 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
     return new MCNOperationSummary(unwrap, chain, [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
   })
+}
+
+export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: string, destination: Blockchain): Promise<FeeData> {
+  const gasLimit: bigint = api.chain.estimateAtomicExportGas([assetId], destination.assetId)
+  const gasPrice: bigint = await api.eth_baseFee()
+  return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ExportFee)
+}
+
+export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string): Promise<FeeData> {
+  const gasLimit: bigint = api.chain.estimateAtomicImportGas([assetId])
+  const gasPrice: bigint = await api.eth_baseFee()
+  return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
 }

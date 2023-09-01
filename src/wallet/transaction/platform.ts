@@ -1,13 +1,19 @@
 import { type PlatformAPI } from '../../api'
 import { type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId } from '../../transaction'
+import {
+  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId
+} from '../../transaction'
 import { type PlatformAccount } from '../account'
 import { MCNOperationSummary } from '../operation'
 import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation, ValidationShare } from '../stake'
 import { type VMWallet, type JuneoWallet } from '../wallet'
-import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
+import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
+
+async function getPlatformBaseTxFee (provider: MCNProvider, type: FeeType): Promise<BaseFeeData> {
+  return new BaseFeeData(provider.platform.chain, BigInt((await provider.info.getTxFee()).txFee), type)
+}
 
 async function getPlatformAddValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkValidatorFee)
@@ -71,4 +77,12 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
     const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
     return new MCNOperationSummary(delegate, chain, [fee], [new BaseSpending(chain.id, delegate.amount, chain.assetId), fee])
   })
+}
+
+export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<FeeData> {
+  return await getPlatformBaseTxFee(provider, FeeType.ExportFee)
+}
+
+export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<FeeData> {
+  return await getPlatformBaseTxFee(provider, FeeType.ImportFee)
 }

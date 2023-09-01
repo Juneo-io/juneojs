@@ -31,7 +31,6 @@ export interface ChainAccount {
 export abstract class AbstractAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, Balance>()
-  protected fetching: boolean = false
   addresses: string[] = []
 
   constructor (chain: Blockchain) {
@@ -69,16 +68,6 @@ export abstract class AbstractAccount implements ChainAccount {
 
   abstract fetchAllBalances (): Promise<void>
 
-  protected async fetchAllBalancesAsynchronously (fetch: () => Promise<void>): Promise<void> {
-    if (this.fetching) {
-      return
-    }
-    this.fetching = true
-    this.balances.clear()
-    await fetch()
-    this.fetching = false
-  }
-
   abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
 
   abstract execute (executable: ExecutableMCNOperation): Promise<void>
@@ -98,6 +87,7 @@ export abstract class UtxoAccount extends AbstractAccount {
   wallet: JuneoWallet
   chainWallet: VMWallet
   sourceChain?: string
+  protected fetching: boolean = false
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
     super(chain)
@@ -115,10 +105,17 @@ export abstract class UtxoAccount extends AbstractAccount {
   }
 
   async fetchAllBalances (): Promise<void> {
-    await super.fetchAllBalancesAsynchronously(async () => {
-      this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
-      this.calculateBalances()
+    if (this.fetching) {
+      return
+    }
+    this.fetching = true
+    // force all balances to 0 in order to prevent desync
+    this.balances.forEach((balance) => {
+      balance.update(BigInt(0))
     })
+    this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
+    this.calculateBalances()
+    this.fetching = false
   }
 
   abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>

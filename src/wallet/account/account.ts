@@ -7,9 +7,8 @@ import { type VMWallet, type JuneoWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
 
 export interface ChainAccount {
-  chain: Blockchain
-  balances: Map<string, Balance>
-  addresses: string[]
+  readonly chain: Blockchain
+  readonly balances: Map<string, Balance>
 
   hasBalance: (asset: TokenAsset) => boolean
 
@@ -28,13 +27,18 @@ export interface ChainAccount {
   execute: (executable: ExecutableMCNOperation) => Promise<void>
 }
 
-export abstract class AbstractAccount implements ChainAccount {
+export abstract class AbstractChainAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, Balance>()
+  wallet: JuneoWallet
+  chainWallet: VMWallet
   addresses: string[] = []
 
-  constructor (chain: Blockchain) {
+  constructor (chain: Blockchain, wallet: JuneoWallet) {
     this.chain = chain
+    this.wallet = wallet
+    this.chainWallet = wallet.getWallet(chain)
+    this.addresses.push(this.chainWallet.getAddress())
   }
 
   hasBalance (asset: TokenAsset): boolean {
@@ -81,20 +85,15 @@ export abstract class AbstractAccount implements ChainAccount {
   }
 }
 
-export abstract class UtxoAccount extends AbstractAccount {
+export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoApi: AbstractUtxoAPI
-  wallet: JuneoWallet
-  chainWallet: VMWallet
   sourceChain?: string
   protected fetching: boolean = false
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
-    super(chain)
+    super(chain, wallet)
     this.utxoApi = utxoApi
-    this.wallet = wallet
-    this.chainWallet = wallet.getWallet(chain)
-    this.addresses.push(this.chainWallet.getAddress())
     this.sourceChain = sourceChain
   }
 

@@ -7,23 +7,21 @@ import { type ExecutableMCNOperation, type MCNOperation, MCNOperationSummary, MC
 import { SendManager, type SendOperation } from '../send'
 import { type JEVMWallet, type JuneoWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
-import { AbstractAccount } from './account'
+import { AbstractChainAccount } from './account'
 import { Balance } from './balance'
 
-export class EVMAccount extends AbstractAccount {
+export class EVMAccount extends AbstractChainAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
-  wallet: JuneoWallet
-  chainWallet: JEVMWallet
-  registeredAssets: string[] = []
+  override chainWallet: JEVMWallet
+  readonly registeredAssets: string[] = []
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
 
   constructor (provider: MCNProvider, chainId: string, wallet: JuneoWallet) {
-    super(provider.jevm[chainId].chain)
+    super(provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
-    this.wallet = wallet
     this.chainWallet = wallet.getEthWallet(this.chain)
     this.addresses.push(this.chainWallet.getHexAddress())
     this.wrapManager = new WrapManager(this.api, this.chainWallet)

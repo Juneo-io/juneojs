@@ -109,10 +109,6 @@ export abstract class UtxoAccount extends AbstractAccount {
       return
     }
     this.fetching = true
-    // force all balances to 0 in order to prevent desync
-    this.balances.forEach((balance) => {
-      balance.update(BigInt(0))
-    })
     this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
     this.calculateBalances()
     this.fetching = false
@@ -168,6 +164,12 @@ export abstract class UtxoAccount extends AbstractAccount {
       }
       const balance: Balance = this.balances.get(key) as Balance
       balance.update(value)
+    })
+    this.balances.forEach((balance, key) => {
+      // force all balances that no longer have a value from calculation to 0 in order to prevent desync
+      if (!values.has(key) && balance.getValue() !== BigInt(0)) {
+        balance.update(BigInt(0))
+      }
     })
   }
 }

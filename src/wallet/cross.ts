@@ -7,7 +7,7 @@ import { type MCNOperation, MCNOperationType } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
-  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction
+  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction, sendEVMExportTransaction
 } from './transaction'
 import { type JuneoWallet } from './wallet'
 
@@ -64,6 +64,9 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
+    if (source.vmId === JEVM_ID && destination.vmId === JEVM_ID) {
+      throw new CrossError('cross between two JEVM is not supported')
+    }
     if (typeof importFee === 'undefined') {
       importFee = await this.estimateImport(destination, assetId)
     }
@@ -71,12 +74,10 @@ export class CrossManager {
       return await sendJVMExportTransaction(this.provider, this.wallet, destination, assetId, amount, address, sendImportFee, importFee.amount, exportFee, utxoSet)
     } else if (source.vmId === PLATFORMVM_ID) {
       return await sendPlatformExportTransaction(this.provider, this.wallet, destination, assetId, amount, address, sendImportFee, importFee.amount, exportFee, utxoSet)
+    } else if (source.vmId === JEVM_ID) {
+      const api: JEVMAPI = this.provider.jevm[source.id]
+      return await sendEVMExportTransaction(this.provider, api, this.wallet, destination, assetId, amount, address, sendImportFee, importFee.amount, exportFee)
     }
-    // TODO
-    // else if (source.vmId === JEVM_ID) {
-    //   const api: JEVMAPI = this.provider.jevm[source.id]
-    //   return await sendEVMExportTransaction(api, assetId, destination)
-    // }
     throw new CrossError(`source vm id does not support cross: ${source.vmId}`)
   }
 
@@ -87,16 +88,20 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
+    if (source.vmId === JEVM_ID && destination.vmId === JEVM_ID) {
+      throw new CrossError('cross between two JEVM is not supported')
+    }
     if (destination.vmId === JVM_ID) {
       return await sendJVMImportTransaction(this.provider, this.wallet, source, assetId, amount, address, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
       return await sendPlatformImportTransaction(this.provider, this.wallet, source, assetId, amount, address, payImportFee, importFee, utxoSet)
+    } else if (source.vmId === JEVM_ID) {
+      if (payImportFee) {
+        throw new CrossError(`vm id ${source.vmId} cannot pay import fee`)
+      }
+      const api: JEVMAPI = this.provider.jevm[destination.id]
+      return await sendEVMImportTransaction(this.provider, api, this.wallet, source, assetId, amount, address, importFee, utxoSet)
     }
-    // TODO
-    // else if (source.vmId === JEVM_ID) {
-    //   const api: JEVMAPI = this.provider.jevm[destination.id]
-    //   return await sendEVMImportTransaction(api, assetId, destination)
-    // }
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
 }

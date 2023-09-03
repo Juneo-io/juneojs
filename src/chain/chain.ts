@@ -28,17 +28,35 @@ export interface Blockchain {
 
   validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>
 
+  /**
+   * @deprecated
+   */
   queryBaseFee: (provider: MCNProvider) => Promise<bigint>
 }
 
+/**
+   * @deprecated
+   */
 export interface Crossable {
+  /**
+   * @deprecated
+   */
   queryExportFee: (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string) => Promise<bigint>
 
+  /**
+   * @deprecated
+   */
   queryImportFee: (provider: MCNProvider, userInputs: UserInput[]) => Promise<bigint>
 
+  /**
+   * @deprecated
+   */
   canPayImportFee: () => boolean
 }
 
+/**
+   * @deprecated
+   */
 export function isCrossable (object: any): boolean {
   const a: boolean = 'queryExportFee' in object
   const b: boolean = 'queryImportFee' in object
@@ -84,6 +102,9 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
 
+  /**
+   * @deprecated
+   */
   abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
 }
 
@@ -100,18 +121,30 @@ export class PlatformBlockchain extends AbstractBlockchain implements Crossable 
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
   }
 
+  /**
+   * @deprecated
+   */
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   canPayImportFee (): boolean {
     return true
   }
@@ -130,18 +163,30 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
   }
 
+  /**
+   * @deprecated
+   */
   async queryBaseFee (provider: MCNProvider): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
     return BigInt((await provider.getFees()).txFee)
   }
 
+  /**
+   * @deprecated
+   */
   canPayImportFee (): boolean {
     return true
   }

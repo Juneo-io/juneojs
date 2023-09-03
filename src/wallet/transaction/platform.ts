@@ -1,8 +1,8 @@
 import { type PlatformAPI } from '../../api'
-import { type PlatformBlockchain } from '../../chain'
+import { type Blockchain, type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
-  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId
+  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
 import { MCNOperationSummary } from '../operation'
@@ -83,6 +83,43 @@ export async function estimatePlatformExportTransaction (provider: MCNProvider):
   return await getPlatformBaseTxFee(provider, FeeType.ExportFee)
 }
 
+export async function sendPlatformExportTransaction (
+  provider: MCNProvider, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string, importFee: bigint, fee?: FeeData, utxoSet?: Utxo[]
+): Promise<string> {
+  const api: PlatformAPI = provider.platform
+  if (typeof utxoSet === 'undefined') {
+    utxoSet = await fetchUtxos(api, [wallet.getAddress(api.chain)])
+  }
+  if (typeof fee === 'undefined') {
+    fee = await estimatePlatformExportTransaction(provider)
+  }
+  const transaction: UnsignedTransaction = buildPlatformExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
+    utxoSet, [wallet.getAddress(api.chain)], wallet.getAddress(destination), fee.amount, importFee, wallet.getAddress(api.chain), provider.mcn.id, api.chain.id
+  )
+  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+}
+
 export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<FeeData> {
   return await getPlatformBaseTxFee(provider, FeeType.ImportFee)
+}
+
+export async function sendPlatformImportTransaction (
+  provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, assetId: string, amount: bigint, address: string, fee?: FeeData, utxoSet?: Utxo[]
+): Promise<string> {
+  const api: PlatformAPI = provider.platform
+  const sender: string = wallet.getAddress(api.chain)
+  if (typeof utxoSet === 'undefined') {
+    // put import utxos first to priorize usage of imported inputs
+    utxoSet = await fetchUtxos(api, [sender], source.id)
+    // also fetching utxos in chain that could be needed if import fee
+    // was expected to be paid in destination chain during export
+    utxoSet = utxoSet.concat(await fetchUtxos(api, [sender]))
+  }
+  if (typeof fee === 'undefined') {
+    fee = await estimatePlatformImportTransaction(provider)
+  }
+  const transaction: UnsignedTransaction = buildPlatformImportTransaction([new UserInput(assetId, source, amount, address, api.chain)],
+    utxoSet, [sender], fee.amount, sender, provider.mcn.id
+  )
+  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

@@ -26,12 +26,18 @@ export class MCNOperationSummary {
   chain: Blockchain
   fees: FeeData[]
   spendings: Spending[]
+  private readonly executable: ExecutableMCNOperation
 
   constructor (operation: MCNOperation, chain: Blockchain, fees: FeeData[], spendings: Spending[]) {
     this.operation = operation
     this.chain = chain
     this.fees = fees
     this.spendings = spendings
+    this.executable = ExecutableMCNOperation.from(this)
+  }
+
+  getExecutable (): ExecutableMCNOperation {
+    return this.executable
   }
 }
 
@@ -40,8 +46,12 @@ export class ExecutableMCNOperation {
   status: MCNOperationStatus = MCNOperationStatus.Initializing
   receipts: TransactionReceipt[] = []
 
-  constructor (summary: MCNOperationSummary) {
+  private constructor (summary: MCNOperationSummary) {
     this.summary = summary
+  }
+
+  static from (summary: MCNOperationSummary): ExecutableMCNOperation {
+    return new ExecutableMCNOperation(summary)
   }
 
   async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {

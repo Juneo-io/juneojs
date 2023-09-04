@@ -23,14 +23,14 @@ export interface MCNOperation {
 
 export class MCNOperationSummary {
   operation: MCNOperation
-  chain: Blockchain
+  chains: Blockchain[]
   fees: FeeData[]
   spendings: Spending[]
   private readonly executable: ExecutableMCNOperation
 
-  constructor (operation: MCNOperation, chain: Blockchain, fees: FeeData[], spendings: Spending[]) {
+  constructor (operation: MCNOperation, chains: Blockchain[], fees: FeeData[], spendings: Spending[]) {
     this.operation = operation
-    this.chain = chain
+    this.chains = chains
     this.fees = fees
     this.spendings = spendings
     this.executable = ExecutableMCNOperation.from(this)

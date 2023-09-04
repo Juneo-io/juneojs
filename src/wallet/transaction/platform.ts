@@ -48,7 +48,7 @@ export async function estimatePlatformValidateOperation (provider: MCNProvider, 
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-    return new MCNOperationSummary(validate, chain, [fee], [new BaseSpending(chain.id, validate.amount, chain.assetId), fee])
+    return new MCNOperationSummary(validate, [chain], [fee], [new BaseSpending(chain.id, validate.amount, chain.assetId), fee])
   })
 }
 
@@ -75,7 +75,7 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-    return new MCNOperationSummary(delegate, chain, [fee], [new BaseSpending(chain.id, delegate.amount, chain.assetId), fee])
+    return new MCNOperationSummary(delegate, [chain], [fee], [new BaseSpending(chain.id, delegate.amount, chain.assetId), fee])
   })
 }
 

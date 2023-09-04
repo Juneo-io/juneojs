@@ -15,12 +15,10 @@ export class MCNAccount {
   private readonly crossManager: CrossManager
 
   constructor (provider: MCNProvider, wallet: JuneoWallet) {
-    const balances: ChainAccount[] = [
-      new JVMAccount(provider, wallet),
-      new PlatformAccount(provider, wallet)
-    ]
+    this.addAccount(new JVMAccount(provider, wallet))
+    this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {
-      balances.push(new EVMAccount(provider, chainId, wallet))
+      this.addAccount(new EVMAccount(provider, chainId, wallet))
     }
     this.crossManager = new CrossManager(provider, wallet)
   }
@@ -55,9 +53,16 @@ export class MCNAccount {
     const sourceAccount: ChainAccount = this.getAccount(operation.source.id)
     const destinationAccount: ChainAccount = this.getAccount(operation.destination.id)
     const destinationBalance: bigint = destinationAccount.getValue(importFee.assetId)
-    const sourceBalance: bigint = sourceAccount.getValue(importFee.assetId)
+    let sourceBalance: bigint = sourceAccount.getValue(importFee.assetId)
+    if (exportFee.assetId === importFee.assetId) {
+      sourceBalance -= exportFee.amount
+    }
+    if (operation.assetId === importFee.assetId) {
+      sourceBalance -= operation.amount
+    }
     const sendImportFee: boolean = this.crossManager.shouldSendImportFee(operation.destination, importFee.amount, destinationBalance, sourceBalance)
-    const spendings: Spending[] = [exportFee]
+    operation.sendImportFee = sendImportFee
+    const spendings: Spending[] = [new BaseSpending(operation.source.id, operation.amount, operation.assetId), exportFee]
     if (sendImportFee) {
       spendings.push(new BaseSpending(operation.source.id, importFee.amount, importFee.assetId))
     } else {
@@ -82,7 +87,9 @@ export class MCNAccount {
   }
 
   private async executeMCNOperation (executable: ExecutableMCNOperation): Promise<void> {
-    // TODO IMPLEMENTATION
+    // this is currently the only multi chain operation available
+    // verifications are done in it so keep it like that until newer features are added
+    await this.crossManager.executeCrossOperation(executable, this)
   }
 
   verifySpendings (executable: ExecutableMCNOperation): void {

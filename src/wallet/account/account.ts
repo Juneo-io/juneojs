@@ -9,6 +9,8 @@ import { Balance, type BalanceListener } from './balance'
 export interface ChainAccount {
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
+  wallet: JuneoWallet
+  chainWallet: VMWallet
   addresses: string[]
 
   hasBalance: (asset: TokenAsset) => boolean

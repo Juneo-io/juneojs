@@ -1,7 +1,7 @@
 import { type Blockchain } from '../chain'
 import {
   EVMTransactionStatus, EVMTransactionStatusFetcher, PlatformTransactionStatusFetcher, PlatformTransactionStatus,
-  JVMTransactionStatus, JVMTransactionStatusFetcher
+  JVMTransactionStatus, JVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher
 } from '../transaction'
 import { type PlatformAPI, type JEVMAPI, type JVMAPI } from '../api'
 import { type FeeData, TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending } from './transaction'
@@ -70,6 +70,24 @@ export class ExecutableMCNOperation {
       this.status = MCNOperationStatus.Timeout
     }
     return transactionStatus === EVMTransactionStatus.Success
+  }
+
+  async addTrackedJEVMTransaction (api: JEVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
+    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JEVMTransactionStatus.Processing, transactionId)
+    this.receipts.push(receipt)
+    const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId)
+      .fetch(WalletStatusFetcherTimeout)
+      .catch(error => {
+        this.status = MCNOperationStatus.Error
+        throw error
+      })
+    receipt.transactionStatus = transactionStatus
+    if (transactionStatus === JEVMTransactionStatus.Dropped) {
+      this.status = MCNOperationStatus.Error
+    } else if (transactionStatus !== JEVMTransactionStatus.Accepted) {
+      this.status = MCNOperationStatus.Timeout
+    }
+    return transactionStatus === JEVMTransactionStatus.Accepted
   }
 
   async addTrackedPlatformTransaction (api: PlatformAPI, type: TransactionType, transactionId: string): Promise<boolean> {

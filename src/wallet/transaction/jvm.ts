@@ -38,7 +38,7 @@ export async function estimateJVMSendOperation (provider: MCNProvider, wallet: J
   })
 }
 
-export async function estimateJVMExportTransaction (provider: MCNProvider): Promise<FeeData> {
+export async function estimateJVMExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
   return await getJVMBaseTxFee(provider, FeeType.ExportFee)
 }
 
@@ -60,7 +60,7 @@ export async function sendJVMExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimateJVMImportTransaction (provider: MCNProvider): Promise<FeeData> {
+export async function estimateJVMImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
   return await getJVMBaseTxFee(provider, FeeType.ImportFee)
 }
 

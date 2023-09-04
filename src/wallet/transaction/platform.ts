@@ -79,7 +79,7 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
   })
 }
 
-export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<FeeData> {
+export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
   return await getPlatformBaseTxFee(provider, FeeType.ExportFee)
 }
 
@@ -101,7 +101,7 @@ export async function sendPlatformExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<FeeData> {
+export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
   return await getPlatformBaseTxFee(provider, FeeType.ImportFee)
 }
 

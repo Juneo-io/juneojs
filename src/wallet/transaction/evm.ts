@@ -103,7 +103,7 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
   })
 }
 
-export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: string, destination: Blockchain): Promise<FeeData> {
+export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: string, destination: Blockchain): Promise<BaseFeeData> {
   const gasLimit: bigint = api.chain.estimateAtomicExportGas([assetId], destination.assetId)
   const gasPrice: bigint = await api.eth_baseFee()
   return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ExportFee)
@@ -123,7 +123,7 @@ export async function sendEVMExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string): Promise<FeeData> {
+export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string): Promise<BaseFeeData> {
   const gasLimit: bigint = api.chain.estimateAtomicImportGas([assetId])
   const gasPrice: bigint = await api.eth_baseFee()
   return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)

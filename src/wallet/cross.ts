@@ -7,7 +7,7 @@ import { type MCNOperation, MCNOperationType } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
-  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction, sendEVMExportTransaction
+  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction, sendEVMExportTransaction, type BaseFeeData
 } from './transaction'
 import { type JuneoWallet } from './wallet'
 
@@ -20,7 +20,7 @@ export class CrossManager {
     this.wallet = wallet
   }
 
-  async estimateImport (destination: Blockchain, assetId: string): Promise<FeeData> {
+  async estimateImport (destination: Blockchain, assetId: string): Promise<BaseFeeData> {
     if (destination.vmId === JVM_ID) {
       return await estimateJVMImportTransaction(this.provider)
     } else if (destination.vmId === PLATFORMVM_ID) {
@@ -32,7 +32,7 @@ export class CrossManager {
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
 
-  async estimateExport (source: Blockchain, destination: Blockchain, assetId: string): Promise<FeeData> {
+  async estimateExport (source: Blockchain, destination: Blockchain, assetId: string): Promise<BaseFeeData> {
     if (source.vmId === JVM_ID) {
       return await estimateJVMExportTransaction(this.provider)
     } else if (source.vmId === PLATFORMVM_ID) {

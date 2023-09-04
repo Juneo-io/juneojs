@@ -4,7 +4,7 @@ import { DelegateOperation, ExecutableMCNOperation, JuneoWallet, MCNAccount, MCN
 async function main () {
     const provider: MCNProvider = new MCNProvider()
     const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
-    const mcnAccount: MCNAccount = MCNAccount.from(provider, wallet)
+    const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // the chain which we will perform an action on
     const platformChain: PlatformBlockchain = provider.platform.chain
     // the node id where to validate funds
@@ -21,7 +21,7 @@ async function main () {
     // estimate the operation to get a summary
     const summary: MCNOperationSummary = await mcnAccount.estimate(platformChain.id, validateOperation)
     // from the summary we can instantiate a new executable operation that can be used to perform it
-    const executable: ExecutableMCNOperation = new ExecutableMCNOperation(summary)
+    const executable: ExecutableMCNOperation = summary.getExecutable()
     // execute the operation
     await mcnAccount.execute(executable)
     // check if the operation is successfull
@@ -33,7 +33,7 @@ async function main () {
     // we can instantiate a delegate operation if we want to perform it instead of a validation
     const delegateOperation: DelegateOperation = new DelegateOperation(nodeId, stakeAmount, startTime, endTime)
     const delegationSummary: MCNOperationSummary = await mcnAccount.estimate(platformChain.id, delegateOperation)
-    const delegationExecutable: ExecutableMCNOperation = new ExecutableMCNOperation(delegationSummary)
+    const delegationExecutable: ExecutableMCNOperation = delegationSummary.getExecutable()
     // execute the operation
     await mcnAccount.execute(delegationExecutable)
 }

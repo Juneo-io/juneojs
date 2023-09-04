@@ -94,7 +94,7 @@ export class StakingOperationSummary extends MCNOperationSummary {
   potentialReward: bigint
 
   constructor (operation: Staking, chain: PlatformBlockchain, fees: UtxoFeeData[], spendings: Spending[], potentialReward: bigint) {
-    super(operation, chain, fees, spendings)
+    super(operation, [chain], fees, spendings)
     this.potentialReward = potentialReward
   }
 }

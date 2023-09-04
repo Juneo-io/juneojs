@@ -2,7 +2,7 @@ import { type JEVMAPI } from '../../api/jevm/api'
 import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
 import { sleep } from '../../utils/time'
 import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
-import { type Spendable, TransferableInput, type UserInput } from '../input'
+import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
@@ -226,24 +226,25 @@ export class JEVMExportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (userInputs: UserInput[], exportFeeAssetId: string, importFeeAssetId: string): number {
-    // see if import/export fee outputs will be merged with user outputs only if merging after estimate
+  static estimateSignaturesCount (exportedAssets: string[], exportFeeAssetId: string, importFeeAssetId: string): number {
+    // see if import/export fee outputs will be merged with exported assets only if merging after estimate
     let ignoreImportFee: boolean = false
     let ignoreExportFee: boolean = false
-    userInputs.forEach(input => {
-      if (input.assetId === exportFeeAssetId) {
+    for (let i = 0; i < exportedAssets.length; i++) {
+      const assetId: string = exportedAssets[i]
+      if (assetId === exportFeeAssetId) {
         ignoreExportFee = true
       }
-      if (input.assetId === importFeeAssetId) {
+      if (assetId === importFeeAssetId) {
         ignoreImportFee = true
       }
-    })
+    }
     let feeInputsCount: number = ignoreImportFee ? 0 : 1
     // import and export fee could also be merged together
     if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
       feeInputsCount += 1
     }
-    return userInputs.length + feeInputsCount
+    return exportedAssets.length + feeInputsCount
   }
 
   static estimateSize (inputsCount: number): number {
@@ -320,18 +321,19 @@ export class JEVMImportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (userInputs: UserInput[], feeAssetId: string, mergedInputs: boolean): number {
-    // fee output will be merged with user outputs if has same asset id and explicitly merged after estimate
+  static estimateSignaturesCount (importedAssets: string[], feeAssetId: string, mergedInputs: boolean): number {
+    // fee output will be merged with imported assets if has same asset id and explicitly merged after estimate
     let ignoreFeeInput: boolean = false
     if (mergedInputs) {
-      userInputs.forEach(input => {
-        if (input.assetId === feeAssetId) {
+      for (let i = 0; i < importedAssets.length; i++) {
+        if (importedAssets[i] === feeAssetId) {
           ignoreFeeInput = true
+          break
         }
-      })
+      }
     }
     const feeInputsCount: number = ignoreFeeInput ? 0 : 1
-    return userInputs.length + feeInputsCount
+    return importedAssets.length + feeInputsCount
   }
 
   static estimateSize (inputsCount: number, mergedInputs: boolean): number {

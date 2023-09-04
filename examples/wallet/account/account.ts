@@ -5,7 +5,7 @@ async function main () {
     const provider: MCNProvider = new MCNProvider()
     const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // create a MCNAccount from the provider with the chains of the default used MCN
-    const mcnAccount: MCNAccount = MCNAccount.from(provider, wallet)
+    const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // getting the account of one chain
     // note that if you are trying to retrieve the account of a chain that is not registered
     // in the creation of the MCNAccount you will get an error
@@ -23,9 +23,6 @@ async function main () {
     // this value is rounded down up to 6 decimals
     console.log(balance.getReadableValueRounded(6))
 
-    // if you only want one account you can instantiate it with chain accounts
-    const jvmAccount: JVMAccount = new JVMAccount(provider, wallet)
-    const customMasterAccount: MCNAccount = new MCNAccount([jvmAccount])
     // note that the JVM-Chain and Platform-Chain are both utxo accounts
     // and EVM chains are using nonce accounts
     const juneChain: JEVMBlockchain = SocotraJUNEChain

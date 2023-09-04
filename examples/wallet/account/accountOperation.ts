@@ -4,7 +4,7 @@ import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, MCNOpe
 async function main () {
     const provider: MCNProvider = new MCNProvider()
     const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
-    const mcnAccount: MCNAccount = MCNAccount.from(provider, wallet)
+    const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // the chain which we will perform an action on
     const juneChain: JEVMBlockchain = SocotraJUNEChain
     // we instantiate a wrap operation that we want to perform on the chain
@@ -17,7 +17,7 @@ async function main () {
     console.log(summary.fees)
     // from the summary we can instantiate a new executable operation
     // that can be used to perform it from an account
-    const executable: ExecutableMCNOperation = new ExecutableMCNOperation(summary)
+    const executable: ExecutableMCNOperation = summary.getExecutable()
     await mcnAccount.execute(executable)
     // the executable has fields that can help keeping track of the current state of the operation
     console.log(executable.status === MCNOperationStatus.Done)

@@ -19,6 +19,7 @@ export enum FeeType {
 export interface FeeData {
   chain: Blockchain
   type: string
+  amount: bigint
   getAssetValue: () => AssetValue
 }
 

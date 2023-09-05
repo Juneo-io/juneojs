@@ -106,7 +106,9 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
 export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: string, destination: Blockchain): Promise<BaseFeeData> {
   const gasLimit: bigint = api.chain.estimateAtomicExportGas([assetId], destination.assetId)
   const gasPrice: bigint = await api.eth_baseFee()
-  return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ExportFee)
+  // the evm export fee is paid in gas so it must be multiplied by the atomic denominator
+  const fee: bigint = api.chain.calculateAtomicCost(gasLimit, gasPrice) * JEVMBlockchain.AtomicDenomination
+  return new BaseFeeData(api.chain, fee, FeeType.ExportFee)
 }
 
 export async function sendEVMExportTransaction (
@@ -116,9 +118,14 @@ export async function sendEVMExportTransaction (
   if (typeof fee === 'undefined') {
     fee = await estimateEVMExportTransaction(api, assetId, destination)
   }
+  // exportations of the gas token must be divided by atomic denomination
+  if (assetId === api.chain.assetId) {
+    amount /= JEVMBlockchain.AtomicDenomination
+  }
+  const feeAmount: bigint = fee.amount / JEVMBlockchain.AtomicDenomination
   const nonce: bigint = await api.eth_getTransactionCount(wallet.getEthAddress(api.chain), 'pending')
   const transaction: JEVMExportTransaction = buildJEVMExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
-    wallet.getEthAddress(api.chain), nonce, wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), provider.mcn.id
+    wallet.getEthAddress(api.chain), nonce, wallet.getAddress(destination), feeAmount, sendImportFee ? importFee : BigInt(0), provider.mcn.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

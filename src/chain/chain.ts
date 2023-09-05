@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { ChainError, isHex, validateBech32 } from '../utils'
 import { type MCNProvider } from '../juneo'
-import { AssetId, type UserInput } from '../transaction'
+import { AssetId } from '../transaction'
 import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jevm'
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
@@ -27,41 +27,6 @@ export interface Blockchain {
   validateAddress: (address: string, hrp?: string) => boolean
 
   validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>
-
-  /**
-   * @deprecated
-   */
-  queryBaseFee: (provider: MCNProvider) => Promise<bigint>
-}
-
-/**
-   * @deprecated
-   */
-export interface Crossable {
-  /**
-   * @deprecated
-   */
-  queryExportFee: (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string) => Promise<bigint>
-
-  /**
-   * @deprecated
-   */
-  queryImportFee: (provider: MCNProvider, userInputs: UserInput[]) => Promise<bigint>
-
-  /**
-   * @deprecated
-   */
-  canPayImportFee: () => boolean
-}
-
-/**
-   * @deprecated
-   */
-export function isCrossable (object: any): boolean {
-  const a: boolean = 'queryExportFee' in object
-  const b: boolean = 'queryImportFee' in object
-  const c: boolean = 'canPayImportFee' in object
-  return a && b && c
 }
 
 export abstract class AbstractBlockchain implements Blockchain {
@@ -101,14 +66,9 @@ export abstract class AbstractBlockchain implements Blockchain {
   abstract validateAddress (address: string, hrp?: string): boolean
 
   abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
-
-  /**
-   * @deprecated
-   */
-  abstract queryBaseFee (provider: MCNProvider): Promise<bigint>
 }
 
-export class PlatformBlockchain extends AbstractBlockchain implements Crossable {
+export class PlatformBlockchain extends AbstractBlockchain {
   constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
     super(name, id, PLATFORMVM_ID, asset, aliases, registeredAssets)
   }
@@ -120,37 +80,9 @@ export class PlatformBlockchain extends AbstractBlockchain implements Crossable 
   async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
   }
-
-  /**
-   * @deprecated
-   */
-  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  canPayImportFee (): boolean {
-    return true
-  }
 }
 
-export class JVMBlockchain extends AbstractBlockchain implements Crossable {
+export class JVMBlockchain extends AbstractBlockchain {
   constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
     super(name, id, JVM_ID, asset, aliases, registeredAssets)
   }
@@ -161,34 +93,6 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
 
   async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
     return await JVMBlockchain.validateJVMAssetId(provider, assetId)
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryExportFee (provider: MCNProvider, userInputs?: UserInput[], importFeeAssetId?: string): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryImportFee (provider: MCNProvider, userInputs?: UserInput[]): Promise<bigint> {
-    return BigInt((await provider.getFees()).txFee)
-  }
-
-  /**
-   * @deprecated
-   */
-  canPayImportFee (): boolean {
-    return true
   }
 
   static async validateJVMAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
@@ -207,9 +111,9 @@ export class JVMBlockchain extends AbstractBlockchain implements Crossable {
   }
 }
 
-export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
-  static readonly SendEtherGasLimit: bigint = BigInt(21000)
-  static readonly AtomicSignatureCost: bigint = BigInt(1000)
+export class JEVMBlockchain extends AbstractBlockchain {
+  static readonly SendEtherGasLimit: bigint = BigInt(21_000)
+  static readonly AtomicSignatureCost: bigint = BigInt(1_000)
   static readonly AtomicBaseCost: bigint = BigInt(10_000)
   static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
   chainId: bigint
@@ -228,27 +132,6 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     this.contractHandler.registerAdapters([
       new ERC20ContractAdapter(this.ethProvider)
     ])
-  }
-
-  /**
-   * @deprecated
-   */
-  async estimateGasLimit (assetId: string, from: string, to: string, amount: bigint): Promise<bigint> {
-    if (assetId === this.assetId) {
-      return JEVMBlockchain.SendEtherGasLimit
-    }
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
-    if (contract === null) {
-      return BigInt(0)
-    } else {
-      const data: string = contract.getTransferData(assetId, to, amount)
-      return await this.ethProvider.estimateGas({
-        from,
-        to: assetId,
-        value: BigInt(0),
-        data
-      })
-    }
   }
 
   /**
@@ -297,60 +180,6 @@ export class JEVMBlockchain extends AbstractBlockchain implements Crossable {
     } else {
       return await contract.queryBalance(assetId, address)
     }
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryBaseFee (provider: MCNProvider): Promise<bigint> {
-    return await provider.jevm[this.id].eth_baseFee()
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryExportFee (provider: MCNProvider, userInputs: UserInput[], importFeeAssetId: string): Promise<bigint> {
-    const assets: string[] = []
-    userInputs.forEach(input => {
-      assets.push(input.assetId)
-    })
-    const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      assets, this.assetId, importFeeAssetId
-    )
-    const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    return await this.calculateAtomicCost_(provider, BigInt(size), BigInt(signaturesCount))
-  }
-
-  /**
-   * @deprecated
-   */
-  async queryImportFee (provider: MCNProvider, userInputs: UserInput[]): Promise<bigint> {
-    const mergedInputs: boolean = false
-    const assets: string[] = []
-    userInputs.forEach(input => {
-      assets.push(input.assetId)
-    })
-    const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
-      assets, this.assetId, mergedInputs
-    )
-    const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
-    return await this.calculateAtomicCost_(provider, BigInt(size), BigInt(signaturesCount))
-  }
-
-  /**
-   * @deprecated
-   */
-  private async calculateAtomicCost_ (provider: MCNProvider, size: bigint, signaturesCount: bigint): Promise<bigint> {
-    const gasUsed: bigint = this.calculateAtomicGas(size, signaturesCount)
-    const baseFee: bigint = await this.queryBaseFee(provider)
-    return gasUsed * baseFee / JEVMBlockchain.AtomicDenomination
-  }
-
-  /**
-   * @deprecated
-   */
-  canPayImportFee (): boolean {
-    return false
   }
 
   private calculateAtomicGas (size: bigint, signaturesCount: bigint): bigint {

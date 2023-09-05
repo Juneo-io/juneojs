@@ -1,13 +1,12 @@
 import { AccountError } from '../../utils'
 import { type JuneoWallet } from '../wallet'
-import { MCNOperationType, MCNOperationStatus, type MCNOperation, MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
+import { MCNOperationType, MCNOperationStatus, type MCNOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
-import { type Spending, BaseSpending, type BaseFeeData } from '../transaction'
+import { type Spending, BaseSpending } from '../transaction'
 import { CrossManager, type CrossOperation } from '../cross'
-import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -40,35 +39,9 @@ export class MCNAccount {
     }
     const account: ChainAccount = this.getAccount(chainId)
     if (operation.type === MCNOperationType.Cross) {
-      return await this.estimateCross(operation as CrossOperation)
+      return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
     }
     return await account.estimate(operation)
-  }
-
-  private async estimateCross (operation: CrossOperation): Promise<MCNOperationSummary> {
-    const chains: Blockchain[] = [operation.source, operation.destination]
-    const exportFee: BaseFeeData = await this.crossManager.estimateExport(operation.source, operation.destination, operation.assetId)
-    const importFee: BaseFeeData = await this.crossManager.estimateImport(operation.destination, operation.assetId)
-    const fees: BaseFeeData[] = [exportFee, importFee]
-    const sourceAccount: ChainAccount = this.getAccount(operation.source.id)
-    const destinationAccount: ChainAccount = this.getAccount(operation.destination.id)
-    const destinationBalance: bigint = destinationAccount.getValue(importFee.assetId)
-    let sourceBalance: bigint = sourceAccount.getValue(importFee.assetId)
-    if (exportFee.assetId === importFee.assetId) {
-      sourceBalance -= exportFee.amount
-    }
-    if (operation.assetId === importFee.assetId) {
-      sourceBalance -= operation.amount
-    }
-    const sendImportFee: boolean = this.crossManager.shouldSendImportFee(operation.destination, importFee.amount, destinationBalance, sourceBalance)
-    operation.sendImportFee = sendImportFee
-    const spendings: Spending[] = [new BaseSpending(operation.source.id, operation.amount, operation.assetId), exportFee]
-    if (sendImportFee) {
-      spendings.push(new BaseSpending(operation.source.id, importFee.amount, importFee.assetId))
-    } else {
-      spendings.push(importFee)
-    }
-    return new MCNOperationSummary(operation, chains, fees, spendings)
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {

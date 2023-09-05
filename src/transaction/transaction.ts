@@ -8,7 +8,7 @@ import { type BlockchainId, BlockchainIdSize } from './types'
 import { type Utxo } from './utxo'
 
 export const CodecId: number = 0
-export const TransactionStatusFetchDelay: number = 100
+export const TransactionStatusFetchDelay: number = 500
 
 export class TransactionFee {
   chain: Blockchain
@@ -23,7 +23,7 @@ export class TransactionFee {
 }
 
 export interface TransactionStatusFetcher {
-  fetch: (timeout: number) => Promise<string>
+  fetch: (timeout: number, delay: number) => Promise<string>
 }
 
 export interface UnsignedTransaction {

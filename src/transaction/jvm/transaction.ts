@@ -27,11 +27,11 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.transactionId = transactionId
   }
 
-  async fetch (timeout: number): Promise<string> {
-    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
+    const maxAttempts: number = timeout / delay
     this.currentStatus = JVMTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(TransactionStatusFetchDelay)
+      await sleep(delay)
       await this.jvmApi.getTx(this.transactionId).then(() => {
         this.currentStatus = JVMTransactionStatus.Accepted
       }, error => {

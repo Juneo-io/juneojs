@@ -23,7 +23,7 @@ export class TransactionFee {
 }
 
 export interface TransactionStatusFetcher {
-  fetch: (timeout: number) => Promise<string>
+  fetch: (timeout: number, delay: number) => Promise<string>
 }
 
 export interface UnsignedTransaction {

@@ -18,7 +18,7 @@ export enum JEVMTransactionStatus {
   Unknown = 'Unknown'
 }
 
-export class JEVMTransactionStatusFetcher {
+export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
   jevmApi: JEVMAPI
   private attempts: number = 0
   transactionId: string
@@ -29,10 +29,10 @@ export class JEVMTransactionStatusFetcher {
     this.transactionId = transactionId
   }
 
-  async fetch (timeout: number): Promise<string> {
-    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
+    const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(TransactionStatusFetchDelay)
+      await sleep(delay)
       this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
@@ -62,11 +62,11 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.transactionHash = transactionHash
   }
 
-  async fetch (timeout: number): Promise<string> {
-    const maxAttempts: number = timeout / TransactionStatusFetchDelay
+  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
+    const maxAttempts: number = timeout / delay
     this.currentStatus = EVMTransactionStatus.Pending
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(TransactionStatusFetchDelay)
+      await sleep(delay)
       const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
       if (receipt === null) {
         this.attempts += 1

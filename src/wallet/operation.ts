@@ -4,7 +4,7 @@ import {
   JVMTransactionStatus, JVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher
 } from '../transaction'
 import { type PlatformAPI, type JEVMAPI, type JVMAPI } from '../api'
-import { type FeeData, TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending } from './transaction'
+import { type FeeData, TransactionReceipt, type TransactionType, WalletStatusFetcherTimeout, type Spending, WalletStatusFetcherDelay } from './transaction'
 
 export enum MCNOperationType {
   Send = 'Send',
@@ -58,7 +58,7 @@ export class ExecutableMCNOperation {
     const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, EVMTransactionStatus.Pending, transactionHash)
     this.receipts.push(receipt)
     const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash)
-      .fetch(WalletStatusFetcherTimeout)
+      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error
@@ -76,7 +76,7 @@ export class ExecutableMCNOperation {
     const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JEVMTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
     const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout)
+      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error
@@ -94,7 +94,7 @@ export class ExecutableMCNOperation {
     const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, PlatformTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
     const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout)
+      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error
@@ -112,7 +112,7 @@ export class ExecutableMCNOperation {
     const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JVMTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
     const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout)
+      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
       .catch(error => {
         this.status = MCNOperationStatus.Error
         throw error

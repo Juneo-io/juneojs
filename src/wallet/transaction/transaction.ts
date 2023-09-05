@@ -1,6 +1,7 @@
 import { type Utxo } from '../../transaction'
 
 export const WalletStatusFetcherTimeout: number = 60000
+export const WalletStatusFetcherDelay: number = 500
 
 export enum TransactionType {
   Base = 'Base transaction',

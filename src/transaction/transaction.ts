@@ -8,7 +8,7 @@ import { type BlockchainId, BlockchainIdSize } from './types'
 import { type Utxo } from './utxo'
 
 export const CodecId: number = 0
-export const TransactionStatusFetchDelay: number = 100
+export const TransactionStatusFetchDelay: number = 500
 
 export class TransactionFee {
   chain: Blockchain

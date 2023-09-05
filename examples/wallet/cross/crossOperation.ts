@@ -1,5 +1,5 @@
-import { CrossOperation, ExecutableMCNOperation, JEVMBlockchain, JVMBlockchain, JuneoWallet, MCNAccount, MCNOperationStatus,
-    MCNOperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
+import { CrossOperation, ExecutableMCNOperation, JEVMBlockchain, JVMBlockchain, JuneoWallet, MCNAccount,
+    MCNOperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -9,6 +9,8 @@ async function main () {
     const juneChain: JEVMBlockchain = SocotraJUNEChain
     // the chain we will perform the cross to
     const jvmChain: JVMBlockchain = SocotraJVMChain
+    // we need balances to perform the operation
+    await mcnAccount.fetchAllBalances()
     const assetId: string = SocotraJUNEAssetId
     const amount: bigint = BigInt(1_000_000_000) // 1 JUNE
     const address: string = wallet.getAddress(jvmChain)

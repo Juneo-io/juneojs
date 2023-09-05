@@ -33,6 +33,14 @@ export class MCNAccount {
     return this.chainAccounts.get(chainId) as ChainAccount
   }
 
+  async fetchAllBalances (): Promise<void> {
+    const promises: Array<Promise<void>> = []
+    this.chainAccounts.forEach(account => {
+      promises.push(account.fetchAllBalances())
+    })
+    await Promise.all(promises)
+  }
+
   async estimate (chainId: string, operation: MCNOperation): Promise<MCNOperationSummary> {
     if (operation.type === MCNOperationType.Unsupported) {
       throw new AccountError('unsupported operation')

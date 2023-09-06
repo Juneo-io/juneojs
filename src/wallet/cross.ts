@@ -1,5 +1,5 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
-import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, SocotraJUNEChain, JEVMBlockchain } from '../chain'
+import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, SocotraJUNEChain, JEVMBlockchain, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { fetchUtxos, type Utxo } from '../transaction'
 import { CrossError } from '../utils'
@@ -8,7 +8,8 @@ import { type MCNOperation, MCNOperationType, type ExecutableMCNOperation, MCNOp
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
-  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction, sendEVMExportTransaction, type BaseFeeData, TransactionType, type Spending, BaseSpending
+  sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
+  sendEVMExportTransaction, type BaseFeeData, TransactionType, type Spending, BaseSpending
 } from './transaction'
 import { type JuneoWallet } from './wallet'
 
@@ -122,19 +123,17 @@ export class CrossManager {
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<MCNOperationSummary> {
     // WIP START <--------->
     if (this.shouldProxy(cross)) {
-      const chains: Blockchain[] = []
-      const fees: FeeData[] = []
-      const spendings: Spending[] = []
+      const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
       const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount, cross.address)
       const exportSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyExport, account)
-      chains.push(...exportSummary.chains)
-      fees.push(...exportSummary.fees)
-      spendings.push(...exportSummary.spendings)
       const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount, cross.address)
       const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
-      chains.push(...importSummary.chains)
-      fees.push(...importSummary.fees)
-      spendings.push(...importSummary.spendings)
+      const spendings: Spending[] = [...exportSummary.spendings]
+      // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
+      const jvm: JVMBlockchain = this.provider.jvm.chain
+      spendings.push(new BaseSpending(jvm.id, importSummary.fees[0].amount, jvm.assetId))
+      spendings.push(new BaseSpending(jvm.id, importSummary.fees[1].amount, jvm.assetId))
+      const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       return new MCNOperationSummary(cross, chains, fees, spendings)
     }
     // WIP END <--------->
@@ -146,11 +145,11 @@ export class CrossManager {
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
     const destinationBalance: bigint = destinationAccount.getValue(importFee.assetId)
     let sourceBalance: bigint = sourceAccount.getValue(importFee.assetId)
-    if (exportFee.assetId === importFee.assetId) {
-      sourceBalance -= exportFee.amount
-    }
     if (cross.assetId === importFee.assetId) {
       sourceBalance -= cross.amount
+    }
+    if (exportFee.assetId === importFee.assetId) {
+      sourceBalance -= exportFee.amount
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
@@ -172,8 +171,15 @@ export class CrossManager {
     const cross: CrossOperation = operation as CrossOperation
     // WIP START <--------->
     if (this.shouldProxy(cross)) {
-      // const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount, cross.address)
-      // await this.executeCrossOperation(proxyExport, account)
+      const destination: Blockchain = cross.destination
+      cross.destination = this.provider.jvm.chain
+      summary.operation = cross // ?? needed in js ?
+      await this.executeCrossOperation(executable, account)
+      cross.source = this.provider.jvm.chain
+      cross.destination = destination
+      summary.operation = cross // ?? needed in js ?
+      await this.executeCrossOperation(executable, account)
+      return
     }
     // WIP END <--------->
     const exportFee: FeeData = executable.summary.fees[0]

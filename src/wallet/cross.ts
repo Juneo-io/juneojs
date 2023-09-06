@@ -1,15 +1,15 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
-import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, SocotraJUNEChain, JEVMBlockchain, type JVMBlockchain } from '../chain'
+import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, SocotraJUNEChain, JEVMBlockchain, type JVMBlockchain, JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { fetchUtxos, type Utxo } from '../transaction'
 import { CrossError } from '../utils'
-import { type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
+import { EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import { type MCNOperation, MCNOperationType, type ExecutableMCNOperation, MCNOperationSummary } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
   sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
-  sendEVMExportTransaction, type BaseFeeData, TransactionType, type Spending, BaseSpending
+  sendEVMExportTransaction, type BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction
 } from './transaction'
 import { type JuneoWallet } from './wallet'
 
@@ -138,9 +138,28 @@ export class CrossManager {
     }
     // WIP END <--------->
     const chains: Blockchain[] = [cross.source, cross.destination]
+    const fees: BaseFeeData[] = []
+    const spendings: Spending[] = []
+    // WIP START <--------->
+    // exporting jrc20
+    const juneChain: JEVMBlockchain = SocotraJUNEChain
+    if (cross.source.id === juneChain.id) {
+      for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
+        const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
+        if (jrc20.address === cross.assetId) {
+          const sender: string = account.getAccount(juneChain.id).addresses[0]
+          const fee: EVMFeeData = await estimateEVMWithdrawJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
+          fees.push(fee)
+          spendings.push(fee)
+          cross.assetId = jrc20.nativeAssetId
+          break;
+        }
+      }
+    }
+    // WIP END <--------->
     const exportFee: BaseFeeData = await this.estimateExport(cross.source, cross.destination, cross.assetId)
     const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
-    const fees: BaseFeeData[] = [exportFee, importFee]
+    fees.push(exportFee, importFee)
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
     const destinationBalance: bigint = destinationAccount.getValue(importFee.assetId)
@@ -153,7 +172,7 @@ export class CrossManager {
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
-    const spendings: Spending[] = [new BaseSpending(cross.source.id, cross.amount, cross.assetId), exportFee]
+    spendings.push(new BaseSpending(cross.source.id, cross.amount, cross.assetId), exportFee)
     if (sendImportFee) {
       spendings.push(new BaseSpending(cross.source.id, importFee.amount, importFee.assetId))
     } else {
@@ -181,9 +200,21 @@ export class CrossManager {
       await this.executeCrossOperation(executable, account)
       return
     }
+    // exporting jrc20
+    if (summary.fees[0].type === FeeType.Withdraw) {
+      const juneChain: JEVMBlockchain = SocotraJUNEChain
+      const api: JEVMAPI = this.provider.jevm[juneChain.id]
+      const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
+      const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
+      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
+      const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
+      if (!success) {
+        throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
+      }
+    }
     // WIP END <--------->
-    const exportFee: FeeData = executable.summary.fees[0]
-    const importFee: FeeData = executable.summary.fees[1]
+    const exportFee: FeeData = summary.fees[0]
+    const importFee: FeeData = summary.fees[1]
     let sourceUtxos: Utxo[] = []
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
     const sourceVmId: string = sourceAccount.chain.vmId

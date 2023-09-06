@@ -9,6 +9,8 @@ export enum FeeType {
   ImportFee = 'Import fee',
   Wrap = 'Wrap fee',
   Unwrap = 'Unwrap fee',
+  Withdraw = 'Withdraw fee',
+  Deposit = 'Deposit fee',
   ValidateFee = 'Validate fee',
   DelegateFee = 'Delegate fee'
 }

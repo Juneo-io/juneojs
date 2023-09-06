@@ -69,36 +69,28 @@ export class ERC20ContractAdapter implements ContractAdapter {
   }
 }
 
-export class JRC20ContractAdapter extends ERC20ContractAdapter {
-  override async instanceOf (contractAddress: string): Promise<boolean> {
-    const contract: ethers.Contract = this.getContract(contractAddress)
-    // checking if is JRC20 by calling nativeAssetId read only function
-    // other main tokens interfaces should not be using nativeAssetId
-    await contract.nativeAssetId().catch(() => {
-      return false
-    })
-    return true
+export class JRC20ContractAdapter {
+  private readonly contract: ethers.Contract
+  private readonly contractAddress: string
+
+  constructor (contractAddress: string) {
+    this.contract = new ethers.Contract(contractAddress, abi.WrappedABI)
+    this.contractAddress = contractAddress
   }
 
-  getWithdrawData (contractAddress: string, value: bigint): string {
-    const contract: ethers.Contract = this.getContract(contractAddress)
-    return contract.interface.encodeFunctionData('withdraw', [value])
+  getWithdrawData (value: bigint): string {
+    return this.contract.interface.encodeFunctionData('withdraw', [value])
   }
 
-  getDepositData (contractAddress: string, assetId: string, amount: bigint): string {
-    const contract: ethers.Contract = this.getContract(contractAddress)
+  getDepositData (assetId: string, amount: bigint): string {
     // native asset call data
     let data: string = ethers.solidityPacked(
       ['address', 'uint256', 'uint256'],
-      [contractAddress, `0x${new AssetId(assetId).serialize().toHex()}`, amount]
+      [this.contractAddress, `0x${new AssetId(assetId).serialize().toHex()}`, amount]
     )
     // add deposit function removed hex prefix
-    data += contract.interface.encodeFunctionData('deposit').substring(2)
+    data += this.contract.interface.encodeFunctionData('deposit').substring(2)
     return data
-  }
-
-  protected override getContract (contractAddress: string): ethers.Contract {
-    return new ethers.Contract(contractAddress, abi.JRC20ABI, this.provider)
   }
 }
 

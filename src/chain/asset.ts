@@ -1,4 +1,4 @@
-import { WrappedContractAdapter } from '../solidity'
+import { JRC20ContractAdapter, WrappedContractAdapter } from '../solidity'
 
 const RoundedValueDefaultDecimals = 2
 const EVMGasTokenDecimals = 18
@@ -93,10 +93,12 @@ export class WrappedAsset extends ERC20Asset {
 export class JRC20Asset extends ERC20Asset {
   override readonly type: string = TokenType.JRC20
   readonly nativeAssetId: string
+  readonly adapter: JRC20ContractAdapter
 
   constructor (address: string, name: string, symbol: string, decimals: number, nativeAssetId: string) {
     super(address, name, symbol, decimals)
     this.nativeAssetId = nativeAssetId
+    this.adapter = new JRC20ContractAdapter(address)
   }
 }
 

@@ -132,8 +132,8 @@ export class CrossManager {
       const spendings: Spending[] = [...exportSummary.spendings]
       // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
       const jvm: JVMBlockchain = this.provider.jvm.chain
-      spendings.push(new BaseSpending(jvm.id, importSummary.fees[0].amount, jvm.assetId))
-      spendings.push(new BaseSpending(jvm.id, importSummary.fees[1].amount, jvm.assetId))
+      spendings.push(new BaseSpending(jvm, importSummary.fees[0].amount, jvm.assetId))
+      spendings.push(new BaseSpending(jvm, importSummary.fees[1].amount, jvm.assetId))
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       if (cross.destination.id === juneChain.id) {
         for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
@@ -142,7 +142,7 @@ export class CrossManager {
             const sender: string = account.getAccount(juneChain.id).addresses[0]
             const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
             fees.push(fee)
-            spendings.push(fee)
+            spendings.push(new BaseSpending(jvm, fee.amount / JEVMBlockchain.AtomicDenomination, jvm.assetId))
             cross.assetId = jrc20.nativeAssetId
             break
           }
@@ -185,9 +185,9 @@ export class CrossManager {
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
-    spendings.push(new BaseSpending(cross.source.id, cross.amount, cross.assetId), exportFee)
+    spendings.push(new BaseSpending(cross.source, cross.amount, cross.assetId), exportFee)
     if (sendImportFee) {
-      spendings.push(new BaseSpending(cross.source.id, importFee.amount, importFee.assetId))
+      spendings.push(new BaseSpending(cross.source, importFee.amount, importFee.assetId))
     } else {
       spendings.push(importFee)
     }

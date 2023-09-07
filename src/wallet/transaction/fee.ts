@@ -48,7 +48,7 @@ export class UtxoFeeData extends UtxoSpending implements FeeData {
   transaction: UnsignedTransaction
 
   constructor (chain: Blockchain, amount: bigint, type: string, transaction: UnsignedTransaction) {
-    super(chain.id, amount, chain.assetId, transaction.getUtxos())
+    super(chain, amount, chain.assetId, transaction.getUtxos())
     this.chain = chain
     this.type = type
     this.transaction = transaction

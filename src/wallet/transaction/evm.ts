@@ -81,13 +81,13 @@ export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
   return await estimateEVMTransaction(api, wrap.asset.assetId, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
-    return new MCNOperationSummary(wrap, [chain], [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
+    return new MCNOperationSummary(wrap, [chain], [fee], [new BaseSpending(chain, wrap.amount, chain.assetId), fee])
   }, async () => {
     const gasPrice: bigint = await api.eth_baseFee().catch(() => {
       return chain.baseFee
     })
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate * gasPrice, type)
-    return new MCNOperationSummary(wrap, [chain], [fee], [new BaseSpending(chain.id, wrap.amount, chain.assetId), fee])
+    return new MCNOperationSummary(wrap, [chain], [fee], [new BaseSpending(chain, wrap.amount, chain.assetId), fee])
   })
 }
 
@@ -96,13 +96,13 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
   const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
   const type: FeeType = FeeType.Unwrap
   return await estimateEVMTransaction(api, unwrap.asset.assetId, from, unwrap.asset.address, BigInt(0), data, type).then(fee => {
-    return new MCNOperationSummary(unwrap, [chain], [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+    return new MCNOperationSummary(unwrap, [chain], [fee], [new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId), fee])
   }, async () => {
     const gasPrice: bigint = await api.eth_baseFee().catch(() => {
       return chain.baseFee
     })
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
-    return new MCNOperationSummary(unwrap, [chain], [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+    return new MCNOperationSummary(unwrap, [chain], [fee], [new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId), fee])
   })
 }
 

@@ -77,7 +77,7 @@ export class MCNAccount {
     const summary: MCNOperationSummary = executable.summary
     const spendings: Map<string, Spending> = this.sortSpendings(summary.spendings)
     spendings.forEach(spending => {
-      const account: ChainAccount = this.getAccount(spending.chainId)
+      const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
         executable.status = MCNOperationStatus.Error
         throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
@@ -88,9 +88,9 @@ export class MCNAccount {
   private sortSpendings (spendings: Spending[]): Map<string, Spending> {
     const values = new Map<string, Spending>()
     spendings.forEach(spending => {
-      const key: string = `${spending.chainId}_${spending.assetId}`
+      const key: string = `${spending.chain.id}_${spending.assetId}`
       if (!values.has(key)) {
-        values.set(key, new BaseSpending(spending.chainId, spending.amount, spending.assetId))
+        values.set(key, new BaseSpending(spending.chain, spending.amount, spending.assetId))
       } else {
         (values.get(key) as Spending).amount += spending.amount
       }

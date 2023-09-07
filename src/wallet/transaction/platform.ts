@@ -44,11 +44,11 @@ export async function estimatePlatformValidateOperation (provider: MCNProvider, 
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet).then(fee => {
     return new StakingOperationSummary(validate, chain, [fee],
-      [new UtxoSpending(chain.id, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-    return new MCNOperationSummary(validate, [chain], [fee], [new BaseSpending(chain.id, validate.amount, chain.assetId), fee])
+    return new MCNOperationSummary(validate, [chain], [fee], [new BaseSpending(chain, validate.amount, chain.assetId), fee])
   })
 }
 
@@ -71,11 +71,11 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet).then(fee => {
     return new StakingOperationSummary(delegate, chain, [fee],
-      [new UtxoSpending(chain.id, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-    return new MCNOperationSummary(delegate, [chain], [fee], [new BaseSpending(chain.id, delegate.amount, chain.assetId), fee])
+    return new MCNOperationSummary(delegate, [chain], [fee], [new BaseSpending(chain, delegate.amount, chain.assetId), fee])
   })
 }
 

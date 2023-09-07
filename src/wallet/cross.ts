@@ -127,11 +127,11 @@ export class CrossManager {
       const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
       const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount, cross.address)
       const exportSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyExport, account)
-      const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount, cross.address)
-      const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       const spendings: Spending[] = [...exportSummary.spendings]
       // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
       const jvm: JVMBlockchain = this.provider.jvm.chain
+      const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount, cross.address)
+      const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       spendings.push(new BaseSpending(jvm, importSummary.fees[0].amount, jvm.assetId))
       spendings.push(new BaseSpending(jvm, importSummary.fees[1].amount, jvm.assetId))
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
@@ -143,7 +143,6 @@ export class CrossManager {
             const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
             fees.push(fee)
             spendings.push(new BaseSpending(jvm, fee.amount / JEVMBlockchain.AtomicDenomination, jvm.assetId))
-            cross.assetId = jrc20.nativeAssetId
             break
           }
         }
@@ -156,6 +155,7 @@ export class CrossManager {
     const spendings: Spending[] = []
     // WIP START <--------->
     // exporting jrc20
+    let spendingAssetId: string = cross.assetId
     if (cross.source.id === juneChain.id) {
       for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
         const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
@@ -164,6 +164,7 @@ export class CrossManager {
           const fee: EVMFeeData = await estimateEVMWithdrawJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
           fees.push(fee)
           spendings.push(fee)
+          spendingAssetId = jrc20.address
           cross.assetId = jrc20.nativeAssetId
           break
         }
@@ -185,9 +186,13 @@ export class CrossManager {
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
-    spendings.push(new BaseSpending(cross.source, cross.amount, cross.assetId), exportFee)
+    spendings.push(new BaseSpending(cross.source, cross.amount, spendingAssetId), exportFee)
     if (sendImportFee) {
-      spendings.push(new BaseSpending(cross.source, importFee.amount, importFee.assetId))
+      // handle case of crossing jrc20
+      const assetId: string = importFee.assetId === cross.assetId
+        ? spendingAssetId
+        : importFee.assetId
+      spendings.push(new BaseSpending(cross.source, importFee.amount, assetId))
     } else {
       spendings.push(importFee)
     }

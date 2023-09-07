@@ -142,7 +142,7 @@ export class CrossManager {
             const sender: string = account.getAccount(juneChain.id).addresses[0]
             const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
             fees.push(fee)
-            spendings.push(fee)
+            spendings.push(new BaseSpending(jvm.id, fee.amount / JEVMBlockchain.AtomicDenomination, jvm.assetId))
             cross.assetId = jrc20.nativeAssetId
             break
           }

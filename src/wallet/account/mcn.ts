@@ -1,11 +1,11 @@
-import { AccountError } from '../../utils'
+import { AccountError, sortSpendings } from '../../utils'
 import { type JuneoWallet } from '../wallet'
 import { MCNOperationType, MCNOperationStatus, type MCNOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
-import { type Spending, BaseSpending } from '../transaction'
+import { type Spending } from '../transaction'
 import { CrossManager, type CrossOperation } from '../cross'
 import { type MCNProvider } from '../../juneo'
 
@@ -75,7 +75,7 @@ export class MCNAccount {
 
   verifySpendings (executable: ExecutableMCNOperation): void {
     const summary: MCNOperationSummary = executable.summary
-    const spendings: Map<string, Spending> = this.sortSpendings(summary.spendings)
+    const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
@@ -83,18 +83,5 @@ export class MCNAccount {
         throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
       }
     })
-  }
-
-  private sortSpendings (spendings: Spending[]): Map<string, Spending> {
-    const values = new Map<string, Spending>()
-    spendings.forEach(spending => {
-      const key: string = `${spending.chain.id}_${spending.assetId}`
-      if (!values.has(key)) {
-        values.set(key, new BaseSpending(spending.chain, spending.amount, spending.assetId))
-      } else {
-        (values.get(key) as Spending).amount += spending.amount
-      }
-    })
-    return values
   }
 }

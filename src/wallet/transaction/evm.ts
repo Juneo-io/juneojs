@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, type FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { type Blockchain, JEVMBlockchain } from '../../chain'
+import { type Blockchain, JEVMBlockchain, type JRC20Asset, NativeAssetCallContract } from '../../chain'
 import { MCNOperationSummary } from '../operation'
 import { type UnwrapOperation, type WrapOperation } from '../wrap'
 import { BaseSpending } from './transaction'
@@ -14,6 +14,9 @@ import { type MCNProvider } from '../../juneo'
 
 const DefaultWrapEstimate: bigint = BigInt(55_000)
 const DefaultUnwrapEstimate: bigint = BigInt(45_000)
+// values below should be tested and reduced for more precision
+const DefaultWithdrawEstimate: bigint = BigInt(200_000)
+const DefaultDepositEstimate: bigint = BigInt(200_000)
 
 export class EVMTransactionData {
   from: string
@@ -100,6 +103,34 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
     })
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
     return new MCNOperationSummary(unwrap, [chain], [fee], [new BaseSpending(chain.id, unwrap.amount, unwrap.asset.assetId), fee])
+  })
+}
+
+export async function estimateEVMWithdrawJRC20 (api: JEVMAPI, sender: string, jrc20: JRC20Asset, amount: bigint): Promise<EVMFeeData> {
+  const type: FeeType = FeeType.Withdraw
+  const data: string = jrc20.adapter.getWithdrawData(amount)
+  return await estimateEVMTransaction(api, jrc20.address, sender, jrc20.address, BigInt(0), data, type).then(fee => {
+    return fee
+  }, async () => {
+    const gasPrice: bigint = await api.eth_baseFee().catch(() => {
+      return api.chain.baseFee
+    })
+    const transactionData: EVMTransactionData = new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
+    return new EVMFeeData(api.chain, gasPrice * DefaultWithdrawEstimate, type, gasPrice, DefaultWithdrawEstimate, transactionData)
+  })
+}
+
+export async function estimateEVMDepositJRC20 (api: JEVMAPI, sender: string, jrc20: JRC20Asset, amount: bigint): Promise<EVMFeeData> {
+  const type: FeeType = FeeType.Deposit
+  const data: string = jrc20.adapter.getDepositData(jrc20.nativeAssetId, amount)
+  return await estimateEVMTransaction(api, jrc20.address, sender, NativeAssetCallContract, BigInt(0), data, type).then(fee => {
+    return fee
+  }, async () => {
+    const gasPrice: bigint = await api.eth_baseFee().catch(() => {
+      return api.chain.baseFee
+    })
+    const transactionData: EVMTransactionData = new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)
+    return new EVMFeeData(api.chain, gasPrice * DefaultDepositEstimate, type, gasPrice, DefaultDepositEstimate, transactionData)
   })
 }
 

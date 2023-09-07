@@ -4,7 +4,7 @@ import { NodeId, type Utxo, Validator } from '../transaction'
 import { type Spending, type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
-import { type PlatformAPI } from '../api'
+import { type IssueTxResponse, type PlatformAPI } from '../api'
 import { type PlatformBlockchain } from '../chain'
 
 export const ValidationShare: number = 12_0000 // 12%
@@ -49,16 +49,22 @@ export class StakeManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
     }
-    const addValidatorTransaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addValidatorTransaction)).txID
+    const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
+    const response: IssueTxResponse = await this.api.issueTx(transaction).catch(error => {
+      throw error
+    })
+    return response.txID
   }
 
   async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
     }
-    const addDelegatorTransaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
-    return (await this.api.issueTx(addDelegatorTransaction)).txID
+    const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
+    const response: IssueTxResponse = await this.api.issueTx(transaction).catch(error => {
+      throw error
+    })
+    return response.txID
   }
 }
 

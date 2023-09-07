@@ -1,4 +1,3 @@
-import { JRC20ContractAdapter } from '../solidity'
 import { EVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from './asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from './chain'
 import { MCN, PrimarySupernet, StakeConfig } from './network'
@@ -90,7 +89,6 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
     SocotraWJUNEAsset, ...jrc20Assets
   ], jrc20Assets
 )
-SocotraJUNEChain.contractHandler.registerAdapter(new JRC20ContractAdapter(SocotraJUNEChain.ethProvider))
 
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain', 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN', SocotraETH1GasToken, BigInt(220002), BigInt('1000000000'), SocotraAddress, ['ETH1']

@@ -147,7 +147,7 @@ export class CrossManager {
     }
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
-    const spendings: Spending[] = []
+    const spendings: Spending[] = [new BaseSpending(cross.source, cross.amount, cross.assetId)]
     // exporting jrc20
     let spendingAssetId: string = cross.assetId
     if (cross.source.id === juneChain.id) {
@@ -179,7 +179,7 @@ export class CrossManager {
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
-    spendings.push(new BaseSpending(cross.source, cross.amount, spendingAssetId), exportFee)
+    spendings.push(exportFee)
     if (sendImportFee) {
       // handle case of crossing jrc20
       const assetId: string = importFee.assetId === cross.assetId

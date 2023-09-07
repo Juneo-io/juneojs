@@ -1,6 +1,5 @@
 
-// const StartRewardYear: bigint = BigInt(1685570400) // 1st June 2023
-const StartRewardYear: bigint = BigInt(1672527600) // 1st January 2023
+const StartRewardYear: bigint = BigInt(1685570400) // 1st June 2023
 const DiminishingRewardYear: bigint = BigInt(1811800800)
 const TargetRewardYear: bigint = BigInt(1843423200)
 const StartReward: bigint = BigInt(21_5000) // 21.5%

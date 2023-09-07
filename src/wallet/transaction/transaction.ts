@@ -1,3 +1,4 @@
+import { type Blockchain } from '../../chain'
 import { type Utxo } from '../../transaction'
 
 export const WalletStatusFetcherTimeout: number = 60000
@@ -32,18 +33,18 @@ export class TransactionReceipt {
 }
 
 export interface Spending {
-  chainId: string
+  chain: Blockchain
   amount: bigint
   assetId: string
 }
 
 export class BaseSpending implements Spending {
-  chainId: string
+  chain: Blockchain
   amount: bigint
   assetId: string
 
-  constructor (chainId: string, amount: bigint, assetId: string) {
-    this.chainId = chainId
+  constructor (chain: Blockchain, amount: bigint, assetId: string) {
+    this.chain = chain
     this.amount = amount
     this.assetId = assetId
   }
@@ -52,8 +53,8 @@ export class BaseSpending implements Spending {
 export class UtxoSpending extends BaseSpending {
   utxos: Utxo[]
 
-  constructor (chainId: string, amount: bigint, assetId: string, utxos: Utxo[]) {
-    super(chainId, amount, assetId)
+  constructor (chain: Blockchain, amount: bigint, assetId: string, utxos: Utxo[]) {
+    super(chain, amount, assetId)
     this.utxos = utxos
   }
 }

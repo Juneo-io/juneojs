@@ -78,9 +78,6 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
-    if (source.vmId === JEVM_ID && destination.vmId === JEVM_ID) {
-      throw new CrossError('cross between two JEVM is not supported')
-    }
     if (typeof importFee === 'undefined') {
       importFee = await this.estimateImport(destination, assetId)
     }
@@ -121,7 +118,6 @@ export class CrossManager {
   }
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<MCNOperationSummary> {
-    // WIP START <--------->
     const juneChain: JEVMBlockchain = SocotraJUNEChain
     if (this.shouldProxy(cross)) {
       const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
@@ -149,11 +145,9 @@ export class CrossManager {
       }
       return new MCNOperationSummary(cross, chains, fees, spendings)
     }
-    // WIP END <--------->
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
     const spendings: Spending[] = []
-    // WIP START <--------->
     // exporting jrc20
     let spendingAssetId: string = cross.assetId
     if (cross.source.id === juneChain.id) {
@@ -170,7 +164,6 @@ export class CrossManager {
         }
       }
     }
-    // WIP END <--------->
     const exportFee: BaseFeeData = await this.estimateExport(cross.source, cross.destination, cross.assetId)
     const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
@@ -206,7 +199,6 @@ export class CrossManager {
       throw new CrossError(`operation ${operation.type} is forbidden`)
     }
     const cross: CrossOperation = operation as CrossOperation
-    // WIP START <--------->
     if (this.shouldProxy(cross)) {
       const destination: Blockchain = cross.destination
       cross.destination = this.provider.jvm.chain
@@ -230,7 +222,6 @@ export class CrossManager {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
       }
     }
-    // WIP END <--------->
     const exportFee: FeeData = summary.fees[0]
     const importFee: FeeData = summary.fees[1]
     let sourceUtxos: Utxo[] = []

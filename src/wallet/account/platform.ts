@@ -33,7 +33,11 @@ export class PlatformAccount extends UtxoAccount {
       const staking: ValidateOperation = operation as ValidateOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
-        const transactionId: string = await this.stakeManager.validate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i] as UtxoFeeData, this.utxoSet)
+        const transactionId: string = await this.stakeManager.validate(
+          staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i] as UtxoFeeData, this.utxoSet
+        ).catch(error => {
+          throw error
+        })
         const success: boolean = await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.PrimaryValidation, transactionId)
         if (!success) {
           break
@@ -43,7 +47,11 @@ export class PlatformAccount extends UtxoAccount {
       const staking: DelegateOperation = operation as DelegateOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
-        const transactionId: string = await this.stakeManager.delegate(staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i] as UtxoFeeData, this.utxoSet)
+        const transactionId: string = await this.stakeManager.delegate(
+          staking.nodeId, staking.amount, staking.startTime, staking.endTime, fees[i] as UtxoFeeData, this.utxoSet
+        ).catch(error => {
+          throw error
+        })
         const success: boolean = await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.PrimaryDelegation, transactionId)
         if (!success) {
           break

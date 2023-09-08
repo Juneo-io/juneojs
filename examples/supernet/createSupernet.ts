@@ -1,9 +1,16 @@
-import { JuneoWallet, MCNProvider, CreateSupernetTransaction, Utxo,
-    buildCreateSupernetTransaction, fetchUtxos } from '../../src'
+import dotenv from 'dotenv';
+import {
+    CreateSupernetTransaction,
+    JuneoWallet, MCNProvider,
+    Utxo,
+    buildCreateSupernetTransaction, fetchUtxos
+} from '../../src';
+
+dotenv.config();
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()
-    const masterWallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const masterWallet: JuneoWallet = JuneoWallet.recover(process.env.MNEMONIC ?? '')
     const sendersAddresses: string[] = [masterWallet.getAddress(provider.platform.chain)]
     const utxoSet: Utxo[] = await fetchUtxos(provider.platform, sendersAddresses)
     const fee: number = (await provider.getFees()).createSupernetTxFee

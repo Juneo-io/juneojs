@@ -150,6 +150,24 @@ export class AssetValue {
    * @returns The complete value with its decimals separated by a dot.
    */
   getReadableValue (): string {
+    let value: string = this.getReadableValuePadded()
+    if (value.indexOf('.') < 1) {
+      return value
+    }
+    while (value.lastIndexOf('0') === value.length - 1) {
+      value = value.substring(0, value.length - 1)
+    }
+    if (value.charAt(value.length - 1) === '.') {
+      return value.substring(0, value.length - 1)
+    }
+    return value
+  }
+
+  /**
+   * Get a human friendly representation of this value padded with zeros.
+   * @returns The complete value with its decimals separated by a dot and zero padded.
+   */
+  getReadableValuePadded (): string {
     const stringValue: string = this.value.toString()
     const length: number = stringValue.length
     if (length <= this.decimals) {
@@ -171,12 +189,16 @@ export class AssetValue {
    * by the provided number.
    */
   getReadableValueRounded (decimals: number = RoundedValueDefaultDecimals): string {
-    const readableValue: string = this.getReadableValue()
+    const readableValue: string = this.getReadableValuePadded()
     if (this.decimals < 1) {
       return readableValue
     }
     let index: number = readableValue.indexOf('.')
     index += decimals + 1
-    return readableValue.substring(0, index)
+    const value: string = readableValue.substring(0, index)
+    if (value.charAt(value.length - 1) === '.') {
+      return value.substring(0, value.length - 1)
+    }
+    return value
   }
 }

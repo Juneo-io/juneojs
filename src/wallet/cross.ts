@@ -185,7 +185,10 @@ export class CrossManager {
       const assetId: string = importFee.assetId === cross.assetId
         ? spendingAssetId
         : importFee.assetId
-      spendings.push(new BaseSpending(cross.source, importFee.amount, assetId))
+      const amount: bigint = exportFee.chain.id === juneChain.id && importFee.assetId === juneChain.assetId
+        ? importFee.amount * JEVMBlockchain.AtomicDenomination
+        : importFee.amount
+      spendings.push(new BaseSpending(cross.source, amount, assetId))
     } else {
       spendings.push(importFee)
     }

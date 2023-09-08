@@ -6,7 +6,7 @@ import { JEVMExportTransaction, JEVMImportTransaction } from '../transaction/jev
 import { type JEVMAPI } from '../api/jevm'
 import { type GetAssetDescriptionResponse } from '../api/jvm/data'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
-import { type TokenAsset, type JRC20Asset } from './asset'
+import { type TokenAsset, type JRC20Asset, type JEVMGasToken, type JNTAsset } from './asset'
 
 export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
@@ -69,7 +69,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 }
 
 export class PlatformBlockchain extends AbstractBlockchain {
-  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
+  constructor (name: string, id: string, asset: JNTAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
     super(name, id, PLATFORMVM_ID, asset, aliases, registeredAssets)
   }
 
@@ -83,7 +83,7 @@ export class PlatformBlockchain extends AbstractBlockchain {
 }
 
 export class JVMBlockchain extends AbstractBlockchain {
-  constructor (name: string, id: string, asset: TokenAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
+  constructor (name: string, id: string, asset: JNTAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
     super(name, id, JVM_ID, asset, aliases, registeredAssets)
   }
 
@@ -116,14 +116,16 @@ export class JEVMBlockchain extends AbstractBlockchain {
   static readonly AtomicSignatureCost: bigint = BigInt(1_000)
   static readonly AtomicBaseCost: bigint = BigInt(10_000)
   static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
+  override asset: JEVMGasToken
   chainId: bigint
   baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
   contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, asset: TokenAsset, chainId: bigint, baseFee: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
+  constructor (name: string, id: string, asset: JEVMGasToken, chainId: bigint, baseFee: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
     super(name, id, JEVM_ID, asset, aliases, registeredAssets)
+    this.asset = asset
     this.chainId = chainId
     this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)

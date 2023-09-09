@@ -153,7 +153,7 @@ export class CrossManager {
           const sender: string = account.getAccount(juneChain.id).addresses[0]
           const fee: EVMFeeData = await estimateEVMWithdrawJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
           fees.push(fee)
-          spendings.push(fee)
+          spendings.push(fee.getAsSpending())
           spendingAssetId = jrc20.address
           cross.assetId = jrc20.nativeAssetId
           break
@@ -175,7 +175,7 @@ export class CrossManager {
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
     cross.sendImportFee = sendImportFee
-    spendings.push(exportFee)
+    spendings.push(exportFee.getAsSpending())
     if (sendImportFee) {
       // handle case of crossing jrc20
       const assetId: string = importFee.assetId === cross.assetId
@@ -186,7 +186,7 @@ export class CrossManager {
         : importFee.amount
       spendings.push(new BaseSpending(cross.source, amount, assetId))
     } else {
-      spendings.push(importFee)
+      spendings.push(importFee.getAsSpending())
     }
     return new MCNOperationSummary(cross, chains, fees, spendings)
   }

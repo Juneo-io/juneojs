@@ -32,7 +32,7 @@ export class EVMAccount extends AbstractChainAccount {
     if (operation.type === MCNOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fee: EVMFeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
-      return new MCNOperationSummary(operation, [this.chain], [fee], [new BaseSpending(this.chain, send.amount, send.assetId), fee])
+      return new MCNOperationSummary(operation, [this.chain], [fee], [new BaseSpending(this.chain, send.amount, send.assetId), fee.getAsSpending()])
     } else if (operation.type === MCNOperationType.Wrap) {
       return await estimateEVMWrapOperation(this.api, this.chainWallet.getHexAddress(), operation as WrapOperation)
     } else if (operation.type === MCNOperationType.Unwrap) {

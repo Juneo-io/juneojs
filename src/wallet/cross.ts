@@ -99,10 +99,6 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
-    // jevm cross transactions amount must be changed because of atomic denominator
-    if (source.vmId === JEVM_ID && assetId === source.assetId) {
-      amount /= JEVMBlockchain.AtomicDenomination
-    }
     if (destination.vmId === JVM_ID) {
       return await sendJVMImportTransaction(this.provider, this.wallet, source, assetId, amount, address, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
@@ -185,7 +181,7 @@ export class CrossManager {
       const assetId: string = importFee.assetId === cross.assetId
         ? spendingAssetId
         : importFee.assetId
-      const amount: bigint = exportFee.chain.id === juneChain.id && importFee.assetId === juneChain.assetId
+      const amount: bigint = cross.source.id === juneChain.id && importFee.assetId === juneChain.assetId
         ? importFee.amount * JEVMBlockchain.AtomicDenomination
         : importFee.amount
       spendings.push(new BaseSpending(cross.source, amount, assetId))
@@ -264,11 +260,16 @@ export class CrossManager {
     }
     // fetch imported utxos
     const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getAddress()], sourceAccount.chain.id)
-    if (cross.sendImportFee && (sourceVmId === JVM_ID || sourceVmId === PLATFORMVM_ID)) {
-      destinationUtxos.push(...(sourceAccount as UtxoAccount).utxoSet)
+    if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
+      destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
+    }
+    // jevm cross transactions amount must be changed because of atomic denominator
+    let amount: bigint = cross.amount
+    if (cross.source.vmId === JEVM_ID && cross.assetId === cross.source.assetId) {
+      amount /= JEVMBlockchain.AtomicDenomination
     }
     const importTransactionId: string = await this.import(
-      cross.source, cross.destination, cross.assetId, cross.amount, cross.address, !cross.sendImportFee, importFee, destinationUtxos
+      cross.source, cross.destination, cross.assetId, amount, cross.address, !cross.sendImportFee, importFee, destinationUtxos
     )
     let importSuccess: boolean = false
     if (destinationVmId === JVM_ID) {

@@ -6,12 +6,19 @@ import * as time from '../utils/time'
 import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
 
-export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
-  signersAddresses: Address[], fees: TransactionFee[]): TransferableInput[] {
+export function buildTransactionInputs (
+  userInputs: UserInput[], utxoSet: Utxo[], signersAddresses: Address[], fees: TransactionFee[]
+): TransferableInput[] {
   const targetAmounts: Record<string, bigint> = {}
   fees.forEach(fee => {
     if (fee.amount > 0) {
-      targetAmounts[fee.assetId] = fee.amount
+      const assetId: string = fee.assetId
+      const targetAmount: bigint = targetAmounts[assetId]
+      if (targetAmount === undefined) {
+        targetAmounts[assetId] = fee.amount
+      } else {
+        targetAmounts[assetId] += fee.amount
+      }
     }
   })
   // gathering data needed to build transaction inputs
@@ -33,9 +40,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   // transaction it will still be added in the build outputs.
   // This is not an issue but note that it may require to group some utxos together
   // for the outputs so make sure to spend them to avoid losses.
-  for (let i: number = 0;
-    i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts);
-    i++) {
+  for (let i: number = 0; i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts); i++) {
     const utxo: Utxo = utxoSet[i]
     if (utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
@@ -94,8 +99,9 @@ export function getSignersIndices (signers: Address[], addresses: Address[]): nu
   return indices
 }
 
-export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[],
-  fee: TransactionFee, changeAddress: string): UserOutput[] {
+export function buildTransactionOutputs (
+  userInputs: UserInput[], inputs: Spendable[], fee: TransactionFee, changeAddress: string
+): UserOutput[] {
   const spentAmounts: Record<string, bigint> = {}
   // add fees as already spent so they are not added in outputs
   spentAmounts[fee.assetId] = fee.amount

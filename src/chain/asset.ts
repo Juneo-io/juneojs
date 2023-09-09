@@ -3,10 +3,6 @@ import { JRC20ContractAdapter, WrappedContractAdapter } from '../solidity'
 const RoundedValueDefaultDecimals = 2
 const EVMGasTokenDecimals = 18
 
-export interface TypedToken {
-  type: string
-}
-
 export enum TokenType {
   Generic = 'generic',
   Gas = 'gas',
@@ -20,7 +16,7 @@ export enum TokenType {
  * Representation of an asset on a chain with its common values
  * such as an id, a name, a symbol and decimals.
  */
-export class TokenAsset implements TypedToken {
+export class TokenAsset {
   readonly type: string = TokenType.Generic
   readonly assetId: string
   readonly name: string
@@ -53,6 +49,20 @@ export class EVMGasToken extends TokenAsset {
 
   constructor (assetId: string, name: string, symbol: string) {
     super(assetId, name, symbol, EVMGasTokenDecimals)
+  }
+}
+
+/**
+ * Representation of the gas token used to pay fees in an JEVM.
+ * JEVM gas token also has a reference to its native JNT asset.
+ * It is also known as the native asset of a JEVM.
+ */
+export class JEVMGasToken extends EVMGasToken {
+  nativeAsset: JNTAsset
+
+  constructor (nativeAsset: JNTAsset) {
+    super(nativeAsset.assetId, nativeAsset.name, nativeAsset.symbol)
+    this.nativeAsset = nativeAsset
   }
 }
 
@@ -150,6 +160,24 @@ export class AssetValue {
    * @returns The complete value with its decimals separated by a dot.
    */
   getReadableValue (): string {
+    let value: string = this.getReadableValuePadded()
+    if (value.indexOf('.') < 1) {
+      return value
+    }
+    while (value.lastIndexOf('0') === value.length - 1) {
+      value = value.substring(0, value.length - 1)
+    }
+    if (value.charAt(value.length - 1) === '.') {
+      return value.substring(0, value.length - 1)
+    }
+    return value
+  }
+
+  /**
+   * Get a human friendly representation of this value padded with zeros.
+   * @returns The complete value with its decimals separated by a dot and zero padded.
+   */
+  getReadableValuePadded (): string {
     const stringValue: string = this.value.toString()
     const length: number = stringValue.length
     if (length <= this.decimals) {
@@ -171,12 +199,16 @@ export class AssetValue {
    * by the provided number.
    */
   getReadableValueRounded (decimals: number = RoundedValueDefaultDecimals): string {
-    const readableValue: string = this.getReadableValue()
+    const readableValue: string = this.getReadableValuePadded()
     if (this.decimals < 1) {
       return readableValue
     }
     let index: number = readableValue.indexOf('.')
     index += decimals + 1
-    return readableValue.substring(0, index)
+    const value: string = readableValue.substring(0, index)
+    if (value.charAt(value.length - 1) === '.') {
+      return value.substring(0, value.length - 1)
+    }
+    return value
   }
 }

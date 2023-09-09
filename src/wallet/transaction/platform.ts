@@ -2,7 +2,8 @@ import { type PlatformAPI } from '../../api'
 import { type Blockchain, type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
-  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
+  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction,
+  NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
 import { MCNOperationSummary } from '../operation'

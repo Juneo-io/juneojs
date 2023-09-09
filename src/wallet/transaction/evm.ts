@@ -153,6 +153,7 @@ export async function sendEVMExportTransaction (
   if (assetId === api.chain.assetId) {
     amount /= JEVMBlockchain.AtomicDenomination
   }
+  // fee is also gas token
   const feeAmount: bigint = fee.amount / JEVMBlockchain.AtomicDenomination
   const nonce: bigint = await api.eth_getTransactionCount(wallet.getEthAddress(api.chain), 'pending')
   const transaction: JEVMExportTransaction = buildJEVMExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
@@ -164,7 +165,10 @@ export async function sendEVMExportTransaction (
 export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string): Promise<BaseFeeData> {
   const gasLimit: bigint = api.chain.estimateAtomicImportGas([assetId])
   const gasPrice: bigint = await api.eth_baseFee()
-  return new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
+  const fee: BaseFeeData = new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
+  // import fee is paid with utxos from shared memory so using JNT asset
+  fee.asset = api.chain.asset.nativeAsset
+  return fee
 }
 
 export async function sendEVMImportTransaction (

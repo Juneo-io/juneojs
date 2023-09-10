@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type FeeData, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType } from '../operation'
+import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,8 +17,8 @@ export class JVMAccount extends UtxoAccount {
     this.sendManager = new SendManager(provider, wallet)
   }
 
-  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
-    if (operation.type === MCNOperationType.Send) {
+  async estimate (operation: NetworkOperation): Promise<MCNOperationSummary> {
+    if (operation.type === NetworkOperationType.Send) {
       return await estimateJVMSendOperation(this.provider, this.wallet, operation as SendOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
@@ -26,8 +26,8 @@ export class JVMAccount extends UtxoAccount {
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     super.spend(executable.summary.spendings as UtxoSpending[])
-    const operation: MCNOperation = executable.summary.operation
-    if (operation.type === MCNOperationType.Send) {
+    const operation: NetworkOperation = executable.summary.operation
+    if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {

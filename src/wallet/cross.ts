@@ -4,7 +4,7 @@ import { type MCNProvider } from '../juneo'
 import { fetchUtxos, type Utxo } from '../transaction'
 import { CrossError } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
-import { type MCNOperation, MCNOperationType, type ExecutableMCNOperation, MCNOperationSummary } from './operation'
+import { type NetworkOperation, NetworkOperationType, type ExecutableMCNOperation, MCNOperationSummary } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
@@ -193,8 +193,8 @@ export class CrossManager {
 
   async executeCrossOperation (executable: ExecutableMCNOperation, account: MCNAccount): Promise<void> {
     const summary: MCNOperationSummary = executable.summary
-    const operation: MCNOperation = summary.operation
-    if (operation.type !== MCNOperationType.Cross) {
+    const operation: NetworkOperation = summary.operation
+    if (operation.type !== NetworkOperationType.Cross) {
       throw new CrossError(`operation ${operation.type} is forbidden`)
     }
     const cross: CrossOperation = operation as CrossOperation
@@ -299,8 +299,8 @@ export class CrossManager {
   }
 }
 
-export class CrossOperation implements MCNOperation {
-  type: MCNOperationType = MCNOperationType.Cross
+export class CrossOperation implements NetworkOperation {
+  type: NetworkOperationType = NetworkOperationType.Cross
   source: Blockchain
   destination: Blockchain
   assetId: string

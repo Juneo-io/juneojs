@@ -1,4 +1,4 @@
-import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, MCNOperationStatus,
+import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
     MCNOperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
 
 async function main () {
@@ -16,7 +16,7 @@ async function main () {
     // execute the operation
     await mcnAccount.execute(executable)
     // check if the operation is successfull
-    console.log(executable.status === MCNOperationStatus.Done)
+    console.log(executable.status === NetworkOperationStatus.Done)
 }
 
 main().catch((error) => {

@@ -3,7 +3,7 @@ import { type JEVMAPI } from '../api'
 import { type JEVMWallet, type JuneoWallet } from './wallet'
 import { type JEVMBlockchain, type WrappedAsset } from '../chain'
 import { type EVMFeeData, FeeType, estimateEVMTransaction, sendEVMTransaction } from './transaction'
-import { type MCNOperation, MCNOperationType } from './operation'
+import { type NetworkOperation, NetworkOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class WrapManager {
@@ -47,12 +47,12 @@ export class WrapManager {
   }
 }
 
-abstract class Wrapping implements MCNOperation {
-  type: MCNOperationType
+abstract class Wrapping implements NetworkOperation {
+  type: NetworkOperationType
   asset: WrappedAsset
   amount: bigint
 
-  constructor (type: MCNOperationType, asset: WrappedAsset, amount: bigint) {
+  constructor (type: NetworkOperationType, asset: WrappedAsset, amount: bigint) {
     this.type = type
     this.asset = asset
     this.amount = amount
@@ -61,12 +61,12 @@ abstract class Wrapping implements MCNOperation {
 
 export class WrapOperation extends Wrapping {
   constructor (asset: WrappedAsset, amount: bigint) {
-    super(MCNOperationType.Wrap, asset, amount)
+    super(NetworkOperationType.Wrap, asset, amount)
   }
 }
 
 export class UnwrapOperation extends Wrapping {
   constructor (asset: WrappedAsset, amount: bigint) {
-    super(MCNOperationType.Unwrap, asset, amount)
+    super(NetworkOperationType.Unwrap, asset, amount)
   }
 }

@@ -1,6 +1,6 @@
 import { AccountError, sortSpendings } from '../../utils'
 import { type JuneoWallet } from '../wallet'
-import { MCNOperationType, MCNOperationStatus, type MCNOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
+import { NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
@@ -41,20 +41,17 @@ export class MCNAccount {
     await Promise.all(promises)
   }
 
-  async estimate (chainId: string, operation: MCNOperation): Promise<MCNOperationSummary> {
-    if (operation.type === MCNOperationType.Unsupported) {
-      throw new AccountError('unsupported operation')
-    }
-    const account: ChainAccount = this.getAccount(chainId)
-    if (operation.type === MCNOperationType.Cross) {
+  async estimate (chainId: string, operation: NetworkOperation): Promise<MCNOperationSummary> {
+    if (operation.type === NetworkOperationType.Cross) {
       return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
     }
+    const account: ChainAccount = this.getAccount(chainId)
     return await account.estimate(operation)
   }
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     this.verifySpendings(executable)
-    executable.status = MCNOperationStatus.Executing
+    executable.status = NetworkOperationStatus.Executing
     if (executable.summary.chains.length === 1) {
       const account: ChainAccount = this.getAccount(executable.summary.chains[0].id)
       await account.execute(executable)
@@ -62,8 +59,8 @@ export class MCNAccount {
       await this.executeMCNOperation(executable)
     }
     // the only case it is not executing is if an error happened in that case we do not change it
-    if (executable.status === MCNOperationStatus.Executing) {
-      executable.status = MCNOperationStatus.Done
+    if (executable.status === NetworkOperationStatus.Executing) {
+      executable.status = NetworkOperationStatus.Done
     }
   }
 
@@ -79,7 +76,7 @@ export class MCNAccount {
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
-        executable.status = MCNOperationStatus.Error
+        executable.status = NetworkOperationStatus.Error
         throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
       }
     })

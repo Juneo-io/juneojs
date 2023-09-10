@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type FeeData, type UtxoFeeData, type UtxoSpending, estimatePlatformValidateOperation, estimatePlatformDelegateOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary, MCNOperationType } from '../operation'
+import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType } from '../operation'
 import { type DelegateOperation, StakeManager, type ValidateOperation } from '../stake'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,10 +17,10 @@ export class PlatformAccount extends UtxoAccount {
     this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
-  async estimate (operation: MCNOperation): Promise<MCNOperationSummary> {
-    if (operation.type === MCNOperationType.Validate) {
+  async estimate (operation: NetworkOperation): Promise<MCNOperationSummary> {
+    if (operation.type === NetworkOperationType.Validate) {
       return await estimatePlatformValidateOperation(this.provider, this.wallet, operation as ValidateOperation, this)
-    } else if (operation.type === MCNOperationType.Delegate) {
+    } else if (operation.type === NetworkOperationType.Delegate) {
       return await estimatePlatformDelegateOperation(this.provider, this.wallet, operation as DelegateOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
@@ -28,8 +28,8 @@ export class PlatformAccount extends UtxoAccount {
 
   async execute (executable: ExecutableMCNOperation): Promise<void> {
     super.spend(executable.summary.spendings as UtxoSpending[])
-    const operation: MCNOperation = executable.summary.operation
-    if (operation.type === MCNOperationType.Validate) {
+    const operation: NetworkOperation = executable.summary.operation
+    if (operation.type === NetworkOperationType.Validate) {
       const staking: ValidateOperation = operation as ValidateOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {
@@ -43,7 +43,7 @@ export class PlatformAccount extends UtxoAccount {
           break
         }
       }
-    } else if (operation.type === MCNOperationType.Delegate) {
+    } else if (operation.type === NetworkOperationType.Delegate) {
       const staking: DelegateOperation = operation as DelegateOperation
       const fees: FeeData[] = executable.summary.fees
       for (let i = 0; i < fees.length; i++) {

@@ -6,8 +6,8 @@ import {
   NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
-import { MCNOperationSummary } from '../operation'
-import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation, ValidationShare } from '../stake'
+import { MCNOperationSummary, StakingOperationSummary } from '../operation'
+import { type DelegateOperation, StakeManager, type ValidateOperation, ValidationShare } from '../stake'
 import { type VMWallet, type JuneoWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'

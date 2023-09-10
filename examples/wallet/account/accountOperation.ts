@@ -1,4 +1,4 @@
-import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, MCNOperationStatus,
+import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
     MCNOperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
 
 async function main () {
@@ -19,7 +19,7 @@ async function main () {
     const executable: ExecutableMCNOperation = summary.getExecutable()
     await mcnAccount.execute(executable)
     // the executable has fields that can help keeping track of the current state of the operation
-    console.log(executable.status === MCNOperationStatus.Done)
+    console.log(executable.status === NetworkOperationStatus.Done)
     // a list of the current receipts created by the operation is also available
     console.log(executable.receipts)
     // once a finished status is set there should be no newer receipts into it

@@ -4,7 +4,7 @@ import { JEVMBlockchain } from '../chain'
 import { type JuneoWallet, type VMWallet } from './wallet'
 import { FeeType, type EVMFeeData, estimateEVMTransaction, sendEVMTransaction, type UtxoFeeData, estimateJVMBaseTransaction } from './transaction'
 import { type Utxo } from '../transaction'
-import { type MCNOperation, MCNOperationType } from './operation'
+import { type NetworkOperation, NetworkOperationType } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class SendManager {
@@ -50,8 +50,8 @@ export class SendManager {
   }
 }
 
-export class SendOperation implements MCNOperation {
-  type: MCNOperationType = MCNOperationType.Send
+export class SendOperation implements NetworkOperation {
+  type: NetworkOperationType = NetworkOperationType.Send
   assetId: string
   amount: bigint
   address: string

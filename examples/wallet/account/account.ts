@@ -1,5 +1,5 @@
-import { AssetValue, ChainAccount, EVMAccount, JEVMBlockchain, JVMAccount, JuneoWallet,
-    MCNAccount, MCNProvider, SocotraJUNEAsset, SocotraJUNEChain, SocotraWJUNEAsset } from '../../../src'
+import { AssetValue, ChainAccount, EVMAccount, JEVMBlockchain, JuneoWallet, MCNAccount,
+    MCNProvider, SocotraJUNEAsset, SocotraJUNEChain, SocotraWJUNEAsset } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()

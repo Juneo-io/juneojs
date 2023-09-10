@@ -1,4 +1,4 @@
-import { DelegateOperation, ExecutableMCNOperation, JuneoWallet, MCNAccount, MCNOperationStatus,
+import { DelegateOperation, ExecutableMCNOperation, JuneoWallet, MCNAccount, NetworkOperationStatus,
     MCNOperationSummary, MCNProvider, PlatformBlockchain, StakingOperationSummary, ValidateOperation, now } from "../../../src"
 
 async function main () {
@@ -25,7 +25,7 @@ async function main () {
     // execute the operation
     await mcnAccount.execute(executable)
     // check if the operation is successfull
-    console.log(executable.status === MCNOperationStatus.Done)
+    console.log(executable.status === NetworkOperationStatus.Done)
     // to retrieve the potential reward from the summary we must first convert it
     // when estimating a validate or delegate operation it will always return a staking operation summary
     const validateSummary: StakingOperationSummary = summary as StakingOperationSummary

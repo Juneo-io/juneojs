@@ -5,20 +5,10 @@ import {
 } from '../../transaction'
 import { type TransactionType, WalletStatusFetcherTimeout, WalletStatusFetcherDelay, TransactionReceipt } from '../transaction'
 import { NetworkOperationStatus } from './operation'
-import { type OperationSummary } from './summary'
 
 export class ExecutableMCNOperation {
-  summary: OperationSummary
   status: NetworkOperationStatus = NetworkOperationStatus.Initializing
   receipts: TransactionReceipt[] = []
-
-  private constructor (summary: OperationSummary) {
-    this.summary = summary
-  }
-
-  static from (summary: OperationSummary): ExecutableMCNOperation {
-    return new ExecutableMCNOperation(summary)
-  }
 
   async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {
     const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, EVMTransactionStatus.Pending, transactionHash)

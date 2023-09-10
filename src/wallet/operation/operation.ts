@@ -9,19 +9,6 @@ export enum NetworkOperationType {
   Unwrap = 'Unwrap'
 }
 
-export enum ChainOperationType {
-  Send = NetworkOperationType.Send,
-  Validate = NetworkOperationType.Validate,
-  Delegate = NetworkOperationType.Delegate,
-  Wrap = NetworkOperationType.Wrap,
-  Unwrap = NetworkOperationType.Unwrap
-}
-
-export enum MCNOperationType {
-  Cross = NetworkOperationType.Cross,
-  Bridge = NetworkOperationType.Bridge
-}
-
 export interface NetworkOperation {
   type: NetworkOperationType
 }

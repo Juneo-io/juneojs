@@ -1,6 +1,9 @@
 import { AccountError, sortSpendings } from '../../utils'
 import { type JuneoWallet } from '../wallet'
-import { NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
+import {
+  NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
+  type ExecutableMCNOperation, SummaryType, type ChainOperationSummary, type OperationSummary
+} from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
@@ -49,14 +52,15 @@ export class MCNAccount {
     return await account.estimate(operation)
   }
 
-  async execute (executable: ExecutableMCNOperation): Promise<void> {
-    this.verifySpendings(executable)
+  async execute (executable: ExecutableMCNOperation, summary: OperationSummary): Promise<void> {
+    this.verifySpendings(executable, summary)
     executable.status = NetworkOperationStatus.Executing
-    if (executable.summary.chains.length === 1) {
-      const account: ChainAccount = this.getAccount(executable.summary.chains[0].id)
-      await account.execute(executable)
-    } else {
-      await this.executeMCNOperation(executable)
+    if (summary.type === SummaryType.Chain) {
+      const chainSummary: ChainOperationSummary = summary as ChainOperationSummary
+      const account: ChainAccount = this.getAccount(chainSummary.chain.id)
+      await account.execute(executable, chainSummary)
+    } else if (summary.type === SummaryType.MCN) {
+      await this.executeMCNOperation(executable, summary as MCNOperationSummary)
     }
     // the only case it is not executing is if an error happened in that case we do not change it
     if (executable.status === NetworkOperationStatus.Executing) {
@@ -64,14 +68,13 @@ export class MCNAccount {
     }
   }
 
-  private async executeMCNOperation (executable: ExecutableMCNOperation): Promise<void> {
+  private async executeMCNOperation (executable: ExecutableMCNOperation, summary: MCNOperationSummary): Promise<void> {
     // this is currently the only multi chain operation available
     // verifications are done in it so keep it like that until newer features are added
-    await this.crossManager.executeCrossOperation(executable, this)
+    await this.crossManager.executeCrossOperation(executable, summary, this)
   }
 
-  verifySpendings (executable: ExecutableMCNOperation): void {
-    const summary: MCNOperationSummary = executable.summary
+  verifySpendings (executable: ExecutableMCNOperation, summary: OperationSummary): void {
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)

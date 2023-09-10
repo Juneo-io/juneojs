@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
-import { TransactionType, type FeeData, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
+import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType } from '../operation'
+import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -24,19 +24,15 @@ export class JVMAccount extends UtxoAccount {
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
-  async execute (executable: ExecutableMCNOperation): Promise<void> {
-    super.spend(executable.summary.spendings as UtxoSpending[])
-    const operation: NetworkOperation = executable.summary.operation
+  async execute (executable: ExecutableMCNOperation, summary: ChainOperationSummary): Promise<void> {
+    super.spend(summary.spendings as UtxoSpending[])
+    const operation: NetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fees: FeeData[] = executable.summary.fees
-      for (let i = 0; i < fees.length; i++) {
-        const transactionHash: string = await this.sendManager.sendJVM(send.assetId, send.amount, send.address, fees[i] as UtxoFeeData, super.utxoSet)
-        const success: boolean = await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
-        if (!success) {
-          break
-        }
-      }
+      const transactionHash: string = await this.sendManager.sendJVM(
+        send.assetId, send.amount, send.address, summary.fee as UtxoFeeData, super.utxoSet
+      )
+      await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.fetchAllBalances()

@@ -17,7 +17,7 @@ async function main () {
     // we need balances to perform the operation
     await mcnAccount.fetchAllBalances()
     const assetId: string = SocotraJUNEAssetId
-    const amount: bigint = BigInt('1000000000000000000') // 1 JUNE
+    const amount: bigint = BigInt('1100000000000000000') // 1 JUNE
     const address: string = wallet.getAddress(jvmChain)
     // we instantiate a cross operation that we want to perform
     const cross: CrossOperation = new CrossOperation(juneChain, jvmChain, assetId, amount, address)

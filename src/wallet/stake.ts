@@ -1,4 +1,4 @@
-import { type PlatformAPI } from '../api'
+import { type GetCurrentValidatorsResponse, type PlatformAPI } from '../api'
 import { type PlatformBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { NodeId, Validator, type Utxo } from '../transaction'
@@ -45,35 +45,51 @@ export class StakeManager {
     return await estimatePlatformAddDelegatorTransaction(this.provider, this.wallet, validator, utxoSet)
   }
 
-  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
-    if (typeof feeData === 'undefined') {
-      feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
-    }
-
-    // check if the time is valid
+  private checkTimeValidity (startTime: bigint, endTime: bigint): void {
     if (startTime < now()) {
       throw new WalletError('Stake start time must be in the future')
     }
     if (endTime <= startTime) {
       throw new WalletError('Stake end time must be after start time')
     }
+  }
+
+  private checkNodeId (nodeId: string, mustBeValidator: boolean, nodeIdData: GetCurrentValidatorsResponse): void {
+    if (mustBeValidator && nodeIdData.validators.length <= 0) {
+      throw new WalletError(`Node ${nodeId} is not a validator`)
+    }
+    if (!mustBeValidator && nodeIdData.validators.length > 0) {
+      throw new WalletError(`Attempted to issue duplicate validation for node ${nodeId}`)
+    }
+  }
+
+  private checkStakeAmount (amount: bigint, minStake: bigint, maxStake: bigint): void {
+    if (amount > maxStake) {
+      throw new WalletError(`Stake amount ${amount} exceeds max stake ${maxStake}`)
+    }
+    if (amount < minStake) {
+      throw new WalletError(`Stake amount ${amount} is less than min stake ${minStake}`)
+    }
+  }
+
+  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
+    if (typeof feeData === 'undefined') {
+      feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
+    }
+    const nodeIdData = await this.api.getCurrentValidators(undefined, [nodeId])
+
+    // check if the time is valid
+    this.checkTimeValidity(startTime, endTime)
     if (endTime - startTime < this.provider.mcn.stakeConfig.minStakeDuration) {
       throw new WalletError(`Stake duration must be at least ${this.provider.mcn.stakeConfig.minStakeDuration} seconds`)
     }
 
-    // check if node already validate
-    const nodeIdData = await this.api.getCurrentValidators(undefined, [nodeId])
-    if (nodeIdData.validators.length > 0) {
-      throw new WalletError(`Attempted to issue duplicate validation for node ${nodeId}`)
-    }
+    // check if node already validate (must be false)
+    this.checkNodeId(nodeId, false, nodeIdData)
 
     // check if stake amount is valid
-    if (amount > this.provider.mcn.stakeConfig.maxValidatorStake) {
-      throw new WalletError(`Validator stake amount ${amount} exceeds max stake ${this.provider.mcn.stakeConfig.maxValidatorStake}`)
-    }
-    if (amount < this.provider.mcn.stakeConfig.minValidatorStake) {
-      throw new WalletError(`Validator stake amount ${amount} is less than min stake ${this.provider.mcn.stakeConfig.minValidatorStake}`)
-    }
+    // ici j'ai l'impression que le check du amount se fait directement dans estimateValidationFee
+    this.checkStakeAmount(amount, BigInt(this.provider.mcn.stakeConfig.minValidatorStake), BigInt(this.provider.mcn.stakeConfig.maxValidatorStake))
 
     const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(transaction)).txID
@@ -83,34 +99,23 @@ export class StakeManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
     }
-    // check if node already validate
+
     const nodeIdData = await this.api.getCurrentValidators(undefined, [nodeId])
-    console.log(nodeIdData)
-    if (nodeIdData.validators.length <= 0) {
-      throw new WalletError(`Attempted to delegate to node ${nodeId} which is not a validator`)
-    }
+    // check if node already validate (must be true)
+    this.checkTimeValidity(startTime, endTime)
 
     // check if the time is valid
-    if (startTime < now()) {
-      throw new WalletError('Stake start time must be in the future')
-    }
-    if (endTime <= startTime) {
-      throw new WalletError('Stake end time must be after start time')
-    }
+    this.checkNodeId(nodeId, true, nodeIdData)
     if (endTime > BigInt(nodeIdData.validators[0].endTime)) {
       throw new WalletError(`Stake duration must be less than ${nodeIdData.validators[0].endTime} seconds`)
     }
 
     // check if stake amount is valid
-    const available = (BigInt(nodeIdData.validators[0].stakeAmount) * BigInt(5) - BigInt(this.provider.mcn.stakeConfig.maxValidatorStake)) -
+    // available = (maxValidatorStake * 5) - delegatorWeight - stakeAmount
+    const available = (BigInt(nodeIdData.validators[0].stakeAmount) * BigInt(5)) -
      BigInt(nodeIdData.validators[0].delegatorWeight) -
      BigInt(nodeIdData.validators[0].stakeAmount)
-    if (amount > available) {
-      throw new WalletError(`Delegation amount ${amount} exceeds available stake ${available}`)
-    }
-    if (amount < this.provider.mcn.stakeConfig.minDelegatorStake) {
-      throw new WalletError(`Validator stake amount ${amount} is less than min stake ${this.provider.mcn.stakeConfig.minValidatorStake}`)
-    }
+    this.checkStakeAmount(amount, BigInt(this.provider.mcn.stakeConfig.minDelegatorStake), available)
 
     const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(transaction)).txID

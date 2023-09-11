@@ -44,7 +44,7 @@ export class MCNAccount {
     await Promise.all(promises)
   }
 
-  async estimate (chainId: string, operation: NetworkOperation): Promise<MCNOperationSummary> {
+  async estimate (chainId: string, operation: NetworkOperation): Promise<OperationSummary> {
     if (operation.type === NetworkOperationType.Cross) {
       return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
     }

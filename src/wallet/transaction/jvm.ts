@@ -6,7 +6,7 @@ import {
   buildJVMExportTransaction, buildJVMImportTransaction
 } from '../../transaction'
 import { type JVMAccount } from '../account'
-import { MCNOperationSummary } from '../operation'
+import { ChainOperationSummary } from '../operation'
 import { type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
@@ -28,13 +28,13 @@ export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet:
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimateJVMSendOperation (provider: MCNProvider, wallet: JuneoWallet, send: SendOperation, account: JVMAccount): Promise<MCNOperationSummary> {
+export async function estimateJVMSendOperation (provider: MCNProvider, wallet: JuneoWallet, send: SendOperation, account: JVMAccount): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
   return await estimateJVMBaseTransaction(provider, wallet, send.assetId, send.amount, send.address, account.utxoSet).then(fee => {
-    return new MCNOperationSummary(send, [chain], [fee], [new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos()), fee.getAsSpending()])
+    return new ChainOperationSummary(send, chain, fee, [new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos()), fee.getAsSpending()])
   }, async () => {
     const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
-    return new MCNOperationSummary(send, [chain], [fee], [new BaseSpending(chain, send.amount, send.assetId), fee.getAsSpending()])
+    return new ChainOperationSummary(send, chain, fee, [new BaseSpending(chain, send.amount, send.assetId), fee.getAsSpending()])
   })
 }
 

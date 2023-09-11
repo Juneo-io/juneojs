@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimatePlatformValidateOperation, estimatePlatformDelegateOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType, type ChainOperationSummary } from '../operation'
+import { type ExecutableMCNOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { type DelegateOperation, StakeManager, type ValidateOperation } from '../stake'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,7 +17,7 @@ export class PlatformAccount extends UtxoAccount {
     this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<MCNOperationSummary> {
+  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Validate) {
       return await estimatePlatformValidateOperation(this.provider, this.wallet, operation as ValidateOperation, this)
     } else if (operation.type === NetworkOperationType.Delegate) {

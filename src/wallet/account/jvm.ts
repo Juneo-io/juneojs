@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type NetworkOperation, type MCNOperationSummary, NetworkOperationType, type ChainOperationSummary } from '../operation'
+import { type ExecutableMCNOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,7 +17,7 @@ export class JVMAccount extends UtxoAccount {
     this.sendManager = new SendManager(provider, wallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<MCNOperationSummary> {
+  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       return await estimateJVMSendOperation(this.provider, this.wallet, operation as SendOperation, this)
     }

@@ -14,6 +14,8 @@ export interface OperationSummary {
   operation: NetworkOperation
   fees: FeeData[]
   spendings: Spending[]
+
+  getExecutable: () => ExecutableMCNOperation
 }
 
 abstract class AbstractOperationSummary implements OperationSummary {

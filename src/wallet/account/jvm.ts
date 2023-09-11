@@ -1,7 +1,7 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableMCNOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
+import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JuneoWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -24,7 +24,7 @@ export class JVMAccount extends UtxoAccount {
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
-  async execute (executable: ExecutableMCNOperation, summary: ChainOperationSummary): Promise<void> {
+  async execute (executable: ExecutableOperation, summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings as UtxoSpending[])
     const operation: NetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {

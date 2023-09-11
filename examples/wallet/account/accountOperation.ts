@@ -1,5 +1,5 @@
-import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
-    MCNOperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
+import { ExecutableOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
+    OperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -13,11 +13,11 @@ async function main () {
     // note that if you try to estimate an operation which is not compatible with the chain
     // an error will be thrown. If you try to do an operation on a chain which is not
     // registered in the MCNAccount you will also encounter an error
-    const summary: MCNOperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
+    const summary: OperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
     console.log(summary.fees)
     // from the summary we can get an executable operation that can be used to perform it from an account
-    const executable: ExecutableMCNOperation = summary.getExecutable()
-    await mcnAccount.execute(executable)
+    const executable: ExecutableOperation = summary.getExecutable()
+    await mcnAccount.execute(executable, summary)
     // the executable has fields that can help keeping track of the current state of the operation
     console.log(executable.status === NetworkOperationStatus.Done)
     // a list of the current receipts created by the operation is also available

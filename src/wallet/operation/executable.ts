@@ -6,7 +6,7 @@ import {
 import { type TransactionType, WalletStatusFetcherTimeout, WalletStatusFetcherDelay, TransactionReceipt } from '../transaction'
 import { NetworkOperationStatus } from './operation'
 
-export class ExecutableMCNOperation {
+export class ExecutableOperation {
   status: NetworkOperationStatus = NetworkOperationStatus.Initializing
   receipts: TransactionReceipt[] = []
 

@@ -1,7 +1,7 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
-import { type ExecutableMCNOperation, type NetworkOperation, type ChainOperationSummary } from '../operation'
+import { type ExecutableOperation, type NetworkOperation, type ChainOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type JuneoWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
@@ -27,7 +27,7 @@ export interface ChainAccount {
 
   estimate: (operation: NetworkOperation) => Promise<ChainOperationSummary>
 
-  execute: (executable: ExecutableMCNOperation, summary: ChainOperationSummary) => Promise<void>
+  execute: (executable: ExecutableOperation, summary: ChainOperationSummary) => Promise<void>
 }
 
 export abstract class AbstractChainAccount implements ChainAccount {
@@ -76,7 +76,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
 
-  abstract execute (executable: ExecutableMCNOperation, summary: ChainOperationSummary): Promise<void>
+  abstract execute (executable: ExecutableOperation, summary: ChainOperationSummary): Promise<void>
 
   protected spend (spendings: Spending[]): void {
     spendings.forEach(spending => {
@@ -118,7 +118,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
 
   abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
 
-  abstract execute (executable: ExecutableMCNOperation, summary: ChainOperationSummary): Promise<void>
+  abstract execute (executable: ExecutableOperation, summary: ChainOperationSummary): Promise<void>
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)

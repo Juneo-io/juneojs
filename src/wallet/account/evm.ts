@@ -3,7 +3,7 @@ import { type JEVMBlockchain, type TokenAsset } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
 import { BaseSpending, TransactionType, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
-import { type ExecutableMCNOperation, type NetworkOperation, NetworkOperationType, ChainOperationSummary } from '../operation'
+import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
 import { type JEVMWallet, type JuneoWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
@@ -43,7 +43,7 @@ export class EVMAccount extends AbstractChainAccount {
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
-  async execute (executable: ExecutableMCNOperation, summary: ChainOperationSummary): Promise<void> {
+  async execute (executable: ExecutableOperation, summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings)
     const operation: NetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {

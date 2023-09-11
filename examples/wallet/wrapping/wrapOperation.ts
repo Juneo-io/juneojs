@@ -1,5 +1,5 @@
-import { ExecutableMCNOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
-    MCNOperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
+import { ExecutableOperation, JEVMBlockchain, JuneoWallet, MCNAccount, NetworkOperationStatus,
+    OperationSummary, MCNProvider, SocotraJUNEChain, SocotraWJUNEAsset, WrapOperation } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -10,11 +10,11 @@ async function main () {
     // we instantiate a wrap operation that we want to perform on the chain
     const wrapOperation: WrapOperation = new WrapOperation(SocotraWJUNEAsset, BigInt("1000000000000000000"))
     // estimate the operation to get a summary
-    const summary: MCNOperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
+    const summary: OperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
     // from the summary we can instantiate a new executable operation that can be used to perform it
-    const executable: ExecutableMCNOperation = summary.getExecutable()
+    const executable: ExecutableOperation = summary.getExecutable()
     // execute the operation
-    await mcnAccount.execute(executable)
+    await mcnAccount.execute(executable, summary)
     // check if the operation is successfull
     console.log(executable.status === NetworkOperationStatus.Done)
 }

@@ -2,7 +2,7 @@ import { AccountError, sortSpendings } from '../../utils'
 import { type JuneoWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
-  type ExecutableMCNOperation, SummaryType, type ChainOperationSummary, type OperationSummary
+  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
@@ -52,7 +52,7 @@ export class MCNAccount {
     return await account.estimate(operation)
   }
 
-  async execute (executable: ExecutableMCNOperation, summary: OperationSummary): Promise<void> {
+  async execute (executable: ExecutableOperation, summary: OperationSummary): Promise<void> {
     this.verifySpendings(executable, summary)
     executable.status = NetworkOperationStatus.Executing
     if (summary.type === SummaryType.Chain) {
@@ -68,13 +68,13 @@ export class MCNAccount {
     }
   }
 
-  private async executeMCNOperation (executable: ExecutableMCNOperation, summary: MCNOperationSummary): Promise<void> {
+  private async executeMCNOperation (executable: ExecutableOperation, summary: MCNOperationSummary): Promise<void> {
     // this is currently the only multi chain operation available
     // verifications are done in it so keep it like that until newer features are added
     await this.crossManager.executeCrossOperation(executable, summary, this)
   }
 
-  verifySpendings (executable: ExecutableMCNOperation, summary: OperationSummary): void {
+  verifySpendings (executable: ExecutableOperation, summary: OperationSummary): void {
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)

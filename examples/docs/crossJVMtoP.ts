@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import {
-    CrossOperation, ExecutableMCNOperation,
+    CrossOperation, ExecutableOperation,
     JVMBlockchain, JuneoWallet, MCNAccount,
-    MCNOperationSummary, MCNProvider, PlatformBlockchain, SocotraJUNEAssetId,
+    OperationSummary, MCNProvider, PlatformBlockchain, SocotraJUNEAssetId,
     SocotraJVMChain, SocotraPlatformChain
 } from "../../src";
 dotenv.config();
@@ -24,10 +24,10 @@ async function main () {
     // we instantiate a cross operation that we want to perform
     const cross: CrossOperation = new CrossOperation(jvmChain, pChain, assetId, amount, address)
     // estimate the operation
-    const summary: MCNOperationSummary = await mcnAccount.estimate(jvmChain.id, cross)
+    const summary: OperationSummary = await mcnAccount.estimate(jvmChain.id, cross)
     // execute the operation
-    const executable: ExecutableMCNOperation = summary.getExecutable()
-    await mcnAccount.execute(executable)
+    const executable: ExecutableOperation = summary.getExecutable()
+    await mcnAccount.execute(executable, summary)
     // the receipts should contain multiple transaction ids
     // that were performed to complete the cross operation
     console.log(executable.receipts)

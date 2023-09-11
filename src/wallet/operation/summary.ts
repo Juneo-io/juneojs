@@ -1,7 +1,7 @@
 import { type PlatformBlockchain, type Blockchain } from '../../chain'
 import { type Staking } from '../stake'
 import { type UtxoFeeData, type FeeData, type Spending } from '../transaction'
-import { ExecutableMCNOperation } from './executable'
+import { ExecutableOperation } from './executable'
 import { type NetworkOperation } from './operation'
 
 export enum SummaryType {
@@ -15,7 +15,7 @@ export interface OperationSummary {
   fees: FeeData[]
   spendings: Spending[]
 
-  getExecutable: () => ExecutableMCNOperation
+  getExecutable: () => ExecutableOperation
 }
 
 abstract class AbstractOperationSummary implements OperationSummary {
@@ -23,17 +23,17 @@ abstract class AbstractOperationSummary implements OperationSummary {
   operation: NetworkOperation
   spendings: Spending[]
   fees: FeeData[]
-  private readonly executable: ExecutableMCNOperation
+  private readonly executable: ExecutableOperation
 
   constructor (type: SummaryType, operation: NetworkOperation, fees: FeeData[], spendings: Spending[]) {
     this.type = type
     this.operation = operation
     this.fees = fees
     this.spendings = spendings
-    this.executable = new ExecutableMCNOperation()
+    this.executable = new ExecutableOperation()
   }
 
-  getExecutable (): ExecutableMCNOperation {
+  getExecutable (): ExecutableOperation {
     return this.executable
   }
 }

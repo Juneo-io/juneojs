@@ -11,10 +11,10 @@ async function main () {
     const wrapOperation: WrapOperation = new WrapOperation(SocotraWJUNEAsset, BigInt("1000000000000000000"))
     // estimate the operation to get a summary
     const summary: OperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
-    // from the summary we can instantiate a new executable operation that can be used to perform it
+    // from the summary we can get the executable operation that will be used to perform it
     const executable: ExecutableOperation = summary.getExecutable()
     // execute the operation
-    await mcnAccount.execute(executable, summary)
+    await mcnAccount.execute(summary)
     // check if the operation is successfull
     console.log(executable.status === NetworkOperationStatus.Done)
 }

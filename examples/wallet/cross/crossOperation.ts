@@ -21,7 +21,7 @@ async function main () {
     console.log(summary.fees)
     // execute the operation
     const executable: ExecutableOperation = summary.getExecutable()
-    await mcnAccount.execute(executable, summary)
+    await mcnAccount.execute(summary)
     // the receipts should contain multiple transaction ids
     // that were performed to complete the cross operation
     console.log(executable.receipts)

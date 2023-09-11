@@ -43,8 +43,9 @@ export class EVMAccount extends AbstractChainAccount {
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
-  async execute (executable: ExecutableOperation, summary: ChainOperationSummary): Promise<void> {
+  async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings)
+    const executable: ExecutableOperation = summary.getExecutable()
     const operation: NetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation

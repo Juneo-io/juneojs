@@ -191,21 +191,22 @@ export class CrossManager {
     return new MCNOperationSummary(cross, chains, fees, spendings)
   }
 
-  async executeCrossOperation (executable: ExecutableOperation, summary: MCNOperationSummary, account: MCNAccount): Promise<void> {
+  async executeCrossOperation (summary: MCNOperationSummary, account: MCNAccount): Promise<void> {
     const operation: NetworkOperation = summary.operation
     if (operation.type !== NetworkOperationType.Cross) {
       throw new CrossError(`operation ${operation.type} is forbidden`)
     }
+    const executable: ExecutableOperation = summary.getExecutable()
     const cross: CrossOperation = operation as CrossOperation
     if (this.shouldProxy(cross)) {
       const destination: Blockchain = cross.destination
       cross.destination = this.provider.jvm.chain
       summary.operation = cross // ?? needed in js ?
-      await this.executeCrossOperation(executable, summary, account)
+      await this.executeCrossOperation(summary, account)
       cross.source = this.provider.jvm.chain
       cross.destination = destination
       summary.operation = cross // ?? needed in js ?
-      await this.executeCrossOperation(executable, summary, account)
+      await this.executeCrossOperation(summary, account)
       return
     }
     // exporting jrc20

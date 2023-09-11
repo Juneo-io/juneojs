@@ -15,9 +15,9 @@ async function main () {
     // registered in the MCNAccount you will also encounter an error
     const summary: OperationSummary = await mcnAccount.estimate(juneChain.id, wrapOperation)
     console.log(summary.fees)
-    // from the summary we can get an executable operation that can be used to perform it from an account
+    // from the summary we can get the executable operation that will be used to perform it
     const executable: ExecutableOperation = summary.getExecutable()
-    await mcnAccount.execute(executable, summary)
+    await mcnAccount.execute(summary)
     // the executable has fields that can help keeping track of the current state of the operation
     console.log(executable.status === NetworkOperationStatus.Done)
     // a list of the current receipts created by the operation is also available

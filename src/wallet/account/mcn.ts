@@ -52,15 +52,16 @@ export class MCNAccount {
     return await account.estimate(operation)
   }
 
-  async execute (executable: ExecutableOperation, summary: OperationSummary): Promise<void> {
-    this.verifySpendings(executable, summary)
+  async execute (summary: OperationSummary): Promise<void> {
+    const executable: ExecutableOperation = summary.getExecutable()
+    this.verifySpendings(summary)
     executable.status = NetworkOperationStatus.Executing
     if (summary.type === SummaryType.Chain) {
       const chainSummary: ChainOperationSummary = summary as ChainOperationSummary
       const account: ChainAccount = this.getAccount(chainSummary.chain.id)
-      await account.execute(executable, chainSummary)
+      await account.execute(chainSummary)
     } else if (summary.type === SummaryType.MCN) {
-      await this.executeMCNOperation(executable, summary as MCNOperationSummary)
+      await this.executeMCNOperation(summary as MCNOperationSummary)
     }
     // the only case it is not executing is if an error happened in that case we do not change it
     if (executable.status === NetworkOperationStatus.Executing) {
@@ -68,13 +69,14 @@ export class MCNAccount {
     }
   }
 
-  private async executeMCNOperation (executable: ExecutableOperation, summary: MCNOperationSummary): Promise<void> {
+  private async executeMCNOperation (summary: MCNOperationSummary): Promise<void> {
     // this is currently the only multi chain operation available
     // verifications are done in it so keep it like that until newer features are added
-    await this.crossManager.executeCrossOperation(executable, summary, this)
+    await this.crossManager.executeCrossOperation(summary, this)
   }
 
-  verifySpendings (executable: ExecutableOperation, summary: OperationSummary): void {
+  verifySpendings (summary: OperationSummary): void {
+    const executable: ExecutableOperation = summary.getExecutable()
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)

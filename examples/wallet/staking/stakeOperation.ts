@@ -20,10 +20,10 @@ async function main () {
     const validateOperation: ValidateOperation = new ValidateOperation(nodeId, stakeAmount, startTime, endTime)
     // estimate the operation to get a summary
     const summary: OperationSummary = await mcnAccount.estimate(platformChain.id, validateOperation)
-    // from the summary we can instantiate a new executable operation that can be used to perform it
+    // from the summary we can get the executable operation that will be used to perform it
     const executable: ExecutableOperation = summary.getExecutable()
     // execute the operation
-    await mcnAccount.execute(executable, summary)
+    await mcnAccount.execute(summary)
     // check if the operation is successfull
     console.log(executable.status === NetworkOperationStatus.Done)
     // to retrieve the potential reward from the summary we must first convert it
@@ -33,9 +33,8 @@ async function main () {
     // we can instantiate a delegate operation if we want to perform it instead of a validation
     const delegateOperation: DelegateOperation = new DelegateOperation(nodeId, stakeAmount, startTime, endTime)
     const delegationSummary: OperationSummary = await mcnAccount.estimate(platformChain.id, delegateOperation)
-    const delegationExecutable: ExecutableOperation = delegationSummary.getExecutable()
     // execute the operation
-    await mcnAccount.execute(delegationExecutable, summary)
+    await mcnAccount.execute(delegationSummary)
 }
 
 main().catch((error) => {

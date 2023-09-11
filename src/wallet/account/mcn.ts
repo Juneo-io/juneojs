@@ -52,9 +52,11 @@ export class MCNAccount {
     return await account.estimate(operation)
   }
 
-  async execute (summary: OperationSummary): Promise<void> {
+  async execute (summary: OperationSummary, skipVerification: boolean = false): Promise<void> {
     const executable: ExecutableOperation = summary.getExecutable()
-    this.verifySpendings(summary)
+    if (!skipVerification) {
+      this.verifySpendings(summary)
+    }
     executable.status = NetworkOperationStatus.Executing
     if (summary.type === SummaryType.Chain) {
       const chainSummary: ChainOperationSummary = summary as ChainOperationSummary

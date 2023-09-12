@@ -321,23 +321,7 @@ export class JEVMImportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (importedAssets: string[], feeAssetId: string, mergedInputs: boolean): number {
-    // fee output will be merged with imported assets if has same asset id and explicitly merged after estimate
-    let ignoreFeeInput: boolean = false
-    if (mergedInputs) {
-      for (let i = 0; i < importedAssets.length; i++) {
-        if (importedAssets[i] === feeAssetId) {
-          ignoreFeeInput = true
-          break
-        }
-      }
-    }
-    const feeInputsCount: number = ignoreFeeInput ? 0 : 1
-    return importedAssets.length + feeInputsCount
-  }
-
-  static estimateSize (inputsCount: number, mergedInputs: boolean): number {
-    const outputsCount: number = mergedInputs ? inputsCount : inputsCount - 1
+  static estimateSize (inputsCount: number, outputsCount: number): number {
     // 2 + 4 + 4 + 4 + 4 = 18
     return 18 + BlockchainIdSize * 2 + this.estimateInputsSize(inputsCount) + EVMOutput.Size * outputsCount
   }

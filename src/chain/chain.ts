@@ -196,13 +196,9 @@ export class JEVMBlockchain extends AbstractBlockchain {
     return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
   }
 
-  estimateAtomicImportGas (importedAssets: string[]): bigint {
-    const mergedInputs: boolean = false
-    const signaturesCount: number = JEVMImportTransaction.estimateSignaturesCount(
-      importedAssets, this.assetId, mergedInputs
-    )
-    const size: number = JEVMImportTransaction.estimateSize(signaturesCount, mergedInputs)
-    return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
+  estimateAtomicImportGas (inputsCount: number, outputsCount: number): bigint {
+    const size: number = JEVMImportTransaction.estimateSize(inputsCount, outputsCount)
+    return this.calculateAtomicGas(BigInt(size), BigInt(inputsCount))
   }
 
   calculateAtomicCost (gas: bigint, baseFee: bigint): bigint {

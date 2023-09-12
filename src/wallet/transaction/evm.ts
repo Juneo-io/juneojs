@@ -162,8 +162,10 @@ export async function sendEVMExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string): Promise<BaseFeeData> {
-  const gasLimit: bigint = api.chain.estimateAtomicImportGas([assetId])
+export async function estimateEVMImportTransaction (api: JEVMAPI, hasExtraFee: boolean): Promise<BaseFeeData> {
+  const inputsCount: number = hasExtraFee ? 2 : 1
+  const outputsCount: number = hasExtraFee ? 2 : 1
+  const gasLimit: bigint = api.chain.estimateAtomicImportGas(inputsCount, outputsCount)
   const gasPrice: bigint = await api.eth_baseFee()
   const fee: BaseFeeData = new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
   // import fee is paid with utxos from shared memory so using JNT asset
@@ -172,17 +174,21 @@ export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: strin
 }
 
 export async function sendEVMImportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, source: Blockchain, assetId: string, amount: bigint, address: string, fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, source: Blockchain, assetId: string,
+  amount: bigint, address: string, fee?: FeeData, utxoSet?: Utxo[], extraGasFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
   const sender: string = wallet.getAddress(api.chain)
+  const hasExtraFee: boolean = extraGasFeeAmount > BigInt(0)
   if (typeof fee === 'undefined') {
-    fee = await estimateEVMImportTransaction(api, assetId)
+    fee = await estimateEVMImportTransaction(api, hasExtraFee)
   }
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [sender], source.id)
   }
-  const transaction: JEVMImportTransaction = buildJEVMImportTransaction([new UserInput(assetId, source, amount, address, api.chain)],
-    utxoSet, [sender], fee.amount, provider.mcn.id
-  )
+  const inputs: UserInput[] = [new UserInput(assetId, source, amount, address, api.chain)]
+  if (hasExtraFee) {
+    inputs.push(new UserInput(api.chain.assetId, source, extraGasFeeAmount, address, api.chain))
+  }
+  const transaction: JEVMImportTransaction = buildJEVMImportTransaction(inputs, utxoSet, [sender], fee.amount, provider.mcn.id)
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

@@ -1,6 +1,6 @@
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
+import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput } from './output'
 import { type Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
@@ -100,7 +100,7 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
   const spentAmounts = new Map<string, bigint>()
   // add fees as already spent so they are not added in outputs
   spentAmounts.set(fee.assetId, fee.amount)
-  const outputs: UserOutput[] = []
+  let outputs: UserOutput[] = []
   // adding outputs matching user inputs
   userInputs.forEach(input => {
     outputs.push(new UserOutput(
@@ -113,7 +113,7 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
         // e.g. multisig we need to do changes here
         [new Address(input.address)]
       ),
-      input
+      false
     ))
     const assetId: string = input.assetId
     let spentAmount: bigint = BigInt(input.amount)
@@ -132,6 +132,7 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
     }
     availableAmounts.set(assetId, amount)
   })
+  outputs = mergeSecp256k1Outputs(outputs)
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
   for (let i: number = 0; i < inputs.length; i++) {
@@ -157,7 +158,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
         BigInt(0),
         1,
         [new Address(changeAddress)]
-      )
+      ),
+      true
     ))
     // adding the spending of the change output
     let amount: bigint = available - spent
@@ -167,4 +169,26 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
     spentAmounts.set(assetId, amount)
   }
   return outputs
+}
+
+function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
+  const mergedOutputs: UserOutput[] = []
+  const spendings = new Map<string, UserOutput>()
+  outputs.forEach(output => {
+    let key: string = output.assetId.assetId
+    key += output.output.locktime
+    key += output.output.threshold.toString()
+    output.output.addresses.sort(Address.comparator)
+    output.output.addresses.forEach(address => {
+      key += address.serialize().toHex()
+    })
+    if (spendings.has(key)) {
+      const out: TransactionOutput = (spendings.get(key) as UserOutput).output;
+      (out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
+    } else {
+      mergedOutputs.push(output)
+      spendings.set(key, output)
+    }
+  })
+  return mergedOutputs
 }

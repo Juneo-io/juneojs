@@ -124,21 +124,16 @@ export class CrossManager {
       const jvm: JVMBlockchain = this.provider.jvm.chain
       const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount, cross.address)
       const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
-      spendings.push(new BaseSpending(jvm, importSummary.fees[0].amount, jvm.assetId))
-      spendings.push(new BaseSpending(jvm, importSummary.fees[1].amount, jvm.assetId))
-      const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
-      if (cross.destination.id === juneChain.id) {
-        for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
-          const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
-          if (jrc20.nativeAssetId === cross.assetId) {
-            const sender: string = account.getAccount(juneChain.id).addresses[0]
-            const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
-            fees.push(fee)
-            spendings.push(new BaseSpending(jvm, fee.amount / JEVMBlockchain.AtomicDenomination, jvm.assetId))
-            break
-          }
+      importSummary.fees.forEach(fee => {
+        const spending: Spending = fee.getAsSpending()
+        spending.chain = jvm
+        spending.assetId = jvm.assetId
+        if (fee.type === FeeType.Deposit) {
+          spending.amount /= JEVMBlockchain.AtomicDenomination
         }
-      }
+        spendings.push(spending)
+      })
+      const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       cross.sendImportFee = proxyExport.sendImportFee
       return new MCNOperationSummary(cross, chains, fees, spendings)
     }
@@ -161,17 +156,36 @@ export class CrossManager {
         }
       }
     }
+    let importedJRC20: JRC20Asset | undefined
+    if (cross.destination.id === juneChain.id && cross.assetId !== juneChain.assetId) {
+      for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
+        const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
+        if (jrc20.nativeAssetId === cross.assetId) {
+          importedJRC20 = jrc20
+          break
+        }
+      }
+    }
     const exportFee: BaseFeeData = await this.estimateExport(cross.source, cross.destination, cross.assetId)
-    const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
+    const hasDepositFee: boolean = typeof importedJRC20 !== 'undefined'
+    const importFee: BaseFeeData = await this.estimateImport(cross.destination, hasDepositFee)
     fees.push(exportFee, importFee)
+    if (hasDepositFee) {
+      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
+      cross.amount /= JEVMBlockchain.AtomicDenomination
+      const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, importedJRC20 as JRC20Asset, cross.amount)
+      fees.push(fee)
+    }
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
-    const destinationBalance: bigint = destinationAccount.getValue(importFee.assetId)
-    let sourceBalance: bigint = sourceAccount.getValue(importFee.assetId)
-    if (cross.assetId === importFee.assetId) {
+    const destinationAssetId: string = cross.destination.assetId
+    const destinationBalance: bigint = destinationAccount.getValue(destinationAssetId)
+    let sourceBalance: bigint = sourceAccount.getValue(destinationAssetId)
+    if (cross.assetId === destinationAssetId) {
       sourceBalance -= cross.amount
     }
-    if (exportFee.assetId === importFee.assetId) {
+    if (exportFee.assetId === destinationAssetId) {
       sourceBalance -= exportFee.amount
     }
     const sendImportFee: boolean = this.shouldSendImportFee(cross.destination, importFee.amount, destinationBalance, sourceBalance)
@@ -179,10 +193,10 @@ export class CrossManager {
     spendings.push(exportFee.getAsSpending())
     if (sendImportFee) {
       // handle case of crossing jrc20
-      const assetId: string = importFee.assetId === cross.assetId
+      const assetId: string = destinationAssetId === cross.assetId
         ? spendingAssetId
-        : importFee.assetId
-      const amount: bigint = cross.source.id === juneChain.id && importFee.assetId === juneChain.assetId
+        : destinationAssetId
+      const amount: bigint = cross.source.id === juneChain.id && destinationAssetId === juneChain.assetId
         ? importFee.amount * JEVMBlockchain.AtomicDenomination
         : importFee.amount
       spendings.push(new BaseSpending(cross.source, amount, assetId))

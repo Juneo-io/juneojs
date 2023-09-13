@@ -6,8 +6,8 @@ import {
   NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
-import { MCNOperationSummary } from '../operation'
-import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation, ValidationShare } from '../stake'
+import { ChainOperationSummary, StakingOperationSummary } from '../operation'
+import { type DelegateOperation, StakeManager, type ValidateOperation, ValidationShare } from '../stake'
 import { type VMWallet, type JuneoWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
@@ -39,17 +39,19 @@ export async function estimatePlatformAddValidatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: JuneoWallet, validate: ValidateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
+export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: JuneoWallet, validate: ValidateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateValidationReward(validate.endTime - validate.startTime, validate.amount)
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(validate, chain, [fee],
-      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+    return new StakingOperationSummary(validate, chain, fee,
+      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-    return new MCNOperationSummary(validate, [chain], [fee], [new BaseSpending(chain, validate.amount, chain.assetId), fee])
+    return new ChainOperationSummary(validate, chain, fee,
+      [new BaseSpending(chain, validate.amount, chain.assetId), fee.getAsSpending()]
+    )
   })
 }
 
@@ -66,17 +68,17 @@ export async function estimatePlatformAddDelegatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: JuneoWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
+export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: JuneoWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(delegate, chain, [fee],
-      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+    return new StakingOperationSummary(delegate, chain, fee,
+      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-    return new MCNOperationSummary(delegate, [chain], [fee], [new BaseSpending(chain, delegate.amount, chain.assetId), fee])
+    return new ChainOperationSummary(delegate, chain, fee, [new BaseSpending(chain, delegate.amount, chain.assetId), fee.getAsSpending()])
   })
 }
 

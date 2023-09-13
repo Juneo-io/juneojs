@@ -1,6 +1,9 @@
 import { AccountError, sortSpendings } from '../../utils'
 import { type JuneoWallet } from '../wallet'
-import { MCNOperationType, MCNOperationStatus, type MCNOperation, type MCNOperationSummary, type ExecutableMCNOperation } from '../operation'
+import {
+  NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
+  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary
+} from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
@@ -41,45 +44,46 @@ export class MCNAccount {
     await Promise.all(promises)
   }
 
-  async estimate (chainId: string, operation: MCNOperation): Promise<MCNOperationSummary> {
-    if (operation.type === MCNOperationType.Unsupported) {
-      throw new AccountError('unsupported operation')
-    }
-    const account: ChainAccount = this.getAccount(chainId)
-    if (operation.type === MCNOperationType.Cross) {
+  async estimate (chainId: string, operation: NetworkOperation): Promise<OperationSummary> {
+    if (operation.type === NetworkOperationType.Cross) {
       return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
     }
+    const account: ChainAccount = this.getAccount(chainId)
     return await account.estimate(operation)
   }
 
-  async execute (executable: ExecutableMCNOperation): Promise<void> {
-    this.verifySpendings(executable)
-    executable.status = MCNOperationStatus.Executing
-    if (executable.summary.chains.length === 1) {
-      const account: ChainAccount = this.getAccount(executable.summary.chains[0].id)
-      await account.execute(executable)
-    } else {
-      await this.executeMCNOperation(executable)
+  async execute (summary: OperationSummary, skipVerification: boolean = false): Promise<void> {
+    const executable: ExecutableOperation = summary.getExecutable()
+    if (!skipVerification) {
+      this.verifySpendings(summary)
+    }
+    executable.status = NetworkOperationStatus.Executing
+    if (summary.type === SummaryType.Chain) {
+      const chainSummary: ChainOperationSummary = summary as ChainOperationSummary
+      const account: ChainAccount = this.getAccount(chainSummary.chain.id)
+      await account.execute(chainSummary)
+    } else if (summary.type === SummaryType.MCN) {
+      await this.executeMCNOperation(summary as MCNOperationSummary)
     }
     // the only case it is not executing is if an error happened in that case we do not change it
-    if (executable.status === MCNOperationStatus.Executing) {
-      executable.status = MCNOperationStatus.Done
+    if (executable.status === NetworkOperationStatus.Executing) {
+      executable.status = NetworkOperationStatus.Done
     }
   }
 
-  private async executeMCNOperation (executable: ExecutableMCNOperation): Promise<void> {
+  private async executeMCNOperation (summary: MCNOperationSummary): Promise<void> {
     // this is currently the only multi chain operation available
     // verifications are done in it so keep it like that until newer features are added
-    await this.crossManager.executeCrossOperation(executable, this)
+    await this.crossManager.executeCrossOperation(summary, this)
   }
 
-  verifySpendings (executable: ExecutableMCNOperation): void {
-    const summary: MCNOperationSummary = executable.summary
+  verifySpendings (summary: OperationSummary): void {
+    const executable: ExecutableOperation = summary.getExecutable()
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     spendings.forEach(spending => {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
-        executable.status = MCNOperationStatus.Error
+        executable.status = NetworkOperationStatus.Error
         throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
       }
     })

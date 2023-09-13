@@ -1,5 +1,5 @@
-import { CrossOperation, ExecutableMCNOperation, JEVMBlockchain, JVMBlockchain, JuneoWallet, MCNAccount,
-    MCNOperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain } from "../../../src"
+import { CrossOperation, ExecutableOperation, JEVMBlockchain, JVMBlockchain, JuneoWallet, MCNAccount,
+    OperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
@@ -17,11 +17,11 @@ async function main () {
     // we instantiate a cross operation that we want to perform
     const cross: CrossOperation = new CrossOperation(juneChain, jvmChain, assetId, amount, address)
     // estimate the operation
-    const summary: MCNOperationSummary = await mcnAccount.estimate(juneChain.id, cross)
+    const summary: OperationSummary = await mcnAccount.estimate(juneChain.id, cross)
     console.log(summary.fees)
     // execute the operation
-    const executable: ExecutableMCNOperation = summary.getExecutable()
-    await mcnAccount.execute(executable)
+    const executable: ExecutableOperation = summary.getExecutable()
+    await mcnAccount.execute(summary)
     // the receipts should contain multiple transaction ids
     // that were performed to complete the cross operation
     console.log(executable.receipts)

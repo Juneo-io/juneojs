@@ -9,7 +9,7 @@ import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
   sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
-  sendEVMExportTransaction, type BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
+  sendEVMExportTransaction, BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
 } from './transaction'
 import { type JuneoWallet } from './wallet'
 
@@ -142,14 +142,13 @@ export class CrossManager {
     const spendings: Spending[] = [new BaseSpending(cross.source, cross.amount, cross.assetId)]
     // exporting jrc20
     let spendingAssetId: string = cross.assetId
+    let exportedJRC20: JRC20Asset | undefined
     if (cross.source.id === juneChain.id) {
       for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
         const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
         if (jrc20.address === cross.assetId) {
-          const sender: string = account.getAccount(juneChain.id).addresses[0]
-          const fee: EVMFeeData = await estimateEVMWithdrawJRC20(this.provider.jevm[juneChain.id], sender, jrc20, cross.amount)
-          fees.push(fee)
-          spendings.push(fee.getAsSpending())
+          exportedJRC20 = jrc20
+          fees.push(new BaseFeeData(juneChain, BigInt(0), FeeType.Withdraw))
           spendingAssetId = jrc20.address
           cross.assetId = jrc20.nativeAssetId
           break
@@ -170,6 +169,13 @@ export class CrossManager {
     const hasDepositFee: boolean = typeof importedJRC20 !== 'undefined'
     const importFee: BaseFeeData = await this.estimateImport(cross.destination, hasDepositFee)
     fees.push(exportFee, importFee)
+    if (fees[0].type === FeeType.Withdraw) {
+      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      const amount: bigint = cross.amount + importFee.amount
+      const fee: EVMFeeData = await estimateEVMWithdrawJRC20(this.provider.jevm[juneChain.id], sender, exportedJRC20 as JRC20Asset, amount)
+      fees[0] = fee
+      spendings.push(fee.getAsSpending())
+    }
     if (hasDepositFee) {
       const sender: string = account.getAccount(juneChain.id).addresses[0]
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values

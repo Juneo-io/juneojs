@@ -15,8 +15,8 @@ import { type MCNProvider } from '../../juneo'
 const DefaultWrapEstimate: bigint = BigInt(55_000)
 const DefaultUnwrapEstimate: bigint = BigInt(45_000)
 // values below should be tested and reduced for more precision
-const DefaultWithdrawEstimate: bigint = BigInt(200_000)
-const DefaultDepositEstimate: bigint = BigInt(200_000)
+const DefaultWithdrawEstimate: bigint = BigInt(100_000)
+const DefaultDepositEstimate: bigint = BigInt(100_000)
 
 export class EVMTransactionData {
   from: string

@@ -15,10 +15,6 @@ export class ExecutableOperation {
     this.receipts.push(receipt)
     const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash)
       .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
-      .catch(error => {
-        this.status = NetworkOperationStatus.Error
-        throw error
-      })
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === EVMTransactionStatus.Failure) {
       this.status = NetworkOperationStatus.Error
@@ -33,10 +29,6 @@ export class ExecutableOperation {
     this.receipts.push(receipt)
     const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId)
       .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
-      .catch(error => {
-        this.status = NetworkOperationStatus.Error
-        throw error
-      })
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === JEVMTransactionStatus.Dropped) {
       this.status = NetworkOperationStatus.Error
@@ -51,10 +43,6 @@ export class ExecutableOperation {
     this.receipts.push(receipt)
     const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId)
       .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
-      .catch(error => {
-        this.status = NetworkOperationStatus.Error
-        throw error
-      })
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === PlatformTransactionStatus.Dropped || transactionStatus === PlatformTransactionStatus.Aborted) {
       this.status = NetworkOperationStatus.Error
@@ -69,10 +57,6 @@ export class ExecutableOperation {
     this.receipts.push(receipt)
     const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId)
       .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
-      .catch(error => {
-        this.status = NetworkOperationStatus.Error
-        throw error
-      })
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === JVMTransactionStatus.Unknown) {
       this.status = NetworkOperationStatus.Error

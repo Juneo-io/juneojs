@@ -130,10 +130,16 @@ export function buildAddValidatorTransaction (
     1,
     [new Address(rewardAddress)]
   )
+  const changeOutputs: TransferableOutput[] = []
+  outputs.forEach(output => {
+    if (output.isChange) {
+      changeOutputs.push(output)
+    }
+  })
   return new AddValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,
@@ -167,10 +173,16 @@ export function buildAddDelegatorTransaction (
     1,
     [new Address(rewardAddress)]
   )
+  const changeOutputs: TransferableOutput[] = []
+  outputs.forEach(output => {
+    if (output.isChange) {
+      changeOutputs.push(output)
+    }
+  })
   return new AddDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,

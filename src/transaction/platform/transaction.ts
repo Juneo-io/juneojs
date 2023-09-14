@@ -39,7 +39,11 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = (await this.platformApi.getTxStatus(this.transactionId)).status
+      this.currentStatus = await this.platformApi.getTxStatus(this.transactionId).then(value => {
+        return value.status
+      }, () => {
+        return PlatformTransactionStatus.Unknown
+      })
       this.attempts += 1
     }
     return this.currentStatus

@@ -6,7 +6,7 @@ import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
-import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
+import { Address, AddressSize, AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
 
 const ImportTransactionTypeId: number = 0
 const ExportTransactionTypeId: number = 1
@@ -110,7 +110,11 @@ export class EVMOutput implements Serializable {
   }
 
   static comparator = (a: EVMOutput, b: EVMOutput): number => {
-    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+    const comparison: number = Address.comparator(a.address, b.address)
+    if (comparison !== 0) {
+      return comparison
+    }
+    return AssetId.comparator(a.assetId, b.assetId)
   }
 }
 

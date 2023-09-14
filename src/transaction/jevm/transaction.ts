@@ -33,7 +33,11 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
+      this.currentStatus = await this.jevmApi.getTxStatus(this.transactionId).then(value => {
+        return value.status
+      }, () => {
+        return JEVMTransactionStatus.Unknown
+      })
       this.attempts += 1
     }
     return this.currentStatus
@@ -67,7 +71,9 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.currentStatus = EVMTransactionStatus.Pending
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
+      const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash).catch(() => {
+        return null
+      })
       if (receipt === null) {
         this.attempts += 1
         continue

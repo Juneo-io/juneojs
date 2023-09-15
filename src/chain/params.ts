@@ -25,7 +25,7 @@ export const SocotraR10AssetId: string = 'tDxKdhyn2b9dNLMdsSv3xEY8ihGf7991XSWxXM
 
 export const SocotraJUNEAsset: JNTAsset = new JNTAsset(SocotraJUNEAssetId, 'JUNE', 'JUNE', 9, false)
 export const SocotraETH1Asset: JNTAsset = new JNTAsset(SocotraETH1AssetId, 'ETH1', 'ETH1', 9, false)
-export const SocotraMBTC1Asset: JNTAsset = new JNTAsset(SocotraMBTC1AssetId, 'MBTC1', 'MBTC1', 9, false)
+export const SocotraMBTC1Asset: JNTAsset = new JNTAsset(SocotraMBTC1AssetId, 'mBTC1', 'mBTC1', 9, false)
 export const SocotraDOGE1Asset: JNTAsset = new JNTAsset(SocotraDOGE1AssetId, 'DOGE1', 'DOGE1', 9, false)
 export const SocotraUSDT1Asset: JNTAsset = new JNTAsset(SocotraUSDT1AssetId, 'USDT1', 'USDT1', 9, false)
 export const SocotraDAI1Asset: JNTAsset = new JNTAsset(SocotraDAI1AssetId, 'DAI1', 'DAI1', 9, false)

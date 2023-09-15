@@ -260,6 +260,7 @@ export class CrossManager {
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
       const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
+      await Promise.all([juneAccount.fetchBalance(feeData.assetId), juneAccount.fetchBalance(cross.assetId)])
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
       }
@@ -337,6 +338,7 @@ export class CrossManager {
       const feeData: EVMFeeData = lastFee as EVMFeeData
       const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
+      await juneAccount.fetchAllBalances()
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
       }

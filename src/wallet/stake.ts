@@ -2,7 +2,7 @@ import { type MCNProvider } from '../juneo'
 import { type NetworkOperation, NetworkOperationType } from './operation'
 import { NodeId, type Utxo, Validator } from '../transaction'
 import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
-import { type JuneoWallet, type VMWallet } from './wallet'
+import { type MCNWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
 
@@ -21,7 +21,7 @@ export class StakeManager {
     this.wallet = wallet
   }
 
-  static from (provider: MCNProvider, wallet: JuneoWallet): StakeManager {
+  static from (provider: MCNProvider, wallet: MCNWallet): StakeManager {
     return new StakeManager(provider, wallet.getWallet(provider.platform.chain))
   }
 

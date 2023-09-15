@@ -9,7 +9,7 @@ import {
   type JEVMExportTransaction, type JEVMImportTransaction, UserInput, type Utxo,
   buildJEVMExportTransaction, buildJEVMImportTransaction, fetchUtxos
 } from '../../transaction'
-import { type JuneoWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import { type MCNProvider } from '../../juneo'
 
 const DefaultWrapEstimate: bigint = BigInt(55_000)
@@ -143,7 +143,7 @@ export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: strin
 }
 
 export async function sendEVMExportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
   sendImportFee: boolean, importFee: bigint, fee?: FeeData
 ): Promise<string> {
   if (typeof fee === 'undefined') {
@@ -174,7 +174,7 @@ export async function estimateEVMImportTransaction (api: JEVMAPI, hasExtraFee: b
 }
 
 export async function sendEVMImportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, source: Blockchain, assetId: string,
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, assetId: string,
   amount: bigint, address: string, fee?: FeeData, utxoSet?: Utxo[], extraGasFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
   const sender: string = wallet.getAddress(api.chain)

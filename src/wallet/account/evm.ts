@@ -5,7 +5,7 @@ import { AccountError } from '../../utils'
 import { BaseSpending, TransactionType, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
 import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
-import { type JEVMWallet, type JuneoWallet } from '../wallet'
+import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
 import { AbstractChainAccount } from './account'
 import { Balance } from './balance'
@@ -18,7 +18,7 @@ export class EVMAccount extends AbstractChainAccount {
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
 
-  constructor (provider: MCNProvider, chainId: string, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
     super(provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]

@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
 import { JEVMBlockchain } from '../chain'
-import { type JuneoWallet, type VMWallet } from './wallet'
+import { type MCNWallet, type VMWallet } from './wallet'
 import { FeeType, type EVMFeeData, estimateEVMTransaction, sendEVMTransaction, type UtxoFeeData, estimateJVMBaseTransaction } from './transaction'
 import { type Utxo } from '../transaction'
 import { type NetworkOperation, NetworkOperationType } from './operation'
@@ -9,9 +9,9 @@ import { type MCNProvider } from '../juneo'
 
 export class SendManager {
   private readonly provider: MCNProvider
-  private readonly wallet: JuneoWallet
+  private readonly wallet: MCNWallet
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     this.provider = provider
     this.wallet = wallet
   }

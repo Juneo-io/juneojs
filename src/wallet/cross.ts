@@ -11,13 +11,13 @@ import {
   sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
   sendEVMExportTransaction, BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
 } from './transaction'
-import { type JuneoWallet } from './wallet'
+import { type MCNWallet } from './wallet'
 
 export class CrossManager {
   private readonly provider: MCNProvider
-  private readonly wallet: JuneoWallet
+  private readonly wallet: MCNWallet
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     this.provider = provider
     this.wallet = wallet
   }

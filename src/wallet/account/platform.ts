@@ -3,14 +3,14 @@ import { TransactionType, type UtxoFeeData, type UtxoSpending, estimatePlatformV
 import { AccountError } from '../../utils'
 import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { type DelegateOperation, StakeManager, type ValidateOperation } from '../stake'
-import { type JuneoWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
 
 export class PlatformAccount extends UtxoAccount {
   provider: MCNProvider
   private readonly stakeManager: StakeManager
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     super(provider.platform.chain, provider.platform, wallet)
     this.chain = provider.platform.chain
     this.provider = provider

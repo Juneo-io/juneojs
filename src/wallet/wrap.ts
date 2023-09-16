@@ -1,6 +1,6 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
-import { type JEVMWallet, type MCNWallet } from './wallet'
+import { type MCNWallet } from './wallet'
 import { type JEVMBlockchain, type WrappedAsset } from '../chain'
 import { type EVMFeeData, FeeType, estimateEVMTransaction, sendEVMTransaction } from './transaction'
 import { type NetworkOperation, NetworkOperationType } from './operation'
@@ -10,14 +10,14 @@ export class WrapManager {
   private readonly api: JEVMAPI
   private readonly wallet: ethers.Wallet
 
-  constructor (api: JEVMAPI, wallet: JEVMWallet) {
+  constructor (api: JEVMAPI, wallet: ethers.Wallet) {
     this.api = api
-    this.wallet = wallet.evmWallet.connect(api.chain.ethProvider)
+    this.wallet = wallet
   }
 
   static from (provider: MCNProvider, wallet: MCNWallet, chain: JEVMBlockchain): WrapManager {
     const api: JEVMAPI = provider.jevm[chain.id]
-    return new WrapManager(api, wallet.getEthWallet(chain))
+    return new WrapManager(api, wallet.getJEVMWallet(api.chain).evmWallet)
   }
 
   async estimateWrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {

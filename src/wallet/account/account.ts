@@ -41,6 +41,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
     this.chain = chain
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
+    this.addresses.push(this.chainWallet.getAddress())
   }
 
   hasBalance (asset: TokenAsset): boolean {
@@ -97,7 +98,6 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     super(chain, wallet)
     this.utxoApi = utxoApi
     this.sourceChain = sourceChain
-    this.addresses.push(this.chainWallet.getAddress())
   }
 
   async fetchBalance (assetId: string): Promise<void> {

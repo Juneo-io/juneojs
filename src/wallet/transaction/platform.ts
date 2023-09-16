@@ -98,8 +98,9 @@ export async function sendPlatformExportTransaction (
   if (typeof fee === 'undefined') {
     fee = await estimatePlatformExportTransaction(provider)
   }
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const transaction: UnsignedTransaction = buildPlatformExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
-    utxoSet, [sender], wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
+    utxoSet, [sender], exportAddress, fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

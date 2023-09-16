@@ -22,9 +22,8 @@ export class EVMAccount extends AbstractChainAccount {
     super(provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
-    this.chainWallet = wallet.getEthWallet(this.chain)
-    this.addresses.push(this.chainWallet.getHexAddress())
-    this.wrapManager = new WrapManager(this.api, this.chainWallet)
+    this.chainWallet = this.wallet.getJEVMWallet(this.chain)
+    this.wrapManager = new WrapManager(this.api, this.chainWallet.evmWallet)
     this.sendManager = new SendManager(provider, wallet)
   }
 
@@ -36,9 +35,9 @@ export class EVMAccount extends AbstractChainAccount {
         operation, this.chain, fee, [new BaseSpending(this.chain, send.amount, send.assetId), fee.getAsSpending()]
       )
     } else if (operation.type === NetworkOperationType.Wrap) {
-      return await estimateEVMWrapOperation(this.api, this.chainWallet.getHexAddress(), operation as WrapOperation)
+      return await estimateEVMWrapOperation(this.api, this.chainWallet.getAddress(), operation as WrapOperation)
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      return await estimateEVMUnwrapOperation(this.api, this.chainWallet.getHexAddress(), operation as UnwrapOperation)
+      return await estimateEVMUnwrapOperation(this.api, this.chainWallet.getAddress(), operation as UnwrapOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -90,7 +89,7 @@ export class EVMAccount extends AbstractChainAccount {
       this.balances.set(assetId, new Balance())
     }
     const balance: Balance = this.balances.get(assetId) as Balance
-    const address: string = this.chainWallet.getHexAddress()
+    const address: string = this.chainWallet.getAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }
 

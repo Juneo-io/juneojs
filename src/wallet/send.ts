@@ -18,7 +18,7 @@ export class SendManager {
 
   async estimateSendEVM (chainId: string, assetId: string, amount: bigint, address: string): Promise<EVMFeeData> {
     const api: JEVMAPI = this.provider.jevm[chainId]
-    const wallet: ethers.Wallet = this.wallet.getEthWallet(api.chain).evmWallet
+    const wallet: ethers.Wallet = this.wallet.getJEVMWallet(api.chain).evmWallet
     const isContract: boolean = JEVMBlockchain.isContractAddress(assetId)
     const to: string = isContract ? assetId : address
     const value: bigint = isContract ? BigInt(0) : amount
@@ -31,7 +31,7 @@ export class SendManager {
       feeData = await this.estimateSendEVM(chainId, assetId, amount, address)
     }
     const api: JEVMAPI = this.provider.jevm[chainId]
-    const wallet: ethers.Wallet = this.wallet.getEthWallet(api.chain).evmWallet
+    const wallet: ethers.Wallet = this.wallet.getJEVMWallet(api.chain).evmWallet
     return await sendEVMTransaction(api, wallet, feeData)
   }
 

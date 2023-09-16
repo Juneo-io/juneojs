@@ -1,7 +1,7 @@
 import { type JEVMAPI } from '../../api/jevm/api'
 import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
 import { sleep } from '../../utils/time'
-import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
+import { type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
@@ -144,12 +144,8 @@ export class EVMInput implements Serializable, Signable, Spendable {
     const signatures: Signature[] = []
     const address: Address = this.address
     for (let i = 0; i < wallets.length; i++) {
-      if (!(wallets[i] instanceof JEVMWallet)) {
-        continue
-      }
-      const wallet: JEVMWallet = wallets[i] as JEVMWallet
-      if (address.matches(wallet.getHexAddress())) {
-        signatures.push(new Signature(wallet.sign(sha256(bytes))))
+      if (address.matches(wallets[i].getAddress())) {
+        signatures.push(new Signature(wallets[i].sign(sha256(bytes))))
         break
       }
     }

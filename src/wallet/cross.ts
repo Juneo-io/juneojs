@@ -302,7 +302,7 @@ export class CrossManager {
       throw new CrossError(`unsupported destination vm id: ${destinationVmId}`)
     }
     // fetch imported utxos
-    const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getAddress()], sourceAccount.chain.id)
+    const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getJuneoAddress()], sourceAccount.chain.id)
     if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }

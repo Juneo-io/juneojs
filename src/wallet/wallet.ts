@@ -30,10 +30,6 @@ export class MCNWallet {
     return this.getWallet(chain).getAddress()
   }
 
-  getEthAddress (chain: JEVMBlockchain): string {
-    return (this.getWallet(chain) as JEVMWallet).getHexAddress()
-  }
-
   getWallet (chain: Blockchain): VMWallet {
     if (!this.chainsWallets.has(chain.id)) {
       this.setChainWallet(chain)
@@ -41,7 +37,7 @@ export class MCNWallet {
     return this.chainsWallets.get(chain.id) as VMWallet
   }
 
-  getEthWallet (chain: JEVMBlockchain): JEVMWallet {
+  getJEVMWallet (chain: JEVMBlockchain): JEVMWallet {
     return this.getWallet(chain) as JEVMWallet
   }
 
@@ -150,6 +146,8 @@ export class MCNWallet {
 export interface VMWallet {
   getAddress: () => string
 
+  getJuneoAddress: () => string
+
   getChain: () => Blockchain
 
   sign: (buffer: JuneoBuffer) => JuneoBuffer
@@ -160,21 +158,30 @@ export abstract class AbstractVMWallet implements VMWallet {
   private readonly keyPair: ECKeyPair
   hrp: string
   chain: Blockchain
-  address: string
+  juneoAddress: string
+  address?: string
 
-  constructor (privateKey: string, hrp: string, chain: Blockchain) {
+  constructor (privateKey: string, hrp: string, chain: Blockchain, address?: string) {
     this.privateKey = privateKey
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.juneoAddress = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.address = address
   }
 
   getAddress (): string {
-    if (this.chain.aliases.length > 0) {
-      return `${this.chain.aliases[0]}-${this.address}`
+    if (typeof this.address === 'undefined') {
+      return this.getJuneoAddress()
     }
-    return `${this.chain.id}-${this.address}`
+    return this.address
+  }
+
+  getJuneoAddress (): string {
+    if (this.chain.aliases.length > 0) {
+      return `${this.chain.aliases[0]}-${this.juneoAddress}`
+    }
+    return `${this.chain.id}-${this.juneoAddress}`
   }
 
   getChain (): Blockchain {
@@ -202,15 +209,10 @@ export class JVMWallet extends AbstractVMWallet {
 
 export class JEVMWallet extends AbstractVMWallet {
   evmWallet: Wallet
-  evmAddress: string
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
     this.evmWallet = new Wallet(this.privateKey)
-    this.evmAddress = this.evmWallet.address
-  }
-
-  getHexAddress (): string {
-    return this.evmAddress
+    this.address = this.evmWallet.address
   }
 }

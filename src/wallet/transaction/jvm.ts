@@ -58,8 +58,9 @@ export async function sendJVMExportTransaction (
   if (extraFeeAmount > BigInt(0)) {
     inputs.push(new UserInput(destination.assetId, api.chain, extraFeeAmount, address, destination))
   }
-  const transaction: UnsignedTransaction = buildJVMExportTransaction(inputs, utxoSet, [sender],
-    wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
+  const transaction: UnsignedTransaction = buildJVMExportTransaction(inputs, utxoSet, [sender], exportAddress,
+    fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

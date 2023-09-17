@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer/'
-import hash from 'create-hash'
+import { ripemd160 } from '@noble/hashes/ripemd160'
+import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
 import { Signature, recoverPublicKey, getPublicKey, signSync } from '@noble/secp256k1'
 import { JuneoBuffer } from './bytes'
 
@@ -9,14 +10,14 @@ export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
   const buffer: JuneoBuffer = typeof data === 'string'
     ? JuneoBuffer.fromString(data, 'hex')
     : data
-  return JuneoBuffer.fromBytes(Buffer.from(hash('ripemd160').update(buffer.getBytes()).digest()))
+  return JuneoBuffer.fromBytes(Buffer.from(ripemd160(buffer.getBytes())))
 }
 
 export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
   const buffer: JuneoBuffer = typeof data === 'string'
     ? JuneoBuffer.fromString(data, 'hex')
     : data
-  return JuneoBuffer.fromBytes(Buffer.from(hash('sha256').update(buffer.getBytes()).digest()))
+  return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
 function recoverPubKey (hash: Buffer, signature: Signature, recovery: number): string {

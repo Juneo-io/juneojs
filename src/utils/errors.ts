@@ -1,4 +1,3 @@
-
 const NETWORK_CODE: string = 'Network error'
 const HTTP_CODE: string = 'HTTP error'
 const JSON_RPC_CODE: string = 'JsonRPC error'
@@ -6,7 +5,6 @@ const NOT_IMPLEMENTED_CODE: string = 'Not implemented'
 const PROTOCOL_CODE: string = 'Protocol error'
 const DECODING_CODE: string = 'Decoding error'
 const WALLET_CODE: string = 'Wallet error'
-const CRYPTO_CODE: string = 'Crypto error'
 const TYPE_CODE: string = 'Type error'
 const PARSING_CODE: string = 'Parsing error'
 const INPUT_CODE: string = 'Input error'
@@ -77,13 +75,6 @@ export class WalletError extends JuneoError {
   constructor (message: string) {
     super(message, WALLET_CODE)
     Object.setPrototypeOf(this, WalletError.prototype)
-  }
-}
-
-export class CryptoError extends JuneoError {
-  constructor (message: string) {
-    super(message, CRYPTO_CODE)
-    Object.setPrototypeOf(this, CryptoError.prototype)
   }
 }
 

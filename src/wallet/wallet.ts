@@ -166,7 +166,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.juneoAddress = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.juneoAddress = AbstractVMWallet.encodeJuneoAddress(this.keyPair.publicKey, hrp)
     this.address = address
   }
 

@@ -1,4 +1,3 @@
-
 export enum NetworkOperationType {
   Send = 'Send',
   Cross = 'Cross',

@@ -1,4 +1,3 @@
-
 import { Buffer } from 'buffer/'
 import * as encoding from './encoding'
 import { ParsingError } from './errors'

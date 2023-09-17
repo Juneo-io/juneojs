@@ -1,4 +1,3 @@
-
 export interface BuildGenesisResponse {
   bytes: string
   encoding: string

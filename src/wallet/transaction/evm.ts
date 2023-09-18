@@ -9,7 +9,7 @@ import {
   type JEVMExportTransaction, type JEVMImportTransaction, UserInput, type Utxo,
   buildJEVMExportTransaction, buildJEVMImportTransaction, fetchUtxos
 } from '../../transaction'
-import { type JuneoWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import { type MCNProvider } from '../../juneo'
 
 const DefaultWrapEstimate: bigint = BigInt(55_000)
@@ -143,7 +143,7 @@ export async function estimateEVMExportTransaction (api: JEVMAPI, assetId: strin
 }
 
 export async function sendEVMExportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
   sendImportFee: boolean, importFee: bigint, fee?: FeeData
 ): Promise<string> {
   if (typeof fee === 'undefined') {
@@ -155,9 +155,10 @@ export async function sendEVMExportTransaction (
   }
   // fee is also gas token
   const feeAmount: bigint = fee.amount / JEVMBlockchain.AtomicDenomination
-  const nonce: bigint = await api.eth_getTransactionCount(wallet.getEthAddress(api.chain), 'pending')
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
+  const nonce: bigint = await api.eth_getTransactionCount(wallet.getAddress(api.chain), 'pending')
   const transaction: JEVMExportTransaction = buildJEVMExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
-    wallet.getEthAddress(api.chain), nonce, wallet.getAddress(destination), feeAmount, sendImportFee ? importFee : BigInt(0), provider.mcn.id
+    wallet.getAddress(api.chain), nonce, exportAddress, feeAmount, sendImportFee ? importFee : BigInt(0), provider.mcn.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
@@ -174,10 +175,11 @@ export async function estimateEVMImportTransaction (api: JEVMAPI, hasExtraFee: b
 }
 
 export async function sendEVMImportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: JuneoWallet, source: Blockchain, assetId: string,
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, assetId: string,
   amount: bigint, address: string, fee?: FeeData, utxoSet?: Utxo[], extraGasFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
-  const sender: string = wallet.getAddress(api.chain)
+  const chainWallet: VMWallet = wallet.getWallet(api.chain)
+  const sender: string = chainWallet.getJuneoAddress()
   const hasExtraFee: boolean = extraGasFeeAmount > BigInt(0)
   if (typeof fee === 'undefined') {
     fee = await estimateEVMImportTransaction(api, hasExtraFee)
@@ -190,5 +192,5 @@ export async function sendEVMImportTransaction (
     inputs.push(new UserInput(api.chain.assetId, source, extraGasFeeAmount, address, api.chain))
   }
   const transaction: JEVMImportTransaction = buildJEVMImportTransaction(inputs, utxoSet, [sender], fee.amount, provider.mcn.id)
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  return (await api.issueTx(transaction.signTransaction([chainWallet]).toCHex())).txID
 }

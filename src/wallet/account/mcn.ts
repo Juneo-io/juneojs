@@ -1,5 +1,5 @@
 import { AccountError, sortSpendings } from '../../utils'
-import { type JuneoWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
   type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary
@@ -16,7 +16,7 @@ export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly crossManager: CrossManager
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     this.addAccount(new JVMAccount(provider, wallet))
     this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {

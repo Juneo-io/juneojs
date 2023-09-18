@@ -3,14 +3,14 @@ import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOp
 import { AccountError } from '../../utils'
 import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
-import { type JuneoWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
 
 export class JVMAccount extends UtxoAccount {
   provider: MCNProvider
   private readonly sendManager: SendManager
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     super(provider.jvm.chain, provider.jvm, wallet)
     this.chain = provider.jvm.chain
     this.provider = provider

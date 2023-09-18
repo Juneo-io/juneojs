@@ -8,7 +8,7 @@ import {
 import { type PlatformAccount } from '../account'
 import { ChainOperationSummary, StakingOperationSummary } from '../operation'
 import { type DelegateOperation, StakeManager, type ValidateOperation, ValidationShare } from '../stake'
-import { type VMWallet, type JuneoWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
@@ -39,7 +39,7 @@ export async function estimatePlatformAddValidatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: JuneoWallet, validate: ValidateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
+export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: MCNWallet, validate: ValidateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateValidationReward(validate.endTime - validate.startTime, validate.amount)
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
@@ -68,7 +68,7 @@ export async function estimatePlatformAddDelegatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: JuneoWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
+export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: MCNWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
@@ -87,7 +87,7 @@ export async function estimatePlatformExportTransaction (provider: MCNProvider):
 }
 
 export async function sendPlatformExportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
+  provider: MCNProvider, wallet: MCNWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
   sendImportFee: boolean, importFee: bigint, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const api: PlatformAPI = provider.platform
@@ -98,8 +98,9 @@ export async function sendPlatformExportTransaction (
   if (typeof fee === 'undefined') {
     fee = await estimatePlatformExportTransaction(provider)
   }
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const transaction: UnsignedTransaction = buildPlatformExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
-    utxoSet, [sender], wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
+    utxoSet, [sender], exportAddress, fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
@@ -109,7 +110,7 @@ export async function estimatePlatformImportTransaction (provider: MCNProvider):
 }
 
 export async function sendPlatformImportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, assetId: string, amount: bigint, address: string, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, wallet: MCNWallet, source: Blockchain, assetId: string, amount: bigint, address: string, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const api: PlatformAPI = provider.platform
   const sender: string = wallet.getAddress(api.chain)

@@ -8,7 +8,7 @@ import {
 import { type JVMAccount } from '../account'
 import { ChainOperationSummary } from '../operation'
 import { type SendOperation } from '../send'
-import { type JuneoWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
@@ -16,7 +16,7 @@ async function getJVMBaseTxFee (provider: MCNProvider, type: FeeType): Promise<B
   return new BaseFeeData(provider.jvm.chain, BigInt((await provider.info.getTxFee()).txFee), type)
 }
 
-export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet: JuneoWallet, assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet: MCNWallet, assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
   const api: JVMAPI = provider.jvm
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [wallet.getAddress(api.chain)])
@@ -28,7 +28,7 @@ export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet:
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimateJVMSendOperation (provider: MCNProvider, wallet: JuneoWallet, send: SendOperation, account: JVMAccount): Promise<ChainOperationSummary> {
+export async function estimateJVMSendOperation (provider: MCNProvider, wallet: MCNWallet, send: SendOperation, account: JVMAccount): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
   return await estimateJVMBaseTransaction(provider, wallet, send.assetId, send.amount, send.address, account.utxoSet).then(fee => {
     return new ChainOperationSummary(send, chain, fee, [new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos()), fee.getAsSpending()])
@@ -43,7 +43,7 @@ export async function estimateJVMExportTransaction (provider: MCNProvider): Prom
 }
 
 export async function sendJVMExportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
+  provider: MCNProvider, wallet: MCNWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
   sendImportFee: boolean, importFee: bigint, fee?: FeeData, utxoSet?: Utxo[], extraFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
   const api: JVMAPI = provider.jvm
@@ -58,8 +58,9 @@ export async function sendJVMExportTransaction (
   if (extraFeeAmount > BigInt(0)) {
     inputs.push(new UserInput(destination.assetId, api.chain, extraFeeAmount, address, destination))
   }
-  const transaction: UnsignedTransaction = buildJVMExportTransaction(inputs, utxoSet, [sender],
-    wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
+  const transaction: UnsignedTransaction = buildJVMExportTransaction(inputs, utxoSet, [sender], exportAddress,
+    fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
@@ -69,7 +70,7 @@ export async function estimateJVMImportTransaction (provider: MCNProvider): Prom
 }
 
 export async function sendJVMImportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, assetId: string, amount: bigint, address: string, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, wallet: MCNWallet, source: Blockchain, assetId: string, amount: bigint, address: string, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const api: JVMAPI = provider.jvm
   const sender: string = wallet.getAddress(api.chain)

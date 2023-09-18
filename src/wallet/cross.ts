@@ -11,13 +11,13 @@ import {
   sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
   sendEVMExportTransaction, BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
 } from './transaction'
-import { type JuneoWallet } from './wallet'
+import { type MCNWallet } from './wallet'
 
 export class CrossManager {
   private readonly provider: MCNProvider
-  private readonly wallet: JuneoWallet
+  private readonly wallet: MCNWallet
 
-  constructor (provider: MCNProvider, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
     this.provider = provider
     this.wallet = wallet
   }
@@ -260,6 +260,7 @@ export class CrossManager {
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
       const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
+      await Promise.all([juneAccount.fetchBalance(feeData.assetId), juneAccount.fetchBalance(cross.assetId)])
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
       }
@@ -301,7 +302,7 @@ export class CrossManager {
       throw new CrossError(`unsupported destination vm id: ${destinationVmId}`)
     }
     // fetch imported utxos
-    const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getAddress()], sourceAccount.chain.id)
+    const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getJuneoAddress()], sourceAccount.chain.id)
     if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }
@@ -337,6 +338,7 @@ export class CrossManager {
       const feeData: EVMFeeData = lastFee as EVMFeeData
       const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
+      await juneAccount.fetchAllBalances()
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
       }

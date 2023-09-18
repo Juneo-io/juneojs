@@ -178,17 +178,21 @@ export class AssetValue {
    * @returns The complete value with its decimals separated by a dot and zero padded.
    */
   getReadableValuePadded (): string {
-    const stringValue: string = this.value.toString()
+    let stringValue: string = this.value.toString()
+    if (stringValue.charAt(0) === '-') {
+      stringValue = stringValue.substring(1, stringValue.length)
+    }
     const length: number = stringValue.length
+    const prefix: string = this.value < 0 ? '-' : ''
     if (length <= this.decimals) {
-      return `0.${stringValue.padStart(this.decimals, '0')}`
+      return `${prefix}0.${stringValue.padStart(this.decimals, '0')}`
     } else {
       let readableValue: string = stringValue.substring(0, length - this.decimals)
       if (this.decimals > 0) {
         readableValue += '.'
         readableValue += stringValue.substring(length - this.decimals, length).padEnd(this.decimals, '0')
       }
-      return readableValue
+      return `${prefix}${readableValue}`
     }
   }
 
@@ -205,10 +209,13 @@ export class AssetValue {
     }
     let index: number = readableValue.indexOf('.')
     index += decimals + 1
-    const value: string = readableValue.substring(0, index)
-    if (value.charAt(value.length - 1) === '.') {
-      return value.substring(0, value.length - 1)
+    let value: string = readableValue.substring(0, index)
+    if (Number(value) === 0 && value.charAt(0) === '-') {
+      value = value.substring(1, value.length)
     }
-    return value
+    if (value.charAt(value.length - 1) === '.') {
+      return `${value.substring(0, value.length - 1)}`
+    }
+    return `${value}`
   }
 }

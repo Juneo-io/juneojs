@@ -3,13 +3,13 @@ import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
 import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
 import { type NetworkOperation, type ChainOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
-import { type VMWallet, type JuneoWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
 
 export interface ChainAccount {
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
-  wallet: JuneoWallet
+  wallet: MCNWallet
   chainWallet: VMWallet
   addresses: string[]
 
@@ -33,14 +33,15 @@ export interface ChainAccount {
 export abstract class AbstractChainAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, Balance>()
-  wallet: JuneoWallet
+  wallet: MCNWallet
   chainWallet: VMWallet
   addresses: string[] = []
 
-  constructor (chain: Blockchain, wallet: JuneoWallet) {
+  constructor (chain: Blockchain, wallet: MCNWallet) {
     this.chain = chain
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
+    this.addresses.push(this.chainWallet.getAddress())
   }
 
   hasBalance (asset: TokenAsset): boolean {
@@ -93,11 +94,10 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   sourceChain?: string
   protected fetching: boolean = false
 
-  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
+  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
     super(chain, wallet)
     this.utxoApi = utxoApi
     this.sourceChain = sourceChain
-    this.addresses.push(this.chainWallet.getAddress())
   }
 
   async fetchBalance (assetId: string): Promise<void> {

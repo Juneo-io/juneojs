@@ -1,7 +1,7 @@
 import { type JEVMAPI } from '../../api/jevm/api'
 import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
 import { sleep } from '../../utils/time'
-import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
+import { type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
@@ -144,12 +144,8 @@ export class EVMInput implements Serializable, Signable, Spendable {
     const signatures: Signature[] = []
     const address: Address = this.address
     for (let i = 0; i < wallets.length; i++) {
-      if (!(wallets[i] instanceof JEVMWallet)) {
-        continue
-      }
-      const wallet: JEVMWallet = wallets[i] as JEVMWallet
-      if (address.matches(wallet.getHexAddress())) {
-        signatures.push(new Signature(wallet.sign(sha256(bytes))))
+      if (address.matches(wallets[i].getAddress())) {
+        signatures.push(new Signature(wallets[i].sign(sha256(bytes))))
         break
       }
     }
@@ -237,18 +233,9 @@ export class JEVMExportTransaction implements Serializable {
   }
 
   static estimateSignaturesCount (exportedAssets: string[], exportFeeAssetId: string, importFeeAssetId: string): number {
-    // see if import/export fee outputs will be merged with exported assets only if merging after estimate
-    let ignoreImportFee: boolean = false
-    let ignoreExportFee: boolean = false
-    for (let i = 0; i < exportedAssets.length; i++) {
-      const assetId: string = exportedAssets[i]
-      if (assetId === exportFeeAssetId) {
-        ignoreExportFee = true
-      }
-      if (assetId === importFeeAssetId) {
-        ignoreImportFee = true
-      }
-    }
+    // see if import/export fee outputs will be merged with exported assets
+    const ignoreImportFee: boolean = exportedAssets.includes(importFeeAssetId)
+    const ignoreExportFee: boolean = exportedAssets.includes(exportFeeAssetId)
     let feeInputsCount: number = ignoreImportFee ? 0 : 1
     // import and export fee could also be merged together
     if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
@@ -259,16 +246,16 @@ export class JEVMExportTransaction implements Serializable {
 
   static estimateSize (inputsCount: number): number {
     // for now consider inputs + 2 outputs for fees outputs
-    const outputsCount: number = inputsCount + 2
+    const outputsCount: number = inputsCount
     // 2 + 4 + 4 + 4 + 4 = 18
     return 18 + BlockchainIdSize * 2 + EVMInput.Size * inputsCount + this.estimateOutputsSize(outputsCount)
   }
 
-  private static estimateOutputsSize (inputsCount: number): number {
+  private static estimateOutputsSize (outputsCount: number): number {
     // TransferableOutput size
     // 4 + 8 + 8 + 4 + 4 = 28 + 20 * addressesCount
     // addresses count most likely will be 1 so = 48
-    return AssetIdSize + 48 * inputsCount
+    return AssetIdSize + 48 * outputsCount
   }
 }
 

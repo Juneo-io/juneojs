@@ -1,4 +1,3 @@
-
 export interface IsBootstrappedResponse {
   isBootstrapped: boolean
 }

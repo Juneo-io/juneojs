@@ -1,4 +1,3 @@
-
 export interface GetBlockResponse {
   block: string
   encoding: string

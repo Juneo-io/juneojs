@@ -5,7 +5,7 @@ import { AccountError } from '../../utils'
 import { BaseSpending, TransactionType, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
 import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, ChainOperationSummary } from '../operation'
 import { SendManager, type SendOperation } from '../send'
-import { type JEVMWallet, type JuneoWallet } from '../wallet'
+import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { type UnwrapOperation, WrapManager, type WrapOperation } from '../wrap'
 import { AbstractChainAccount } from './account'
 import { Balance } from './balance'
@@ -18,13 +18,12 @@ export class EVMAccount extends AbstractChainAccount {
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
 
-  constructor (provider: MCNProvider, chainId: string, wallet: JuneoWallet) {
+  constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
     super(provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
-    this.chainWallet = wallet.getEthWallet(this.chain)
-    this.addresses.push(this.chainWallet.getHexAddress())
-    this.wrapManager = new WrapManager(this.api, this.chainWallet)
+    this.chainWallet = this.wallet.getJEVMWallet(this.chain)
+    this.wrapManager = new WrapManager(this.api, this.chainWallet.evmWallet)
     this.sendManager = new SendManager(provider, wallet)
   }
 
@@ -36,9 +35,9 @@ export class EVMAccount extends AbstractChainAccount {
         operation, this.chain, fee, [new BaseSpending(this.chain, send.amount, send.assetId), fee.getAsSpending()]
       )
     } else if (operation.type === NetworkOperationType.Wrap) {
-      return await estimateEVMWrapOperation(this.api, this.chainWallet.getHexAddress(), operation as WrapOperation)
+      return await estimateEVMWrapOperation(this.api, this.chainWallet.getAddress(), operation as WrapOperation)
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      return await estimateEVMUnwrapOperation(this.api, this.chainWallet.getHexAddress(), operation as UnwrapOperation)
+      return await estimateEVMUnwrapOperation(this.api, this.chainWallet.getAddress(), operation as UnwrapOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -90,7 +89,7 @@ export class EVMAccount extends AbstractChainAccount {
       this.balances.set(assetId, new Balance())
     }
     const balance: Balance = this.balances.get(assetId) as Balance
-    const address: string = this.chainWallet.getHexAddress()
+    const address: string = this.chainWallet.getAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }
 

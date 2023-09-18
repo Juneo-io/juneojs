@@ -19,8 +19,6 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "@jest/globals": "29.7.0",
-    "@types/create-hash": "1.2.3",
-    "@types/elliptic": "6.4.14",
     "@types/hdkey": "2.0.1",
     "@types/jest": "29.5.5",
     "@types/node": "20.6.2",

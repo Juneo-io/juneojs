@@ -6,7 +6,7 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 const UtxoRequestLimit: number = 1024
 
 export async function fetchUtxos (
-  utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string, transactionId?: string, index?: number
+  utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string, transactionId?: string
 ): Promise<Utxo[]> {
   // use a set to avoid duplicates because getUtxos does not guarantee to provide unique
   // utxos between multiple calls. There could be some duplicates because of start/end indexes
@@ -19,7 +19,7 @@ export async function fetchUtxos (
   utxoResponse.utxos.forEach(data => {
     const utxo: Utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
-    if (addUtxo(utxos, utxo, transactionId, index)) {
+    if (addUtxo(utxos, utxo, transactionId)) {
       utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
     }
   })
@@ -34,7 +34,7 @@ export async function fetchUtxos (
       if (utxoSet.has(key)) {
         continue
       }
-      if (addUtxo(utxos, utxo, transactionId, index)) {
+      if (addUtxo(utxos, utxo, transactionId)) {
         utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
       }
     }
@@ -42,25 +42,16 @@ export async function fetchUtxos (
   return utxos
 }
 
-function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string, index?: number): boolean {
-  const transactionParam: boolean = typeof transactionId === 'string'
-  const indexParam: boolean = typeof index === 'number'
-  let success: boolean = false
-  if (indexParam && transactionParam) {
-    if (transactionId === utxo.transactionId.transactionId && index === utxo.utxoIndex) {
-      utxos.push(utxo)
-      success = true
-    }
-  } else if (transactionParam) {
-    if (transactionId === utxo.transactionId.transactionId) {
-      utxos.push(utxo)
-      success = true
-    }
-  } else {
+function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
+  if (typeof transactionId !== 'string') {
     utxos.push(utxo)
-    success = true
+    return true
   }
-  return success
+  if (transactionId === utxo.transactionId.transactionId) {
+    utxos.push(utxo)
+    return true
+  }
+  return false
 }
 
 export class Utxo {

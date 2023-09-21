@@ -38,7 +38,7 @@ export abstract class AbstractUtxoAPI extends AbstractAPI implements ChainAPI {
   chain: Blockchain
 
   constructor (client: JuneoClient, endpoint: string, service: string, chain: Blockchain) {
-    super(client, service, endpoint)
+    super(client, endpoint, service)
     this.chain = chain
   }
 

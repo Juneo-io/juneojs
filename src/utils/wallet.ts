@@ -15,7 +15,7 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
   return values
 }
 
-export function getAmountValues (utxoSet: Utxo[]): Map<string, bigint> {
+export function getUtxosAmountValues (utxoSet: Utxo[]): Map<string, bigint> {
   const values = new Map<string, bigint>()
   for (const utxo of utxoSet) {
     if (utxo.output.typeId !== Secp256k1OutputTypeId) {
@@ -31,7 +31,7 @@ export function getAmountValues (utxoSet: Utxo[]): Map<string, bigint> {
   return values
 }
 
-export function getUserInputs (
+export function getImportUserInputs (
   values: Map<string, bigint>, feeAssetId: string, feeAmount: bigint, source: Blockchain, destination: Blockchain, address: string
 ): UserInput[] {
   const inputs: UserInput[] = []

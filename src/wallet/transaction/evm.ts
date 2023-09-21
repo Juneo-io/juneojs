@@ -5,6 +5,7 @@ import { type Blockchain, JEVMBlockchain, type JRC20Asset, NativeAssetCallContra
 import { ChainOperationSummary } from '../operation'
 import { type UnwrapOperation, type WrapOperation } from '../wrap'
 import { BaseSpending } from './transaction'
+import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
 import {
   type JEVMExportTransaction, type JEVMImportTransaction, UserInput, type Utxo,
   buildJEVMExportTransaction, buildJEVMImportTransaction, fetchUtxos
@@ -180,9 +181,11 @@ export async function sendEVMExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimateEVMImportTransaction (api: JEVMAPI, hasExtraFee: boolean): Promise<BaseFeeData> {
-  const inputsCount: number = hasExtraFee ? 2 : 1
-  const outputsCount: number = hasExtraFee ? 2 : 1
+export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string, utxosCount?: number, assetsCount?: number): Promise<BaseFeeData> {
+  const exportedAssetsCount: number = assetId === api.chain.assetId ? 1 : 2
+  const inputsCount: number = typeof utxosCount === 'number' ? utxosCount : exportedAssetsCount
+  // default outputsCount should use 1 instead of exportedAssetsCount but currently needed for importing june for jrc20 deposits
+  const outputsCount: number = typeof assetsCount === 'number' ? assetsCount : exportedAssetsCount // 1
   const gasLimit: bigint = api.chain.estimateAtomicImportGas(inputsCount, outputsCount)
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   const fee: BaseFeeData = new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
@@ -192,22 +195,18 @@ export async function estimateEVMImportTransaction (api: JEVMAPI, hasExtraFee: b
 }
 
 export async function sendEVMImportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, assetId: string,
-  amount: bigint, address: string, extraGasFeeAmount: bigint = BigInt(0), fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, assetId: string, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const chainWallet: VMWallet = wallet.getWallet(api.chain)
   const sender: string = chainWallet.getJuneoAddress()
-  const hasExtraFee: boolean = extraGasFeeAmount > BigInt(0)
-  if (typeof fee === 'undefined') {
-    fee = await estimateEVMImportTransaction(api, hasExtraFee)
-  }
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [sender], source.id)
   }
-  const inputs: UserInput[] = [new UserInput(assetId, source, amount, address, api.chain)]
-  if (hasExtraFee) {
-    inputs.push(new UserInput(api.chain.assetId, source, extraGasFeeAmount, address, api.chain))
+  const values = getUtxosAmountValues(utxoSet)
+  if (typeof fee === 'undefined') {
+    fee = await estimateEVMImportTransaction(api, assetId, utxoSet.length, values.size)
   }
+  const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, wallet.getAddress(api.chain))
   const transaction: JEVMImportTransaction = buildJEVMImportTransaction(inputs, utxoSet, [sender], fee.amount, provider.mcn.id)
   return (await api.issueTx(transaction.signTransaction([chainWallet]).toCHex())).txID
 }

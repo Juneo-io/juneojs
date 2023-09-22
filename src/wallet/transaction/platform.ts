@@ -120,7 +120,7 @@ export async function sendPlatformImportTransaction (
     // put import utxos first to priorize usage of imported inputs
     utxoSet = await fetchUtxos(api, [sender], source.id)
   }
-  const values: Map<string, bigint> = getUtxosAmountValues(utxoSet)
+  const values: Map<string, bigint> = getUtxosAmountValues(utxoSet, source.id)
   if (fetchUtxoSet && payImportFee) {
     // also fetching utxos in chain that could be needed if import fee
     // was expected to be paid in destination chain during export

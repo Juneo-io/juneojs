@@ -181,11 +181,7 @@ export async function sendEVMExportTransaction (
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
 
-export async function estimateEVMImportTransaction (api: JEVMAPI, assetId: string, utxosCount?: number, assetsCount?: number): Promise<BaseFeeData> {
-  const exportedAssetsCount: number = assetId === api.chain.assetId ? 1 : 2
-  const inputsCount: number = typeof utxosCount === 'number' ? utxosCount : exportedAssetsCount
-  // default outputsCount should use 1 instead of exportedAssetsCount but currently needed for importing june for jrc20 deposits
-  const outputsCount: number = typeof assetsCount === 'number' ? assetsCount : exportedAssetsCount // 1
+export async function estimateEVMImportTransaction (api: JEVMAPI, inputsCount: number, outputsCount: number): Promise<BaseFeeData> {
   const gasLimit: bigint = api.chain.estimateAtomicImportGas(inputsCount, outputsCount)
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   const fee: BaseFeeData = new BaseFeeData(api.chain, api.chain.calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
@@ -202,9 +198,9 @@ export async function sendEVMImportTransaction (
   if (typeof utxoSet === 'undefined') {
     utxoSet = await fetchUtxos(api, [sender], source.id)
   }
-  const values = getUtxosAmountValues(utxoSet)
+  const values = getUtxosAmountValues(utxoSet, source.id)
   if (typeof fee === 'undefined') {
-    fee = await estimateEVMImportTransaction(api, assetId, utxoSet.length, values.size)
+    fee = await estimateEVMImportTransaction(api, utxoSet.length, values.size)
   }
   const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, wallet.getAddress(api.chain))
   const transaction: JEVMImportTransaction = buildJEVMImportTransaction(inputs, utxoSet, [sender], fee.amount, provider.mcn.id)

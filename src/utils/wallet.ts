@@ -15,10 +15,10 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
   return values
 }
 
-export function getUtxosAmountValues (utxoSet: Utxo[]): Map<string, bigint> {
+export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<string, bigint> {
   const values = new Map<string, bigint>()
   for (const utxo of utxoSet) {
-    if (utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (utxo.sourceChain !== source || utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
     }
     let value: bigint = (utxo.output as Secp256k1Output).amount

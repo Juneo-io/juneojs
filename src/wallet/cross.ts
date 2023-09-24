@@ -373,13 +373,15 @@ export class CrossManager {
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
     const operations: CrossResumeOperation[] = []
     const chains: Blockchain[] = this.provider.mcn.primary.chains
+    const promises: Array<Promise<void>> = []
     for (const chain of chains) {
-      operations.push(...await this.fetchUnfinishedChainCrossOperation(chain))
+      promises.push(this.fetchUnfinishedChainCrossOperation(chain, operations))
     }
+    await Promise.all(promises)
     return operations
   }
 
-  private async fetchUnfinishedChainCrossOperation (chain: Blockchain): Promise<CrossResumeOperation[]> {
+  private async fetchUnfinishedChainCrossOperation (chain: Blockchain, list: CrossResumeOperation[]): Promise<void> {
     const vmId: string = chain.vmId
     let utxoApi: AbstractUtxoAPI = this.provider.platform
     if (vmId === JVM_ID) {
@@ -389,7 +391,6 @@ export class CrossManager {
     } else if (vmId !== PLATFORMVM_ID) {
       throw new CrossError(`unsupported vm id: ${vmId}`)
     }
-    const operations: CrossResumeOperation[] = []
     const chains: Blockchain[] = this.provider.mcn.primary.chains
     for (const source of chains) {
       if (source.id === chain.id) {
@@ -397,10 +398,9 @@ export class CrossManager {
       }
       const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
       if (utxoSet.length > 0) {
-        operations.push(new CrossResumeOperation(source, chain, utxoSet))
+        list.push(new CrossResumeOperation(source, chain, utxoSet))
       }
     }
-    return operations
   }
 }
 

@@ -351,7 +351,7 @@ export class CrossManager {
     } else if (vmId === JEVM_ID) {
       utxoApi = this.provider.jevm[operation.destination.id]
     } else if (vmId !== PLATFORMVM_ID) {
-      throw new CrossError(`unsupported vm id: ${vmId}`)
+      throw new CrossError(`unsupported destination vm id: ${vmId}`)
     }
     const utxos: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()], operation.source.id)
     const values: Map<string, bigint> = getUtxosAmountValues(utxos)

@@ -353,7 +353,7 @@ export class CrossManager {
     } else if (vmId !== PLATFORMVM_ID) {
       throw new CrossError(`unsupported destination vm id: ${vmId}`)
     }
-    const utxos: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()], operation.source.id)
+    const utxos: Utxo[] = operation.utxoSet
     const values: Map<string, bigint> = getUtxosAmountValues(utxos)
     const fee: FeeData = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, values.size)
     const hasFeeValue: boolean = values.has(fee.assetId) && values.get(fee.assetId) as bigint >= fee.amount
@@ -368,6 +368,39 @@ export class CrossManager {
       }
     }
     return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos)
+  }
+
+  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
+    const operations: CrossResumeOperation[] = []
+    const chains: Blockchain[] = this.provider.mcn.primary.chains
+    for (const chain of chains) {
+      operations.push(...await this.fetchUnfinishedChainCrossOperation(chain))
+    }
+    return operations
+  }
+
+  private async fetchUnfinishedChainCrossOperation (chain: Blockchain): Promise<CrossResumeOperation[]> {
+    const vmId: string = chain.vmId
+    let utxoApi: AbstractUtxoAPI = this.provider.platform
+    if (vmId === JVM_ID) {
+      utxoApi = this.provider.jvm
+    } else if (vmId === JEVM_ID) {
+      utxoApi = this.provider.jevm[chain.id]
+    } else if (vmId !== PLATFORMVM_ID) {
+      throw new CrossError(`unsupported vm id: ${vmId}`)
+    }
+    const operations: CrossResumeOperation[] = []
+    const chains: Blockchain[] = this.provider.mcn.primary.chains
+    for (const source of chains) {
+      if (source.id === chain.id) {
+        continue
+      }
+      const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
+      if (utxoSet.length > 0) {
+        operations.push(new CrossResumeOperation(source, chain, utxoSet))
+      }
+    }
+    return operations
   }
 }
 
@@ -391,9 +424,11 @@ export class CrossResumeOperation implements NetworkOperation {
   type: NetworkOperationType = NetworkOperationType.CrossResume
   source: Blockchain
   destination: Blockchain
+  utxoSet: Utxo[]
 
-  constructor (source: Blockchain, destination: Blockchain) {
+  constructor (source: Blockchain, destination: Blockchain, utxoSet: Utxo[]) {
     this.source = source
     this.destination = destination
+    this.utxoSet = utxoSet
   }
 }

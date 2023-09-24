@@ -89,6 +89,10 @@ export class MCNAccount {
     }
   }
 
+  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
+    return await this.crossManager.fetchUnfinishedCrossOperations()
+  }
+
   verifySpendings (summary: OperationSummary): void {
     const executable: ExecutableOperation = summary.getExecutable()
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)

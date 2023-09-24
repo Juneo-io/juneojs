@@ -191,7 +191,7 @@ export async function estimateEVMImportTransaction (api: JEVMAPI, inputsCount: n
 }
 
 export async function sendEVMImportTransaction (
-  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, assetId: string, fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, api: JEVMAPI, wallet: MCNWallet, source: Blockchain, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const chainWallet: VMWallet = wallet.getWallet(api.chain)
   const sender: string = chainWallet.getJuneoAddress()

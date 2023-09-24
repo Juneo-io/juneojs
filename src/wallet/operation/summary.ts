@@ -1,4 +1,6 @@
 import { type PlatformBlockchain, type Blockchain } from '../../chain'
+import { type Utxo } from '../../transaction'
+import { type CrossResumeOperation } from '../cross'
 import { type Staking } from '../stake'
 import { type UtxoFeeData, type FeeData, type Spending } from '../transaction'
 import { ExecutableOperation } from './executable'
@@ -64,5 +66,20 @@ export class StakingOperationSummary extends ChainOperationSummary {
   constructor (operation: Staking, chain: PlatformBlockchain, fee: UtxoFeeData, spendings: Spending[], potentialReward: bigint) {
     super(operation, chain, fee, spendings)
     this.potentialReward = potentialReward
+  }
+}
+
+export class CrossResumeOperationSummary extends MCNOperationSummary {
+  override operation: CrossResumeOperation
+  importFee: FeeData
+  payImportFee: boolean
+  utxoSet: Utxo[]
+
+  constructor (operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[]) {
+    super(operation, [operation.source, operation.destination], [importFee], spendings)
+    this.operation = operation
+    this.importFee = importFee
+    this.payImportFee = payImportFee
+    this.utxoSet = utxoSet
   }
 }

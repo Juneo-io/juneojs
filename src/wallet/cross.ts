@@ -363,14 +363,11 @@ export class CrossManager {
       const balance: bigint = account.getAccount(operation.destination.id).getValue(fee.assetId)
       if (this.canPayImportFee(operation.destination, fee.amount, balance)) {
         spendings.push(fee.getAsSpending())
+        utxos.push(...await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()]))
         payImportFee = true
       }
     }
     return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos)
-  }
-
-  async executeCrossResumeOperation (summary: CrossResumeOperationSummary): Promise<void> {
-    await this.import(summary.operation.source, summary.operation.destination, summary.payImportFee, summary.importFee, summary.utxoSet)
   }
 }
 

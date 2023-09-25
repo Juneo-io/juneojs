@@ -4,7 +4,7 @@ import { type MCNProvider } from '../juneo'
 import { fetchUtxos, type Utxo } from '../transaction'
 import { CrossError, getUtxosAmountValues } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
-import { type NetworkOperation, NetworkOperationType, type ExecutableOperation, MCNOperationSummary, CrossResumeOperationSummary } from './operation'
+import { type NetworkOperation, NetworkOperationType, type ExecutableOperation, MCNOperationSummary, CrossResumeOperationSummary, NetworkOperationRange, ChainNetworkOperation } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
@@ -406,6 +406,7 @@ export class CrossManager {
 
 export class CrossOperation implements NetworkOperation {
   type: NetworkOperationType = NetworkOperationType.Cross
+  range: NetworkOperationRange = NetworkOperationRange.Supernet
   source: Blockchain
   destination: Blockchain
   assetId: string
@@ -420,13 +421,13 @@ export class CrossOperation implements NetworkOperation {
   }
 }
 
-export class CrossResumeOperation implements NetworkOperation {
-  type: NetworkOperationType = NetworkOperationType.CrossResume
+export class CrossResumeOperation extends ChainNetworkOperation {
   source: Blockchain
   destination: Blockchain
   utxoSet: Utxo[]
 
   constructor (source: Blockchain, destination: Blockchain, utxoSet: Utxo[]) {
+    super(NetworkOperationType.CrossResume, destination)
     this.source = source
     this.destination = destination
     this.utxoSet = utxoSet

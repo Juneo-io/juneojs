@@ -2,7 +2,7 @@ import { AccountError, sortSpendings } from '../../utils'
 import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
-  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary, type CrossResumeOperationSummary
+  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary, type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
@@ -44,13 +44,21 @@ export class MCNAccount {
     await Promise.all(promises)
   }
 
-  async estimate (chainId: string, operation: NetworkOperation): Promise<OperationSummary> {
+  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
+    return await this.crossManager.fetchUnfinishedCrossOperations()
+  }
+
+  async estimate (operation: NetworkOperation): Promise<OperationSummary> {
     if (operation.type === NetworkOperationType.Cross) {
       return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
     } else if (operation.type === NetworkOperationType.CrossResume) {
       return await this.crossManager.estimateCrossResumeOperation(operation as CrossResumeOperation, this)
     }
-    const account: ChainAccount = this.getAccount(chainId)
+    if (operation.range !== NetworkOperationRange.Chain) {
+      throw new AccountError(`unsupported operation range: ${operation.range}`)
+    }
+    const chainOperation: ChainNetworkOperation = operation as ChainNetworkOperation
+    const account: ChainAccount = this.getAccount(chainOperation.chain.id)
     return await account.estimate(operation)
   }
 
@@ -87,10 +95,6 @@ export class MCNAccount {
         resumeSummary.importFee, resumeSummary.utxoSet
       )
     }
-  }
-
-  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
-    return await this.crossManager.fetchUnfinishedCrossOperations()
   }
 
   verifySpendings (summary: OperationSummary): void {

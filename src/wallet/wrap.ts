@@ -1,9 +1,9 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
 import { type MCNWallet } from './wallet'
-import { type JEVMBlockchain, type WrappedAsset } from '../chain'
+import { type Blockchain, type JEVMBlockchain, type WrappedAsset } from '../chain'
 import { type EVMFeeData, FeeType, estimateEVMCall, sendEVMTransaction } from './transaction'
-import { type NetworkOperation, NetworkOperationType } from './operation'
+import { NetworkOperationType, ChainNetworkOperation } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class WrapManager {
@@ -47,26 +47,25 @@ export class WrapManager {
   }
 }
 
-abstract class Wrapping implements NetworkOperation {
-  type: NetworkOperationType
+abstract class Wrapping extends ChainNetworkOperation {
   asset: WrappedAsset
   amount: bigint
 
-  constructor (type: NetworkOperationType, asset: WrappedAsset, amount: bigint) {
-    this.type = type
+  constructor (type: NetworkOperationType, chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(type, chain)
     this.asset = asset
     this.amount = amount
   }
 }
 
 export class WrapOperation extends Wrapping {
-  constructor (asset: WrappedAsset, amount: bigint) {
-    super(NetworkOperationType.Wrap, asset, amount)
+  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(NetworkOperationType.Wrap, chain, asset, amount)
   }
 }
 
 export class UnwrapOperation extends Wrapping {
-  constructor (asset: WrappedAsset, amount: bigint) {
-    super(NetworkOperationType.Unwrap, asset, amount)
+  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(NetworkOperationType.Unwrap, chain, asset, amount)
   }
 }

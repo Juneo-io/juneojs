@@ -1,3 +1,5 @@
+import { type Blockchain } from '../../chain'
+
 export enum NetworkOperationType {
   Send = 'Send',
   Cross = 'Cross',
@@ -9,8 +11,26 @@ export enum NetworkOperationType {
   Unwrap = 'Unwrap'
 }
 
+export enum NetworkOperationRange {
+  Chain = 'Chain',
+  Supernet = 'Supernet',
+  MCN = 'MCN'
+}
+
 export interface NetworkOperation {
   type: NetworkOperationType
+  range: NetworkOperationRange
+}
+
+export abstract class ChainNetworkOperation implements NetworkOperation {
+  type: NetworkOperationType
+  range: NetworkOperationRange = NetworkOperationRange.Chain
+  chain: Blockchain
+
+  constructor (type: NetworkOperationType, chain: Blockchain) {
+    this.type = type
+    this.chain = chain
+  }
 }
 
 export enum NetworkOperationStatus {

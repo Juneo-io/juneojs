@@ -4,7 +4,7 @@ import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlat
 import { type MCNWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
-import { SocotraPlatformChain } from '../chain'
+import { type MCN } from '../chain'
 import { type MCNProvider } from '../juneo'
 
 export const ValidationShare: number = 12_0000 // 12%
@@ -68,8 +68,8 @@ export abstract class Staking extends ChainNetworkOperation {
   startTime: bigint
   endTime: bigint
 
-  constructor (type: NetworkOperationType, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(type, SocotraPlatformChain)
+  constructor (type: NetworkOperationType, mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(type, mcn.primary.platform)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
@@ -78,13 +78,13 @@ export abstract class Staking extends ChainNetworkOperation {
 }
 
 export class ValidateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Validate, nodeId, amount, startTime, endTime)
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime)
   }
 }
 
 export class DelegateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Delegate, nodeId, amount, startTime, endTime)
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime)
   }
 }

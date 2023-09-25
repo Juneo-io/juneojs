@@ -1,8 +1,8 @@
-import { ChainAccount, JuneoWallet, MCNAccount, MCNProvider, SocotraJUNEChain, BalanceListener, BalanceUpdateEvent, SocotraJUNEAssetId } from "../../../src"
+import { ChainAccount, MCNWallet, MCNAccount, MCNProvider, SocotraJUNEChain, BalanceListener, BalanceUpdateEvent, SocotraJUNEAssetId } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const wallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     const juneAccount: ChainAccount = mcnAccount.getAccount(SocotraJUNEChain.id)
     // the asset id of the balance we will listen to

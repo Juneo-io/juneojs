@@ -1,9 +1,9 @@
-import { AssetValue, ChainAccount, EVMAccount, JEVMBlockchain, JuneoWallet, MCNAccount,
+import { AssetValue, ChainAccount, EVMAccount, JEVMBlockchain, MCNWallet, MCNAccount,
     MCNProvider, SocotraJUNEAsset, SocotraJUNEChain, SocotraWJUNEAsset } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const wallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // create a MCNAccount from the provider with the chains of the default used MCN
     const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // getting the account of one chain

@@ -34,7 +34,14 @@ export interface ChainAPI {
   chain: Blockchain
 }
 
-export abstract class AbstractUtxoAPI extends AbstractAPI {
+export abstract class AbstractUtxoAPI extends AbstractAPI implements ChainAPI {
+  chain: Blockchain
+
+  constructor (client: JuneoClient, endpoint: string, service: string, chain: Blockchain) {
+    super(client, endpoint, service)
+    this.chain = chain
+  }
+
   async getUTXOs (addresses: string[], limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
     const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, limit, startIndex, encoding }])
     return response.result

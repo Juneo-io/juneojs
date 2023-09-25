@@ -1,6 +1,7 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
+import { type Utxo, fetchUtxos } from '../../transaction'
+import { getUtxosAmountValues } from '../../utils'
 import { type NetworkOperation, type ChainOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -148,18 +149,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   }
 
   private calculateBalances (): void {
-    const values = new Map<string, bigint>()
-    this.utxoSet.forEach(utxo => {
-      const assetId: string = utxo.assetId.assetId
-      let amount: bigint = BigInt(0)
-      if (utxo.output.typeId === Secp256k1OutputTypeId) {
-        amount = (utxo.output as Secp256k1Output).amount
-      }
-      if (values.has(assetId)) {
-        amount += values.get(assetId) as bigint
-      }
-      values.set(assetId, amount)
-    })
+    const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
     values.forEach((value, key) => {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())

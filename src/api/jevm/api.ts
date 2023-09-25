@@ -1,17 +1,17 @@
 import { type JEVMBlockchain } from '../../chain'
-import { AbstractUtxoAPI, type ChainAPI } from '../api'
+import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type IssueTxResponse } from '../data'
 import { type GetAtomicTxResponse, type GetAtomicTxStatusResponse } from './data'
 
 const Service: string = 'june'
 
-export class JEVMAPI extends AbstractUtxoAPI implements ChainAPI {
-  chain: JEVMBlockchain
+export class JEVMAPI extends AbstractUtxoAPI {
+  override chain: JEVMBlockchain
   private readonly rpcEndpoint: string
 
   constructor (client: JuneoClient, chain: JEVMBlockchain) {
-    super(client, `/bc/${chain.id}/june`, Service)
+    super(client, `/bc/${chain.id}/june`, Service, chain)
     this.chain = chain
     this.rpcEndpoint = `/bc/${chain.id}/rpc`
   }

@@ -2,7 +2,7 @@ import { SignatureError, sha256 } from '../../utils'
 import { JuneoBuffer, type Serializable } from '../../utils/bytes'
 import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
-import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput } from '../output'
+import { type TransactionOutput } from '../output'
 import { type Signable } from '../signature'
 import { Address, AddressSize, NodeId, NodeIdSize, Signature } from '../types'
 
@@ -81,18 +81,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
     const buffer: JuneoBuffer = typeof data === 'string'
       ? JuneoBuffer.fromString(data)
       : data
-    let position: number = 0
-    const typeId: number = buffer.readUInt32(position)
-    position += 4
-    // we must check this due to a bug? in current network version
-    if (typeId === Secp256k1OutputTypeId) {
-      const output: Secp256k1Output = Secp256k1Output.parse(buffer)
-      return new Secp256k1OutputOwners(
-        output.locktime,
-        output.threshold,
-        output.addresses
-      )
-    }
+    let position: number = 4
     const locktime: bigint = buffer.readUInt64(position)
     position += 8
     const threshold: number = buffer.readUInt32(position)

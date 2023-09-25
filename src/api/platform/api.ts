@@ -1,5 +1,5 @@
 import { type PlatformBlockchain } from '../../chain'
-import { AbstractUtxoAPI, type ChainAPI } from '../api'
+import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type GetBlockResponse, type GetHeightResponse, type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import {
@@ -11,11 +11,11 @@ import {
 
 const Service: string = 'platform'
 
-export class PlatformAPI extends AbstractUtxoAPI implements ChainAPI {
-  chain: PlatformBlockchain
+export class PlatformAPI extends AbstractUtxoAPI {
+  override chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
-    super(client, `/bc/${chain.id}`, Service)
+    super(client, `/bc/${chain.id}`, Service, chain)
     this.chain = chain
   }
 

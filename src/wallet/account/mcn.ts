@@ -2,14 +2,14 @@ import { AccountError, sortSpendings } from '../../utils'
 import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
-  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary
+  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary, type CrossResumeOperationSummary
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
-import { CrossManager, type CrossOperation } from '../cross'
+import { CrossManager, type CrossResumeOperation, type CrossOperation } from '../cross'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -47,6 +47,8 @@ export class MCNAccount {
   async estimate (chainId: string, operation: NetworkOperation): Promise<OperationSummary> {
     if (operation.type === NetworkOperationType.Cross) {
       return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
+    } else if (operation.type === NetworkOperationType.CrossResume) {
+      return await this.crossManager.estimateCrossResumeOperation(operation as CrossResumeOperation, this)
     }
     const account: ChainAccount = this.getAccount(chainId)
     return await account.estimate(operation)
@@ -72,9 +74,23 @@ export class MCNAccount {
   }
 
   private async executeMCNOperation (summary: MCNOperationSummary): Promise<void> {
-    // this is currently the only multi chain operation available
+    // those are currently the only multi chain operations available
     // verifications are done in it so keep it like that until newer features are added
-    await this.crossManager.executeCrossOperation(summary, this)
+    const operation: NetworkOperationType = summary.operation.type
+    if (operation === NetworkOperationType.Cross) {
+      await this.crossManager.executeCrossOperation(summary, this)
+    } else if (operation === NetworkOperationType.CrossResume) {
+      const resumeSummary: CrossResumeOperationSummary = summary as CrossResumeOperationSummary
+      const resumeOperation: CrossResumeOperation = resumeSummary.operation
+      await this.crossManager.import(
+        resumeOperation.source, resumeOperation.destination, resumeSummary.payImportFee,
+        resumeSummary.importFee, resumeSummary.utxoSet
+      )
+    }
+  }
+
+  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
+    return await this.crossManager.fetchUnfinishedCrossOperations()
   }
 
   verifySpendings (summary: OperationSummary): void {

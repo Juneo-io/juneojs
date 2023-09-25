@@ -1,6 +1,7 @@
 export enum NetworkOperationType {
   Send = 'Send',
   Cross = 'Cross',
+  CrossResume = 'Cross resume',
   Bridge = 'Bridge',
   Validate = 'Validate',
   Delegate = 'Delegate',

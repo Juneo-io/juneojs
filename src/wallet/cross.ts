@@ -2,14 +2,15 @@ import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, SocotraJUNEChain, JEVMBlockchain, type JVMBlockchain, type JRC20Asset } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { fetchUtxos, type Utxo } from '../transaction'
-import { CrossError } from '../utils'
+import { CrossError, getUtxosAmountValues } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
-import { type NetworkOperation, NetworkOperationType, type ExecutableOperation, MCNOperationSummary } from './operation'
+import { type NetworkOperation, NetworkOperationType, type ExecutableOperation, MCNOperationSummary, CrossResumeOperationSummary } from './operation'
 import {
   estimateEVMExportTransaction, estimateEVMImportTransaction, estimateJVMExportTransaction, estimateJVMImportTransaction,
   estimatePlatformExportTransaction, estimatePlatformImportTransaction, sendJVMExportTransaction, type FeeData,
   sendPlatformExportTransaction, sendJVMImportTransaction, sendPlatformImportTransaction, sendEVMImportTransaction,
-  sendEVMExportTransaction, BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData, estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
+  sendEVMExportTransaction, BaseFeeData, TransactionType, type Spending, BaseSpending, FeeType, type EVMFeeData,
+  estimateEVMWithdrawJRC20, sendEVMTransaction, estimateEVMDepositJRC20
 } from './transaction'
 import { type MCNWallet } from './wallet'
 
@@ -22,14 +23,18 @@ export class CrossManager {
     this.wallet = wallet
   }
 
-  async estimateImport (destination: Blockchain, hasExtraFee: boolean): Promise<BaseFeeData> {
+  async estimateImport (destination: Blockchain, assetId: string, utxosCount?: number, assetsCount?: number): Promise<BaseFeeData> {
     if (destination.vmId === JVM_ID) {
       return await estimateJVMImportTransaction(this.provider)
     } else if (destination.vmId === PLATFORMVM_ID) {
       return await estimatePlatformImportTransaction(this.provider)
     } else if (destination.vmId === JEVM_ID) {
       const api: JEVMAPI = this.provider.jevm[destination.id]
-      return await estimateEVMImportTransaction(api, hasExtraFee)
+      const exportedAssetsCount: number = assetId === api.chain.assetId ? 1 : 2
+      const inputsCount: number = typeof utxosCount === 'number' ? utxosCount : exportedAssetsCount
+      // default outputsCount should use 1 instead of exportedAssetsCount but currently needed for importing june for jrc20 deposits
+      const outputsCount: number = typeof assetsCount === 'number' ? assetsCount : exportedAssetsCount // 1
+      return await estimateEVMImportTransaction(api, inputsCount, outputsCount)
     }
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
@@ -46,11 +51,15 @@ export class CrossManager {
     throw new CrossError(`source vm id does not support cross: ${source.vmId}`)
   }
 
-  shouldSendImportFee (destination: Blockchain, importFee: bigint, importFeeAssetDestinationBalance: bigint, importFeeAssetSourceBalance: bigint): boolean {
-    // verify if the destination account can pay the import fee with its funds
-    const canPayImportFee: boolean = destination.vmId !== JEVM_ID
+  canPayImportFee (destination: Blockchain, importFee: bigint, importFeeAssetDestinationBalance: bigint): boolean {
+    return destination.vmId !== JEVM_ID
       ? importFeeAssetDestinationBalance >= importFee
       : false
+  }
+
+  shouldSendImportFee (destination: Blockchain, importFee: bigint, importFeeAssetDestinationBalance: bigint, importFeeAssetSourceBalance: bigint): boolean {
+    // verify if the destination account can pay the import fee with its funds
+    const canPayImportFee: boolean = this.canPayImportFee(destination, importFee, importFeeAssetDestinationBalance)
     // will not export the import fee only if destination can pay
     // import fee and source does not have enough to export it
     const sendImportFee: boolean = canPayImportFee
@@ -79,7 +88,7 @@ export class CrossManager {
       throw new CrossError('source and destination chain cannot be the same')
     }
     if (typeof importFee === 'undefined') {
-      importFee = await this.estimateImport(destination, extraFeeAmount > BigInt(0))
+      importFee = await this.estimateImport(destination, assetId)
     }
     if (source.vmId === JVM_ID) {
       return await sendJVMExportTransaction(this.provider, this.wallet, destination, assetId, amount, address, sendImportFee, importFee.amount, exportFee, utxoSet, extraFeeAmount)
@@ -93,22 +102,21 @@ export class CrossManager {
   }
 
   async import (
-    source: Blockchain, destination: Blockchain, assetId: string, amount: bigint, address: string,
-    payImportFee: boolean = false, importFee?: FeeData, utxoSet?: Utxo[], extraFeeAmount: bigint = BigInt(0)
+    source: Blockchain, destination: Blockchain, payImportFee: boolean = false, importFee?: FeeData, utxoSet?: Utxo[]
   ): Promise<string> {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
     if (destination.vmId === JVM_ID) {
-      return await sendJVMImportTransaction(this.provider, this.wallet, source, assetId, amount, address, payImportFee, importFee, utxoSet)
+      return await sendJVMImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
-      return await sendPlatformImportTransaction(this.provider, this.wallet, source, assetId, amount, address, payImportFee, importFee, utxoSet)
+      return await sendPlatformImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === JEVM_ID) {
       if (payImportFee) {
         throw new CrossError(`vm id ${destination.vmId} cannot pay import fee`)
       }
       const api: JEVMAPI = this.provider.jevm[destination.id]
-      return await sendEVMImportTransaction(this.provider, api, this.wallet, source, assetId, amount, address, importFee, utxoSet, extraFeeAmount)
+      return await sendEVMImportTransaction(this.provider, api, this.wallet, source, importFee, utxoSet)
     }
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
@@ -117,12 +125,12 @@ export class CrossManager {
     const juneChain: JEVMBlockchain = SocotraJUNEChain
     if (this.shouldProxy(cross)) {
       const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
-      const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount, cross.address)
+      const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount)
       const exportSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyExport, account)
       const spendings: Spending[] = [...exportSummary.spendings]
       // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
       const jvm: JVMBlockchain = this.provider.jvm.chain
-      const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount, cross.address)
+      const proxyImport: CrossOperation = new CrossOperation(this.provider.jvm.chain, cross.destination, cross.assetId, cross.amount)
       const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       importSummary.fees.forEach(fee => {
         const spending: Spending = fee.getAsSpending()
@@ -166,8 +174,7 @@ export class CrossManager {
       }
     }
     const exportFee: BaseFeeData = await this.estimateExport(cross.source, cross.destination, cross.assetId)
-    const hasDepositFee: boolean = typeof importedJRC20 !== 'undefined'
-    const importFee: BaseFeeData = await this.estimateImport(cross.destination, hasDepositFee)
+    const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
     if (fees[0].type === FeeType.Withdraw) {
       const sender: string = account.getAccount(juneChain.id).addresses[0]
@@ -176,11 +183,11 @@ export class CrossManager {
       fees[0] = fee
       spendings.push(fee.getAsSpending())
     }
-    if (hasDepositFee) {
+    if (typeof importedJRC20 !== 'undefined') {
       const sender: string = account.getAccount(juneChain.id).addresses[0]
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
       cross.amount /= JEVMBlockchain.AtomicDenomination
-      const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, importedJRC20 as JRC20Asset, cross.amount)
+      const fee: EVMFeeData = await estimateEVMDepositJRC20(this.provider.jevm[juneChain.id], sender, importedJRC20, cross.amount)
       fees.push(fee)
     }
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
@@ -220,11 +227,8 @@ export class CrossManager {
     const cross: CrossOperation = operation as CrossOperation
     if (this.shouldProxy(cross)) {
       const destination: Blockchain = cross.destination
-      const address: string = cross.address
       const jvmChain: JVMBlockchain = this.provider.jvm.chain
-      const jvmAccount: ChainAccount = account.getAccount(jvmChain.id)
       cross.destination = jvmChain
-      cross.address = jvmAccount.addresses[0]
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[0], summary.fees[1])
       // jevm cross transactions amount must be changed because of atomic denominator
       if (cross.source.vmId === JEVM_ID && cross.assetId === cross.source.assetId) {
@@ -232,7 +236,6 @@ export class CrossManager {
       }
       cross.source = jvmChain
       cross.destination = destination
-      cross.address = address
       // always export fee from JVM to destination
       cross.sendImportFee = true
       const lastFee: FeeData = summary.fees[summary.fees.length - 1]
@@ -302,20 +305,15 @@ export class CrossManager {
       throw new CrossError(`unsupported destination vm id: ${destinationVmId}`)
     }
     // fetch imported utxos
-    const destinationUtxos: Utxo[] = await fetchUtxos(utxoApi, [destinationAccount.chainWallet.getJuneoAddress()], sourceAccount.chain.id)
+    const destinationUtxos: Utxo[] = await fetchUtxos(
+      utxoApi, [destinationAccount.chainWallet.getJuneoAddress()], sourceAccount.chain.id, exportTransactionId
+    )
     if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }
-    // jevm cross transactions amount must be changed because of atomic denominator
-    let amount: bigint = cross.amount
-    if (cross.source.vmId === JEVM_ID && cross.assetId === cross.source.assetId) {
-      amount /= JEVMBlockchain.AtomicDenomination
-    }
     const lastFee: FeeData = summary.fees[summary.fees.length - 1]
-    const jrc20Import: boolean = lastFee.type === FeeType.Deposit
-    const address: string = jrc20Import ? destinationAccount.addresses[0] : cross.address
     const importTransactionId: string = await this.import(
-      cross.source, cross.destination, cross.assetId, amount, address, !cross.sendImportFee, importFee, destinationUtxos, extraFeeAmount
+      cross.source, cross.destination, !cross.sendImportFee, importFee, destinationUtxos
     )
     let importSuccess: boolean = false
     if (destinationVmId === JVM_ID) {
@@ -344,6 +342,66 @@ export class CrossManager {
       }
     }
   }
+
+  async estimateCrossResumeOperation (operation: CrossResumeOperation, account: MCNAccount): Promise<CrossResumeOperationSummary> {
+    const vmId: string = operation.destination.vmId
+    let utxoApi: AbstractUtxoAPI = this.provider.platform
+    if (vmId === JVM_ID) {
+      utxoApi = this.provider.jvm
+    } else if (vmId === JEVM_ID) {
+      utxoApi = this.provider.jevm[operation.destination.id]
+    } else if (vmId !== PLATFORMVM_ID) {
+      throw new CrossError(`unsupported destination vm id: ${vmId}`)
+    }
+    const utxos: Utxo[] = operation.utxoSet
+    const values: Map<string, bigint> = getUtxosAmountValues(utxos)
+    const fee: FeeData = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, values.size)
+    const hasFeeValue: boolean = values.has(fee.assetId) && values.get(fee.assetId) as bigint >= fee.amount
+    const spendings: Spending[] = []
+    let payImportFee: boolean = false
+    if (!hasFeeValue) {
+      const balance: bigint = account.getAccount(operation.destination.id).getValue(fee.assetId)
+      if (this.canPayImportFee(operation.destination, fee.amount, balance)) {
+        spendings.push(fee.getAsSpending())
+        utxos.push(...await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()]))
+        payImportFee = true
+      }
+    }
+    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos)
+  }
+
+  async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
+    const operations: CrossResumeOperation[] = []
+    const chains: Blockchain[] = this.provider.mcn.primary.chains
+    const promises: Array<Promise<void>> = []
+    for (const chain of chains) {
+      promises.push(this.fetchUnfinishedChainCrossOperation(chain, operations))
+    }
+    await Promise.all(promises)
+    return operations
+  }
+
+  private async fetchUnfinishedChainCrossOperation (chain: Blockchain, list: CrossResumeOperation[]): Promise<void> {
+    const vmId: string = chain.vmId
+    let utxoApi: AbstractUtxoAPI = this.provider.platform
+    if (vmId === JVM_ID) {
+      utxoApi = this.provider.jvm
+    } else if (vmId === JEVM_ID) {
+      utxoApi = this.provider.jevm[chain.id]
+    } else if (vmId !== PLATFORMVM_ID) {
+      throw new CrossError(`unsupported vm id: ${vmId}`)
+    }
+    const chains: Blockchain[] = this.provider.mcn.primary.chains
+    for (const source of chains) {
+      if (source.id === chain.id) {
+        continue
+      }
+      const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
+      if (utxoSet.length > 0) {
+        list.push(new CrossResumeOperation(source, chain, utxoSet))
+      }
+    }
+  }
 }
 
 export class CrossOperation implements NetworkOperation {
@@ -352,14 +410,25 @@ export class CrossOperation implements NetworkOperation {
   destination: Blockchain
   assetId: string
   amount: bigint
-  address: string
   sendImportFee: boolean = true
 
-  constructor (source: Blockchain, destination: Blockchain, assetId: string, amount: bigint, address: string) {
+  constructor (source: Blockchain, destination: Blockchain, assetId: string, amount: bigint) {
     this.source = source
     this.destination = destination
     this.assetId = assetId
     this.amount = amount
-    this.address = address
+  }
+}
+
+export class CrossResumeOperation implements NetworkOperation {
+  type: NetworkOperationType = NetworkOperationType.CrossResume
+  source: Blockchain
+  destination: Blockchain
+  utxoSet: Utxo[]
+
+  constructor (source: Blockchain, destination: Blockchain, utxoSet: Utxo[]) {
+    this.source = source
+    this.destination = destination
+    this.utxoSet = utxoSet
   }
 }

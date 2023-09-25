@@ -1,10 +1,10 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
-import { JEVMBlockchain } from '../chain'
+import { type Blockchain, JEVMBlockchain } from '../chain'
 import { type MCNWallet, type VMWallet } from './wallet'
 import { FeeType, type EVMFeeData, estimateEVMTransfer, sendEVMTransaction, type UtxoFeeData, estimateJVMBaseTransaction } from './transaction'
 import { type Utxo } from '../transaction'
-import { type NetworkOperation, NetworkOperationType } from './operation'
+import { NetworkOperationType, ChainNetworkOperation } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class SendManager {
@@ -50,13 +50,13 @@ export class SendManager {
   }
 }
 
-export class SendOperation implements NetworkOperation {
-  type: NetworkOperationType = NetworkOperationType.Send
+export class SendOperation extends ChainNetworkOperation {
   assetId: string
   amount: bigint
   address: string
 
-  constructor (assetId: string, amount: bigint, address: string) {
+  constructor (chain: Blockchain, assetId: string, amount: bigint, address: string) {
+    super(NetworkOperationType.Send, chain)
     this.assetId = assetId
     this.amount = amount
     this.address = address

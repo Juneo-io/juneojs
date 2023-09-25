@@ -1,10 +1,11 @@
-import { type MCNProvider } from '../juneo'
-import { type NetworkOperation, NetworkOperationType } from './operation'
+import { NetworkOperationType, ChainNetworkOperation } from './operation'
 import { NodeId, type Utxo, Validator } from '../transaction'
 import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
 import { type MCNWallet, type VMWallet } from './wallet'
 import { calculatePrimary, now } from '../utils'
 import { type PlatformAPI } from '../api'
+import { type MCN } from '../chain'
+import { type MCNProvider } from '../juneo'
 
 export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
@@ -61,15 +62,14 @@ export class StakeManager {
   }
 }
 
-export abstract class Staking implements NetworkOperation {
-  type: NetworkOperationType
+export abstract class Staking extends ChainNetworkOperation {
   nodeId: string
   amount: bigint
   startTime: bigint
   endTime: bigint
 
-  constructor (type: NetworkOperationType, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    this.type = type
+  constructor (type: NetworkOperationType, mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(type, mcn.primary.platform)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
@@ -78,13 +78,13 @@ export abstract class Staking implements NetworkOperation {
 }
 
 export class ValidateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Validate, nodeId, amount, startTime, endTime)
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime)
   }
 }
 
 export class DelegateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Delegate, nodeId, amount, startTime, endTime)
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime)
   }
 }

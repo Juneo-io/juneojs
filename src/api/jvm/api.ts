@@ -8,10 +8,10 @@ const Service: string = 'jvm'
 const VMEndpoint = '/vm/jvm'
 
 export class JVMAPI extends AbstractUtxoAPI {
-  override chain: JVMBlockchain
+  chain: JVMBlockchain
 
   constructor (client: JuneoClient, chain: JVMBlockchain) {
-    super(client, `/bc/${chain.id}`, Service, chain)
+    super(client, `/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

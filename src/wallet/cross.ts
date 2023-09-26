@@ -355,8 +355,24 @@ export class CrossManager {
     }
     const utxos: Utxo[] = operation.utxoSet
     const values: Map<string, bigint> = getUtxosAmountValues(utxos)
-    const fee: FeeData = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, values.size)
-    const hasFeeValue: boolean = values.has(fee.assetId) && values.get(fee.assetId) as bigint >= fee.amount
+    // if we have more than one value it is possible that the fee to pay for import is in the utxos
+    // for calculation we will consider it is here to be fully consumed and can remove it from outputs
+    const outputsCount: number = values.size > 1 ? values.size - 1 : 1
+    let fee: FeeData = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, outputsCount)
+    let hasFeeValue: boolean = false
+    if (values.has(fee.assetId)) {
+      const value: bigint = values.get(fee.assetId) as bigint
+      hasFeeValue = value >= fee.amount
+      // if importing more than one asset and one of those is the fee asset recalculate import with correct outputs count
+      if (outputsCount > 1 && value > fee.amount) {
+        fee = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, values.size)
+        // if with the extra output we now do not have enough funds to import set fee amount to value
+        // that way it will be fully consumed and it avoids extra costs for one extra output
+        if (value < fee.amount) {
+          fee.amount = value
+        }
+      }
+    }
     const spendings: Spending[] = []
     let payImportFee: boolean = false
     if (!hasFeeValue) {

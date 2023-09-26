@@ -5,7 +5,9 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 
 const UtxoRequestLimit: number = 1024
 
-export async function fetchUtxos (utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string): Promise<Utxo[]> {
+export async function fetchUtxos (
+  utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string, transactionId?: string
+): Promise<Utxo[]> {
   // use a set to avoid duplicates because getUtxos does not guarantee to provide unique
   // utxos between multiple calls. There could be some duplicates because of start/end indexes
   // or even if one transaction changes one of the utxos between two calls.
@@ -17,24 +19,39 @@ export async function fetchUtxos (utxoApi: AbstractUtxoAPI, addresses: string[],
   utxoResponse.utxos.forEach(data => {
     const utxo: Utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
-    utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
-    utxos.push(utxo)
+    if (addUtxo(utxos, utxo, transactionId)) {
+      utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+    }
   })
   while (utxoResponse.numFetched === UtxoRequestLimit) {
     utxoResponse = sourceChain === undefined
       ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
       : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
-    utxoResponse.utxos.forEach(data => {
+    for (const data of utxoResponse.utxos) {
       const utxo: Utxo = Utxo.parse(data)
       utxo.sourceChain = sourceChain
       const key: string = `${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`
-      if (!utxoSet.has(key)) {
-        utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
-        utxos.push(utxo)
+      if (utxoSet.has(key)) {
+        continue
       }
-    })
+      if (addUtxo(utxos, utxo, transactionId)) {
+        utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+      }
+    }
   }
   return utxos
+}
+
+function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
+  if (typeof transactionId !== 'string') {
+    utxos.push(utxo)
+    return true
+  }
+  if (transactionId === utxo.transactionId.transactionId) {
+    utxos.push(utxo)
+    return true
+  }
+  return false
 }
 
 export class Utxo {

@@ -3,10 +3,6 @@ import { JRC20ContractAdapter, WrappedContractAdapter } from '../solidity'
 const RoundedValueDefaultDecimals = 2
 const EVMGasTokenDecimals = 18
 
-export interface TypedToken {
-  type: string
-}
-
 export enum TokenType {
   Generic = 'generic',
   Gas = 'gas',
@@ -20,7 +16,7 @@ export enum TokenType {
  * Representation of an asset on a chain with its common values
  * such as an id, a name, a symbol and decimals.
  */
-export class TokenAsset implements TypedToken {
+export class TokenAsset {
   readonly type: string = TokenType.Generic
   readonly assetId: string
   readonly name: string
@@ -53,6 +49,20 @@ export class EVMGasToken extends TokenAsset {
 
   constructor (assetId: string, name: string, symbol: string) {
     super(assetId, name, symbol, EVMGasTokenDecimals)
+  }
+}
+
+/**
+ * Representation of the gas token used to pay fees in an JEVM.
+ * JEVM gas token also has a reference to its native JNT asset.
+ * It is also known as the native asset of a JEVM.
+ */
+export class JEVMGasToken extends EVMGasToken {
+  nativeAsset: JNTAsset
+
+  constructor (nativeAsset: JNTAsset) {
+    super(nativeAsset.assetId, nativeAsset.name, nativeAsset.symbol)
+    this.nativeAsset = nativeAsset
   }
 }
 
@@ -168,17 +178,21 @@ export class AssetValue {
    * @returns The complete value with its decimals separated by a dot and zero padded.
    */
   getReadableValuePadded (): string {
-    const stringValue: string = this.value.toString()
+    let stringValue: string = this.value.toString()
+    if (stringValue.charAt(0) === '-') {
+      stringValue = stringValue.substring(1, stringValue.length)
+    }
     const length: number = stringValue.length
+    const prefix: string = this.value < 0 ? '-' : ''
     if (length <= this.decimals) {
-      return `0.${stringValue.padStart(this.decimals, '0')}`
+      return `${prefix}0.${stringValue.padStart(this.decimals, '0')}`
     } else {
       let readableValue: string = stringValue.substring(0, length - this.decimals)
       if (this.decimals > 0) {
         readableValue += '.'
         readableValue += stringValue.substring(length - this.decimals, length).padEnd(this.decimals, '0')
       }
-      return readableValue
+      return `${prefix}${readableValue}`
     }
   }
 
@@ -195,10 +209,13 @@ export class AssetValue {
     }
     let index: number = readableValue.indexOf('.')
     index += decimals + 1
-    const value: string = readableValue.substring(0, index)
-    if (value.charAt(value.length - 1) === '.') {
-      return value.substring(0, value.length - 1)
+    let value: string = readableValue.substring(0, index)
+    if (Number(value) === 0 && value.charAt(0) === '-') {
+      value = value.substring(1, value.length)
     }
-    return value
+    if (value.charAt(value.length - 1) === '.') {
+      return `${value.substring(0, value.length - 1)}`
+    }
+    return `${value}`
   }
 }

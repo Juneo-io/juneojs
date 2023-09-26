@@ -1,5 +1,5 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, ParsingError, sha256, type Serializable, SignatureError } from '../utils'
+import { JuneoBuffer, ParsingError, sha256, type Serializable, SignatureError, InputError } from '../utils'
 import { type VMWallet } from '../wallet'
 import { type Signable } from './signature'
 import { type Address, AssetId, AssetIdSize, Signature, TransactionId, TransactionIdSize } from './types'
@@ -19,6 +19,9 @@ export class UserInput {
     address: string, destinationChain: Blockchain, locktime: bigint = BigInt(0)) {
     this.assetId = assetId
     this.sourceChain = sourceChain
+    if (amount < BigInt(1)) {
+      throw new InputError('user input amount must be greater than 0')
+    }
     this.amount = amount
     this.address = address
     this.destinationChain = destinationChain
@@ -66,7 +69,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
       const address: Address = this.input.utxo.output.addresses[i]
       for (let j = 0; j < wallets.length; j++) {
         const wallet: VMWallet = wallets[j]
-        if (address.matches(wallet.getAddress())) {
+        if (address.matches(wallet.getJuneoAddress())) {
           signatures.push(new Signature(wallet.sign(sha256(bytes))))
           break
         }

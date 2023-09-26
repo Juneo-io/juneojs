@@ -2,12 +2,14 @@ import { type PlatformAPI } from '../../api'
 import { type Blockchain, type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
-  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction, NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
+  Validator, type Utxo, fetchUtxos, type UnsignedTransaction, buildAddValidatorTransaction, buildAddDelegatorTransaction,
+  NodeId, buildPlatformExportTransaction, UserInput, buildPlatformImportTransaction
 } from '../../transaction'
+import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
 import { type PlatformAccount } from '../account'
-import { MCNOperationSummary } from '../operation'
-import { type DelegateOperation, StakeManager, StakingOperationSummary, type ValidateOperation, ValidationShare } from '../stake'
-import { type VMWallet, type JuneoWallet } from '../wallet'
+import { ChainOperationSummary, StakingOperationSummary } from '../operation'
+import { type DelegateOperation, StakeManager, type ValidateOperation, ValidationShare } from '../stake'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
@@ -38,17 +40,19 @@ export async function estimatePlatformAddValidatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: JuneoWallet, validate: ValidateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
+export async function estimatePlatformValidateOperation (provider: MCNProvider, wallet: MCNWallet, validate: ValidateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateValidationReward(validate.endTime - validate.startTime, validate.amount)
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(validate, chain, [fee],
-      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+    return new StakingOperationSummary(validate, chain, fee,
+      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-    return new MCNOperationSummary(validate, [chain], [fee], [new BaseSpending(chain, validate.amount, chain.assetId), fee])
+    return new ChainOperationSummary(validate, chain, fee,
+      [new BaseSpending(chain, validate.amount, chain.assetId), fee.getAsSpending()]
+    )
   })
 }
 
@@ -65,17 +69,17 @@ export async function estimatePlatformAddDelegatorTransaction (provider: MCNProv
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: JuneoWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<MCNOperationSummary> {
+export async function estimatePlatformDelegateOperation (provider: MCNProvider, wallet: MCNWallet, delegate: DelegateOperation, account: PlatformAccount): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(delegate, chain, [fee],
-      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee], potentialReward
+    return new StakingOperationSummary(delegate, chain, fee,
+      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
     )
   }, async () => {
     const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-    return new MCNOperationSummary(delegate, [chain], [fee], [new BaseSpending(chain, delegate.amount, chain.assetId), fee])
+    return new ChainOperationSummary(delegate, chain, fee, [new BaseSpending(chain, delegate.amount, chain.assetId), fee.getAsSpending()])
   })
 }
 
@@ -84,7 +88,7 @@ export async function estimatePlatformExportTransaction (provider: MCNProvider):
 }
 
 export async function sendPlatformExportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
+  provider: MCNProvider, wallet: MCNWallet, destination: Blockchain, assetId: string, amount: bigint, address: string,
   sendImportFee: boolean, importFee: bigint, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const api: PlatformAPI = provider.platform
@@ -95,8 +99,9 @@ export async function sendPlatformExportTransaction (
   if (typeof fee === 'undefined') {
     fee = await estimatePlatformExportTransaction(provider)
   }
+  const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const transaction: UnsignedTransaction = buildPlatformExportTransaction([new UserInput(assetId, api.chain, amount, address, destination)],
-    utxoSet, [sender], wallet.getAddress(destination), fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
+    utxoSet, [sender], exportAddress, fee.amount, sendImportFee ? importFee : BigInt(0), sender, provider.mcn.id, api.chain.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }
@@ -106,24 +111,25 @@ export async function estimatePlatformImportTransaction (provider: MCNProvider):
 }
 
 export async function sendPlatformImportTransaction (
-  provider: MCNProvider, wallet: JuneoWallet, source: Blockchain, assetId: string, amount: bigint, address: string, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
+  provider: MCNProvider, wallet: MCNWallet, source: Blockchain, payImportFee: boolean, fee?: FeeData, utxoSet?: Utxo[]
 ): Promise<string> {
   const api: PlatformAPI = provider.platform
   const sender: string = wallet.getAddress(api.chain)
+  const fetchUtxoSet: boolean = typeof utxoSet === 'undefined'
   if (typeof utxoSet === 'undefined') {
     // put import utxos first to priorize usage of imported inputs
     utxoSet = await fetchUtxos(api, [sender], source.id)
-    if (payImportFee) {
-      // also fetching utxos in chain that could be needed if import fee
-      // was expected to be paid in destination chain during export
-      utxoSet = utxoSet.concat(await fetchUtxos(api, [sender]))
-    }
+  }
+  const values: Map<string, bigint> = getUtxosAmountValues(utxoSet, source.id)
+  if (fetchUtxoSet && payImportFee) {
+    // also fetching utxos in chain that could be needed if import fee
+    // was expected to be paid in destination chain during export
+    utxoSet = utxoSet.concat(await fetchUtxos(api, [sender]))
   }
   if (typeof fee === 'undefined') {
     fee = await estimatePlatformImportTransaction(provider)
   }
-  const transaction: UnsignedTransaction = buildPlatformImportTransaction([new UserInput(assetId, source, amount, address, api.chain)],
-    utxoSet, [sender], fee.amount, sender, provider.mcn.id
-  )
+  const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, sender)
+  const transaction: UnsignedTransaction = buildPlatformImportTransaction(inputs, utxoSet, [sender], fee.amount, sender, provider.mcn.id)
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

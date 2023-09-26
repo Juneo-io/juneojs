@@ -1,30 +1,33 @@
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, UserOutput } from './output'
+import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput } from './output'
 import { type Utxo } from './utxo'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
 
-export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[],
-  signersAddresses: Address[], fees: TransactionFee[]): TransferableInput[] {
-  const targetAmounts: Record<string, bigint> = {}
+export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[], signersAddresses: Address[], fees: TransactionFee[]): TransferableInput[] {
+  const targetAmounts = new Map<string, bigint>()
   fees.forEach(fee => {
     if (fee.amount > 0) {
-      targetAmounts[fee.assetId] = fee.amount
+      const assetId: string = fee.assetId
+      let targetAmount: bigint = BigInt(fee.amount)
+      if (targetAmounts.has(assetId)) {
+        targetAmount += targetAmounts.get(assetId) as bigint
+      }
+      targetAmounts.set(assetId, targetAmount)
     }
   })
   // gathering data needed to build transaction inputs
   userInputs.forEach(input => {
     const assetId: string = input.assetId
-    const targetAmount: bigint = targetAmounts[assetId]
-    if (targetAmount === undefined) {
-      targetAmounts[assetId] = input.amount
-    } else {
-      targetAmounts[assetId] += input.amount
+    let targetAmount: bigint = BigInt(input.amount)
+    if (targetAmounts.has(assetId)) {
+      targetAmount += targetAmounts.get(assetId) as bigint
     }
+    targetAmounts.set(assetId, targetAmount)
   })
-  const gatheredAmounts: Record<string, bigint> = {}
+  const gatheredAmounts = new Map<string, bigint>()
   const inputs: TransferableInput[] = []
   // This loop tries to gather required amounts from the provided utxo set
   // it will try to get fees costs covered first and then
@@ -33,9 +36,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   // transaction it will still be added in the build outputs.
   // This is not an issue but note that it may require to group some utxos together
   // for the outputs so make sure to spend them to avoid losses.
-  for (let i: number = 0;
-    i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts);
-    i++) {
+  for (let i: number = 0; i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts); i++) {
     const utxo: Utxo = utxoSet[i]
     if (utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
@@ -57,10 +58,11 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
       )
     ))
     const assetId: string = utxo.assetId.assetId
-    if (gatheredAmounts[assetId] === undefined) {
-      gatheredAmounts[assetId] = BigInt(0)
+    let gathered: bigint = BigInt(output.amount)
+    if (gatheredAmounts.has(assetId)) {
+      gathered += gatheredAmounts.get(assetId) as bigint
     }
-    gatheredAmounts[assetId] += output.amount
+    gatheredAmounts.set(assetId, gathered)
   }
   if (!isGatheringComplete(targetAmounts, gatheredAmounts)) {
     throw new InputError('provided utxo set does not have enough funds to cover user inputs')
@@ -68,15 +70,15 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
   return inputs
 }
 
-function isGatheringComplete (targets: Record<string, bigint>, gathereds: Record<string, bigint>): boolean {
-  for (const key in targets) {
-    const target: bigint = targets[key]
-    const gathered: bigint = gathereds[key]
-    if (gathered < target || gathered === undefined) {
+function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
+  let complete: boolean = true
+  targets.forEach((target, key) => {
+    if (!gathereds.has(key) || gathereds.get(key) as bigint < target) {
+      complete = false
       return false
     }
-  }
-  return true
+  })
+  return complete
 }
 
 export function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
@@ -94,12 +96,11 @@ export function getSignersIndices (signers: Address[], addresses: Address[]): nu
   return indices
 }
 
-export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[],
-  fee: TransactionFee, changeAddress: string): UserOutput[] {
-  const spentAmounts: Record<string, bigint> = {}
+export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[], fee: TransactionFee, changeAddress: string): UserOutput[] {
+  const spentAmounts = new Map<string, bigint>()
   // add fees as already spent so they are not added in outputs
-  spentAmounts[fee.assetId] = fee.amount
-  const outputs: UserOutput[] = []
+  spentAmounts.set(fee.assetId, fee.amount)
+  let outputs: UserOutput[] = []
   // adding outputs matching user inputs
   userInputs.forEach(input => {
     outputs.push(new UserOutput(
@@ -112,36 +113,37 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
         // e.g. multisig we need to do changes here
         [new Address(input.address)]
       ),
-      input
+      false
     ))
     const assetId: string = input.assetId
-    const spentAmount: bigint = spentAmounts[assetId]
-    if (spentAmount === undefined) {
-      spentAmounts[assetId] = input.amount
-    } else {
-      spentAmounts[assetId] += input.amount
+    let spentAmount: bigint = BigInt(input.amount)
+    if (spentAmounts.has(assetId)) {
+      spentAmount += spentAmounts.get(assetId) as bigint
     }
+    spentAmounts.set(assetId, spentAmount)
   })
-  const availableAmounts: Record<string, bigint> = {}
+  const availableAmounts = new Map<string, bigint>()
   // getting the total amount spendable for each asset in provided inputs
   inputs.forEach(input => {
-    const availableAmount: bigint = availableAmounts[input.getAssetId().assetId]
-    const amount: bigint = input.getAmount()
-    if (availableAmount === undefined) {
-      availableAmounts[input.getAssetId().assetId] = BigInt(amount)
-    } else {
-      availableAmounts[input.getAssetId().assetId] += BigInt(amount)
+    const assetId: string = input.getAssetId().assetId
+    let amount: bigint = BigInt(input.getAmount())
+    if (availableAmounts.has(assetId)) {
+      amount += availableAmounts.get(assetId) as bigint
     }
+    availableAmounts.set(assetId, amount)
   })
+  outputs = mergeSecp256k1Outputs(outputs)
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
   for (let i: number = 0; i < inputs.length; i++) {
     const input: Spendable = inputs[i]
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts[assetId] === undefined
-      ? BigInt(0)
-      : spentAmounts[assetId]
-    const available: bigint = availableAmounts[assetId]
+    const spent: bigint = spentAmounts.has(assetId)
+      ? spentAmounts.get(assetId) as bigint
+      : BigInt(0)
+    const available: bigint = availableAmounts.has(assetId)
+      ? availableAmounts.get(assetId) as bigint
+      : BigInt(0)
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')
     }
@@ -156,14 +158,37 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
         BigInt(0),
         1,
         [new Address(changeAddress)]
-      )
+      ),
+      true
     ))
     // adding the spending of the change output
-    if (spentAmounts[assetId] === undefined) {
-      spentAmounts[assetId] = available - spent
-    } else {
-      spentAmounts[assetId] += available - spent
+    let amount: bigint = available - spent
+    if (spentAmounts.has(assetId)) {
+      amount += spentAmounts.get(assetId) as bigint
     }
+    spentAmounts.set(assetId, amount)
   }
   return outputs
+}
+
+function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
+  const mergedOutputs: UserOutput[] = []
+  const spendings = new Map<string, UserOutput>()
+  outputs.forEach(output => {
+    let key: string = output.assetId.assetId
+    key += output.output.locktime
+    key += output.output.threshold.toString()
+    output.output.addresses.sort(Address.comparator)
+    output.output.addresses.forEach(address => {
+      key += address.serialize().toHex()
+    })
+    if (spendings.has(key)) {
+      const out: TransactionOutput = (spendings.get(key) as UserOutput).output;
+      (out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
+    } else {
+      mergedOutputs.push(output)
+      spendings.set(key, output)
+    }
+  })
+  return mergedOutputs
 }

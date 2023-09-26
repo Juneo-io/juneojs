@@ -9,9 +9,10 @@ import { type Utxo } from '../utxo'
 import { AddDelegatorTransaction, AddSupernetValidatorTransaction, AddValidatorTransaction, CreateChainTransaction, CreateSupernetTransaction, PlatformExportTransaction, PlatformImportTransaction } from './transaction'
 import { Secp256k1OutputOwners, type SupernetAuth, Validator } from './validation'
 
-export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
-  networkId: number, memo: string = ''): PlatformExportTransaction {
+export function buildPlatformExportTransaction (
+  userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[], exportAddress: string, sourceFee: bigint,
+  destinationFee: bigint, changeAddress: string, networkId: number, memo: string = ''
+): PlatformExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -46,8 +47,7 @@ export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet
   const exportedOutputs: TransferableOutput[] = []
   const changeOutputs: TransferableOutput[] = []
   outputs.forEach(output => {
-    // no user input means change output
-    if (output.input !== undefined) {
+    if (!output.isChange) {
       exportedOutputs.push(output)
     } else {
       changeOutputs.push(output)
@@ -64,8 +64,9 @@ export function buildPlatformExportTransaction (userInputs: UserInput[], utxoSet
   )
 }
 
-export function buildPlatformImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): PlatformImportTransaction {
+export function buildPlatformImportTransaction (
+  userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, changeAddress: string, networkId: number, memo: string = ''
+): PlatformImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -105,8 +106,10 @@ export function buildPlatformImportTransaction (userInputs: UserInput[], utxoSet
   )
 }
 
-export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddValidatorTransaction {
+export function buildAddValidatorTransaction (
+  utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint, endTime: bigint,
+  stakeAmount: bigint, stakedAssetId: string, share: number, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''
+): AddValidatorTransaction {
   const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
   const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, Address.toAddresses(sendersAddresses), [new TransactionFee(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new TransactionFee(chain, fee), changeAddress)
@@ -129,15 +132,14 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
   const changeOutputs: TransferableOutput[] = []
   outputs.forEach(output => {
-    // no user input means change output
-    if (output.input === undefined) {
+    if (output.isChange) {
       changeOutputs.push(output)
     }
   })
   return new AddValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    changeOutputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,
@@ -147,8 +149,10 @@ export function buildAddValidatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
 }
 
-export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''): AddDelegatorTransaction {
+export function buildAddDelegatorTransaction (
+  utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint, endTime: bigint,
+  stakeAmount: bigint, stakedAssetId: string, rewardAddress: string, changeAddress: string, networkId: number, memo: string = ''
+): AddDelegatorTransaction {
   const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
   const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, Address.toAddresses(sendersAddresses), [new TransactionFee(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([userInput], inputs, new TransactionFee(chain, fee), changeAddress)
@@ -171,15 +175,14 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
   const changeOutputs: TransferableOutput[] = []
   outputs.forEach(output => {
-    // no user input means change output
-    if (output.input === undefined) {
+    if (output.isChange) {
       changeOutputs.push(output)
     }
   })
   return new AddDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    changeOutputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,
@@ -188,8 +191,10 @@ export function buildAddDelegatorTransaction (utxoSet: Utxo[], sendersAddresses:
   )
 }
 
-export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint,
-  endTime: bigint, weight: bigint, supernetId: string | SupernetId, supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''): AddSupernetValidatorTransaction {
+export function buildAddSupernetValidatorTransaction (
+  utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, nodeId: string | NodeId, startTime: bigint, endTime: bigint,
+  weight: bigint, supernetId: string | SupernetId, supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''
+): AddSupernetValidatorTransaction {
   const signersAddresses: Address[] = Address.toAddresses(sendersAddresses)
   const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new TransactionFee(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
@@ -206,8 +211,10 @@ export function buildAddSupernetValidatorTransaction (utxoSet: Utxo[], sendersAd
   )
 }
 
-export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain,
-  supernetAuthAddresses: string[], supernetAuthThreshold: number, changeAddress: string, networkId: number, memo: string = ''): CreateSupernetTransaction {
+export function buildCreateSupernetTransaction (
+  utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, supernetAuthAddresses: string[],
+  supernetAuthThreshold: number, changeAddress: string, networkId: number, memo: string = ''
+): CreateSupernetTransaction {
   const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(sendersAddresses), [new TransactionFee(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
@@ -225,9 +232,11 @@ export function buildCreateSupernetTransaction (utxoSet: Utxo[], sendersAddresse
   )
 }
 
-export function buildCreateChainTransaction (utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain,
-  supernetId: string | SupernetId, name: string, chainAssetId: string | AssetId, vmId: string | DynamicId, fxIds: DynamicId[],
-  genesisData: string, supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''): CreateChainTransaction {
+export function buildCreateChainTransaction (
+  utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, chain: PlatformBlockchain, supernetId: string | SupernetId,
+  name: string, chainAssetId: string | AssetId, vmId: string | DynamicId, fxIds: DynamicId[], genesisData: string,
+  supernetAuth: SupernetAuth, changeAddress: string, networkId: number, memo: string = ''
+): CreateChainTransaction {
   const signersAddresses: Address[] = Address.toAddresses(sendersAddresses)
   const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [new TransactionFee(chain, fee)])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)

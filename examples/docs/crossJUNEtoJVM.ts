@@ -1,14 +1,14 @@
 import dotenv from 'dotenv';
 import {
-    CrossOperation, ExecutableMCNOperation, JEVMBlockchain, JVMBlockchain, JuneoWallet, MCNAccount,
-    MCNOperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain
+    CrossOperation, ExecutableOperation, JEVMBlockchain, JVMBlockchain, MCNWallet, MCNAccount,
+    OperationSummary, MCNProvider, SocotraJUNEAssetId, SocotraJUNEChain, SocotraJVMChain
 } from "../../src";
 dotenv.config();
 
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover(process.env.MNEMONIC ?? '')
+    const wallet: MCNWallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
     const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // the chain which we will perform the cross from
     const juneChain: JEVMBlockchain = SocotraJUNEChain
@@ -18,14 +18,13 @@ async function main () {
     await mcnAccount.fetchAllBalances()
     const assetId: string = SocotraJUNEAssetId
     const amount: bigint = BigInt('1000000000000000000') // 1 JUNE
-    const address: string = wallet.getAddress(jvmChain)
     // we instantiate a cross operation that we want to perform
-    const cross: CrossOperation = new CrossOperation(juneChain, jvmChain, assetId, amount, address)
+    const cross: CrossOperation = new CrossOperation(juneChain, jvmChain, assetId, amount)
     // estimate the operation
-    const summary: MCNOperationSummary = await mcnAccount.estimate(juneChain.id, cross)
+    const summary: OperationSummary = await mcnAccount.estimate(cross)
     // execute the operation
-    const executable: ExecutableMCNOperation = summary.getExecutable()
-    await mcnAccount.execute(executable)
+    await mcnAccount.execute(summary)
+    const executable: ExecutableOperation = summary.getExecutable()
     // the receipts should contain multiple transaction ids
     // that were performed to complete the cross operation
     console.log(executable.receipts)

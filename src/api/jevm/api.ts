@@ -1,12 +1,12 @@
 import { type JEVMBlockchain } from '../../chain'
-import { AbstractUtxoAPI, type ChainAPI } from '../api'
+import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
 import { type IssueTxResponse } from '../data'
 import { type GetAtomicTxResponse, type GetAtomicTxStatusResponse } from './data'
 
 const Service: string = 'june'
 
-export class JEVMAPI extends AbstractUtxoAPI implements ChainAPI {
+export class JEVMAPI extends AbstractUtxoAPI {
   chain: JEVMBlockchain
   private readonly rpcEndpoint: string
 

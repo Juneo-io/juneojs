@@ -1,15 +1,16 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
-import { type Utxo, fetchUtxos, Secp256k1OutputTypeId, type Secp256k1Output } from '../../transaction'
-import { type ExecutableMCNOperation, type MCNOperation, type MCNOperationSummary } from '../operation'
+import { type Utxo, fetchUtxos } from '../../transaction'
+import { getUtxosAmountValues } from '../../utils'
+import { type NetworkOperation, type ChainOperationSummary } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
-import { type VMWallet, type JuneoWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
 
 export interface ChainAccount {
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
-  wallet: JuneoWallet
+  wallet: MCNWallet
   chainWallet: VMWallet
   addresses: string[]
 
@@ -25,22 +26,23 @@ export interface ChainAccount {
 
   fetchAllBalances: () => Promise<void>
 
-  estimate: (operation: MCNOperation) => Promise<MCNOperationSummary>
+  estimate: (operation: NetworkOperation) => Promise<ChainOperationSummary>
 
-  execute: (executable: ExecutableMCNOperation) => Promise<void>
+  execute: (summary: ChainOperationSummary) => Promise<void>
 }
 
 export abstract class AbstractChainAccount implements ChainAccount {
   chain: Blockchain
   balances = new Map<string, Balance>()
-  wallet: JuneoWallet
+  wallet: MCNWallet
   chainWallet: VMWallet
   addresses: string[] = []
 
-  constructor (chain: Blockchain, wallet: JuneoWallet) {
+  constructor (chain: Blockchain, wallet: MCNWallet) {
     this.chain = chain
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
+    this.addresses.push(this.chainWallet.getAddress())
   }
 
   hasBalance (asset: TokenAsset): boolean {
@@ -74,9 +76,9 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   abstract fetchAllBalances (): Promise<void>
 
-  abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
+  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
 
-  abstract execute (executable: ExecutableMCNOperation): Promise<void>
+  abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected spend (spendings: Spending[]): void {
     spendings.forEach(spending => {
@@ -93,11 +95,10 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   sourceChain?: string
   protected fetching: boolean = false
 
-  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: JuneoWallet, sourceChain?: string) {
+  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
     super(chain, wallet)
     this.utxoApi = utxoApi
     this.sourceChain = sourceChain
-    this.addresses.push(this.chainWallet.getAddress())
   }
 
   async fetchBalance (assetId: string): Promise<void> {
@@ -116,9 +117,9 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = false
   }
 
-  abstract estimate (operation: MCNOperation): Promise<MCNOperationSummary>
+  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
 
-  abstract execute (executable: ExecutableMCNOperation): Promise<void>
+  abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
@@ -148,18 +149,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   }
 
   private calculateBalances (): void {
-    const values = new Map<string, bigint>()
-    this.utxoSet.forEach(utxo => {
-      const assetId: string = utxo.assetId.assetId
-      let amount: bigint = BigInt(0)
-      if (utxo.output.typeId === Secp256k1OutputTypeId) {
-        amount = (utxo.output as Secp256k1Output).amount
-      }
-      if (values.has(assetId)) {
-        amount += values.get(assetId) as bigint
-      }
-      values.set(assetId, amount)
-    })
+    const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
     values.forEach((value, key) => {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())

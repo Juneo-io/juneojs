@@ -1,12 +1,12 @@
 import { type JEVMAPI } from '../../api/jevm/api'
 import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
 import { sleep } from '../../utils/time'
-import { JEVMWallet, type VMWallet } from '../../wallet/wallet'
+import { type VMWallet } from '../../wallet/wallet'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
-import { type Address, AddressSize, type AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
+import { Address, AddressSize, AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
 
 const ImportTransactionTypeId: number = 0
 const ExportTransactionTypeId: number = 1
@@ -33,7 +33,11 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
+      this.currentStatus = await this.jevmApi.getTxStatus(this.transactionId).then(value => {
+        return value.status
+      }, () => {
+        return JEVMTransactionStatus.Unknown
+      })
       this.attempts += 1
     }
     return this.currentStatus
@@ -67,7 +71,9 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.currentStatus = EVMTransactionStatus.Pending
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash)
+      const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash).catch(() => {
+        return null
+      })
       if (receipt === null) {
         this.attempts += 1
         continue
@@ -104,7 +110,11 @@ export class EVMOutput implements Serializable {
   }
 
   static comparator = (a: EVMOutput, b: EVMOutput): number => {
-    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+    const comparison: number = Address.comparator(a.address, b.address)
+    if (comparison !== 0) {
+      return comparison
+    }
+    return AssetId.comparator(a.assetId, b.assetId)
   }
 }
 
@@ -134,12 +144,8 @@ export class EVMInput implements Serializable, Signable, Spendable {
     const signatures: Signature[] = []
     const address: Address = this.address
     for (let i = 0; i < wallets.length; i++) {
-      if (!(wallets[i] instanceof JEVMWallet)) {
-        continue
-      }
-      const wallet: JEVMWallet = wallets[i] as JEVMWallet
-      if (address.matches(wallet.getHexAddress())) {
-        signatures.push(new Signature(wallet.sign(sha256(bytes))))
+      if (address.matches(wallets[i].getAddress())) {
+        signatures.push(new Signature(wallets[i].sign(sha256(bytes))))
         break
       }
     }
@@ -227,18 +233,9 @@ export class JEVMExportTransaction implements Serializable {
   }
 
   static estimateSignaturesCount (exportedAssets: string[], exportFeeAssetId: string, importFeeAssetId: string): number {
-    // see if import/export fee outputs will be merged with exported assets only if merging after estimate
-    let ignoreImportFee: boolean = false
-    let ignoreExportFee: boolean = false
-    for (let i = 0; i < exportedAssets.length; i++) {
-      const assetId: string = exportedAssets[i]
-      if (assetId === exportFeeAssetId) {
-        ignoreExportFee = true
-      }
-      if (assetId === importFeeAssetId) {
-        ignoreImportFee = true
-      }
-    }
+    // see if import/export fee outputs will be merged with exported assets
+    const ignoreImportFee: boolean = exportedAssets.includes(importFeeAssetId)
+    const ignoreExportFee: boolean = exportedAssets.includes(exportFeeAssetId)
     let feeInputsCount: number = ignoreImportFee ? 0 : 1
     // import and export fee could also be merged together
     if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
@@ -249,16 +246,16 @@ export class JEVMExportTransaction implements Serializable {
 
   static estimateSize (inputsCount: number): number {
     // for now consider inputs + 2 outputs for fees outputs
-    const outputsCount: number = inputsCount + 2
+    const outputsCount: number = inputsCount
     // 2 + 4 + 4 + 4 + 4 = 18
     return 18 + BlockchainIdSize * 2 + EVMInput.Size * inputsCount + this.estimateOutputsSize(outputsCount)
   }
 
-  private static estimateOutputsSize (inputsCount: number): number {
+  private static estimateOutputsSize (outputsCount: number): number {
     // TransferableOutput size
     // 4 + 8 + 8 + 4 + 4 = 28 + 20 * addressesCount
     // addresses count most likely will be 1 so = 48
-    return AssetIdSize + 48 * inputsCount
+    return AssetIdSize + 48 * outputsCount
   }
 }
 
@@ -321,23 +318,7 @@ export class JEVMImportTransaction implements Serializable {
     return buffer
   }
 
-  static estimateSignaturesCount (importedAssets: string[], feeAssetId: string, mergedInputs: boolean): number {
-    // fee output will be merged with imported assets if has same asset id and explicitly merged after estimate
-    let ignoreFeeInput: boolean = false
-    if (mergedInputs) {
-      for (let i = 0; i < importedAssets.length; i++) {
-        if (importedAssets[i] === feeAssetId) {
-          ignoreFeeInput = true
-          break
-        }
-      }
-    }
-    const feeInputsCount: number = ignoreFeeInput ? 0 : 1
-    return importedAssets.length + feeInputsCount
-  }
-
-  static estimateSize (inputsCount: number, mergedInputs: boolean): number {
-    const outputsCount: number = mergedInputs ? inputsCount : inputsCount - 1
+  static estimateSize (inputsCount: number, outputsCount: number): number {
     // 2 + 4 + 4 + 4 + 4 = 18
     return 18 + BlockchainIdSize * 2 + this.estimateInputsSize(inputsCount) + EVMOutput.Size * outputsCount
   }

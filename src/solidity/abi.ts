@@ -1,4 +1,3 @@
-
 export const ERC20ABI: string[] = [
   'function name() view returns (string)',
   'function decimals() view returns (uint8)',

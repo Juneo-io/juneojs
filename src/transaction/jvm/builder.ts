@@ -7,9 +7,9 @@ import { type UserOutput, type TransferableOutput } from '../output'
 import { InputError } from '../../utils'
 import { TransactionFee } from '../transaction'
 
-export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], fee: bigint, changeAddress: string,
-  networkId: number, memo: string = ''): BaseTransaction {
+export function buildJVMBaseTransaction (
+  userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, changeAddress: string, networkId: number, memo: string = ''
+): BaseTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -31,9 +31,10 @@ export function buildJVMBaseTransaction (userInputs: UserInput[], utxoSet: Utxo[
   )
 }
 
-export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utxo[],
-  sendersAddresses: string[], exportAddress: string, sourceFee: bigint, destinationFee: bigint, changeAddress: string,
-  networkId: number, memo: string = ''): JVMExportTransaction {
+export function buildJVMExportTransaction (
+  userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[], exportAddress: string, sourceFee: bigint,
+  destinationFee: bigint, changeAddress: string, networkId: number, memo: string = ''
+): JVMExportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -68,8 +69,7 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
   const exportedOutputs: TransferableOutput[] = []
   const changeOutputs: TransferableOutput[] = []
   outputs.forEach(output => {
-    // no user input means change output
-    if (output.input !== undefined) {
+    if (!output.isChange) {
       exportedOutputs.push(output)
     } else {
       changeOutputs.push(output)
@@ -86,8 +86,9 @@ export function buildJVMExportTransaction (userInputs: UserInput[], utxoSet: Utx
   )
 }
 
-export function buildJVMImportTransaction (userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[],
-  fee: bigint, changeAddress: string, networkId: number, memo: string = ''): JVMImportTransaction {
+export function buildJVMImportTransaction (
+  userInputs: UserInput[], utxoSet: Utxo[], sendersAddresses: string[], fee: bigint, changeAddress: string, networkId: number, memo: string = ''
+): JVMImportTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }

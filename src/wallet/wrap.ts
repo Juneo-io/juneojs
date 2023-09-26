@@ -1,34 +1,34 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
-import { type JEVMWallet, type JuneoWallet } from './wallet'
-import { type JEVMBlockchain, type WrappedAsset } from '../chain'
-import { type EVMFeeData, FeeType, estimateEVMTransaction, sendEVMTransaction } from './transaction'
-import { type MCNOperation, MCNOperationType } from './operation'
+import { type MCNWallet } from './wallet'
+import { type Blockchain, type JEVMBlockchain, type WrappedAsset } from '../chain'
+import { type EVMFeeData, FeeType, estimateEVMCall, sendEVMTransaction } from './transaction'
+import { NetworkOperationType, ChainNetworkOperation } from './operation'
 import { type MCNProvider } from '../juneo'
 
 export class WrapManager {
   private readonly api: JEVMAPI
   private readonly wallet: ethers.Wallet
 
-  constructor (api: JEVMAPI, wallet: JEVMWallet) {
+  constructor (api: JEVMAPI, wallet: ethers.Wallet) {
     this.api = api
-    this.wallet = wallet.evmWallet.connect(api.chain.ethProvider)
+    this.wallet = wallet
   }
 
-  static from (provider: MCNProvider, wallet: JuneoWallet, chain: JEVMBlockchain): WrapManager {
+  static from (provider: MCNProvider, wallet: MCNWallet, chain: JEVMBlockchain): WrapManager {
     const api: JEVMAPI = provider.jevm[chain.id]
-    return new WrapManager(api, wallet.getEthWallet(chain))
+    return new WrapManager(api, wallet.getJEVMWallet(api.chain).evmWallet)
   }
 
   async estimateWrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
-    return await estimateEVMTransaction(
-      this.api, asset.assetId, this.wallet.address, asset.address, BigInt(amount), asset.adapter.getDepositData(), FeeType.Wrap
+    return await estimateEVMCall(
+      this.api, this.wallet.address, asset.address, BigInt(amount), asset.adapter.getDepositData(), FeeType.Wrap
     )
   }
 
   async estimateUnwrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
-    return await estimateEVMTransaction(
-      this.api, asset.assetId, this.wallet.address, asset.address, BigInt(0), asset.adapter.getWithdrawData(amount), FeeType.Unwrap
+    return await estimateEVMCall(
+      this.api, this.wallet.address, asset.address, BigInt(0), asset.adapter.getWithdrawData(amount), FeeType.Unwrap
     )
   }
 
@@ -47,26 +47,25 @@ export class WrapManager {
   }
 }
 
-abstract class Wrapping implements MCNOperation {
-  type: MCNOperationType
+abstract class Wrapping extends ChainNetworkOperation {
   asset: WrappedAsset
   amount: bigint
 
-  constructor (type: MCNOperationType, asset: WrappedAsset, amount: bigint) {
-    this.type = type
+  constructor (type: NetworkOperationType, chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(type, chain)
     this.asset = asset
     this.amount = amount
   }
 }
 
 export class WrapOperation extends Wrapping {
-  constructor (asset: WrappedAsset, amount: bigint) {
-    super(MCNOperationType.Wrap, asset, amount)
+  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(NetworkOperationType.Wrap, chain, asset, amount)
   }
 }
 
 export class UnwrapOperation extends Wrapping {
-  constructor (asset: WrappedAsset, amount: bigint) {
-    super(MCNOperationType.Unwrap, asset, amount)
+  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+    super(NetworkOperationType.Unwrap, chain, asset, amount)
   }
 }

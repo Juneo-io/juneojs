@@ -12,10 +12,10 @@ import {
 const Service: string = 'platform'
 
 export class PlatformAPI extends AbstractUtxoAPI {
-  override chain: PlatformBlockchain
+  chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
-    super(client, `/bc/${chain.id}`, Service, chain)
+    super(client, `/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

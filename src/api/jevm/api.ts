@@ -7,11 +7,11 @@ import { type GetAtomicTxResponse, type GetAtomicTxStatusResponse } from './data
 const Service: string = 'june'
 
 export class JEVMAPI extends AbstractUtxoAPI {
-  override chain: JEVMBlockchain
+  chain: JEVMBlockchain
   private readonly rpcEndpoint: string
 
   constructor (client: JuneoClient, chain: JEVMBlockchain) {
-    super(client, `/bc/${chain.id}/june`, Service, chain)
+    super(client, `/bc/${chain.id}/june`, Service)
     this.chain = chain
     this.rpcEndpoint = `/bc/${chain.id}/rpc`
   }

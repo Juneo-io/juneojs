@@ -5,7 +5,7 @@
 dist/
 
 # Temporarily ignore unreleased tests
-tests/unreleased
+tests_dev/
 
 ### Node ###
 # Logs

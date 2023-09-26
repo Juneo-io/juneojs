@@ -124,7 +124,7 @@ describe('AssetValue', (): void => {
         expect(value.getReadableValueRounded(4)).toBe('-0.0123')
         expect(value.getReadableValueRounded(3)).toBe('-0.012')
         expect(value.getReadableValueRounded(2)).toBe('-0.01')
-        expect(value.getReadableValueRounded(1)).toBe('0')
+        expect(value.getReadableValueRounded(1)).toBe('0.0')
         expect(value.getReadableValueRounded(0)).toBe('0')
         expect(value.getReadableValueRounded(-1)).toBe('0')
         // zero values
@@ -137,7 +137,7 @@ describe('AssetValue', (): void => {
         expect(value.getReadableValueRounded(0)).toBe('0')
         expect(value.getReadableValueRounded(-1)).toBe('0')
         value = new AssetValue(BigInt(0), 1)
-        expect(value.getReadableValueRounded(1)).toBe('0')
+        expect(value.getReadableValueRounded(1)).toBe('0.0')
         expect(value.getReadableValueRounded(0)).toBe('0')
         expect(value.getReadableValueRounded(-1)).toBe('0')
     })

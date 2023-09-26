@@ -1,6 +1,5 @@
 import { ParsingError } from '../utils'
 import { JuneoBuffer, type Serializable } from '../utils/bytes'
-import { type UserInput } from './input'
 import { Address, AddressSize, AssetId, AssetIdSize } from './types'
 
 export const Secp256k1OutputTypeId: number = 0x00000007
@@ -56,11 +55,11 @@ export class TransferableOutput implements Serializable {
 }
 
 export class UserOutput extends TransferableOutput {
-  input: UserInput | undefined
+  isChange: boolean
 
-  constructor (assetId: AssetId, output: TransactionOutput & Serializable, input?: UserInput) {
+  constructor (assetId: AssetId, output: TransactionOutput & Serializable, isChange: boolean) {
     super(assetId, output)
-    this.input = input
+    this.isChange = isChange
   }
 }
 

@@ -1,3 +1,5 @@
+import { type Blockchain } from '../chain'
+import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
 import { type Spending, BaseSpending } from '../wallet'
 
 export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
@@ -11,4 +13,33 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
     }
   })
   return values
+}
+
+export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<string, bigint> {
+  const values = new Map<string, bigint>()
+  for (const utxo of utxoSet) {
+    if (utxo.sourceChain !== source || utxo.output.typeId !== Secp256k1OutputTypeId) {
+      continue
+    }
+    let value: bigint = (utxo.output as Secp256k1Output).amount
+    const assetId: string = utxo.assetId.assetId
+    if (values.has(assetId)) {
+      value += values.get(assetId) as bigint
+    }
+    values.set(assetId, value)
+  }
+  return values
+}
+
+export function getImportUserInputs (
+  values: Map<string, bigint>, feeAssetId: string, feeAmount: bigint, source: Blockchain, destination: Blockchain, address: string
+): UserInput[] {
+  const inputs: UserInput[] = []
+  for (const [key, value] of values) {
+    const amount: bigint = key === feeAssetId ? value - feeAmount : value
+    if (amount > BigInt(0)) {
+      inputs.push(new UserInput(key, source, amount, address, destination))
+    }
+  }
+  return inputs
 }

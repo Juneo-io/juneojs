@@ -9,49 +9,48 @@ import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } fro
 
 export function buildTransactionEVMInputs (userInputs: UserInput[], signer: string, nonce: bigint, fees: TransactionFee[]): EVMInput[] {
   const inputs: EVMInput[] = []
-  const values: Record<string, bigint> = {}
+  const values = new Map<string, bigint>()
   // merging inputs
   userInputs.forEach(userInput => {
     const assetId: string = userInput.assetId
-    if (values[assetId] === undefined) {
-      values[assetId] = userInput.amount
-    } else {
-      values[assetId] += userInput.amount
+    let value: bigint = userInput.amount
+    if (values.has(assetId)) {
+      value += values.get(assetId) as bigint
     }
+    values.set(assetId, value)
   })
   // adding and merging fees
   fees.forEach(fee => {
     if (fee.amount > 0) {
       const assetId: string = fee.assetId
-      if (values[assetId] === undefined) {
-        values[assetId] = fee.amount
-      } else {
-        values[assetId] += fee.amount
+      let value: bigint = fee.amount
+      if (values.has(assetId)) {
+        value += values.get(assetId) as bigint
       }
+      values.set(assetId, value)
     }
   })
   // adding inputs
-  for (const key in values) {
-    inputs.push(new EVMInput(new Address(signer), values[key], new AssetId(key), nonce))
+  for (const [key, value] of values) {
+    inputs.push(new EVMInput(new Address(signer), value, new AssetId(key), nonce))
   }
   return inputs
 }
 
 export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: TransferableInput[], feeData: TransactionFee): EVMOutput[] {
-  const spentAmounts: Record<string, bigint> = {}
+  const spentAmounts = new Map<string, bigint>()
   // add fees as already spent so they are not added in outputs
-  spentAmounts[feeData.assetId] = feeData.amount
+  spentAmounts.set(feeData.assetId, feeData.amount)
   // adding outputs matching user inputs
   const outputs: EVMOutput[] = []
   userInputs.forEach(input => {
     const assetId: string = input.assetId
     outputs.push(new EVMOutput(new Address(input.address), input.amount, new AssetId(assetId)))
-    const spentAmount: bigint = spentAmounts[assetId]
-    if (spentAmount === undefined) {
-      spentAmounts[assetId] = input.amount
-    } else {
-      spentAmounts[assetId] += input.amount
+    let spentAmount: bigint = input.amount
+    if (spentAmounts.has(assetId)) {
+      spentAmount += spentAmounts.get(assetId) as bigint
     }
+    spentAmounts.set(assetId, spentAmount)
   })
   const availableAmounts: Record<string, bigint> = {}
   // getting the total amount spendable for each asset in provided inputs
@@ -68,9 +67,9 @@ export function buildTransactionEVMOutputs (userInputs: UserInput[], inputs: Tra
   for (let i: number = 0; i < inputs.length; i++) {
     const input: Spendable = inputs[i]
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts[assetId] === undefined
-      ? BigInt(0)
-      : spentAmounts[assetId]
+    const spent: bigint = spentAmounts.has(assetId)
+      ? spentAmounts.get(assetId) as bigint
+      : BigInt(0)
     const available: bigint = availableAmounts[assetId]
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')

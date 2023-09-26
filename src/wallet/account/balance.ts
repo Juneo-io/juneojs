@@ -1,4 +1,3 @@
-
 export enum BalanceStatus {
   Updating = 'Updating',
   Done = 'Done',

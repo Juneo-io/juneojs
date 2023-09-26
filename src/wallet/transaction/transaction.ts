@@ -2,7 +2,8 @@ import { type Blockchain } from '../../chain'
 import { type Utxo } from '../../transaction'
 
 export const WalletStatusFetcherTimeout: number = 60000
-// too low delay may not give enough time to some vms to produce the utxos after the transaction is accepted
+// too low delay may not give enough time to some vms to produce the transaction
+// and/or the utxos after the transaction is accepted
 export const WalletStatusFetcherDelay: number = 100
 
 export enum TransactionType {

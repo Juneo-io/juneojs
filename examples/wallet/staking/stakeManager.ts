@@ -1,8 +1,8 @@
-import { MCNProvider, JuneoWallet, StakeManager, now, fetchUtxos, Utxo, UtxoFeeData } from '../../../src'
+import { MCNProvider, MCNWallet, StakeManager, now, fetchUtxos, Utxo, UtxoFeeData } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const wallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // stake manager to handle staking
     let manager: StakeManager = StakeManager.from(provider, wallet)
     // instantiation using vm wallet

@@ -5,72 +5,66 @@ import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
 import hdKey from 'hdkey'
 
-const EvmHdPath = "m/44'/60'/0'/0/0"
-const JvmHdPath = "m/44'/9000'/0'/0/0"
+const EVMHdPath = "m/44'/60'/0'/0/0"
+const JVMHdPath = "m/44'/9000'/0'/0/0"
 
-const JvmPrivateKeyPrefix = 'PrivateKey-'
+const JVMPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
 const DefaultHrp = 'socotra'
 
-export class JuneoWallet {
+export class MCNWallet {
   hrp: string
   mnemonic: string | undefined
   private hdNode: hdKey | undefined
   privateKey: string | undefined
-  chainsWallets: Record<string, VMWallet> = {}
+  chainsWallets = new Map<string, VMWallet>()
 
   private constructor (hrp: string = DefaultHrp) {
     this.hrp = hrp
   }
 
   getAddress (chain: Blockchain): string {
-    if (this.chainsWallets[chain.id] === undefined) {
+    if (!this.chainsWallets.has(chain.id)) {
       this.setChainWallet(chain)
     }
     return this.getWallet(chain).getAddress()
   }
 
-  getEthAddress (chain: JEVMBlockchain): string {
-    return (this.getWallet(chain) as JEVMWallet).getHexAddress()
-  }
-
   getWallet (chain: Blockchain): VMWallet {
-    if (this.chainsWallets[chain.id] === undefined) {
+    if (!this.chainsWallets.has(chain.id)) {
       this.setChainWallet(chain)
     }
-    return this.chainsWallets[chain.id]
+    return this.chainsWallets.get(chain.id) as VMWallet
   }
 
-  getEthWallet (chain: JEVMBlockchain): JEVMWallet {
+  getJEVMWallet (chain: JEVMBlockchain): JEVMWallet {
     return this.getWallet(chain) as JEVMWallet
   }
 
   getWallets (): VMWallet[] {
     const wallets: VMWallet[] = []
-    for (const key in this.chainsWallets) {
-      wallets.push(this.chainsWallets[key])
-    }
+    this.chainsWallets.forEach(wallet => {
+      wallets.push(wallet)
+    })
     return wallets
   }
 
   private setChainWallet (chain: Blockchain): void {
     if (chain.vmId === JEVM_ID) {
-      this.chainsWallets[chain.id] = this.buildJEVMWallet(chain)
+      this.chainsWallets.set(chain.id, this.buildJEVMWallet(chain))
     } else if (chain.vmId === JVM_ID) {
-      this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
+      this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
     } else if (chain.vmId === PLATFORMVM_ID) {
-      this.chainsWallets[chain.id] = this.buildJVMWallet(chain)
+      this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
     } else {
-      throw new WalletError('unsupported vm id')
+      throw new WalletError(`unsupported vm id: ${chain.vmId}`)
     }
   }
 
   private buildJVMWallet (chain: Blockchain): JVMWallet {
     let wallet: JVMWallet | undefined
-    // affecation after declaration to prevent linter to remove value
-    wallet = undefined
     if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(JvmHdPath).privateKey.toString('hex')
+      const privateKey = this.hdNode.derive(JVMHdPath).privateKey.toString('hex')
       wallet = new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JVMWallet(this.privateKey, this.hrp, chain)
@@ -83,10 +77,8 @@ export class JuneoWallet {
 
   private buildJEVMWallet (chain: Blockchain): JEVMWallet {
     let wallet: JEVMWallet | undefined
-    // affecation after declaration to prevent linter to remove value
-    wallet = undefined
     if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(EvmHdPath).privateKey.toString('hex')
+      const privateKey = this.hdNode.derive(EVMHdPath).privateKey.toString('hex')
       wallet = new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JEVMWallet(this.privateKey, this.hrp, chain)
@@ -105,14 +97,14 @@ export class JuneoWallet {
     this.hdNode = hdKey.fromMasterSeed(bip39.mnemonicToSeedSync(mnemonic))
   }
 
-  static recover (data: string, hrp?: string): JuneoWallet {
+  static recover (data: string, hrp?: string): MCNWallet {
     if (bip39.validateMnemonic(data)) {
-      const wallet: JuneoWallet = new JuneoWallet(hrp)
+      const wallet: MCNWallet = new MCNWallet(hrp)
       wallet.setMnemonic(data)
       return wallet
     }
-    if (JuneoWallet.validatePrivateKey(data)) {
-      const wallet: JuneoWallet = new JuneoWallet(hrp)
+    if (MCNWallet.validatePrivateKey(data)) {
+      const wallet: MCNWallet = new MCNWallet(hrp)
       let privateKey: string = data
       // should only be hex or bs58 private key after validate
       if (encoding.isHex(privateKey)) {
@@ -126,13 +118,13 @@ export class JuneoWallet {
     throw new WalletError('invalid recovery data provided')
   }
 
-  static generate (hrp?: string, words: number = 12): JuneoWallet {
+  static generate (words: number = 12, hrp?: string): MCNWallet {
     if (words !== 12 && words !== 24) {
       throw new WalletError('words count must be 12 or 24')
     }
     const strength: number = words === 12 ? 128 : 256
     const mnemonic = bip39.generateMnemonic(strength)
-    const wallet = JuneoWallet.recover(mnemonic, hrp)
+    const wallet = MCNWallet.recover(mnemonic, hrp)
     return wallet
   }
 
@@ -142,7 +134,7 @@ export class JuneoWallet {
       const length = hasPrefix ? data.substring(2).length : data.length
       return length === PrivateKeyLength
     }
-    if (data.includes(JvmPrivateKeyPrefix)) {
+    if (data.includes(JVMPrivateKeyPrefix)) {
       const split: string[] = data.split('-')
       const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
       return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
@@ -152,13 +144,13 @@ export class JuneoWallet {
 }
 
 export interface VMWallet {
-
   getAddress: () => string
+
+  getJuneoAddress: () => string
 
   getChain: () => Blockchain
 
   sign: (buffer: JuneoBuffer) => JuneoBuffer
-
 }
 
 export abstract class AbstractVMWallet implements VMWallet {
@@ -166,21 +158,30 @@ export abstract class AbstractVMWallet implements VMWallet {
   private readonly keyPair: ECKeyPair
   hrp: string
   chain: Blockchain
-  address: string
+  juneoAddress: string
+  address?: string
 
-  constructor (privateKey: string, hrp: string, chain: Blockchain) {
+  constructor (privateKey: string, hrp: string, chain: Blockchain, address?: string) {
     this.privateKey = privateKey
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.address = AbstractVMWallet.encodeJuneoAddress(this.keyPair.getPublicKey(), hrp)
+    this.juneoAddress = AbstractVMWallet.encodeJuneoAddress(this.keyPair.publicKey, hrp)
+    this.address = address
   }
 
   getAddress (): string {
-    if (this.chain.aliases.length > 0) {
-      return `${this.chain.aliases[0]}-${this.address}`
+    if (typeof this.address === 'undefined') {
+      return this.getJuneoAddress()
     }
-    return `${this.chain.id}-${this.address}`
+    return this.address
+  }
+
+  getJuneoAddress (): string {
+    if (this.chain.aliases.length > 0) {
+      return `${this.chain.aliases[0]}-${this.juneoAddress}`
+    }
+    return `${this.chain.id}-${this.juneoAddress}`
   }
 
   getChain (): Blockchain {
@@ -202,21 +203,16 @@ export class JVMWallet extends AbstractVMWallet {
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
     const jvmKey: string = encoding.encodeCB58(JuneoBuffer.fromString(privateKey, 'hex'))
-    this.jvmPrivateKey = `${JvmPrivateKeyPrefix}${jvmKey}`
+    this.jvmPrivateKey = `${JVMPrivateKeyPrefix}${jvmKey}`
   }
 }
 
 export class JEVMWallet extends AbstractVMWallet {
   evmWallet: Wallet
-  evmAddress: string
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
     this.evmWallet = new Wallet(this.privateKey)
-    this.evmAddress = this.evmWallet.address
-  }
-
-  getHexAddress (): string {
-    return this.evmAddress
+    this.address = this.evmWallet.address
   }
 }

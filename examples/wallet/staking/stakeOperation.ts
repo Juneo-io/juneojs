@@ -1,9 +1,9 @@
-import { DelegateOperation, ExecutableMCNOperation, JuneoWallet, MCNAccount, MCNOperationStatus,
-    MCNOperationSummary, MCNProvider, PlatformBlockchain, StakingOperationSummary, ValidateOperation, now } from "../../../src"
+import { DelegateOperation, ExecutableOperation, MCNWallet, MCNAccount, NetworkOperationStatus,
+    OperationSummary, MCNProvider, PlatformBlockchain, StakingOperationSummary, ValidateOperation, now } from "../../../src"
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const wallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
     // the chain which we will perform an action on
     const platformChain: PlatformBlockchain = provider.platform.chain
@@ -17,25 +17,24 @@ async function main () {
     // staking period has a minimal and maximal value
     const endTime: bigint = now() + BigInt(86400 * 15)
     // we instantiate a validate operation that we want to perform on the chain
-    const validateOperation: ValidateOperation = new ValidateOperation(nodeId, stakeAmount, startTime, endTime)
+    const validateOperation: ValidateOperation = new ValidateOperation(provider.mcn, nodeId, stakeAmount, startTime, endTime)
     // estimate the operation to get a summary
-    const summary: MCNOperationSummary = await mcnAccount.estimate(platformChain.id, validateOperation)
-    // from the summary we can instantiate a new executable operation that can be used to perform it
-    const executable: ExecutableMCNOperation = summary.getExecutable()
+    const summary: OperationSummary = await mcnAccount.estimate(validateOperation)
+    // from the summary we can get the executable operation that will be used to perform it
+    const executable: ExecutableOperation = summary.getExecutable()
     // execute the operation
-    await mcnAccount.execute(executable)
+    await mcnAccount.execute(summary)
     // check if the operation is successfull
-    console.log(executable.status === MCNOperationStatus.Done)
+    console.log(executable.status === NetworkOperationStatus.Done)
     // to retrieve the potential reward from the summary we must first convert it
     // when estimating a validate or delegate operation it will always return a staking operation summary
     const validateSummary: StakingOperationSummary = summary as StakingOperationSummary
     console.log(validateSummary.potentialReward)
     // we can instantiate a delegate operation if we want to perform it instead of a validation
-    const delegateOperation: DelegateOperation = new DelegateOperation(nodeId, stakeAmount, startTime, endTime)
-    const delegationSummary: MCNOperationSummary = await mcnAccount.estimate(platformChain.id, delegateOperation)
-    const delegationExecutable: ExecutableMCNOperation = delegationSummary.getExecutable()
+    const delegateOperation: DelegateOperation = new DelegateOperation(provider.mcn, nodeId, stakeAmount, startTime, endTime)
+    const delegationSummary: OperationSummary = await mcnAccount.estimate(delegateOperation)
     // execute the operation
-    await mcnAccount.execute(delegationExecutable)
+    await mcnAccount.execute(delegationSummary)
 }
 
 main().catch((error) => {

@@ -1,11 +1,11 @@
-import { type GetCurrentValidatorsResponse, type PlatformAPI } from '../api'
-import { type PlatformBlockchain } from '../chain'
+import { NetworkOperationType, ChainNetworkOperation } from './operation'
+import { NodeId, type Utxo, Validator } from '../transaction'
+import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
+import { type MCNWallet, type VMWallet } from './wallet'
+import { calculatePrimary, now } from '../utils'
+import { type PlatformAPI } from '../api'
+import { type MCN } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { NodeId, Validator, type Utxo } from '../transaction'
-import { WalletError, calculatePrimary, now } from '../utils'
-import { MCNOperationSummary, MCNOperationType, type MCNOperation } from './operation'
-import { estimatePlatformAddDelegatorTransaction, estimatePlatformAddValidatorTransaction, type Spending, type UtxoFeeData } from './transaction'
-import { type JuneoWallet, type VMWallet } from './wallet'
 
 export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
@@ -22,7 +22,7 @@ export class StakeManager {
     this.wallet = wallet
   }
 
-  static from (provider: MCNProvider, wallet: JuneoWallet): StakeManager {
+  static from (provider: MCNProvider, wallet: MCNWallet): StakeManager {
     return new StakeManager(provider, wallet.getWallet(provider.platform.chain))
   }
 
@@ -122,15 +122,14 @@ export class StakeManager {
   }
 }
 
-abstract class Staking implements MCNOperation {
-  type: MCNOperationType
+export abstract class Staking extends ChainNetworkOperation {
   nodeId: string
   amount: bigint
   startTime: bigint
   endTime: bigint
 
-  constructor (type: MCNOperationType, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    this.type = type
+  constructor (type: NetworkOperationType, mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(type, mcn.primary.platform)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
@@ -139,22 +138,13 @@ abstract class Staking implements MCNOperation {
 }
 
 export class ValidateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(MCNOperationType.Validate, nodeId, amount, startTime, endTime)
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime)
   }
 }
 
 export class DelegateOperation extends Staking {
-  constructor (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(MCNOperationType.Delegate, nodeId, amount, startTime, endTime)
-  }
-}
-
-export class StakingOperationSummary extends MCNOperationSummary {
-  potentialReward: bigint
-
-  constructor (operation: Staking, chain: PlatformBlockchain, fees: UtxoFeeData[], spendings: Spending[], potentialReward: bigint) {
-    super(operation, [chain], fees, spendings)
-    this.potentialReward = potentialReward
+  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
+    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime)
   }
 }

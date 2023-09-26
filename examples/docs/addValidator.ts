@@ -1,13 +1,10 @@
-import dotenv from 'dotenv';
-import { JuneoWallet, MCNProvider, StakeManager, now } from '../../src';
-
-dotenv.config();
+import { MCNProvider, MCNWallet, StakeManager, now } from '../../src'
 
 async function main () {
     // provider to interact with the MCN
     const provider: MCNProvider = new MCNProvider()
     // recovering wallet used to sign transactions
-    const wallet: JuneoWallet = JuneoWallet.recover(process.env.MNEMONIC ?? '')
+    const wallet: MCNWallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
     // stake manager to handle staking
     const manager: StakeManager = StakeManager.from(provider, wallet)
 

@@ -1,14 +1,14 @@
-import { MCNProvider, JuneoWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset, SocotraJUNEChain,
+import { MCNProvider, MCNWallet, WrapManager, WrappedAsset, SocotraWJUNEAsset, SocotraJUNEChain,
     JEVMBlockchain, EVMFeeData } from '../../../src'
 
 async function main () {
     const provider: MCNProvider = new MCNProvider()
-    const wallet: JuneoWallet = JuneoWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const wallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
     // wrap manager to handle wrapping
     let manager: WrapManager = WrapManager.from(provider, wallet, SocotraJUNEChain)
     // instantiation using api and wallet
     const chain: JEVMBlockchain = SocotraJUNEChain
-    manager = new WrapManager(provider.jevm[chain.id], wallet.getEthWallet(chain))
+    manager = new WrapManager(provider.jevm[chain.id], wallet.getJEVMWallet(chain).evmWallet)
     // the wrapped asset we will wrap
     const asset: WrappedAsset = SocotraWJUNEAsset
     // the amount to wrap

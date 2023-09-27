@@ -1,8 +1,9 @@
-import { AccountError, sortSpendings } from '../../utils'
+import { AccountError, sortSpendings, trackJuneoTransaction } from '../../utils'
 import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
-  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary, type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation
+  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary,
+  type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
@@ -13,10 +14,12 @@ import { CrossManager, type CrossResumeOperation, type CrossOperation } from '..
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
+  private readonly provider: MCNProvider
   private readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly crossManager: CrossManager
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
+    this.provider = provider
     this.addAccount(new JVMAccount(provider, wallet))
     this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {
@@ -90,10 +93,16 @@ export class MCNAccount {
     } else if (operation === NetworkOperationType.CrossResume) {
       const resumeSummary: CrossResumeOperationSummary = summary as CrossResumeOperationSummary
       const resumeOperation: CrossResumeOperation = resumeSummary.operation
-      await this.crossManager.executeImportOperation(
-        summary.getExecutable(), this.getAccount(resumeOperation.destination.id), resumeOperation.source, resumeOperation.destination,
-        resumeSummary.payImportFee, resumeSummary.importFee, resumeSummary.utxoSet
+      const importTransactionId: string = await this.crossManager.import(
+        resumeOperation.source, resumeOperation.destination, resumeSummary.payImportFee, resumeSummary.importFee, resumeSummary.utxoSet
       )
+      const importSuccess: boolean = await trackJuneoTransaction(
+        this.provider, resumeOperation.destination, summary.getExecutable(), importTransactionId
+      )
+      await this.getAccount(resumeOperation.destination.id).fetchAllBalances()
+      if (!importSuccess) {
+        throw new AccountError(`error during cross resume transaction ${importTransactionId} status fetching`)
+      }
     }
   }
 

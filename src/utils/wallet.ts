@@ -1,6 +1,9 @@
-import { type Blockchain } from '../chain'
+import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
+import { JVM_ID, type Blockchain, PLATFORMVM_ID, JEVM_ID } from '../chain'
+import { type MCNProvider } from '../juneo'
 import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
-import { type Spending, BaseSpending } from '../wallet'
+import { type Spending, BaseSpending, type ExecutableOperation, TransactionType } from '../wallet'
+import { WalletError } from './errors'
 
 export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
   const values = new Map<string, Spending>()
@@ -42,4 +45,30 @@ export function getImportUserInputs (
     }
   }
   return inputs
+}
+
+export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {
+  const vmId: string = chain.vmId
+  if (vmId === JVM_ID) {
+    return provider.jvm
+  } else if (vmId === PLATFORMVM_ID) {
+    return provider.platform
+  } else if (vmId === JEVM_ID) {
+    return provider.jevm[chain.id]
+  }
+  throw new WalletError(`unsupported vm id does not provide utxo api: ${vmId}`)
+}
+
+export async function trackJuneoTransaction (provider: MCNProvider, chain: Blockchain, executable: ExecutableOperation, transactionId: string): Promise<boolean> {
+  let importSuccess: boolean = false
+  const vmId: string = chain.vmId
+  if (vmId === JVM_ID) {
+    importSuccess = await executable.addTrackedJVMTransaction(provider.jvm, TransactionType.Import, transactionId)
+  } else if (vmId === PLATFORMVM_ID) {
+    importSuccess = await executable.addTrackedPlatformTransaction(provider.platform, TransactionType.Import, transactionId)
+  } else if (vmId === JEVM_ID) {
+    const api: JEVMAPI = provider.jevm[chain.id]
+    importSuccess = await executable.addTrackedJEVMTransaction(api, TransactionType.Import, transactionId)
+  }
+  return importSuccess
 }

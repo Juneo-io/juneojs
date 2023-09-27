@@ -10,12 +10,12 @@ on:
       workflow2_github_account:
         description: 'GitHub Account Owner'
         required: true
-        default: ':corentinDallenogare'
+        default: 'Juneo-io'
 
       workflow2_repo_github:
         description: 'repo-name'
         required: true
-        default: ':juneojs-examples'
+        default: 'juneojs-examples'
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Test
         run: |
-          curl -X POST https://api.github.com/repos/:corentinDallenogare/:juneojs-examples/dispatches \
+          curl -X POST https://api.github.com/repos/Juneo-io/juneojs-examples/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u ${{ secrets.ACTIONS_KEY }} \
           --data '{"event_type": "Trigger Workflow", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'

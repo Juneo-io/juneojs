@@ -8,7 +8,8 @@
     "prepare": "npm run build",
     "build": "tsc",
     "test": "jest",
-    "lint": "eslint . --ext .ts --fix"
+    "lint": "eslint . --ext .ts --fix",
+    "verify": "npm run lint && npm run build"
   },
   "keywords": [
     "Juneo",

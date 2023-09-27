@@ -72,12 +72,16 @@ export class CrossResumeOperationSummary extends MCNOperationSummary {
   importFee: FeeData
   payImportFee: boolean
   utxoSet: Utxo[]
+  values: Map<string, bigint>
 
-  constructor (operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[]) {
+  constructor (
+    operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[], values: Map<string, bigint>
+  ) {
     super(operation, [operation.source, operation.destination], [importFee], spendings)
     this.operation = operation
     this.importFee = importFee
     this.payImportFee = payImportFee
     this.utxoSet = utxoSet
+    this.values = values
   }
 }

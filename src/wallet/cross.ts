@@ -349,7 +349,11 @@ export class CrossManager {
         payImportFee = true
       }
     }
-    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos)
+    if (hasFeeValue && !payImportFee) {
+      const value: bigint = values.get(fee.assetId) as bigint
+      values.set(fee.assetId, value - fee.amount)
+    }
+    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos, values)
   }
 
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {

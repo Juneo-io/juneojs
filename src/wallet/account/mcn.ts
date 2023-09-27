@@ -3,14 +3,14 @@ import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
   type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary,
-  type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation
+  type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation, type CrossResumeOperation, type CrossOperation
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
-import { CrossManager, type CrossResumeOperation, type CrossOperation } from '../cross'
+import { CrossManager } from '../cross'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {

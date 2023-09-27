@@ -312,22 +312,7 @@ export class CrossManager {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }
     const lastFee: FeeData = summary.fees[summary.fees.length - 1]
-    const importTransactionId: string = await this.import(
-      cross.source, cross.destination, !cross.sendImportFee, importFee, destinationUtxos
-    )
-    let importSuccess: boolean = false
-    if (destinationVmId === JVM_ID) {
-      importSuccess = await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Import, importTransactionId)
-    } else if (destinationVmId === PLATFORMVM_ID) {
-      importSuccess = await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Import, importTransactionId)
-    } else if (destinationVmId === JEVM_ID) {
-      const api: JEVMAPI = this.provider.jevm[destinationAccount.chain.id]
-      importSuccess = await executable.addTrackedJEVMTransaction(api, TransactionType.Import, importTransactionId)
-    }
-    await destinationAccount.fetchAllBalances()
-    if (!importSuccess) {
-      throw new CrossError(`error during import transaction ${importTransactionId} status fetching`)
-    }
+    await this.executeImportOperation(executable, destinationAccount, cross.source, cross.destination, !cross.sendImportFee, importFee, destinationUtxos)
     // importing jrc20
     if (lastFee.chain.id === cross.destination.id && lastFee.type === FeeType.Deposit) {
       const juneChain: JEVMBlockchain = SocotraJUNEChain
@@ -340,6 +325,26 @@ export class CrossManager {
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
       }
+    }
+  }
+
+  async executeImportOperation (
+    executable: ExecutableOperation, account: ChainAccount, source: Blockchain, destination: Blockchain, payImportFee: boolean, importFee: FeeData, utxoSet: Utxo[]
+  ): Promise<void> {
+    const importTransactionId: string = await this.import(source, destination, payImportFee, importFee, utxoSet)
+    let importSuccess: boolean = false
+    const destinationVmId: string = destination.vmId
+    if (destinationVmId === JVM_ID) {
+      importSuccess = await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Import, importTransactionId)
+    } else if (destinationVmId === PLATFORMVM_ID) {
+      importSuccess = await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Import, importTransactionId)
+    } else if (destinationVmId === JEVM_ID) {
+      const api: JEVMAPI = this.provider.jevm[destination.id]
+      importSuccess = await executable.addTrackedJEVMTransaction(api, TransactionType.Import, importTransactionId)
+    }
+    await account.fetchAllBalances()
+    if (!importSuccess) {
+      throw new CrossError(`error during import transaction ${importTransactionId} status fetching`)
     }
   }
 

@@ -90,9 +90,9 @@ export class MCNAccount {
     } else if (operation === NetworkOperationType.CrossResume) {
       const resumeSummary: CrossResumeOperationSummary = summary as CrossResumeOperationSummary
       const resumeOperation: CrossResumeOperation = resumeSummary.operation
-      await this.crossManager.import(
-        resumeOperation.source, resumeOperation.destination, resumeSummary.payImportFee,
-        resumeSummary.importFee, resumeSummary.utxoSet
+      await this.crossManager.executeImportOperation(
+        summary.getExecutable(), this.getAccount(resumeOperation.destination.id), resumeOperation.source, resumeOperation.destination,
+        resumeSummary.payImportFee, resumeSummary.importFee, resumeSummary.utxoSet
       )
     }
   }

@@ -1,0 +1,32 @@
+name: PROD upgrade juneojs-examples
+on:
+  workflow_dispatch:
+    inputs:
+      PROD_dispatch:
+        description: 'ًPROD_dispatch which will be triggered'
+        required: true
+        default: 'PROD_dispatch'
+
+      workflow2_github_account:
+        description: 'GitHub Account Owner'
+        required: true
+        default: ':corentinDallenogare'
+
+      workflow2_repo_github:
+        description: 'repo-name'
+        required: true
+        default: ':juneojs-examples'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Test
+        run: |
+          curl -X POST https://api.github.com/repos/:corentinDallenogare/:juneojs-examples/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u ${{ secrets.ACTIONS_KEY }} \
+          --data '{"event_type": "Trigger Workflow", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+      - uses: actions/checkout@v3

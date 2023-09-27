@@ -1,8 +1,8 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimatePlatformValidateOperation, estimatePlatformDelegateOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary } from '../operation'
-import { type DelegateOperation, StakeManager, type ValidateOperation } from '../stake'
+import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary, type DelegateOperation, type ValidateOperation } from '../operation'
+import { StakeManager } from '../stake'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
 

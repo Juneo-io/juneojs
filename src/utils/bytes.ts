@@ -146,6 +146,9 @@ export class JuneoBuffer {
   }
 
   static fromString (data: string, fromEncoding?: string): JuneoBuffer {
+    if (data === '') {
+      throw new ParsingError('parsed data cannot be empty')
+    }
     if (fromEncoding === undefined) {
       const isHex: boolean = encoding.isHex(data)
       if (isHex) {

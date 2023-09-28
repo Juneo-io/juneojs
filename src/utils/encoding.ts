@@ -87,6 +87,9 @@ export function encodeCHex (buffer: JuneoBuffer): string {
 }
 
 export function isHex (value: string): boolean {
+  if (value === '') {
+    return false
+  }
   const hex: string = hasHexPrefix(value) ? value.substring(2) : value
   return /^[0-9A-Fa-f]*$/.test(hex)
 }

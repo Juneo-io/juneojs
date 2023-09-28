@@ -22,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Test
+      - name: Trigger juneojs-examples upgrade workflow
         run: |
           curl -X POST https://api.github.com/repos/Juneo-io/juneojs-examples/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \

@@ -3,7 +3,7 @@ import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlat
 import { type MCNWallet, type VMWallet } from './wallet'
 import { StakeError, calculatePrimary, now, verifyTimeRange } from '../utils'
 import { type PlatformAPI } from '../api'
-import { type StakeConfig, type MCN } from '../chain'
+import { type StakeConfig } from '../chain'
 import { type MCNProvider } from '../juneo'
 
 export const ValidationShare: number = 12_0000 // 12%

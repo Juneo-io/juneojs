@@ -3,7 +3,7 @@ import { MCNWallet, MCNProvider, Address, CreateChainTransaction, CreateSupernet
 
 async function main() {
     const provider: MCNProvider = new MCNProvider()
-    const masterWallet: MCNWallet = MCNWallet.recover('raven whip pave toy benefit moment twin acid wasp satisfy crash april')
+    const masterWallet: MCNWallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
     const sendersAddresses: string[] = [masterWallet.getAddress(provider.platform.chain)]
     const utxoSet: Utxo[] = await fetchUtxos(provider.platform, sendersAddresses)
     const fee: number = (await provider.getFees()).createBlockchainTxFee

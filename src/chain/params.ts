@@ -139,7 +139,7 @@ export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet('1111
 
 export const SocotraStakeConfig: StakeConfig = new StakeConfig(
   // 80%, 1, 100000, 0.01, 1 day, 365 days
-  0.8, 1_000000000, 1000000_000000000, 10000000, 24 * 3600, 365 * 24 * 3600
+  0.8, BigInt(1_000000000), BigInt(1_000_000_000000000), BigInt(1_0000000), BigInt(24 * 3600), BigInt(365 * 24 * 3600)
 )
 export const SocotraNetwork: MCN = new MCN(SocotraAddress, 2, 'socotra', SocotraStakeConfig, SocotraPrimarySupernet)
 

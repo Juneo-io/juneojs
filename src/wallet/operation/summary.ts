@@ -1,10 +1,8 @@
 import { type PlatformBlockchain, type Blockchain } from '../../chain'
 import { type Utxo } from '../../transaction'
-import { type CrossResumeOperation } from '../cross'
-import { type Staking } from '../stake'
 import { type UtxoFeeData, type FeeData, type Spending } from '../transaction'
 import { ExecutableOperation } from './executable'
-import { type NetworkOperation } from './operation'
+import { type Staking, type NetworkOperation, type CrossResumeOperation } from './operation'
 
 export enum SummaryType {
   Chain = 'Chain',
@@ -23,8 +21,8 @@ export interface OperationSummary {
 abstract class AbstractOperationSummary implements OperationSummary {
   type: SummaryType
   operation: NetworkOperation
-  spendings: Spending[]
   fees: FeeData[]
+  spendings: Spending[]
   private readonly executable: ExecutableOperation
 
   constructor (type: SummaryType, operation: NetworkOperation, fees: FeeData[], spendings: Spending[]) {
@@ -74,12 +72,16 @@ export class CrossResumeOperationSummary extends MCNOperationSummary {
   importFee: FeeData
   payImportFee: boolean
   utxoSet: Utxo[]
+  values: Map<string, bigint>
 
-  constructor (operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[]) {
+  constructor (
+    operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[], values: Map<string, bigint>
+  ) {
     super(operation, [operation.source, operation.destination], [importFee], spendings)
     this.operation = operation
     this.importFee = importFee
     this.payImportFee = payImportFee
     this.utxoSet = utxoSet
+    this.values = values
   }
 }

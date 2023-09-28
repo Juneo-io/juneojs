@@ -1,4 +1,3 @@
-import { NetworkOperationType, ChainNetworkOperation } from './operation'
 import { NodeId, type Utxo, Validator } from '../transaction'
 import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
 import { type MCNWallet, type VMWallet } from './wallet'
@@ -88,32 +87,5 @@ export class StakeManager {
     }
     const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(transaction)).txID
-  }
-}
-
-export abstract class Staking extends ChainNetworkOperation {
-  nodeId: string
-  amount: bigint
-  startTime: bigint
-  endTime: bigint
-
-  constructor (type: NetworkOperationType, mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(type, mcn.primary.platform)
-    this.nodeId = nodeId
-    this.amount = amount
-    this.startTime = startTime
-    this.endTime = endTime
-  }
-}
-
-export class ValidateOperation extends Staking {
-  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime)
-  }
-}
-
-export class DelegateOperation extends Staking {
-  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime)
   }
 }

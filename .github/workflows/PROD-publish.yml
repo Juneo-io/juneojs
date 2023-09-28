@@ -15,9 +15,33 @@ jobs:
         with:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
+
       - name: Install dependencies and build 🔧
         run: npm install && npm run build
+
+      - name: Check if version has changed
+        id: version_check
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          NPM_VERSION=$(npm show juneojs version)
+          if [[ "$CURRENT_VERSION" != "$NPM_VERSION" ]]; then
+            echo "New version detected: $CURRENT_VERSION"
+            echo "::set-output name=should_publish::true"
+          else
+            echo "No new version detected."
+            echo "::set-output name=should_publish::false"
+          fi
+
       - name: Publish package on NPM 📦
+        if: steps.version_check.outputs.should_publish == 'true'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Trigger juneojs-examples upgrade workflow
+        if: steps.version_check.outputs.should_publish == 'true'
+        run: |
+          curl -X POST https://api.github.com/repos/Juneo-io/juneojs-examples/dispatches \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Authorization: token ${{ secrets.ACTIONS_KEY }}" \
+          --data '{"event_type": "Trigger Workflow", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'

@@ -5,7 +5,7 @@ on:
       - dev
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,5 +19,5 @@ jobs:
       - name: Install dependencies and build 🔧
         run: npm install && npm run build
 
-      - name: run the tests 🧪
+      - name: Run the tests 🧪
         run: npm run test

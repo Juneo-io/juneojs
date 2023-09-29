@@ -126,6 +126,8 @@ export class CrossManager {
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<MCNOperationSummary> {
     const juneChain: JEVMBlockchain = SocotraJUNEChain
+    const values = new Map<string, bigint>()
+    values.set(cross.assetId, cross.amount)
     if (this.shouldProxy(cross)) {
       const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
       const proxyExport: CrossOperation = new CrossOperation(cross.source, this.provider.jvm.chain, cross.assetId, cross.amount)
@@ -146,7 +148,7 @@ export class CrossManager {
       })
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       cross.sendImportFee = proxyExport.sendImportFee
-      return new MCNOperationSummary(cross, chains, fees, spendings)
+      return new MCNOperationSummary(cross, chains, fees, spendings, values)
     }
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
@@ -219,7 +221,7 @@ export class CrossManager {
     } else {
       spendings.push(importFee.getAsSpending())
     }
-    return new MCNOperationSummary(cross, chains, fees, spendings)
+    return new MCNOperationSummary(cross, chains, fees, spendings, values)
   }
 
   async executeCrossOperation (summary: MCNOperationSummary, account: MCNAccount): Promise<void> {
@@ -354,7 +356,7 @@ export class CrossManager {
       const value: bigint = values.get(fee.assetId) as bigint
       values.set(fee.assetId, value - fee.amount)
     }
-    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, summaryUtxos, values)
+    return new CrossResumeOperationSummary(operation, fee, spendings, values, payImportFee, summaryUtxos)
   }
 
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {

@@ -105,12 +105,16 @@ export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap
   const chain: JEVMBlockchain = api.chain
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
+  const values = new Map<string, bigint>()
+  values.set(wrap.asset.assetId, wrap.amount)
   return await estimateEVMCall(api, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
-    return new ChainOperationSummary(wrap, chain, fee, [new BaseSpending(chain, wrap.amount, chain.assetId), fee.getAsSpending()])
+    const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
+    return new ChainOperationSummary(wrap, chain, fee, [spending, fee.getAsSpending()], values)
   }, async () => {
     const gasPrice: bigint = await estimateEVMGasPrice(api)
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate * gasPrice, type)
-    return new ChainOperationSummary(wrap, chain, fee, [new BaseSpending(chain, wrap.amount, chain.assetId), fee.getAsSpending()])
+    const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
+    return new ChainOperationSummary(wrap, chain, fee, [spending, fee.getAsSpending()], values)
   })
 }
 
@@ -118,12 +122,16 @@ export async function estimateEVMUnwrapOperation (api: JEVMAPI, from: string, un
   const chain: JEVMBlockchain = api.chain
   const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
   const type: FeeType = FeeType.Unwrap
+  const values = new Map<string, bigint>()
+  values.set(unwrap.asset.assetId, unwrap.amount)
   return await estimateEVMCall(api, from, unwrap.asset.address, BigInt(0), data, type).then(fee => {
-    return new ChainOperationSummary(unwrap, chain, fee, [new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId), fee.getAsSpending()])
+    const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
+    return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.getAsSpending()], values)
   }, async () => {
     const gasPrice: bigint = await estimateEVMGasPrice(api)
     const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
-    return new ChainOperationSummary(unwrap, chain, fee, [new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId), fee.getAsSpending()])
+    const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
+    return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.getAsSpending()], values)
   })
 }
 

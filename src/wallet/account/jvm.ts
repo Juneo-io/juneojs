@@ -31,7 +31,7 @@ export class JVMAccount extends UtxoAccount {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendJVM(
-        send.assetId, send.amount, send.address, summary.fee as UtxoFeeData, super.utxoSet
+        send.assetId, send.amount, send.address, summary.fee as UtxoFeeData, this.utxoSet
       )
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }

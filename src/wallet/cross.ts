@@ -409,7 +409,8 @@ export class CrossManager {
       this.provider,
       cross.source,
       executable,
-      exportTransactionId
+      exportTransactionId,
+      TransactionType.Export
     )
     await sourceAccount.fetchAllBalances()
     if (!exportSuccess) {
@@ -438,7 +439,8 @@ export class CrossManager {
       this.provider,
       cross.destination,
       executable,
-      importTransactionId
+      importTransactionId,
+      TransactionType.Import
     )
     await account.fetchAllBalances()
     if (!importSuccess) {

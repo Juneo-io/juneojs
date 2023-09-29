@@ -19,7 +19,7 @@ import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
-import { type Spending } from '../transaction'
+import { TransactionType, type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type MCNProvider } from '../../juneo'
 
@@ -114,7 +114,8 @@ export class MCNAccount {
         this.provider,
         resumeOperation.destination,
         summary.getExecutable(),
-        importTransactionId
+        importTransactionId,
+        TransactionType.Import
       )
       await this.getAccount(resumeOperation.destination.id).fetchAllBalances()
       if (!importSuccess) {

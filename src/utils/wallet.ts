@@ -2,7 +2,7 @@ import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { JVM_ID, type Blockchain, PLATFORMVM_ID, JEVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
-import { type Spending, BaseSpending, type ExecutableOperation, TransactionType } from '../wallet'
+import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType } from '../wallet'
 import { WalletError } from './errors'
 
 export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
@@ -68,17 +68,18 @@ export async function trackJuneoTransaction (
   provider: MCNProvider,
   chain: Blockchain,
   executable: ExecutableOperation,
-  transactionId: string
+  transactionId: string,
+  transactionType: TransactionType
 ): Promise<boolean> {
   let success: boolean = false
   const vmId: string = chain.vmId
   if (vmId === JVM_ID) {
-    success = await executable.addTrackedJVMTransaction(provider.jvm, TransactionType.Import, transactionId)
+    success = await executable.addTrackedJVMTransaction(provider.jvm, transactionType, transactionId)
   } else if (vmId === PLATFORMVM_ID) {
-    success = await executable.addTrackedPlatformTransaction(provider.platform, TransactionType.Import, transactionId)
+    success = await executable.addTrackedPlatformTransaction(provider.platform, transactionType, transactionId)
   } else if (vmId === JEVM_ID) {
     const api: JEVMAPI = provider.jevm[chain.id]
-    success = await executable.addTrackedJEVMTransaction(api, TransactionType.Import, transactionId)
+    success = await executable.addTrackedJEVMTransaction(api, transactionType, transactionId)
   }
   return success
 }

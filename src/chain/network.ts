@@ -31,14 +31,14 @@ export class MCN {
 
 export class StakeConfig {
   uptimeRequirement: number
-  minValidatorStake: number
-  maxValidatorStake: number
-  minDelegatorStake: number
-  minStakeDuration: number
-  maxStakeDuration: number
+  minValidatorStake: bigint
+  maxValidatorStake: bigint
+  minDelegatorStake: bigint
+  minStakeDuration: bigint
+  maxStakeDuration: bigint
 
-  constructor (uptimeRequirement: number, minValidatorStake: number, maxValidatorStake: number,
-    minDelegatorStake: number, minStakeDuration: number, maxStakeDuration: number) {
+  constructor (uptimeRequirement: number, minValidatorStake: bigint, maxValidatorStake: bigint,
+    minDelegatorStake: bigint, minStakeDuration: bigint, maxStakeDuration: bigint) {
     this.uptimeRequirement = uptimeRequirement
     this.minValidatorStake = minValidatorStake
     this.maxValidatorStake = maxValidatorStake

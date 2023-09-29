@@ -14,6 +14,7 @@ export interface OperationSummary {
   operation: NetworkOperation
   fees: FeeData[]
   spendings: Spending[]
+  values: Map<string, bigint>
 
   getExecutable: () => ExecutableOperation
 }
@@ -21,15 +22,17 @@ export interface OperationSummary {
 abstract class AbstractOperationSummary implements OperationSummary {
   type: SummaryType
   operation: NetworkOperation
-  spendings: Spending[]
   fees: FeeData[]
+  spendings: Spending[]
+  values: Map<string, bigint>
   private readonly executable: ExecutableOperation
 
-  constructor (type: SummaryType, operation: NetworkOperation, fees: FeeData[], spendings: Spending[]) {
+  constructor (type: SummaryType, operation: NetworkOperation, fees: FeeData[], spendings: Spending[], values: Map<string, bigint>) {
     this.type = type
     this.operation = operation
     this.fees = fees
     this.spendings = spendings
+    this.values = values
     this.executable = new ExecutableOperation()
   }
 
@@ -42,8 +45,8 @@ export class ChainOperationSummary extends AbstractOperationSummary {
   chain: Blockchain
   fee: FeeData
 
-  constructor (operation: NetworkOperation, chain: Blockchain, fee: FeeData, spendings: Spending[]) {
-    super(SummaryType.Chain, operation, [fee], spendings)
+  constructor (operation: NetworkOperation, chain: Blockchain, fee: FeeData, spendings: Spending[], values: Map<string, bigint>) {
+    super(SummaryType.Chain, operation, [fee], spendings, values)
     this.chain = chain
     this.fee = fee
   }
@@ -52,8 +55,8 @@ export class ChainOperationSummary extends AbstractOperationSummary {
 export class MCNOperationSummary extends AbstractOperationSummary {
   chains: Blockchain[]
 
-  constructor (operation: NetworkOperation, chains: Blockchain[], fees: FeeData[], spendings: Spending[]) {
-    super(SummaryType.MCN, operation, fees, spendings)
+  constructor (operation: NetworkOperation, chains: Blockchain[], fees: FeeData[], spendings: Spending[], values: Map<string, bigint>) {
+    super(SummaryType.MCN, operation, fees, spendings, values)
     this.chains = chains
   }
 }
@@ -61,8 +64,8 @@ export class MCNOperationSummary extends AbstractOperationSummary {
 export class StakingOperationSummary extends ChainOperationSummary {
   potentialReward: bigint
 
-  constructor (operation: Staking, chain: PlatformBlockchain, fee: UtxoFeeData, spendings: Spending[], potentialReward: bigint) {
-    super(operation, chain, fee, spendings)
+  constructor (operation: Staking, chain: PlatformBlockchain, fee: UtxoFeeData, spendings: Spending[], values: Map<string, bigint>, potentialReward: bigint) {
+    super(operation, chain, fee, spendings, values)
     this.potentialReward = potentialReward
   }
 }
@@ -72,16 +75,14 @@ export class CrossResumeOperationSummary extends MCNOperationSummary {
   importFee: FeeData
   payImportFee: boolean
   utxoSet: Utxo[]
-  values: Map<string, bigint>
 
   constructor (
-    operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], payImportFee: boolean, utxoSet: Utxo[], values: Map<string, bigint>
+    operation: CrossResumeOperation, importFee: FeeData, spendings: Spending[], values: Map<string, bigint>, payImportFee: boolean, utxoSet: Utxo[]
   ) {
-    super(operation, [operation.source, operation.destination], [importFee], spendings)
+    super(operation, [operation.source, operation.destination], [importFee], spendings, values)
     this.operation = operation
     this.importFee = importFee
     this.payImportFee = payImportFee
     this.utxoSet = utxoSet
-    this.values = values
   }
 }

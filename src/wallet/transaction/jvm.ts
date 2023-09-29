@@ -30,11 +30,14 @@ export async function estimateJVMBaseTransaction (provider: MCNProvider, wallet:
 
 export async function estimateJVMSendOperation (provider: MCNProvider, wallet: MCNWallet, send: SendOperation, account: JVMAccount): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
+  const values = new Map<string, bigint>()
+  values.set(send.assetId, send.amount)
   return await estimateJVMBaseTransaction(provider, wallet, send.assetId, send.amount, send.address, account.utxoSet).then(fee => {
-    return new ChainOperationSummary(send, chain, fee, [new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos()), fee.getAsSpending()])
+    const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
+    return new ChainOperationSummary(send, chain, fee, [spending, fee.getAsSpending()], values)
   }, async () => {
     const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
-    return new ChainOperationSummary(send, chain, fee, [new BaseSpending(chain, send.amount, send.assetId), fee.getAsSpending()])
+    return new ChainOperationSummary(send, chain, fee, [new BaseSpending(chain, send.amount, send.assetId), fee.getAsSpending()], values)
   })
 }
 

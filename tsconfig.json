@@ -12,6 +12,6 @@
         "allowSyntheticDefaultImports": true,
         "lib": ["DOM", "ES2016"]
     },
-    "exclude": ["node_modules", "tests", "examples"],
+    "exclude": ["node_modules", "tests"],
     "include": ["src/"]
 }

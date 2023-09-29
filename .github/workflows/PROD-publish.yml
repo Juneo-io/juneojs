@@ -26,20 +26,20 @@ jobs:
           NPM_VERSION=$(npm show juneojs version)
           if [[ "$CURRENT_VERSION" != "$NPM_VERSION" ]]; then
             echo "New version detected: $CURRENT_VERSION"
-            echo "::set-output name=should_publish::true"
+            echo "should_publish=true" >> $GITHUB_ENV
           else
             echo "No new version detected."
-            echo "::set-output name=should_publish::false"
+            echo "should_publish=false" >> $GITHUB_ENV
           fi
 
       - name: Publish package on NPM 📦
-        if: steps.version_check.outputs.should_publish == 'true'
+        if: env.should_publish == 'true'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Trigger juneojs-examples upgrade workflow
-        if: steps.version_check.outputs.should_publish == 'true'
+        if: env.should_publish == 'true'
         run: |
           curl -X POST https://api.github.com/repos/Juneo-io/juneojs-examples/dispatches \
           -H "Accept: application/vnd.github.everest-preview+json" \

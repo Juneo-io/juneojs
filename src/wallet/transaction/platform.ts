@@ -44,16 +44,19 @@ export async function estimatePlatformValidateOperation (provider: MCNProvider, 
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateValidationReward(validate.endTime - validate.startTime, validate.amount)
   const validator: Validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
-  return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(validate, chain, fee,
-      [new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
-    )
-  }, async () => {
-    const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-    return new ChainOperationSummary(validate, chain, fee,
-      [new BaseSpending(chain, validate.amount, chain.assetId), fee.getAsSpending()]
-    )
-  })
+  const values = new Map<string, bigint>()
+  return await estimatePlatformAddValidatorTransaction(provider, wallet.getWallet(chain), validator, ValidationShare, account.utxoSet)
+    .then(fee => {
+      const spending: UtxoSpending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
+      return new StakingOperationSummary(
+        validate, chain, fee, [spending, fee.getAsSpending()], values, potentialReward
+      )
+    }, async () => {
+      const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
+      return new ChainOperationSummary(
+        validate, chain, fee, [new BaseSpending(chain, validate.amount, chain.assetId), fee.getAsSpending()], values
+      )
+    })
 }
 
 export async function estimatePlatformAddDelegatorTransaction (provider: MCNProvider, wallet: VMWallet, validator: Validator, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
@@ -73,14 +76,18 @@ export async function estimatePlatformDelegateOperation (provider: MCNProvider, 
   const chain: PlatformBlockchain = provider.platform.chain
   const potentialReward: bigint = StakeManager.estimateDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
   const validator: Validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
-  return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet).then(fee => {
-    return new StakingOperationSummary(delegate, chain, fee,
-      [new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()), fee.getAsSpending()], potentialReward
-    )
-  }, async () => {
-    const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-    return new ChainOperationSummary(delegate, chain, fee, [new BaseSpending(chain, delegate.amount, chain.assetId), fee.getAsSpending()])
-  })
+  const values = new Map<string, bigint>()
+  return await estimatePlatformAddDelegatorTransaction(provider, wallet.getWallet(chain), validator, account.utxoSet)
+    .then(fee => {
+      const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
+      return new StakingOperationSummary(delegate, chain, fee, [spending, fee.getAsSpending()], values, potentialReward
+      )
+    }, async () => {
+      const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
+      return new ChainOperationSummary(
+        delegate, chain, fee, [new BaseSpending(chain, delegate.amount, chain.assetId), fee.getAsSpending()], values
+      )
+    })
 }
 
 export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {

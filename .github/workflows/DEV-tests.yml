@@ -1,0 +1,23 @@
+name: DEV tests
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies and build 🔧
+        run: npm install && npm run build
+
+      - name: run the tests 🧪
+        run: npm run test

@@ -320,7 +320,7 @@ export class CrossManager {
   async estimateCrossResumeOperation (operation: CrossResumeOperation, account: MCNAccount): Promise<CrossResumeOperationSummary> {
     const utxoApi: AbstractUtxoAPI = getUtxoAPI(this.provider, operation.destination)
     const utxos: Utxo[] = operation.utxoSet
-    const values: Map<string, bigint> = getUtxosAmountValues(utxos)
+    const values: Map<string, bigint> = getUtxosAmountValues(utxos, operation.source.id)
     // if we have more than one value it is possible that the fee to pay for import is in the utxos
     // for calculation we will consider it is here to be fully consumed and can remove it from outputs
     const outputsCount: number = values.size > 1 ? values.size - 1 : 1
@@ -341,11 +341,12 @@ export class CrossManager {
     }
     const spendings: Spending[] = []
     let payImportFee: boolean = false
+    const summaryUtxos: Utxo[] = [...utxos]
     if (!hasFeeValue) {
       const balance: bigint = account.getAccount(operation.destination.id).getValue(fee.assetId)
       if (this.canPayImportFee(operation.destination, fee.amount, balance)) {
         spendings.push(fee.getAsSpending())
-        utxos.push(...await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()]))
+        summaryUtxos.push(...await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()]))
         payImportFee = true
       }
     }
@@ -353,7 +354,7 @@ export class CrossManager {
       const value: bigint = values.get(fee.assetId) as bigint
       values.set(fee.assetId, value - fee.amount)
     }
-    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, utxos, values)
+    return new CrossResumeOperationSummary(operation, fee, spendings, payImportFee, summaryUtxos, values)
   }
 
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {

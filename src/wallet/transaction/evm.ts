@@ -106,7 +106,7 @@ export async function estimateEVMWrapOperation (api: JEVMAPI, from: string, wrap
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
   const values = new Map<string, bigint>()
-  values.set(wrap.asset.assetId, wrap.amount)
+  values.set(chain.assetId, wrap.amount)
   return await estimateEVMCall(api, from, wrap.asset.address, wrap.amount, data, type).then(fee => {
     const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
     return new ChainOperationSummary(wrap, chain, fee, [spending, fee.getAsSpending()], values)

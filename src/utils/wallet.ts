@@ -12,7 +12,7 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
     if (!values.has(key)) {
       values.set(key, new BaseSpending(spending.chain, spending.amount, spending.assetId))
     } else {
-      (values.get(key) as Spending).amount += spending.amount
+      ;(values.get(key) as Spending).amount += spending.amount
     }
   }
   return values
@@ -35,7 +35,12 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
 }
 
 export function getImportUserInputs (
-  values: Map<string, bigint>, feeAssetId: string, feeAmount: bigint, source: Blockchain, destination: Blockchain, address: string
+  values: Map<string, bigint>,
+  feeAssetId: string,
+  feeAmount: bigint,
+  source: Blockchain,
+  destination: Blockchain,
+  address: string
 ): UserInput[] {
   const inputs: UserInput[] = []
   for (const [key, value] of values) {
@@ -60,7 +65,10 @@ export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractU
 }
 
 export async function trackJuneoTransaction (
-  provider: MCNProvider, chain: Blockchain, executable: ExecutableOperation, transactionId: string
+  provider: MCNProvider,
+  chain: Blockchain,
+  executable: ExecutableOperation,
+  transactionId: string
 ): Promise<boolean> {
   let success: boolean = false
   const vmId: string = chain.vmId

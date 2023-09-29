@@ -2,8 +2,22 @@ import { type JEVMAPI } from '../../api'
 import { type JEVMBlockchain, type TokenAsset } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
-import { BaseSpending, TransactionType, type EVMFeeData, estimateEVMWrapOperation, estimateEVMUnwrapOperation } from '../transaction'
-import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, ChainOperationSummary, type SendOperation, type WrapOperation, type UnwrapOperation } from '../operation'
+import {
+  BaseSpending,
+  TransactionType,
+  type EVMFeeData,
+  estimateEVMWrapOperation,
+  estimateEVMUnwrapOperation
+} from '../transaction'
+import {
+  type ExecutableOperation,
+  type NetworkOperation,
+  NetworkOperationType,
+  ChainOperationSummary,
+  type SendOperation,
+  type WrapOperation,
+  type UnwrapOperation
+} from '../operation'
 import { SendManager } from '../send'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { WrapManager } from '../wrap'
@@ -30,7 +44,12 @@ export class EVMAccount extends AbstractChainAccount {
   async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: EVMFeeData = await this.sendManager.estimateSendEVM(this.chain.id, send.assetId, send.amount, send.address)
+      const fee: EVMFeeData = await this.sendManager.estimateSendEVM(
+        this.chain.id,
+        send.assetId,
+        send.amount,
+        send.address
+      )
       const spending: BaseSpending = new BaseSpending(this.chain, send.amount, send.assetId)
       const values = new Map<string, bigint>()
       values.set(send.assetId, send.amount)
@@ -50,19 +69,27 @@ export class EVMAccount extends AbstractChainAccount {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendEVM(
-        this.chain.id, send.assetId, send.amount, send.address, summary.fee as EVMFeeData
+        this.chain.id,
+        send.assetId,
+        send.amount,
+        send.address,
+        summary.fee as EVMFeeData
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation
       const transactionHash: string = await this.wrapManager.wrap(
-        wrapping.asset, wrapping.amount, summary.fee as EVMFeeData
+        wrapping.asset,
+        wrapping.amount,
+        summary.fee as EVMFeeData
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash)
     } else if (operation.type === NetworkOperationType.Unwrap) {
       const wrapping: UnwrapOperation = operation as UnwrapOperation
       const transactionHash: string = await this.wrapManager.unwrap(
-        wrapping.asset, wrapping.amount, summary.fee as EVMFeeData
+        wrapping.asset,
+        wrapping.amount,
+        summary.fee as EVMFeeData
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
     }
@@ -72,9 +99,7 @@ export class EVMAccount extends AbstractChainAccount {
 
   registerAssets (assets: TokenAsset[] | string[]): void {
     for (let i = 0; i < assets.length; i++) {
-      const assetId: string = typeof assets[i] === 'string'
-        ? assets[i] as string
-        : (assets[i] as TokenAsset).assetId
+      const assetId: string = typeof assets[i] === 'string' ? (assets[i] as string) : (assets[i] as TokenAsset).assetId
       // no need to register chain asset id as it is already calculated as gas balance
       if (assetId === this.chain.assetId || this.registeredAssets.includes(assetId)) {
         continue

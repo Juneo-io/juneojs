@@ -2,7 +2,14 @@ import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
 import { JEVMBlockchain } from '../chain'
 import { type MCNWallet, type VMWallet } from './wallet'
-import { FeeType, type EVMFeeData, estimateEVMTransfer, sendEVMTransaction, type UtxoFeeData, estimateJVMBaseTransaction } from './transaction'
+import {
+  FeeType,
+  type EVMFeeData,
+  estimateEVMTransfer,
+  sendEVMTransaction,
+  type UtxoFeeData,
+  estimateJVMBaseTransaction
+} from './transaction'
 import { type Utxo } from '../transaction'
 import { type MCNProvider } from '../juneo'
 
@@ -25,7 +32,13 @@ export class SendManager {
     return await estimateEVMTransfer(api, assetId, wallet.address, to, value, data, FeeType.BaseFee)
   }
 
-  async sendEVM (chainId: string, assetId: string, amount: bigint, address: string, feeData?: EVMFeeData): Promise<string> {
+  async sendEVM (
+    chainId: string,
+    assetId: string,
+    amount: bigint,
+    address: string,
+    feeData?: EVMFeeData
+  ): Promise<string> {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateSendEVM(chainId, assetId, amount, address)
     }
@@ -38,7 +51,13 @@ export class SendManager {
     return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, address, utxoSet)
   }
 
-  async sendJVM (assetId: string, amount: bigint, address: string, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
+  async sendJVM (
+    assetId: string,
+    amount: bigint,
+    address: string,
+    feeData?: UtxoFeeData,
+    utxoSet?: Utxo[]
+  ): Promise<string> {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateSendJVM(assetId, amount, address, utxoSet)
     }

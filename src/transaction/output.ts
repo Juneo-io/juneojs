@@ -15,9 +15,7 @@ export class TransferableOutput implements Serializable {
 
   serialize (): JuneoBuffer {
     const outputBuffer: JuneoBuffer = this.output.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      AssetIdSize + outputBuffer.length
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(AssetIdSize + outputBuffer.length)
     buffer.write(this.assetId.serialize())
     buffer.write(outputBuffer)
     return buffer
@@ -28,9 +26,7 @@ export class TransferableOutput implements Serializable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableOutput {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     // start at 2 to skip codec if from string from api
     let position: number = typeof data === 'string' ? 2 : 0
     const assetId: JuneoBuffer = buffer.read(position, AssetIdSize)
@@ -42,9 +38,7 @@ export class TransferableOutput implements Serializable {
   }
 
   static parseOutput (data: string | JuneoBuffer): TransactionOutput & Serializable {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     const typeId: number = buffer.readUInt32(0)
     if (typeId === Secp256k1OutputTypeId) {
       return Secp256k1Output.parse(data)
@@ -94,16 +88,14 @@ export class Secp256k1Output implements TransactionOutput, Serializable {
     buffer.writeUInt64(this.locktime)
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
-    this.addresses.forEach(address => {
+    this.addresses.forEach((address) => {
       buffer.write(address.serialize())
     })
     return buffer
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1Output {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     // start at 4 to skip type id reading
     let position: number = 4
     const amount: bigint = buffer.readUInt64(position)

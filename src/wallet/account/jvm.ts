@@ -1,7 +1,13 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary, type SendOperation } from '../operation'
+import {
+  type ExecutableOperation,
+  type NetworkOperation,
+  NetworkOperationType,
+  type ChainOperationSummary,
+  type SendOperation
+} from '../operation'
 import { SendManager } from '../send'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -31,7 +37,11 @@ export class JVMAccount extends UtxoAccount {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendJVM(
-        send.assetId, send.amount, send.address, summary.fee as UtxoFeeData, this.utxoSet
+        send.assetId,
+        send.amount,
+        send.address,
+        summary.fee as UtxoFeeData,
+        this.utxoSet
       )
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }

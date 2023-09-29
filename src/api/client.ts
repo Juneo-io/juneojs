@@ -42,17 +42,17 @@ export class JuneoClient {
   }
 
   private async post (endpoint: string, data: any): Promise<AxiosResponse> {
-    return await axios.post(endpoint,
-      data,
-      {
+    return await axios
+      .post(endpoint, data, {
         method: 'post',
         baseURL: `${this.protocol}://${this.host}`,
         headers: HttpHeaders,
         responseType: 'json',
         responseEncoding: 'utf8'
-      }).catch(error => {
-      throw new NetworkError(error.message)
-    })
+      })
+      .catch((error) => {
+        throw new NetworkError(error.message)
+      })
   }
 
   async rpcCall (endpoint: string, request: JsonRpcRequest): Promise<JsonRpcResponse> {

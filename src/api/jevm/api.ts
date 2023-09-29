@@ -32,7 +32,11 @@ export class JEVMAPI extends AbstractUtxoAPI {
   }
 
   async eth_getAssetBalance (address: string, block: string, assetID: string): Promise<bigint> {
-    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getAssetBalance', [address, block, assetID])
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getAssetBalance', [
+      address,
+      block,
+      assetID
+    ])
     return BigInt.asUintN(256, response.result)
   }
 
@@ -57,17 +61,24 @@ export class JEVMAPI extends AbstractUtxoAPI {
   }
 
   async eth_getTransactionCount (address: string, block: string): Promise<bigint> {
-    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionCount', [address, block])
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionCount', [
+      address,
+      block
+    ])
     return BigInt.asUintN(256, response.result)
   }
 
   async eth_sendRawTransaction (transaction: string): Promise<string> {
-    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_sendRawTransaction', [transaction])
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_sendRawTransaction', [
+      transaction
+    ])
     return response.result
   }
 
   async eth_getTransactionReceipt (hash: string): Promise<any> {
-    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionReceipt', [hash])
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getTransactionReceipt', [
+      hash
+    ])
     return response.result
   }
 }

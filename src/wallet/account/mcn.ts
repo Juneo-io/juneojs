@@ -1,9 +1,19 @@
 import { AccountError, sortSpendings, trackJuneoTransaction } from '../../utils'
 import { type MCNWallet } from '../wallet'
 import {
-  NetworkOperationType, NetworkOperationStatus, type NetworkOperation, type MCNOperationSummary,
-  type ExecutableOperation, SummaryType, type ChainOperationSummary, type OperationSummary,
-  type CrossResumeOperationSummary, NetworkOperationRange, type ChainNetworkOperation, type CrossResumeOperation, type CrossOperation
+  NetworkOperationType,
+  NetworkOperationStatus,
+  type NetworkOperation,
+  type MCNOperationSummary,
+  type ExecutableOperation,
+  SummaryType,
+  type ChainOperationSummary,
+  type OperationSummary,
+  type CrossResumeOperationSummary,
+  NetworkOperationRange,
+  type ChainNetworkOperation,
+  type CrossResumeOperation,
+  type CrossOperation
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
@@ -41,7 +51,7 @@ export class MCNAccount {
 
   async fetchAllBalances (): Promise<void> {
     const promises: Array<Promise<void>> = []
-    this.chainAccounts.forEach(account => {
+    this.chainAccounts.forEach((account) => {
       promises.push(account.fetchAllBalances())
     })
     await Promise.all(promises)
@@ -94,10 +104,17 @@ export class MCNAccount {
       const resumeSummary: CrossResumeOperationSummary = summary as CrossResumeOperationSummary
       const resumeOperation: CrossResumeOperation = resumeSummary.operation
       const importTransactionId: string = await this.crossManager.import(
-        resumeOperation.source, resumeOperation.destination, resumeSummary.payImportFee, resumeSummary.importFee, resumeSummary.utxoSet
+        resumeOperation.source,
+        resumeOperation.destination,
+        resumeSummary.payImportFee,
+        resumeSummary.importFee,
+        resumeSummary.utxoSet
       )
       const importSuccess: boolean = await trackJuneoTransaction(
-        this.provider, resumeOperation.destination, summary.getExecutable(), importTransactionId
+        this.provider,
+        resumeOperation.destination,
+        summary.getExecutable(),
+        importTransactionId
       )
       await this.getAccount(resumeOperation.destination.id).fetchAllBalances()
       if (!importSuccess) {
@@ -109,7 +126,7 @@ export class MCNAccount {
   verifySpendings (summary: OperationSummary): void {
     const executable: ExecutableOperation = summary.getExecutable()
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
-    spendings.forEach(spending => {
+    spendings.forEach((spending) => {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
         executable.status = NetworkOperationStatus.Error

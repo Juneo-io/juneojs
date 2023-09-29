@@ -38,7 +38,14 @@ export abstract class AbstractBlockchain implements Blockchain {
   aliases: string[]
   registeredAssets: TokenAsset[]
 
-  constructor (name: string, id: string, vmId: string, asset: TokenAsset, aliases: string[] = [], registeredAssets: TokenAsset[] = []) {
+  constructor (
+    name: string,
+    id: string,
+    vmId: string,
+    asset: TokenAsset,
+    aliases: string[] = [],
+    registeredAssets: TokenAsset[] = []
+  ) {
     this.name = name
     this.id = id
     this.vmId = vmId
@@ -123,7 +130,17 @@ export class JEVMBlockchain extends AbstractBlockchain {
   contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
 
-  constructor (name: string, id: string, asset: JEVMGasToken, chainId: bigint, baseFee: bigint, nodeAddress: string, aliases?: string[], registeredAssets: TokenAsset[] = [], jrc20Assets: JRC20Asset[] = []) {
+  constructor (
+    name: string,
+    id: string,
+    asset: JEVMGasToken,
+    chainId: bigint,
+    baseFee: bigint,
+    nodeAddress: string,
+    aliases?: string[],
+    registeredAssets: TokenAsset[] = [],
+    jrc20Assets: JRC20Asset[] = []
+  ) {
     super(name, id, JEVM_ID, asset, aliases, registeredAssets)
     this.asset = asset
     this.chainId = chainId
@@ -131,9 +148,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
     this.contractHandler = new ContractHandler()
-    this.contractHandler.registerAdapters([
-      new ERC20ContractAdapter(this.ethProvider)
-    ])
+    this.contractHandler.registerAdapters([new ERC20ContractAdapter(this.ethProvider)])
   }
 
   /**
@@ -190,7 +205,9 @@ export class JEVMBlockchain extends AbstractBlockchain {
 
   estimateAtomicExportGas (exportedAssets: string[], importFeeAssetId: string): bigint {
     const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      exportedAssets, this.assetId, importFeeAssetId
+      exportedAssets,
+      this.assetId,
+      importFeeAssetId
     )
     const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
     return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
@@ -202,7 +219,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
   }
 
   calculateAtomicCost (gas: bigint, baseFee: bigint): bigint {
-    return gas * baseFee / JEVMBlockchain.AtomicDenomination
+    return (gas * baseFee) / JEVMBlockchain.AtomicDenomination
   }
 
   static isContractAddress (assetId: string): boolean {

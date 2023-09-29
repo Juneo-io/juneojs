@@ -24,7 +24,7 @@ export class ContractHandler {
   }
 
   registerAdapters (adapters: ContractAdapter[]): void {
-    adapters.forEach(adapter => {
+    adapters.forEach((adapter) => {
       this.adapters.unshift(adapter)
     })
   }

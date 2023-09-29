@@ -6,9 +6,14 @@ import * as time from '../utils/time'
 import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
 
-export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[], signersAddresses: Address[], fees: TransactionFee[]): TransferableInput[] {
+export function buildTransactionInputs (
+  userInputs: UserInput[],
+  utxoSet: Utxo[],
+  signersAddresses: Address[],
+  fees: TransactionFee[]
+): TransferableInput[] {
   const targetAmounts = new Map<string, bigint>()
-  fees.forEach(fee => {
+  fees.forEach((fee) => {
     if (fee.amount > 0) {
       const assetId: string = fee.assetId
       let targetAmount: bigint = BigInt(fee.amount)
@@ -19,7 +24,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
     }
   })
   // gathering data needed to build transaction inputs
-  userInputs.forEach(input => {
+  userInputs.forEach((input) => {
     const assetId: string = input.assetId
     let targetAmount: bigint = BigInt(input.amount)
     if (targetAmounts.has(assetId)) {
@@ -47,16 +52,14 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
       continue
     }
     // The utxo will be added as an input in any case
-    inputs.push(new TransferableInput(
-      utxo.transactionId,
-      utxo.utxoIndex,
-      utxo.assetId,
-      new Secp256k1Input(
-        output.amount,
-        getSignersIndices(signersAddresses, utxo.output.addresses),
-        utxo
+    inputs.push(
+      new TransferableInput(
+        utxo.transactionId,
+        utxo.utxoIndex,
+        utxo.assetId,
+        new Secp256k1Input(output.amount, getSignersIndices(signersAddresses, utxo.output.addresses), utxo)
       )
-    ))
+    )
     const assetId: string = utxo.assetId.assetId
     let gathered: bigint = BigInt(output.amount)
     if (gatheredAmounts.has(assetId)) {
@@ -73,7 +76,7 @@ export function buildTransactionInputs (userInputs: UserInput[], utxoSet: Utxo[]
 function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
   let complete: boolean = true
   targets.forEach((target, key) => {
-    if (!gathereds.has(key) || gathereds.get(key) as bigint < target) {
+    if (!gathereds.has(key) || (gathereds.get(key) as bigint) < target) {
       complete = false
       return false
     }
@@ -96,25 +99,33 @@ export function getSignersIndices (signers: Address[], addresses: Address[]): nu
   return indices
 }
 
-export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spendable[], fee: TransactionFee, changeAddress: string): UserOutput[] {
+export function buildTransactionOutputs (
+  userInputs: UserInput[],
+  inputs: Spendable[],
+  fee: TransactionFee,
+  changeAddress: string
+): UserOutput[] {
   const spentAmounts = new Map<string, bigint>()
   // add fees as already spent so they are not added in outputs
   spentAmounts.set(fee.assetId, fee.amount)
   let outputs: UserOutput[] = []
   // adding outputs matching user inputs
-  userInputs.forEach(input => {
-    outputs.push(new UserOutput(
-      new AssetId(input.assetId), new Secp256k1Output(
-        input.amount,
-        input.locktime,
-        // for now threshold will only be 1
-        1,
-        // if we want to create a single output with multiple addresses
-        // e.g. multisig we need to do changes here
-        [new Address(input.address)]
-      ),
-      false
-    ))
+  userInputs.forEach((input) => {
+    outputs.push(
+      new UserOutput(
+        new AssetId(input.assetId),
+        new Secp256k1Output(
+          input.amount,
+          input.locktime,
+          // for now threshold will only be 1
+          1,
+          // if we want to create a single output with multiple addresses
+          // e.g. multisig we need to do changes here
+          [new Address(input.address)]
+        ),
+        false
+      )
+    )
     const assetId: string = input.assetId
     let spentAmount: bigint = BigInt(input.amount)
     if (spentAmounts.has(assetId)) {
@@ -124,7 +135,7 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
   })
   const availableAmounts = new Map<string, bigint>()
   // getting the total amount spendable for each asset in provided inputs
-  inputs.forEach(input => {
+  inputs.forEach((input) => {
     const assetId: string = input.getAssetId().assetId
     let amount: bigint = BigInt(input.getAmount())
     if (availableAmounts.has(assetId)) {
@@ -138,12 +149,8 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
   for (let i: number = 0; i < inputs.length; i++) {
     const input: Spendable = inputs[i]
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts.has(assetId)
-      ? spentAmounts.get(assetId) as bigint
-      : BigInt(0)
-    const available: bigint = availableAmounts.has(assetId)
-      ? availableAmounts.get(assetId) as bigint
-      : BigInt(0)
+    const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId) as bigint) : BigInt(0)
+    const available: bigint = availableAmounts.has(assetId) ? (availableAmounts.get(assetId) as bigint) : BigInt(0)
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')
     }
@@ -151,16 +158,19 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
       continue
     }
     // adding change output to send remaining value into the change address
-    outputs.push(new UserOutput(
-      input.getAssetId(), new Secp256k1Output(
-        available - spent,
-        // no locktime for the change
-        BigInt(0),
-        1,
-        [new Address(changeAddress)]
-      ),
-      true
-    ))
+    outputs.push(
+      new UserOutput(
+        input.getAssetId(),
+        new Secp256k1Output(
+          available - spent,
+          // no locktime for the change
+          BigInt(0),
+          1,
+          [new Address(changeAddress)]
+        ),
+        true
+      )
+    )
     // adding the spending of the change output
     let amount: bigint = available - spent
     if (spentAmounts.has(assetId)) {
@@ -174,17 +184,17 @@ export function buildTransactionOutputs (userInputs: UserInput[], inputs: Spenda
 function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
-  outputs.forEach(output => {
+  outputs.forEach((output) => {
     let key: string = output.assetId.assetId
     key += output.output.locktime
     key += output.output.threshold.toString()
     output.output.addresses.sort(Address.comparator)
-    output.output.addresses.forEach(address => {
+    output.output.addresses.forEach((address) => {
       key += address.serialize().toHex()
     })
     if (spendings.has(key)) {
-      const out: TransactionOutput = (spendings.get(key) as UserOutput).output;
-      (out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
+      const out: TransactionOutput = (spendings.get(key) as UserOutput).output
+      ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
     } else {
       mergedOutputs.push(output)
       spendings.set(key, output)

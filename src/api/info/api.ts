@@ -1,6 +1,18 @@
 import { AbstractAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetBlockchainIDResponse, type GetNetworkIDResponse, type GetNetworkNameResponse, type GetNodeIDResponse, type GetNodeIPResponse, type GetNodeVersionResponse, type GetTxFeeResponse, type GetVMsResponse, type IsBootstrappedResponse, type PeersResponse, type UptimeResponse } from './data'
+import {
+  type GetBlockchainIDResponse,
+  type GetNetworkIDResponse,
+  type GetNetworkNameResponse,
+  type GetNodeIDResponse,
+  type GetNodeIPResponse,
+  type GetNodeVersionResponse,
+  type GetTxFeeResponse,
+  type GetVMsResponse,
+  type IsBootstrappedResponse,
+  type PeersResponse,
+  type UptimeResponse
+} from './data'
 
 const Service: string = 'info'
 const Endpoint = '/info'

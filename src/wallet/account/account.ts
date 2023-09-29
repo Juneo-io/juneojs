@@ -69,7 +69,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    (this.balances.get(assetId) as Balance).registerEvents(listener)
+    ;(this.balances.get(assetId) as Balance).registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
@@ -81,9 +81,9 @@ export abstract class AbstractChainAccount implements ChainAccount {
   abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected spend (spendings: Spending[]): void {
-    spendings.forEach(spending => {
+    spendings.forEach((spending) => {
       if (this.balances.has(spending.assetId)) {
-        (this.balances.get(spending.assetId) as Balance).spend(spending.amount)
+        ;(this.balances.get(spending.assetId) as Balance).spend(spending.amount)
       }
     })
   }
@@ -124,7 +124,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
     const utxos: Utxo[] = []
-    this.utxoSet.forEach(utxo => {
+    this.utxoSet.forEach((utxo) => {
       let spent: boolean = false
       for (let i = 0; i < spendings.length; i++) {
         const spending: UtxoSpending = spendings[i]

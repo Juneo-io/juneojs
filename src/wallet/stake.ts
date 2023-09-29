@@ -1,5 +1,9 @@
 import { NodeId, type Utxo, Validator } from '../transaction'
-import { type UtxoFeeData, estimatePlatformAddValidatorTransaction, estimatePlatformAddDelegatorTransaction } from './transaction'
+import {
+  type UtxoFeeData,
+  estimatePlatformAddValidatorTransaction,
+  estimatePlatformAddDelegatorTransaction
+} from './transaction'
 import { type MCNWallet, type VMWallet } from './wallet'
 import { StakeError, calculatePrimary, now, verifyTimeRange } from '../utils'
 import { type PlatformAPI } from '../api'
@@ -31,11 +35,16 @@ export class StakeManager {
 
   static estimateDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
     const rewards: bigint = calculatePrimary(stakePeriod, now(), stakeAmount)
-    return rewards * BigInt(DelegationShare) / BigInt(BaseShare)
+    return (rewards * BigInt(DelegationShare)) / BigInt(BaseShare)
   }
 
   static verifyStakingValues (
-    amount: bigint, minStake: bigint, maxStake: bigint, startTime: bigint, endTime: bigint, minPeriod: bigint
+    amount: bigint,
+    minStake: bigint,
+    maxStake: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    minPeriod: bigint
   ): void {
     if (amount < minStake) {
       throw new StakeError(`amount ${amount} is less than min stake ${minStake}`)
@@ -61,17 +70,42 @@ export class StakeManager {
     StakeManager.verifyStakingValues(amount, minStake, maxStake, startTime, endTime, minPeriod)
   }
 
-  async estimateValidationFee (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+  async estimateValidationFee (
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    utxoSet?: Utxo[]
+  ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    return await estimatePlatformAddValidatorTransaction(this.provider, this.wallet, validator, ValidationShare, utxoSet)
+    return await estimatePlatformAddValidatorTransaction(
+      this.provider,
+      this.wallet,
+      validator,
+      ValidationShare,
+      utxoSet
+    )
   }
 
-  async estimateDelegationFee (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
+  async estimateDelegationFee (
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    utxoSet?: Utxo[]
+  ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
     return await estimatePlatformAddDelegatorTransaction(this.provider, this.wallet, validator, utxoSet)
   }
 
-  async validate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
+  async validate (
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    feeData?: UtxoFeeData,
+    utxoSet?: Utxo[]
+  ): Promise<string> {
     StakeManager.verifyValidationValues(amount, startTime, endTime, this.provider.mcn.stakeConfig)
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)
@@ -80,7 +114,14 @@ export class StakeManager {
     return (await this.api.issueTx(transaction)).txID
   }
 
-  async delegate (nodeId: string, amount: bigint, startTime: bigint, endTime: bigint, feeData?: UtxoFeeData, utxoSet?: Utxo[]): Promise<string> {
+  async delegate (
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    feeData?: UtxoFeeData,
+    utxoSet?: Utxo[]
+  ): Promise<string> {
     StakeManager.verifyDelegationValues(amount, startTime, endTime, this.provider.mcn.stakeConfig)
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateValidationFee(nodeId, amount, startTime, endTime, utxoSet)

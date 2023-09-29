@@ -14,9 +14,7 @@ export const NodeIdSize: number = 20
 
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
-    const buffer: JuneoBuffer = typeof address === 'string'
-      ? Address.decodeAddress(address)
-      : address
+    const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
@@ -24,9 +22,7 @@ export class Address extends BytesData {
   }
 
   matches (address: string | Address): boolean {
-    const buffer: JuneoBuffer = typeof address === 'string'
-      ? Address.decodeAddress(address)
-      : address.getBuffer()
+    const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address.getBuffer()
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
@@ -35,7 +31,7 @@ export class Address extends BytesData {
 
   static toAddresses (values: string[]): Address[] {
     const addresses: Address[] = []
-    values.forEach(value => {
+    values.forEach((value) => {
       addresses.push(new Address(value))
     })
     return addresses

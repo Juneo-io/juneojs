@@ -43,7 +43,7 @@ export class MCNWallet {
 
   getWallets (): VMWallet[] {
     const wallets: VMWallet[] = []
-    this.chainsWallets.forEach(wallet => {
+    this.chainsWallets.forEach((wallet) => {
       wallets.push(wallet)
     })
     return wallets

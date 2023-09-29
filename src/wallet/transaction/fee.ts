@@ -12,7 +12,7 @@ export enum FeeType {
   Withdraw = 'Withdraw fee',
   Deposit = 'Deposit fee',
   ValidateFee = 'Validate fee',
-  DelegateFee = 'Delegate fee'
+  DelegateFee = 'Delegate fee',
 }
 
 export interface FeeData {

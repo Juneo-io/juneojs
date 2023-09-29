@@ -21,13 +21,23 @@ export class WrapManager {
 
   async estimateWrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMCall(
-      this.api, this.wallet.address, asset.address, BigInt(amount), asset.adapter.getDepositData(), FeeType.Wrap
+      this.api,
+      this.wallet.address,
+      asset.address,
+      BigInt(amount),
+      asset.adapter.getDepositData(),
+      FeeType.Wrap
     )
   }
 
   async estimateUnwrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMCall(
-      this.api, this.wallet.address, asset.address, BigInt(0), asset.adapter.getWithdrawData(amount), FeeType.Unwrap
+      this.api,
+      this.wallet.address,
+      asset.address,
+      BigInt(0),
+      asset.adapter.getWithdrawData(amount),
+      FeeType.Unwrap
     )
   }
 

@@ -14,9 +14,16 @@ export abstract class AbstractAPI {
     this.service = service
   }
 
-  protected async callServiceAt (service: string, endpoint: string, method: string, params?: object[] | string[]): Promise<JsonRpcResponse> {
-    const response: JsonRpcResponse = await this.client.rpcCall(`${BaseEndpoint}${endpoint}`,
-      new JsonRpcRequest(`${service}${service.length > 0 ? '.' : ''}${method}`, params))
+  protected async callServiceAt (
+    service: string,
+    endpoint: string,
+    method: string,
+    params?: object[] | string[]
+  ): Promise<JsonRpcResponse> {
+    const response: JsonRpcResponse = await this.client.rpcCall(
+      `${BaseEndpoint}${endpoint}`,
+      new JsonRpcRequest(`${service}${service.length > 0 ? '.' : ''}${method}`, params)
+    )
     return response
   }
 
@@ -30,13 +37,26 @@ export abstract class AbstractAPI {
 }
 
 export abstract class AbstractUtxoAPI extends AbstractAPI {
-  async getUTXOs (addresses: string[], limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
+  async getUTXOs (
+    addresses: string[],
+    limit?: number,
+    startIndex?: UTXOIndex,
+    encoding?: string
+  ): Promise<GetUTXOsResponse> {
     const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, limit, startIndex, encoding }])
     return response.result
   }
 
-  async getUTXOsFrom (addresses: string[], sourceChain?: string, limit?: number, startIndex?: UTXOIndex, encoding?: string): Promise<GetUTXOsResponse> {
-    const response: JsonRpcResponse = await this.call('getUTXOs', [{ addresses, sourceChain, limit, startIndex, encoding }])
+  async getUTXOsFrom (
+    addresses: string[],
+    sourceChain?: string,
+    limit?: number,
+    startIndex?: UTXOIndex,
+    encoding?: string
+  ): Promise<GetUTXOsResponse> {
+    const response: JsonRpcResponse = await this.call('getUTXOs', [
+      { addresses, sourceChain, limit, startIndex, encoding }
+    ])
     return response.result
   }
 }

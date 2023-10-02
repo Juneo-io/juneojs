@@ -32,7 +32,7 @@ describe('StakeManager', (): void => {
     await expect(mcnAccount.execute(summary)).rejects.toThrow('amount 1 is less than min stake 10000000');
   });
 
-  test('Should make a delegate transaction with amount less than balance', async () => {
+  test('Should make a delegate transaction with amount bigger than balance', async () => {
     // invalid    
     const delegateOperation = new DelegateOperation(
       provider.mcn,

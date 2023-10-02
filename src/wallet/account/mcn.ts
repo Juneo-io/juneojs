@@ -77,8 +77,9 @@ export class MCNAccount {
 
   async execute (summary: OperationSummary, skipVerification: boolean = false): Promise<void> {
     const executable: ExecutableOperation = summary.getExecutable()
-    if (!skipVerification) {
-      this.verifySpendings(summary)
+    if (!skipVerification && this.verifySpendings(summary).length > 0) {
+      executable.status = NetworkOperationStatus.Error
+      throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
     }
     executable.status = NetworkOperationStatus.Executing
     if (summary.type === SummaryType.Chain) {
@@ -124,15 +125,15 @@ export class MCNAccount {
     }
   }
 
-  verifySpendings (summary: OperationSummary): void {
-    const executable: ExecutableOperation = summary.getExecutable()
+  verifySpendings (summary: OperationSummary): Spending[] {
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
+    const faulty: Spending[] = []
     spendings.forEach((spending) => {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
-        executable.status = NetworkOperationStatus.Error
-        throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
+        faulty.push(spending)
       }
     })
+    return faulty
   }
 }

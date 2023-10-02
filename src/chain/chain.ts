@@ -1,5 +1,4 @@
 import { ChainError } from '../utils'
-import { type MCNProvider } from '../juneo'
 import { type TokenAsset } from '../asset'
 
 export interface Blockchain {
@@ -14,8 +13,6 @@ export interface Blockchain {
   getAsset: (assetId: string) => TokenAsset
 
   validateAddress: (address: string, hrp?: string) => boolean
-
-  validateAssetId: (provider: MCNProvider, assetId: string) => Promise<boolean>
 }
 
 export abstract class AbstractBlockchain implements Blockchain {
@@ -60,6 +57,4 @@ export abstract class AbstractBlockchain implements Blockchain {
   }
 
   abstract validateAddress (address: string, hrp?: string): boolean
-
-  abstract validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean>
 }

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import * as abi from './abi'
-import { AssetId } from '../transaction'
+import { AssetId } from '../../transaction'
 
 export class ContractHandler {
   private readonly adapters: ContractAdapter[] = []

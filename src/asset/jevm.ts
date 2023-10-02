@@ -1,4 +1,4 @@
-import { JRC20ContractAdapter } from '../solidity'
+import { JRC20ContractAdapter } from '../chain'
 import { TokenType } from './asset'
 import { ERC20Asset, EVMGasToken } from './evm'
 import { type JNTAsset } from './jvm'

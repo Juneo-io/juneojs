@@ -2,9 +2,8 @@ import { ethers } from 'ethers'
 import { isHex } from '../utils'
 import { AssetId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
+import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from './solidity'
 import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
-import { type MCNProvider } from '../juneo'
 import { AbstractBlockchain } from './chain'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
@@ -60,20 +59,6 @@ export class JEVMBlockchain extends AbstractBlockchain {
 
   validateAddress (address: string): boolean {
     return ethers.isAddress(address)
-  }
-
-  /**
-   * @deprecated
-   */
-  async validateAssetId (provider: MCNProvider, assetId: string): Promise<boolean> {
-    if (assetId === this.assetId) {
-      return true
-    }
-    if (!JEVMBlockchain.isContractAddress(assetId)) {
-      return false
-    }
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
-    return contract !== null
   }
 
   async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {

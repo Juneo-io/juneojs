@@ -1,4 +1,4 @@
-import { WrappedContractAdapter } from '../solidity'
+import { WrappedContractAdapter } from '../chain'
 import { TokenAsset, TokenType } from './asset'
 
 const EVMGasTokenDecimals = 18
@@ -16,7 +16,7 @@ export class EVMGasToken extends TokenAsset {
 }
 
 export interface EVMContract {
-  readonly address: string
+  getAddress: () => string
 }
 
 /**
@@ -29,6 +29,10 @@ export class ERC20Asset extends TokenAsset implements EVMContract {
   constructor (address: string, name: string, symbol: string, decimals: number) {
     super(address, name, symbol, decimals)
     this.address = address
+  }
+
+  getAddress (): string {
+    return this.address
   }
 }
 

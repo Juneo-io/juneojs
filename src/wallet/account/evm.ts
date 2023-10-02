@@ -94,6 +94,8 @@ export class EVMAccount extends AbstractChainAccount {
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
     }
+    // should not be needed because of spend but in some cases this can be usefull e.g. sending to self
+    await this.fetchAllBalances()
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

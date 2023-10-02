@@ -129,17 +129,19 @@ export class MCNAccount {
         error = err
       }
     )
-    // most of the operations require to refetch balances
-    for (const chain of summary.getChains()) {
-      await this.getAccount(chain.id).fetchAllBalances()
-    }
-    // unlock the chains
-    this.executingChains = []
     if (error === undefined) {
+      // unlock the chains
+      this.executingChains = []
       return
     }
     // error occured case
     executable.status = NetworkOperationStatus.Error
+    // most of the operations require to refetch balances but error could have cancelled it
+    // try to restore a proper state by fetching them all
+    for (const chain of summary.getChains()) {
+      await this.getAccount(chain.id).fetchAllBalances()
+    }
+    this.executingChains = []
     throw error
   }
 

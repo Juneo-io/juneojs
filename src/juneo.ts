@@ -1,10 +1,5 @@
-import { JuneoClient, InfoAPI } from './api'
-import { type GetTxFeeResponse } from './api/info/data'
-import { JEVMAPI } from './api/jevm'
-import { JVMAPI } from './api/jvm'
-import { PlatformAPI } from './api/platform'
-import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain } from './chain'
-import * as params from './chain/params'
+import { InfoAPI, type GetTxFeeResponse, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
+import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain, SocotraNetwork } from './chain'
 
 export class MCNProvider {
   mcn: MCN
@@ -14,7 +9,7 @@ export class MCNProvider {
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
-  constructor (mcn: MCN = params.SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
     this.info = new InfoAPI(client)
     this.platform = new PlatformAPI(client, this.mcn.primary.platform)

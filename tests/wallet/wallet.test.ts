@@ -1,4 +1,3 @@
-
 import * as dotenv from 'dotenv';
 import { MCNWallet, SocotraJUNEChain, SocotraPlatformChain } from '../../src/index';
 dotenv.config()

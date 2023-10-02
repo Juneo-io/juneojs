@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { ChainAccount, DelegateOperation, ExecutableOperation, MCNAccount, MCNProvider, MCNWallet, SocotraPlatformChain, StakeManager } from '../../../src/index';
+import { ChainAccount, DelegateOperation, ExecutableOperation, MCNAccount, MCNProvider, MCNWallet, SocotraPlatformChain, StakeManager, ValidateOperation } from '../../../src/index';
 dotenv.config()
 
 describe('StakeManager', (): void => {
@@ -151,6 +151,47 @@ describe('StakeManager', (): void => {
     );
     expect(feeData.chain).toEqual(SocotraPlatformChain);
     expect(feeData.amount).toEqual(BigInt(0));
+  });
+
+  test('Should make a validate transaction with amount less than min stake', async () => {
+    // invalid    
+    const validateOperation = new ValidateOperation(
+      provider.mcn,
+      nodeId,
+      BigInt(1),
+      currentDateToBigint,
+      currentDateToBigint + BigInt(86400), // 1 day
+    );
+    
+    const summary = await mcnAccount.estimate(validateOperation);
+    await expect(mcnAccount.execute(summary)).rejects.toThrow(`amount 1 is less than min stake ${provider.mcn.stakeConfig.minValidatorStake}`);
+  });
+  
+  test('Should make a validate transaction with wrong nodeId', async () => {
+    // invalid    
+    const validateOperation = new ValidateOperation(
+      provider.mcn,
+      "wrong node id",
+      BigInt(10000000),
+      currentDateToBigint,
+      currentDateToBigint + BigInt(86400), // 1 day
+    );
+    
+    await expect(mcnAccount.estimate(validateOperation)).rejects.toThrow('value is not base58');
+  });
+  
+  test('Should make a duplicate validate transaction', async () => {
+    // invalid
+    const validateOperation = new ValidateOperation(
+      provider.mcn,
+      nodeId,
+      BigInt(1000000000),
+      currentDateToBigint,
+      currentDateToBigint + BigInt(86400), // 1 day
+    );
+    
+    const summary = await mcnAccount.estimate(validateOperation);
+    await expect( mcnAccount.execute(summary)).rejects.toThrow("couldn't issue tx: attempted to issue duplicate validation for NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL")
   });
   
 });

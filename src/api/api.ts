@@ -1,10 +1,8 @@
 import { JsonRpcRequest, type JsonRpcResponse, type JuneoClient } from './client'
 import { type UTXOIndex, type GetUTXOsResponse } from './data'
 
-const BaseEndpoint: string = '/ext'
-
 export abstract class AbstractAPI {
-  private readonly client: JuneoClient
+  protected readonly client: JuneoClient
   private readonly endpoint: string
   private readonly service: string
 
@@ -20,11 +18,10 @@ export abstract class AbstractAPI {
     method: string,
     params?: object[] | string[]
   ): Promise<JsonRpcResponse> {
-    const response: JsonRpcResponse = await this.client.rpcCall(
-      `${BaseEndpoint}${endpoint}`,
+    return await this.client.rpcCall(
+      `${endpoint}`,
       new JsonRpcRequest(`${service}${service.length > 0 ? '.' : ''}${method}`, params)
     )
-    return response
   }
 
   protected async callAt (endpoint: string, method: string, params?: object[] | string[]): Promise<JsonRpcResponse> {

@@ -1,10 +1,9 @@
-import { sha256 } from 'ethers'
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
 import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType } from '../wallet'
-import { rmd160 } from './crypto'
+import { sha256, rmd160 } from './crypto'
 import { isHex, hasHexPrefix, decodeCB58, isBase58, encodeBech32 } from './encoding'
 import { WalletError } from './errors'
 

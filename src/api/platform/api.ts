@@ -31,7 +31,7 @@ export class PlatformAPI extends AbstractUtxoAPI {
   chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
-    super(client, `/bc/${chain.id}`, Service)
+    super(client, `/ext/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

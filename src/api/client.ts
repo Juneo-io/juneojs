@@ -62,7 +62,6 @@ export class JuneoClient {
     if (status < 200 || status >= 300) {
       throw new HttpError(`request status is not accepted "${status}"`)
     }
-    this.nextRequestId++
     let data = response.data
     if (typeof data === 'string') {
       data = JSON.parse(data)

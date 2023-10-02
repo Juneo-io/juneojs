@@ -1,5 +1,6 @@
 import { AbstractAPI } from '../api'
-import { type JsonRpcResponse, type JuneoClient } from '../client'
+import { JsonRpcRequest, type JsonRpcResponse, type JuneoClient } from '../client'
+import { CachedResponse } from '../data'
 import {
   type GetBlockchainIDResponse,
   type GetNetworkIDResponse,
@@ -15,7 +16,7 @@ import {
 } from './data'
 
 const Service: string = 'info'
-const Endpoint = '/info'
+const Endpoint = '/ext/info'
 
 /**
  * The InfoAPI provides information about the network and/or a specific node connected to it.
@@ -23,6 +24,8 @@ const Endpoint = '/info'
  * The node which is used for this API depends on the client that is used to instantiate this API.
  */
 export class InfoAPI extends AbstractAPI {
+  private readonly feesCache = new CachedResponse<GetTxFeeResponse>()
+
   /**
    * Creates a new InfoAPI with its corresponding info service and endpoint.
    * @param client The client to use to send network requests for this API.
@@ -99,11 +102,16 @@ export class InfoAPI extends AbstractAPI {
 
   /**
    * Gets the values of the fee from different transactions types of the network this node is connected to.
+   * @param forceUpdate **Optional**. Force the retrieval of the value from the node and update the fee cache.
    * @returns Promise of GetTxFeeResponse.
    */
-  async getTxFee (): Promise<GetTxFeeResponse> {
-    const response: JsonRpcResponse = await this.call('getTxFee')
-    return response.result
+  async getTxFee (forceUpdate: boolean = false): Promise<GetTxFeeResponse> {
+    return await this.feesCache.rpcCall(
+      this.client,
+      Endpoint,
+      new JsonRpcRequest(`${Service}.getTxFee`, []),
+      forceUpdate
+    )
   }
 
   /**

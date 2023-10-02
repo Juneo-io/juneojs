@@ -1,11 +1,10 @@
-import { InfoAPI, type GetTxFeeResponse, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
+import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
 import { type Blockchain, JEVM_ID, type JEVMBlockchain } from './chain'
 import { type MCN, SocotraNetwork, type Supernet } from './network'
 
 export class MCNProvider {
   mcn: MCN
   info: InfoAPI
-  private feesCache: GetTxFeeResponse | undefined
   platform: PlatformAPI
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
@@ -24,19 +23,6 @@ export class MCNProvider {
         }
       }
     }
-  }
-
-  async getFees (forceUpdate?: boolean): Promise<GetTxFeeResponse> {
-    // explicit boolean comparison to cover undefined case
-    if (forceUpdate === false && this.feesCache !== undefined) {
-      return this.feesCache
-    }
-    this.feesCache = await this.info.getTxFee()
-    return this.feesCache
-  }
-
-  clearCaches (): void {
-    this.feesCache = undefined
   }
 }
 

@@ -11,7 +11,7 @@ export class JVMAPI extends AbstractUtxoAPI {
   chain: JVMBlockchain
 
   constructor (client: JuneoClient, chain: JVMBlockchain) {
-    super(client, `/bc/${chain.id}`, Service)
+    super(client, `/ext/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

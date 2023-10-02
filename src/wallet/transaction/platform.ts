@@ -31,12 +31,12 @@ async function getPlatformBaseTxFee (provider: MCNProvider, type: FeeType): Prom
 }
 
 async function getPlatformAddValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
-  const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkValidatorFee)
+  const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkValidatorFee)
   return new BaseFeeData(provider.platform.chain, fee, FeeType.ValidateFee)
 }
 
 async function getPlatformAddDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
-  const fee: bigint = BigInt((await provider.getFees()).addPrimaryNetworkDelegatorFee)
+  const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkDelegatorFee)
   return new BaseFeeData(provider.platform.chain, fee, FeeType.DelegateFee)
 }
 

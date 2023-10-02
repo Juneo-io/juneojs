@@ -11,7 +11,7 @@
     "lint": "eslint . --ext .ts --fix",
     "prettier": "npx prettier . --write",
     "test": "jest",
-    "verify": "npm run lint && npm run build"
+    "verify": "npm run build && npm run lint"
   },
   "keywords": [
     "Juneo",

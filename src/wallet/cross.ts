@@ -10,7 +10,7 @@ import {
   type JRC20Asset
 } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { fetchUtxos, type Utxo } from '../transaction'
+import { fetchUtxos, type Secp256k1Output, type Utxo } from '../transaction'
 import { CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import {
@@ -531,6 +531,16 @@ export class CrossManager {
         continue
       }
       const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
+      // in case we are importing the fee asset make sure it will be worth it to import it
+      if (utxoSet.length === 1 && utxoSet[0].assetId.assetId === chain.assetId) {
+        const fee: FeeData = await this.estimateImport(chain, chain.assetId, 1, 1)
+        // if is fee asset cannot be another output type than this
+        const amount: bigint = (utxoSet[0].output as Secp256k1Output).amount
+        // in that case we would only lose value so skip this utxoSet
+        if (amount <= fee.amount) {
+          continue
+        }
+      }
       if (utxoSet.length > 0) {
         list.push(new CrossResumeOperation(source, chain, utxoSet))
       }

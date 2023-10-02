@@ -11,12 +11,14 @@ export class JVMAPI extends AbstractUtxoAPI {
   chain: JVMBlockchain
 
   constructor (client: JuneoClient, chain: JVMBlockchain) {
-    super(client, `/bc/${chain.id}`, Service)
+    super(client, `/ext/bc/${chain.id}`, Service)
     this.chain = chain
   }
 
   async buildGenesis (networkID: number, genesisData: JSON, encoding?: string): Promise<BuildGenesisResponse> {
-    const response: JsonRpcResponse = await this.callAt(VMEndpoint, 'buildGenesis', [{ networkID, genesisData, encoding }])
+    const response: JsonRpcResponse = await this.callAt(VMEndpoint, 'buildGenesis', [
+      { networkID, genesisData, encoding }
+    ])
     return response.result
   }
 

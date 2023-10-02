@@ -7,21 +7,19 @@ import { JuneoBuffer } from './bytes'
 export const SignatureLength: number = 65
 
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
-  const buffer: JuneoBuffer = typeof data === 'string'
-    ? JuneoBuffer.fromString(data, 'hex')
-    : data
+  const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
   return JuneoBuffer.fromBytes(Buffer.from(ripemd160(buffer.getBytes())))
 }
 
 export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
-  const buffer: JuneoBuffer = typeof data === 'string'
-    ? JuneoBuffer.fromString(data, 'hex')
-    : data
+  const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
   return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
 function recoverPubKey (hash: Buffer, signature: Signature, recovery: number): string {
-  return JuneoBuffer.fromBytes(Buffer.from(recoverPublicKey(hash, signature, recovery, true))).toHex().padStart(66, '0')
+  return JuneoBuffer.fromBytes(Buffer.from(recoverPublicKey(hash, signature, recovery, true)))
+    .toHex()
+    .padStart(66, '0')
 }
 
 export class ECKeyPair {
@@ -30,7 +28,9 @@ export class ECKeyPair {
 
   constructor (privateKey: string) {
     this.privateKey = privateKey
-    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(getPublicKey(privateKey, true))).toHex().padStart(66, '0')
+    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(getPublicKey(privateKey, true)))
+      .toHex()
+      .padStart(66, '0')
   }
 
   sign (buffer: JuneoBuffer): JuneoBuffer {

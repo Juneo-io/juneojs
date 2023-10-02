@@ -3,7 +3,13 @@ import { sleep } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
+import {
+  AbstractBaseTransaction,
+  AbstractExportTransaction,
+  AbstractImportTransaction,
+  TransactionStatusFetchDelay,
+  type TransactionStatusFetcher
+} from '../transaction'
 import { type BlockchainId } from '../types'
 
 const BaseTransactionTypeId: number = 0x00000000
@@ -13,7 +19,7 @@ const ImportTransactionTypeId: number = 0x00000003
 export enum JVMTransactionStatus {
   Accepted = 'Accepted',
   Processing = 'Processing',
-  Unknown = 'Unknown'
+  Unknown = 'Unknown',
 }
 
 export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
@@ -32,13 +38,16 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.currentStatus = JVMTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      await this.jvmApi.getTx(this.transactionId).then(() => {
-        this.currentStatus = JVMTransactionStatus.Accepted
-      }, error => {
-        if (error.message !== 'not found') {
-          return this.currentStatus
+      await this.jvmApi.getTx(this.transactionId).then(
+        () => {
+          this.currentStatus = JVMTransactionStatus.Accepted
+        },
+        (error) => {
+          if (error.message !== 'not found') {
+            return this.currentStatus
+          }
         }
-      })
+      )
       this.attempts += 1
     }
     return this.currentStatus
@@ -50,8 +59,13 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
 }
 
 export class BaseTransaction extends AbstractBaseTransaction {
-  constructor (networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string
+  ) {
     super(BaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
 
@@ -61,19 +75,29 @@ export class BaseTransaction extends AbstractBaseTransaction {
 }
 
 export class JVMExportTransaction extends AbstractExportTransaction {
-  constructor (networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
-    super(ExportTransactionTypeId, networkId, blockchainId, outputs,
-      inputs, memo, destinationChain, exportedOutputs)
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    destinationChain: BlockchainId,
+    exportedOutputs: TransferableOutput[]
+  ) {
+    super(ExportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, destinationChain, exportedOutputs)
   }
 }
 
 export class JVMImportTransaction extends AbstractImportTransaction {
-  constructor (networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    sourceChain: BlockchainId, importedInputs: TransferableInput[]) {
-    super(ImportTransactionTypeId, networkId, blockchainId, outputs,
-      inputs, memo, sourceChain, importedInputs)
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    sourceChain: BlockchainId,
+    importedInputs: TransferableInput[]
+  ) {
+    super(ImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
   }
 }

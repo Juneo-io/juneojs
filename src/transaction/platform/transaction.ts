@@ -4,8 +4,24 @@ import { sleep } from '../../utils/time'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
-import { BlockchainIdSize, BlockchainId, type SupernetId, SupernetIdSize, type DynamicId, DynamicIdSize, type AssetId, type Address, AssetIdSize } from '../types'
+import {
+  AbstractBaseTransaction,
+  AbstractExportTransaction,
+  AbstractImportTransaction,
+  TransactionStatusFetchDelay,
+  type TransactionStatusFetcher
+} from '../transaction'
+import {
+  BlockchainIdSize,
+  BlockchainId,
+  type SupernetId,
+  SupernetIdSize,
+  type DynamicId,
+  DynamicIdSize,
+  type AssetId,
+  type Address,
+  AssetIdSize
+} from '../types'
 import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
 const CreateSupernetTransactionTypeId: number = 0x00000010
@@ -21,7 +37,7 @@ export enum PlatformTransactionStatus {
   Aborted = 'Aborted',
   Processing = 'Processing',
   Dropped = 'Dropped',
-  Unknown = 'Unknown'
+  Unknown = 'Unknown',
 }
 
 export class PlatformTransactionStatusFetcher implements TransactionStatusFetcher {
@@ -39,36 +55,52 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = await this.platformApi.getTxStatus(this.transactionId).then(value => {
-        return value.status
-      }, () => {
-        return PlatformTransactionStatus.Unknown
-      })
+      this.currentStatus = await this.platformApi.getTxStatus(this.transactionId).then(
+        (value) => {
+          return value.status
+        },
+        () => {
+          return PlatformTransactionStatus.Unknown
+        }
+      )
       this.attempts += 1
     }
     return this.currentStatus
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== PlatformTransactionStatus.Unknown && this.currentStatus !== PlatformTransactionStatus.Processing
+    return (
+      this.currentStatus !== PlatformTransactionStatus.Unknown &&
+      this.currentStatus !== PlatformTransactionStatus.Processing
+    )
   }
 }
 
 export class PlatformExportTransaction extends AbstractExportTransaction {
-  constructor (networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
-    super(ExportTransactionTypeId, networkId, blockchainId, outputs,
-      inputs, memo, destinationChain, exportedOutputs)
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    destinationChain: BlockchainId,
+    exportedOutputs: TransferableOutput[]
+  ) {
+    super(ExportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, destinationChain, exportedOutputs)
   }
 }
 
 export class PlatformImportTransaction extends AbstractImportTransaction {
-  constructor (networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    sourceChain: BlockchainId, importedInputs: TransferableInput[]) {
-    super(ImportTransactionTypeId, networkId, blockchainId, outputs,
-      inputs, memo, sourceChain, importedInputs)
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    sourceChain: BlockchainId,
+    importedInputs: TransferableInput[]
+  ) {
+    super(ImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
   }
 }
 
@@ -78,8 +110,17 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
   rewardsOwner: Secp256k1OutputOwners
   shares: number
 
-  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[],
-    memo: string, validator: Validator, stake: TransferableOutput[], rewardsOwner: Secp256k1OutputOwners, shares: number) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    validator: Validator,
+    stake: TransferableOutput[],
+    rewardsOwner: Secp256k1OutputOwners,
+    shares: number
+  ) {
     super(AddValidatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.validator = validator
     this.stake = stake
@@ -95,7 +136,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const stakeBytes: JuneoBuffer[] = []
     let stakeBytesSize: number = 0
-    this.stake.forEach(output => {
+    this.stake.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       stakeBytesSize += bytes.length
       stakeBytes.push(bytes)
@@ -107,7 +148,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     buffer.write(baseTransaction)
     buffer.write(this.validator.serialize())
     buffer.writeUInt32(this.stake.length)
-    stakeBytes.forEach(output => {
+    stakeBytes.forEach((output) => {
       buffer.write(output)
     })
     buffer.write(rewardsOwnerBytes)
@@ -141,9 +182,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     }
     const memoLength: number = buffer.readUInt32(position)
     position += 4
-    const memo: string = memoLength > 0
-      ? String(buffer.read(position, memoLength))
-      : ''
+    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
     position += memoLength
     const validator: Validator = Validator.parse(buffer.read(position, buffer.length - position))
     position += Validator.Size
@@ -155,7 +194,9 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
       position += stake.serialize().length
       stakes.push(stake)
     }
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
+      buffer.read(position, buffer.length - position)
+    )
     position += rewardsOwner.serialize().length
     const shares: number = buffer.readUInt32(position)
     return new AddValidatorTransaction(
@@ -177,8 +218,16 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
   stake: TransferableOutput[]
   rewardsOwner: Secp256k1OutputOwners
 
-  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[],
-    memo: string, validator: Validator, stake: TransferableOutput[], rewardsOwner: Secp256k1OutputOwners) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    validator: Validator,
+    stake: TransferableOutput[],
+    rewardsOwner: Secp256k1OutputOwners
+  ) {
     super(AddDelegatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.validator = validator
     this.stake = stake
@@ -193,7 +242,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const stakeBytes: JuneoBuffer[] = []
     let stakeBytesSize: number = 0
-    this.stake.forEach(output => {
+    this.stake.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       stakeBytesSize += bytes.length
       stakeBytes.push(bytes)
@@ -205,7 +254,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     buffer.write(baseTransaction)
     buffer.write(this.validator.serialize())
     buffer.writeUInt32(this.stake.length)
-    stakeBytes.forEach(output => {
+    stakeBytes.forEach((output) => {
       buffer.write(output)
     })
     buffer.write(rewardsOwnerBytes)
@@ -238,9 +287,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     }
     const memoLength: number = buffer.readUInt32(position)
     position += 4
-    const memo: string = memoLength > 0
-      ? String(buffer.read(position, memoLength))
-      : ''
+    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
     position += memoLength
     const validator: Validator = Validator.parse(buffer.read(position, buffer.length - position))
     position += Validator.Size
@@ -252,17 +299,10 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
       position += stake.serialize().length
       stakes.push(stake)
     }
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
-    return new AddDelegatorTransaction(
-      networkId,
-      blockchainId,
-      outputs,
-      inputs,
-      memo,
-      validator,
-      stakes,
-      rewardsOwner
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
+      buffer.read(position, buffer.length - position)
     )
+    return new AddDelegatorTransaction(networkId, blockchainId, outputs, inputs, memo, validator, stakes, rewardsOwner)
   }
 }
 
@@ -271,8 +311,16 @@ export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
   supernetId: SupernetId
   supernetAuth: SupernetAuth
 
-  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[],
-    memo: string, validator: Validator, supernetId: SupernetId, supernetAuth: SupernetAuth) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    validator: Validator,
+    supernetId: SupernetId,
+    supernetAuth: SupernetAuth
+  ) {
     super(AddSupernetValidatorTransactionType, networkId, blockchainId, outputs, inputs, memo)
     this.validator = validator
     this.supernetId = supernetId
@@ -300,8 +348,14 @@ export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
 export class CreateSupernetTransaction extends AbstractBaseTransaction {
   rewardsOwner: Secp256k1OutputOwners
 
-  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[],
-    inputs: TransferableInput[], memo: string, rewardsOwner: Secp256k1OutputOwners) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    rewardsOwner: Secp256k1OutputOwners
+  ) {
     super(CreateSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.rewardsOwner = rewardsOwner
   }
@@ -317,9 +371,7 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
   serialize (): JuneoBuffer {
     const baseTransaction: JuneoBuffer = super.serialize()
     const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + rewardsOwnerBytes.length
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + rewardsOwnerBytes.length)
     buffer.write(baseTransaction)
     buffer.write(rewardsOwnerBytes)
     return buffer
@@ -351,19 +403,12 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     }
     const memoLength: number = buffer.readUInt32(position)
     position += 4
-    const memo: string = memoLength > 0
-      ? String(buffer.read(position, memoLength))
-      : ''
+    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
     position += memoLength
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(buffer.read(position, buffer.length - position))
-    return new CreateSupernetTransaction(
-      networkId,
-      blockchainId,
-      outputs,
-      inputs,
-      memo,
-      rewardsOwner
+    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
+      buffer.read(position, buffer.length - position)
     )
+    return new CreateSupernetTransaction(networkId, blockchainId, outputs, inputs, memo, rewardsOwner)
   }
 }
 
@@ -376,8 +421,20 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
   genesisData: string
   supernetAuth: SupernetAuth
 
-  constructor (networkId: number, blockchainId: BlockchainId, outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    supernetId: SupernetId, name: string, chainAssetId: AssetId, vmId: DynamicId, fxIds: DynamicId[], genesisData: string, supernetAuth: SupernetAuth) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    supernetId: SupernetId,
+    name: string,
+    chainAssetId: AssetId,
+    vmId: DynamicId,
+    fxIds: DynamicId[],
+    genesisData: string,
+    supernetAuth: SupernetAuth
+  ) {
     super(CreateChainTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.supernetId = supernetId
     this.name = name
@@ -396,8 +453,17 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
     const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + SupernetIdSize + 2 + this.name.length + AssetIdSize + DynamicIdSize +
-      4 + DynamicIdSize * this.fxIds.length + 4 + this.genesisData.length + supernetAuthBytes.length
+      baseTransaction.length +
+        SupernetIdSize +
+        2 +
+        this.name.length +
+        AssetIdSize +
+        DynamicIdSize +
+        4 +
+        DynamicIdSize * this.fxIds.length +
+        4 +
+        this.genesisData.length +
+        supernetAuthBytes.length
     )
     buffer.write(baseTransaction)
     buffer.write(this.supernetId.serialize())
@@ -406,7 +472,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     buffer.write(this.chainAssetId.serialize())
     buffer.write(this.vmId.serialize())
     buffer.writeUInt32(this.fxIds.length)
-    this.fxIds.forEach(fxId => {
+    this.fxIds.forEach((fxId) => {
       buffer.write(fxId.serialize())
     })
     buffer.writeUInt32(this.genesisData.length)

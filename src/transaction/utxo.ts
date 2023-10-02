@@ -6,17 +6,21 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 const UtxoRequestLimit: number = 1024
 
 export async function fetchUtxos (
-  utxoApi: AbstractUtxoAPI, addresses: string[], sourceChain?: string, transactionId?: string
+  utxoApi: AbstractUtxoAPI,
+  addresses: string[],
+  sourceChain?: string,
+  transactionId?: string
 ): Promise<Utxo[]> {
   // use a set to avoid duplicates because getUtxos does not guarantee to provide unique
   // utxos between multiple calls. There could be some duplicates because of start/end indexes
   // or even if one transaction changes one of the utxos between two calls.
   const utxoSet = new Set<string>()
   const utxos: Utxo[] = []
-  let utxoResponse: GetUTXOsResponse = sourceChain === undefined
-    ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
-    : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit)
-  utxoResponse.utxos.forEach(data => {
+  let utxoResponse: GetUTXOsResponse =
+    sourceChain === undefined
+      ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
+      : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit)
+  utxoResponse.utxos.forEach((data) => {
     const utxo: Utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
     if (addUtxo(utxos, utxo, transactionId)) {
@@ -24,9 +28,10 @@ export async function fetchUtxos (
     }
   })
   while (utxoResponse.numFetched === UtxoRequestLimit) {
-    utxoResponse = sourceChain === undefined
-      ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
-      : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
+    utxoResponse =
+      sourceChain === undefined
+        ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
+        : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
     for (const data of utxoResponse.utxos) {
       const utxo: Utxo = Utxo.parse(data)
       utxo.sourceChain = sourceChain
@@ -73,15 +78,11 @@ export class Utxo {
     let position: number = 0
     // skip codec reading
     position += 2
-    const transactionId: TransactionId = new TransactionId(
-      buffer.read(position, TransactionIdSize).toCB58()
-    )
+    const transactionId: TransactionId = new TransactionId(buffer.read(position, TransactionIdSize).toCB58())
     position += TransactionIdSize
     const utxoIndex: number = buffer.readUInt32(position)
     position += 4
-    const assetId: AssetId = new AssetId(
-      buffer.read(position, AssetIdSize).toCB58()
-    )
+    const assetId: AssetId = new AssetId(buffer.read(position, AssetIdSize).toCB58())
     position += AssetIdSize
     const outputBuffer: JuneoBuffer = buffer.read(position, buffer.length - 1)
     const output: TransactionOutput = TransferableOutput.parseOutput(outputBuffer)

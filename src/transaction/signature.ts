@@ -26,7 +26,7 @@ export class Secp256k1Credentials implements TransactionCredentials, Serializabl
     )
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.signatures.length)
-    this.signatures.forEach(signature => {
+    this.signatures.forEach((signature) => {
       buffer.write(signature.serialize())
     })
     return buffer
@@ -36,18 +36,16 @@ export class Secp256k1Credentials implements TransactionCredentials, Serializabl
 export function sign (bytes: JuneoBuffer, unsignedInputs: Signable[], wallets: VMWallet[]): JuneoBuffer {
   const credentials: JuneoBuffer[] = []
   let credentialsSize: number = 0
-  unsignedInputs.forEach(input => {
+  unsignedInputs.forEach((input) => {
     const signatures: Signature[] = input.sign(bytes, wallets)
     const credential: JuneoBuffer = new Secp256k1Credentials(signatures).serialize()
     credentialsSize += credential.length
     credentials.push(credential)
   })
-  const buffer: JuneoBuffer = JuneoBuffer.alloc(
-    bytes.length + 4 + credentialsSize
-  )
+  const buffer: JuneoBuffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
   buffer.write(bytes)
   buffer.writeUInt32(credentials.length)
-  credentials.forEach(credential => {
+  credentials.forEach((credential) => {
     buffer.write(credential)
   })
   return buffer

@@ -1,8 +1,9 @@
 import { type AbstractUtxoAPI } from '../../api'
-import { type TokenAsset, type AssetValue, type Blockchain } from '../../chain'
+import { type TokenAsset } from '../../asset'
+import { type Blockchain } from '../../chain'
 import { type Utxo, fetchUtxos } from '../../transaction'
-import { getUtxosAmountValues } from '../../utils'
-import { type NetworkOperation, type ChainOperationSummary } from '../operation'
+import { getUtxosAmountValues, type AssetValue } from '../../utils'
+import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
@@ -26,7 +27,7 @@ export interface ChainAccount {
 
   fetchAllBalances: () => Promise<void>
 
-  estimate: (operation: NetworkOperation) => Promise<ChainOperationSummary>
+  estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
 
   execute: (summary: ChainOperationSummary) => Promise<void>
 }
@@ -69,21 +70,21 @@ export abstract class AbstractChainAccount implements ChainAccount {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    (this.balances.get(assetId) as Balance).registerEvents(listener)
+    ;(this.balances.get(assetId) as Balance).registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
 
   abstract fetchAllBalances (): Promise<void>
 
-  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
+  abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
   abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected spend (spendings: Spending[]): void {
-    spendings.forEach(spending => {
+    spendings.forEach((spending) => {
       if (this.balances.has(spending.assetId)) {
-        (this.balances.get(spending.assetId) as Balance).spend(spending.amount)
+        ;(this.balances.get(spending.assetId) as Balance).spend(spending.amount)
       }
     })
   }
@@ -117,14 +118,14 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = false
   }
 
-  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
+  abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
   abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
     const utxos: Utxo[] = []
-    this.utxoSet.forEach(utxo => {
+    this.utxoSet.forEach((utxo) => {
       let spent: boolean = false
       for (let i = 0; i < spendings.length; i++) {
         const spending: UtxoSpending = spendings[i]

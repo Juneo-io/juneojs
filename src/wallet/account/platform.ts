@@ -1,7 +1,20 @@
 import { type MCNProvider } from '../../juneo'
-import { TransactionType, type UtxoFeeData, type UtxoSpending, estimatePlatformValidateOperation, estimatePlatformDelegateOperation } from '../transaction'
+import {
+  TransactionType,
+  type UtxoFeeData,
+  type UtxoSpending,
+  estimatePlatformValidateOperation,
+  estimatePlatformDelegateOperation
+} from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary, type DelegateOperation, type ValidateOperation } from '../operation'
+import {
+  type ExecutableOperation,
+  NetworkOperationType,
+  type ChainOperationSummary,
+  type DelegateOperation,
+  type ValidateOperation,
+  type ChainNetworkOperation
+} from '../operation'
 import { StakeManager } from '../stake'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,7 +30,7 @@ export class PlatformAccount extends UtxoAccount {
     this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
+  async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Validate) {
       return await estimatePlatformValidateOperation(this.provider, this.wallet, operation as ValidateOperation, this)
     } else if (operation.type === NetworkOperationType.Delegate) {
@@ -29,19 +42,37 @@ export class PlatformAccount extends UtxoAccount {
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings as UtxoSpending[])
     const executable: ExecutableOperation = summary.getExecutable()
-    const operation: NetworkOperation = summary.operation
+    const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Validate) {
       const staking: ValidateOperation = operation as ValidateOperation
       const transactionId: string = await this.stakeManager.validate(
-        staking.nodeId, staking.amount, staking.startTime, staking.endTime, summary.fee as UtxoFeeData, this.utxoSet
+        staking.nodeId,
+        staking.amount,
+        staking.startTime,
+        staking.endTime,
+        summary.fee as UtxoFeeData,
+        this.utxoSet
       )
-      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.PrimaryValidation, transactionId)
+      await executable.addTrackedPlatformTransaction(
+        this.provider.platform,
+        TransactionType.PrimaryValidation,
+        transactionId
+      )
     } else if (operation.type === NetworkOperationType.Delegate) {
       const staking: DelegateOperation = operation as DelegateOperation
       const transactionId: string = await this.stakeManager.delegate(
-        staking.nodeId, staking.amount, staking.startTime, staking.endTime, summary.fee as UtxoFeeData, this.utxoSet
+        staking.nodeId,
+        staking.amount,
+        staking.startTime,
+        staking.endTime,
+        summary.fee as UtxoFeeData,
+        this.utxoSet
       )
-      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.PrimaryDelegation, transactionId)
+      await executable.addTrackedPlatformTransaction(
+        this.provider.platform,
+        TransactionType.PrimaryDelegation,
+        transactionId
+      )
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.fetchAllBalances()

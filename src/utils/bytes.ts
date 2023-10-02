@@ -46,9 +46,7 @@ export class JuneoBuffer {
   }
 
   writeBuffer (data: Buffer): void {
-    const written: Buffer = this.cursor === 0
-      ? Buffer.alloc(0)
-      : this.bytes.slice(0, this.cursor)
+    const written: Buffer = this.cursor === 0 ? Buffer.alloc(0) : this.bytes.slice(0, this.cursor)
     this.bytes = Buffer.concat([written, data], this.bytes.length)
     this.cursor += data.length
   }
@@ -132,7 +130,7 @@ export class JuneoBuffer {
   static concat (buffers: JuneoBuffer[]): JuneoBuffer {
     const data: Buffer[] = []
     let length: number = 0
-    buffers.forEach(buffer => {
+    buffers.forEach((buffer) => {
       data.push(buffer.bytes)
       length += buffer.bytes.length
     })

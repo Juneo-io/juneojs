@@ -15,8 +15,14 @@ export class UserInput {
   destinationChain: Blockchain
   locktime: bigint
 
-  constructor (assetId: string, sourceChain: Blockchain, amount: bigint,
-    address: string, destinationChain: Blockchain, locktime: bigint = BigInt(0)) {
+  constructor (
+    assetId: string,
+    sourceChain: Blockchain,
+    amount: bigint,
+    address: string,
+    destinationChain: Blockchain,
+    locktime: bigint = BigInt(0)
+  ) {
     this.assetId = assetId
     this.sourceChain = sourceChain
     if (amount < BigInt(1)) {
@@ -40,7 +46,12 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   assetId: AssetId
   input: TransactionInput & Serializable
 
-  constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, input: TransactionInput & Serializable) {
+  constructor (
+    transactionId: TransactionId,
+    utxoIndex: number,
+    assetId: AssetId,
+    input: TransactionInput & Serializable
+  ) {
     this.transactionId = transactionId
     this.utxoIndex = utxoIndex
     this.assetId = assetId
@@ -83,9 +94,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
 
   serialize (): JuneoBuffer {
     const inputBuffer: JuneoBuffer = this.input.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      TransactionIdSize + 4 + AssetIdSize + inputBuffer.length
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(TransactionIdSize + 4 + AssetIdSize + inputBuffer.length)
     buffer.write(this.transactionId.serialize())
     buffer.writeUInt32(this.utxoIndex)
     buffer.write(this.assetId.serialize())
@@ -98,9 +107,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableInput {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     // start at 2 to skip codec if from string from api
     let position: number = typeof data === 'string' ? 2 : 0
     const transactionId: TransactionId = new TransactionId(buffer.read(position, TransactionIdSize).toCB58())
@@ -118,9 +125,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   }
 
   static parseInput (data: string | JuneoBuffer): TransactionInput & Serializable {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     const typeId: number = buffer.readUInt32(0)
     if (typeId === Secp256k1InputTypeId) {
       return Secp256k1Input.parse(data)
@@ -160,16 +165,14 @@ export class Secp256k1Input implements TransactionInput, Serializable {
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt64(this.amount)
     buffer.writeUInt32(this.addressIndices.length)
-    this.addressIndices.forEach(indice => {
+    this.addressIndices.forEach((indice) => {
       buffer.writeUInt32(indice)
     })
     return buffer
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1Input {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     // start at 4 to skip type id reading
     let position: number = 4
     const amount: bigint = buffer.readUInt64(position)

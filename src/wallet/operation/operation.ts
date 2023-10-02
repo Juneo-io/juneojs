@@ -1,4 +1,6 @@
-import { type WrappedAsset, type Blockchain, type MCN } from '../../chain'
+import { type WrappedAsset } from '../../asset'
+import { type Blockchain } from '../../chain'
+import { type MCN } from '../../network'
 import { type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {

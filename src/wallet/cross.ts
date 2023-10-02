@@ -1,15 +1,8 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
-import {
-  JVM_ID,
-  PLATFORMVM_ID,
-  JEVM_ID,
-  type Blockchain,
-  SocotraJUNEChain,
-  JEVMBlockchain,
-  type JVMBlockchain,
-  type JRC20Asset
-} from '../chain'
+import { type JRC20Asset } from '../asset'
+import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, JEVMBlockchain, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
+import { SocotraJUNEChain } from '../network'
 import { fetchUtxos, type Secp256k1Output, type Utxo } from '../transaction'
 import { CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'

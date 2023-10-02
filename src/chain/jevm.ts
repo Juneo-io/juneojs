@@ -3,7 +3,7 @@ import { isHex } from '../utils'
 import { AssetId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
 import { type JEVMAPI } from '../api'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from '../solidity'
-import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from './asset'
+import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { AbstractBlockchain } from './chain'
 

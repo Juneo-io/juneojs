@@ -1,6 +1,6 @@
 import { ChainError } from '../utils'
 import { type MCNProvider } from '../juneo'
-import { type TokenAsset } from './asset'
+import { type TokenAsset } from '../asset'
 
 export interface Blockchain {
   name: string

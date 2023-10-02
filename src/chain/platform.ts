@@ -1,5 +1,5 @@
 import { validateBech32 } from '../utils'
-import { type TokenAsset, type JNTAsset } from './asset'
+import { type TokenAsset, type JNTAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { AbstractBlockchain } from './chain'
 import { JVMBlockchain } from './jvm'

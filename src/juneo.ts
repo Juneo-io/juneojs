@@ -1,5 +1,6 @@
 import { InfoAPI, type GetTxFeeResponse, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
-import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain, SocotraNetwork } from './chain'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain } from './chain'
+import { type MCN, SocotraNetwork, type Supernet } from './network'
 
 export class MCNProvider {
   mcn: MCN
@@ -40,7 +41,9 @@ export class MCNProvider {
 }
 
 export * from './api'
+export * from './asset'
 export * from './chain'
+export * from './network'
 export * from './solidity'
 export * from './transaction'
 export * from './utils'

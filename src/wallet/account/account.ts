@@ -1,5 +1,6 @@
 import { type AbstractUtxoAPI } from '../../api'
-import { type TokenAsset, type Blockchain } from '../../chain'
+import { type TokenAsset } from '../../asset'
+import { type Blockchain } from '../../chain'
 import { type Utxo, fetchUtxos } from '../../transaction'
 import { getUtxosAmountValues, type AssetValue } from '../../utils'
 import { type NetworkOperation, type ChainOperationSummary } from '../operation'

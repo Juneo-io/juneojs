@@ -1,6 +1,4 @@
-import { type Blockchain } from './chain'
-import { type JVMBlockchain } from './jvm'
-import { type PlatformBlockchain } from './platform'
+import { type Blockchain, type PlatformBlockchain, type JVMBlockchain } from '../chain'
 
 export class MCN {
   address: string

@@ -1,6 +1,5 @@
 import { type JEVMAPI } from '../../api'
-import { type JEVMBlockchain, type TokenAsset } from '../../chain'
-import { type MCNProvider } from '../../juneo'
+import { type JEVMBlockchain } from '../../chain'
 import { AccountError } from '../../utils'
 import {
   BaseSpending,
@@ -23,6 +22,8 @@ import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { WrapManager } from '../wrap'
 import { AbstractChainAccount } from './account'
 import { Balance } from './balance'
+import { type TokenAsset } from '../../asset'
+import { type MCNProvider } from '../../juneo'
 
 export class EVMAccount extends AbstractChainAccount {
   override chain: JEVMBlockchain

@@ -1,7 +1,7 @@
 import { validateBech32 } from '../utils'
 import { AssetId } from '../transaction'
 import { type GetAssetDescriptionResponse } from '../api'
-import { type TokenAsset, type JNTAsset } from './asset'
+import { type TokenAsset, type JNTAsset } from '../asset'
 import { AbstractBlockchain } from './chain'
 import { type MCNProvider } from '../juneo'
 

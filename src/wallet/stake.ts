@@ -7,8 +7,8 @@ import {
 import { type MCNWallet, type VMWallet } from './wallet'
 import { StakeError, calculatePrimary, now, verifyTimeRange } from '../utils'
 import { type PlatformAPI } from '../api'
-import { type StakeConfig } from '../chain'
 import { type MCNProvider } from '../juneo'
+import { type StakeConfig } from '../network'
 
 export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%

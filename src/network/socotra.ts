@@ -1,8 +1,6 @@
-import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from './asset'
-import { JEVMBlockchain } from './jevm'
-import { JVMBlockchain } from './jvm'
-import { MCN, PrimarySupernet, StakeConfig } from './network'
-import { PlatformBlockchain } from './platform'
+import { JNTAsset, JRC20Asset, WrappedAsset, JEVMGasToken } from '../asset'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
+import { PrimarySupernet, StakeConfig, MCN } from './network'
 
 const SocotraAddress: string = 'https://api.socotra-test.network:9650'
 

@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, type FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { type Blockchain, JEVMBlockchain, type JRC20Asset, NativeAssetCallContract } from '../../chain'
+import { type Blockchain, JEVMBlockchain, NativeAssetCallContract } from '../../chain'
 import { ChainOperationSummary, type UnwrapOperation, type WrapOperation } from '../operation'
 import { BaseSpending } from './transaction'
 import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
@@ -15,6 +15,7 @@ import {
   fetchUtxos
 } from '../../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
+import { type JRC20Asset } from '../../asset'
 import { type MCNProvider } from '../../juneo'
 
 const DefaultWrapEstimate: bigint = BigInt(55_000)

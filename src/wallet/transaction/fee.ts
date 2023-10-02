@@ -1,5 +1,6 @@
-import { type Blockchain, type AssetValue, type TokenAsset } from '../../chain'
+import { type Blockchain, type TokenAsset } from '../../chain'
 import { type UnsignedTransaction } from '../../transaction'
+import { type AssetValue } from '../../utils'
 import { type Spending, UtxoSpending, BaseSpending } from './transaction'
 
 export enum FeeType {

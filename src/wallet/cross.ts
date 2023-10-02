@@ -435,7 +435,7 @@ export class CrossManager {
       importTransactionId,
       TransactionType.Import
     )
-    await account.fetchAllBalances()
+    await destinationAccount.fetchAllBalances()
     if (!importSuccess) {
       throw new CrossError(`error during import transaction ${importTransactionId} status fetching`)
     }
@@ -537,6 +537,28 @@ export class CrossManager {
       if (utxoSet.length > 0) {
         list.push(new CrossResumeOperation(source, chain, utxoSet))
       }
+    }
+  }
+
+  async executeCrossResumeOperation (summary: CrossResumeOperationSummary, account: ChainAccount): Promise<void> {
+    const resumeOperation: CrossResumeOperation = summary.operation
+    const importTransactionId: string = await this.import(
+      resumeOperation.source,
+      resumeOperation.destination,
+      summary.payImportFee,
+      summary.importFee,
+      summary.utxoSet
+    )
+    const importSuccess: boolean = await trackJuneoTransaction(
+      this.provider,
+      resumeOperation.destination,
+      summary.getExecutable(),
+      importTransactionId,
+      TransactionType.Import
+    )
+    await account.fetchAllBalances()
+    if (!importSuccess) {
+      throw new CrossError(`error during cross resume transaction ${importTransactionId} status fetching`)
     }
   }
 }

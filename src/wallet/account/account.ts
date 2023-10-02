@@ -3,7 +3,7 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type Utxo, fetchUtxos } from '../../transaction'
 import { getUtxosAmountValues, type AssetValue } from '../../utils'
-import { type NetworkOperation, type ChainOperationSummary } from '../operation'
+import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
@@ -27,7 +27,7 @@ export interface ChainAccount {
 
   fetchAllBalances: () => Promise<void>
 
-  estimate: (operation: NetworkOperation) => Promise<ChainOperationSummary>
+  estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
 
   execute: (summary: ChainOperationSummary) => Promise<void>
 }
@@ -77,7 +77,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   abstract fetchAllBalances (): Promise<void>
 
-  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
+  abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
   abstract execute (summary: ChainOperationSummary): Promise<void>
 
@@ -118,7 +118,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = false
   }
 
-  abstract estimate (operation: NetworkOperation): Promise<ChainOperationSummary>
+  abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
   abstract execute (summary: ChainOperationSummary): Promise<void>
 

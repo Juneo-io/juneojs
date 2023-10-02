@@ -10,12 +10,12 @@ import {
 } from '../transaction'
 import {
   type ExecutableOperation,
-  type NetworkOperation,
   NetworkOperationType,
   ChainOperationSummary,
   type SendOperation,
   type WrapOperation,
-  type UnwrapOperation
+  type UnwrapOperation,
+  type ChainNetworkOperation
 } from '../operation'
 import { SendManager } from '../send'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
@@ -42,7 +42,7 @@ export class EVMAccount extends AbstractChainAccount {
     this.sendManager = new SendManager(provider, wallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
+  async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fee: EVMFeeData = await this.sendManager.estimateSendEVM(
@@ -66,7 +66,7 @@ export class EVMAccount extends AbstractChainAccount {
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings)
     const executable: ExecutableOperation = summary.getExecutable()
-    const operation: NetworkOperation = summary.operation
+    const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendEVM(
@@ -94,8 +94,6 @@ export class EVMAccount extends AbstractChainAccount {
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
     }
-    // should not be needed but in some cases this can be usefull e.g. sending to self
-    await this.fetchAllBalances()
   }
 
   registerAssets (assets: TokenAsset[] | string[]): void {

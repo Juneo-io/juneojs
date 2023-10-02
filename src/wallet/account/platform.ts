@@ -9,11 +9,11 @@ import {
 import { AccountError } from '../../utils'
 import {
   type ExecutableOperation,
-  type NetworkOperation,
   NetworkOperationType,
   type ChainOperationSummary,
   type DelegateOperation,
-  type ValidateOperation
+  type ValidateOperation,
+  type ChainNetworkOperation
 } from '../operation'
 import { StakeManager } from '../stake'
 import { type MCNWallet } from '../wallet'
@@ -30,7 +30,7 @@ export class PlatformAccount extends UtxoAccount {
     this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
+  async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Validate) {
       return await estimatePlatformValidateOperation(this.provider, this.wallet, operation as ValidateOperation, this)
     } else if (operation.type === NetworkOperationType.Delegate) {
@@ -42,7 +42,7 @@ export class PlatformAccount extends UtxoAccount {
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings as UtxoSpending[])
     const executable: ExecutableOperation = summary.getExecutable()
-    const operation: NetworkOperation = summary.operation
+    const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Validate) {
       const staking: ValidateOperation = operation as ValidateOperation
       const transactionId: string = await this.stakeManager.validate(
@@ -74,7 +74,5 @@ export class PlatformAccount extends UtxoAccount {
         transactionId
       )
     }
-    // balances fetching is needed to get new utxos creating from this operation
-    await super.fetchAllBalances()
   }
 }

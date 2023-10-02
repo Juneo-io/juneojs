@@ -226,7 +226,7 @@ export class CrossManager {
       )
       const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       importSummary.fees.forEach((fee) => {
-        const spending: Spending = fee.getAsSpending()
+        const spending: Spending = fee.spending
         spending.chain = jvm
         spending.assetId = jvm.assetId
         if (fee.type === FeeType.Deposit) {
@@ -279,7 +279,7 @@ export class CrossManager {
         amount
       )
       fees[0] = fee
-      spendings.push(fee.getAsSpending())
+      spendings.push(fee.spending)
     }
     if (typeof importedJRC20 !== 'undefined') {
       const sender: string = account.getAccount(juneChain.id).addresses[0]
@@ -311,7 +311,7 @@ export class CrossManager {
       sourceBalance
     )
     cross.sendImportFee = sendImportFee
-    spendings.push(exportFee.getAsSpending())
+    spendings.push(exportFee.spending)
     if (sendImportFee) {
       // handle case of crossing jrc20
       const assetId: string = destinationAssetId === cross.assetId ? spendingAssetId : destinationAssetId
@@ -321,7 +321,7 @@ export class CrossManager {
           : importFee.amount
       spendings.push(new BaseSpending(cross.source, amount, assetId))
     } else {
-      spendings.push(importFee.getAsSpending())
+      spendings.push(importFee.spending)
     }
     return new MCNOperationSummary(cross, chains, fees, spendings, values)
   }
@@ -491,7 +491,7 @@ export class CrossManager {
     if (!hasFeeValue) {
       const balance: bigint = account.getAccount(operation.destination.id).getValue(fee.assetId)
       if (this.canPayImportFee(operation.destination, fee.amount, balance)) {
-        spendings.push(fee.getAsSpending())
+        spendings.push(fee.spending)
         summaryUtxos.push(
           ...(await fetchUtxos(utxoApi, [this.wallet.getWallet(operation.destination).getJuneoAddress()]))
         )

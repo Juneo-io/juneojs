@@ -1,6 +1,13 @@
 import { Wallet } from 'ethers'
 import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
-import { ECKeyPair, JuneoBuffer, JVMPrivateKeyPrefix, rmd160, sha256, validatePrivateKey, WalletError } from '../utils'
+import {
+  ECKeyPair,
+  encodeJuneoAddress,
+  JuneoBuffer,
+  JVMPrivateKeyPrefix,
+  validatePrivateKey,
+  WalletError
+} from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
 import hdKey from 'hdkey'
@@ -147,7 +154,7 @@ export abstract class AbstractVMWallet implements VMWallet {
     this.keyPair = new ECKeyPair(privateKey)
     this.hrp = hrp
     this.chain = chain
-    this.juneoAddress = AbstractVMWallet.encodeJuneoAddress(this.keyPair.publicKey, hrp)
+    this.juneoAddress = encodeJuneoAddress(this.keyPair.publicKey, hrp)
     this.address = address
   }
 
@@ -167,10 +174,6 @@ export abstract class AbstractVMWallet implements VMWallet {
 
   sign (buffer: JuneoBuffer): JuneoBuffer {
     return this.keyPair.sign(buffer)
-  }
-
-  static encodeJuneoAddress (publicKey: string, hrp: string): string {
-    return encoding.encodeBech32(hrp, rmd160(sha256(publicKey)))
   }
 }
 

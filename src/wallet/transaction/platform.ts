@@ -97,7 +97,7 @@ export async function estimatePlatformValidateOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(validate, chain, fee, [spending, fee.getAsSpending()], values, potentialReward)
+      return new StakingOperationSummary(validate, chain, fee, [spending, fee.spending], values, potentialReward)
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
@@ -105,7 +105,7 @@ export async function estimatePlatformValidateOperation (
         validate,
         chain,
         fee,
-        [new BaseSpending(chain, validate.amount, chain.assetId), fee.getAsSpending()],
+        [new BaseSpending(chain, validate.amount, chain.assetId), fee.spending],
         values
       )
     }
@@ -166,7 +166,7 @@ export async function estimatePlatformDelegateOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(delegate, chain, fee, [spending, fee.getAsSpending()], values, potentialReward)
+      return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
@@ -174,7 +174,7 @@ export async function estimatePlatformDelegateOperation (
         delegate,
         chain,
         fee,
-        [new BaseSpending(chain, delegate.amount, chain.assetId), fee.getAsSpending()],
+        [new BaseSpending(chain, delegate.amount, chain.assetId), fee.spending],
         values
       )
     }

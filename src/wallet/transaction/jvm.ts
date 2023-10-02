@@ -65,7 +65,7 @@ export async function estimateJVMSendOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
-      return new ChainOperationSummary(send, chain, fee, [spending, fee.getAsSpending()], values)
+      return new ChainOperationSummary(send, chain, fee, [spending, fee.spending], values)
     },
     async () => {
       const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
@@ -73,7 +73,7 @@ export async function estimateJVMSendOperation (
         send,
         chain,
         fee,
-        [new BaseSpending(chain, send.amount, send.assetId), fee.getAsSpending()],
+        [new BaseSpending(chain, send.amount, send.assetId), fee.spending],
         values
       )
     }

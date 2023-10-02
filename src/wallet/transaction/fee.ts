@@ -22,10 +22,9 @@ export interface FeeData {
   amount: bigint
   type: string
   assetId: string
+  spending: Spending
 
   getAssetValue: () => AssetValue
-
-  getAsSpending: () => Spending
 }
 
 export class BaseFeeData implements FeeData {
@@ -34,6 +33,7 @@ export class BaseFeeData implements FeeData {
   amount: bigint
   type: string
   assetId: string
+  spending: BaseSpending
 
   constructor (chain: Blockchain, amount: bigint, type: string) {
     this.chain = chain
@@ -41,30 +41,25 @@ export class BaseFeeData implements FeeData {
     this.amount = amount
     this.type = type
     this.assetId = chain.assetId
+    this.spending = new BaseSpending(this.chain, this.amount, this.assetId)
   }
 
   getAssetValue (): AssetValue {
     return this.asset.getAssetValue(this.amount)
   }
-
-  getAsSpending (): Spending {
-    return new BaseSpending(this.chain, this.amount, this.assetId)
-  }
 }
 
 export class UtxoFeeData extends BaseFeeData {
   transaction: UnsignedTransaction
+  override spending: UtxoSpending
 
   constructor (chain: Blockchain, amount: bigint, type: string, transaction: UnsignedTransaction) {
     super(chain, amount, type)
     this.transaction = transaction
+    this.spending = new UtxoSpending(this.chain, this.amount, this.assetId, this.transaction.getUtxos())
   }
 
   getAssetValue (): AssetValue {
     return this.chain.asset.getAssetValue(this.amount)
-  }
-
-  override getAsSpending (): UtxoSpending {
-    return new UtxoSpending(this.chain, this.amount, this.assetId, this.transaction.getUtxos())
   }
 }

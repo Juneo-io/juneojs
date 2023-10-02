@@ -144,13 +144,13 @@ export async function estimateEVMWrapOperation (
   return await estimateEVMCall(api, from, wrap.asset.address, wrap.amount, data, type).then(
     (fee) => {
       const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
-      return new ChainOperationSummary(wrap, chain, fee, [spending, fee.getAsSpending()], values)
+      return new ChainOperationSummary(wrap, chain, fee, [spending, fee.spending], values)
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
       const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate * gasPrice, type)
       const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
-      return new ChainOperationSummary(wrap, chain, fee, [spending, fee.getAsSpending()], values)
+      return new ChainOperationSummary(wrap, chain, fee, [spending, fee.spending], values)
     }
   )
 }
@@ -168,13 +168,13 @@ export async function estimateEVMUnwrapOperation (
   return await estimateEVMCall(api, from, unwrap.asset.address, BigInt(0), data, type).then(
     (fee) => {
       const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
-      return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.getAsSpending()], values)
+      return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.spending], values)
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
       const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
       const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
-      return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.getAsSpending()], values)
+      return new ChainOperationSummary(unwrap, chain, fee, [spending, fee.spending], values)
     }
   )
 }

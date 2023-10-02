@@ -2,7 +2,13 @@ import { type PlatformBlockchain, type Blockchain } from '../../chain'
 import { type Utxo } from '../../transaction'
 import { type UtxoFeeData, type FeeData, type Spending } from '../transaction'
 import { ExecutableOperation } from './executable'
-import { type Staking, type NetworkOperation, type CrossResumeOperation, type ChainNetworkOperation } from './operation'
+import {
+  type Staking,
+  type NetworkOperation,
+  type CrossResumeOperation,
+  type ChainNetworkOperation,
+  type CrossOperation
+} from './operation'
 
 export interface OperationSummary {
   operation: NetworkOperation
@@ -60,17 +66,19 @@ export class ChainOperationSummary extends AbstractOperationSummary {
   }
 }
 
-export class MCNOperationSummary extends AbstractOperationSummary {
+export class CrossOperationSummary extends AbstractOperationSummary {
+  override operation: CrossOperation
   chains: Blockchain[]
 
   constructor (
-    operation: NetworkOperation,
+    operation: CrossOperation,
     chains: Blockchain[],
     fees: FeeData[],
     spendings: Spending[],
     values: Map<string, bigint>
   ) {
     super(operation, fees, spendings, values)
+    this.operation = operation
     this.chains = chains
   }
 

@@ -7,10 +7,8 @@ import { fetchUtxos, type Secp256k1Output, type Utxo } from '../transaction'
 import { CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import {
-  type NetworkOperation,
-  NetworkOperationType,
   type ExecutableOperation,
-  MCNOperationSummary,
+  CrossOperationSummary,
   CrossResumeOperationSummary,
   CrossResumeOperation,
   CrossOperation
@@ -202,7 +200,7 @@ export class CrossManager {
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
 
-  async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<MCNOperationSummary> {
+  async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<CrossOperationSummary> {
     const juneChain: JEVMBlockchain = SocotraJUNEChain
     const values = new Map<string, bigint>()
     values.set(cross.assetId, cross.amount)
@@ -214,7 +212,7 @@ export class CrossManager {
         cross.assetId,
         cross.amount
       )
-      const exportSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyExport, account)
+      const exportSummary: CrossOperationSummary = await this.estimateCrossOperation(proxyExport, account)
       const spendings: Spending[] = [...exportSummary.spendings]
       // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
       const jvm: JVMBlockchain = this.provider.jvm.chain
@@ -224,7 +222,7 @@ export class CrossManager {
         cross.assetId,
         cross.amount
       )
-      const importSummary: MCNOperationSummary = await this.estimateCrossOperation(proxyImport, account)
+      const importSummary: CrossOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       importSummary.fees.forEach((fee) => {
         const spending: Spending = fee.spending
         spending.chain = jvm
@@ -236,7 +234,7 @@ export class CrossManager {
       })
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       cross.sendImportFee = proxyExport.sendImportFee
-      return new MCNOperationSummary(cross, chains, fees, spendings, values)
+      return new CrossOperationSummary(cross, chains, fees, spendings, values)
     }
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
@@ -323,15 +321,11 @@ export class CrossManager {
     } else {
       spendings.push(importFee.spending)
     }
-    return new MCNOperationSummary(cross, chains, fees, spendings, values)
+    return new CrossOperationSummary(cross, chains, fees, spendings, values)
   }
 
-  async executeCrossOperation (summary: MCNOperationSummary, account: MCNAccount): Promise<void> {
-    const operation: NetworkOperation = summary.operation
-    if (operation.type !== NetworkOperationType.Cross) {
-      throw new CrossError(`operation ${operation.type} is forbidden`)
-    }
-    const cross: CrossOperation = operation as CrossOperation
+  async executeCrossOperation (summary: CrossOperationSummary, account: MCNAccount): Promise<void> {
+    const cross: CrossOperation = summary.operation
     if (this.shouldProxy(cross)) {
       const destination: Blockchain = cross.destination
       const jvmChain: JVMBlockchain = this.provider.jvm.chain
@@ -359,7 +353,7 @@ export class CrossManager {
   }
 
   private async executeCrossOperationStep (
-    summary: MCNOperationSummary,
+    summary: CrossOperationSummary,
     account: MCNAccount,
     cross: CrossOperation,
     exportFee: FeeData,

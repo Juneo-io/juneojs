@@ -4,7 +4,7 @@ import {
   NetworkOperationType,
   NetworkOperationStatus,
   type NetworkOperation,
-  type MCNOperationSummary,
+  type CrossOperationSummary,
   type ExecutableOperation,
   type ChainOperationSummary,
   type OperationSummary,
@@ -100,18 +100,20 @@ export class MCNAccount {
       const account: ChainAccount = this.getAccount(chainSummary.chain.id)
       await this.executeOperation(summary, account.execute(chainSummary))
     } else if (range === NetworkOperationRange.Supernet) {
-      await this.executeOperation(summary, this.executeMCNOperation(summary as MCNOperationSummary))
+      await this.executeOperation(summary, this.executeSupernetOperation(summary))
+    } else {
+      throw new AccountError(`unsupported operation range: ${range}`)
     }
   }
 
-  private async executeMCNOperation (summary: MCNOperationSummary): Promise<void> {
-    // those are currently the only multi chain operations available
+  private async executeSupernetOperation (summary: OperationSummary): Promise<void> {
+    // cross operation is currently the only supernet operation available
     // verifications are done in it so keep it like that until newer features are added
     const operation: NetworkOperationType = summary.operation.type
     if (operation === NetworkOperationType.Cross) {
-      await this.crossManager.executeCrossOperation(summary, this)
+      await this.crossManager.executeCrossOperation(summary as CrossOperationSummary, this)
     } else {
-      throw new AccountError(`unsupported operation mcn operation: ${operation}`)
+      throw new AccountError(`unsupported supernet operation: ${operation}`)
     }
   }
 

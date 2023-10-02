@@ -1,9 +1,13 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
-import { JVM_ID, type Blockchain, PLATFORMVM_ID, JEVM_ID } from '../chain'
+import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
 import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType } from '../wallet'
+import { isHex, hasHexPrefix, decodeCB58, isBase58 } from './encoding'
 import { WalletError } from './errors'
+
+export const JVMPrivateKeyPrefix = 'PrivateKey-'
+const PrivateKeyLength: number = 64
 
 export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
   const values = new Map<string, Spending>()
@@ -82,4 +86,18 @@ export async function trackJuneoTransaction (
     success = await executable.addTrackedJEVMTransaction(api, transactionType, transactionId)
   }
   return success
+}
+
+export function validatePrivateKey (data: string): boolean {
+  if (isHex(data)) {
+    const hasPrefix: boolean = hasHexPrefix(data)
+    const length = hasPrefix ? data.substring(2).length : data.length
+    return length === PrivateKeyLength
+  }
+  if (data.includes(JVMPrivateKeyPrefix)) {
+    const split: string[] = data.split('-')
+    const base58: boolean = split.length > 1 && isBase58(split[1])
+    return base58 && decodeCB58(split[1]).length === PrivateKeyLength
+  }
+  return false
 }

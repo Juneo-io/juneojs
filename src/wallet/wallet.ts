@@ -1,16 +1,13 @@
 import { Wallet } from 'ethers'
 import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
-import { ECKeyPair, JuneoBuffer, rmd160, sha256, WalletError } from '../utils'
+import { ECKeyPair, JuneoBuffer, JVMPrivateKeyPrefix, rmd160, sha256, validatePrivateKey, WalletError } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
 import hdKey from 'hdkey'
+import { MainNetwork } from '../network'
 
 const EVMHdPath = "m/44'/60'/0'/0/0"
 const JVMHdPath = "m/44'/9000'/0'/0/0"
-
-const JVMPrivateKeyPrefix = 'PrivateKey-'
-const PrivateKeyLength: number = 64
-const DefaultHrp = 'socotra'
 
 export class MCNWallet {
   hrp: string
@@ -19,7 +16,7 @@ export class MCNWallet {
   privateKey: string | undefined
   chainsWallets = new Map<string, VMWallet>()
 
-  private constructor (hrp: string = DefaultHrp) {
+  private constructor (hrp: string = MainNetwork.hrp) {
     this.hrp = hrp
   }
 
@@ -103,7 +100,7 @@ export class MCNWallet {
       wallet.setMnemonic(data)
       return wallet
     }
-    if (MCNWallet.validatePrivateKey(data)) {
+    if (validatePrivateKey(data)) {
       const wallet: MCNWallet = new MCNWallet(hrp)
       let privateKey: string = data
       // should only be hex or bs58 private key after validate
@@ -127,28 +124,12 @@ export class MCNWallet {
     const wallet = MCNWallet.recover(mnemonic, hrp)
     return wallet
   }
-
-  static validatePrivateKey (data: string): boolean {
-    if (encoding.isHex(data)) {
-      const hasPrefix: boolean = encoding.hasHexPrefix(data)
-      const length = hasPrefix ? data.substring(2).length : data.length
-      return length === PrivateKeyLength
-    }
-    if (data.includes(JVMPrivateKeyPrefix)) {
-      const split: string[] = data.split('-')
-      const isBase58: boolean = split.length > 1 && encoding.isBase58(split[1])
-      return isBase58 && encoding.decodeCB58(split[1]).length === PrivateKeyLength
-    }
-    return false
-  }
 }
 
 export interface VMWallet {
   getAddress: () => string
 
   getJuneoAddress: () => string
-
-  getChain: () => Blockchain
 
   sign: (buffer: JuneoBuffer) => JuneoBuffer
 }
@@ -182,10 +163,6 @@ export abstract class AbstractVMWallet implements VMWallet {
       return `${this.chain.aliases[0]}-${this.juneoAddress}`
     }
     return `${this.chain.id}-${this.juneoAddress}`
-  }
-
-  getChain (): Blockchain {
-    return this.chain
   }
 
   sign (buffer: JuneoBuffer): JuneoBuffer {

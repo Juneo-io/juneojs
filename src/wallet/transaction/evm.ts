@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, type FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { type Blockchain, JEVMBlockchain, NativeAssetCallContract } from '../../chain'
+import { type Blockchain, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
 import { ChainOperationSummary, type UnwrapOperation, type WrapOperation } from '../operation'
 import { BaseSpending } from './transaction'
 import {
@@ -83,7 +83,7 @@ export async function estimateEVMTransfer (
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   if (assetId === api.chain.assetId) {
     const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    const gasLimit: bigint = JEVMBlockchain.SendEtherGasLimit
+    const gasLimit: bigint = SendEtherGasLimit
     return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
   }
   const gasLimit: bigint = await api.chain.ethProvider

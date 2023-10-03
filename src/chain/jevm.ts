@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
-import { ChainError, isHex } from '../utils'
+import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from './solidity'
+import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
 import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
 import { AbstractBlockchain } from './chain'
 import { type MCNProvider } from '../juneo'
@@ -13,13 +13,14 @@ export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
+export const SendEtherGasLimit: bigint = BigInt(21_000)
+
 export class JEVMBlockchain extends AbstractBlockchain {
-  static readonly SendEtherGasLimit: bigint = BigInt(21_000)
   override asset: JEVMGasToken
   chainId: bigint
   baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
-  contractHandler: ContractHandler
+  contractManager: ContractManager = new ContractManager()
   jrc20Assets: JRC20Asset[]
 
   constructor (
@@ -39,15 +40,14 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
-    this.contractHandler = new ContractHandler()
-    this.contractHandler.registerAdapters([new ERC20ContractAdapter(this.ethProvider)])
+    this.contractManager.registerHandler(new ERC20ContractHandler(this.ethProvider))
   }
 
   /**
    * @deprecated
    */
   async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    const contract: ContractHandler | null = await this.contractManager.getHandler(assetId)
     if (contract === null) {
       return '0x'
     } else {
@@ -56,7 +56,10 @@ export class JEVMBlockchain extends AbstractBlockchain {
   }
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
-    throw new Error('not implemented')
+    if (isContractAddress(assetId)) {
+      throw new Error('not implemented')
+    }
+    return await fetchJNT(provider, assetId)
   }
 
   validateAddress (address: string): boolean {
@@ -72,20 +75,15 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (AssetId.validate(assetId)) {
       return await api.eth_getAssetBalance(address, 'pending', assetId)
     }
-    if (!JEVMBlockchain.isContractAddress(assetId)) {
+    // from here should only be solidity smart contract
+    if (!isContractAddress(assetId)) {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-    // from here should only be solidity smart contract
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
+    const contract: ContractHandler | null = await this.contractManager.getHandler(assetId)
     if (contract === null) {
       return BigInt(0)
     } else {
       return await contract.queryBalance(assetId, address)
     }
-  }
-
-  static isContractAddress (assetId: string): boolean {
-    // ethers.isAddress supports also ICAP addresses so check if it is hex too
-    return isHex(assetId) && ethers.isAddress(assetId)
   }
 }

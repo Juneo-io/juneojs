@@ -1,6 +1,5 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
-import { JEVMBlockchain } from '../chain'
 import { type MCNWallet, type VMWallet } from './wallet'
 import {
   FeeType,
@@ -12,6 +11,7 @@ import {
 } from './transaction'
 import { type Utxo } from '../transaction'
 import { type MCNProvider } from '../juneo'
+import { isContractAddress } from '../utils'
 
 export class SendManager {
   private readonly provider: MCNProvider
@@ -25,7 +25,7 @@ export class SendManager {
   async estimateSendEVM (chainId: string, assetId: string, amount: bigint, address: string): Promise<EVMFeeData> {
     const api: JEVMAPI = this.provider.jevm[chainId]
     const wallet: ethers.Wallet = this.wallet.getJEVMWallet(api.chain).evmWallet
-    const isContract: boolean = JEVMBlockchain.isContractAddress(assetId)
+    const isContract: boolean = isContractAddress(assetId)
     const to: string = isContract ? assetId : address
     const value: bigint = isContract ? BigInt(0) : amount
     const data: string = isContract ? await api.chain.getContractTransactionData(assetId, address, amount) : '0x'

@@ -45,19 +45,25 @@ export class JEVMBlockchain extends AbstractBlockchain {
 
   /**
    * @deprecated
+   * TODO to update -> use chain.getAsset
+   * then TokenAsset.type if === ERC20 = OK
    */
   async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
-    const contract: ContractHandler | null = await this.contractManager.getHandler(assetId)
-    if (contract === null) {
+    const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+    if (handler === null) {
       return '0x'
     } else {
-      return contract.getTransferData(assetId, to, amount)
+      return handler.getTransferData(assetId, to, amount)
     }
   }
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
     if (isContractAddress(assetId)) {
-      throw new Error('not implemented')
+      const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+      if (handler === null) {
+        throw new ChainError(`contract address ${assetId} does not implement a compatible interface`)
+      }
+      return await handler.queryTokenData(assetId)
     }
     return await fetchJNT(provider, assetId)
   }
@@ -79,11 +85,11 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (!isContractAddress(assetId)) {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-    const contract: ContractHandler | null = await this.contractManager.getHandler(assetId)
-    if (contract === null) {
+    const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+    if (handler === null) {
       return BigInt(0)
     } else {
-      return await contract.queryBalance(assetId, address)
+      return await handler.queryBalance(assetId, address)
     }
   }
 }

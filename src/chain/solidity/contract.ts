@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import * as abi from './abi'
 import { AssetId } from '../../transaction'
-import { TokenAsset } from '../../asset'
+import { ERC20Asset, type TokenAsset } from '../../asset'
 
 export class ContractManager {
   private readonly handlers: ContractHandler[] = []
@@ -63,7 +63,7 @@ export class ERC20ContractHandler implements ContractHandler {
     const name: string = await contract.name()
     const symbol: string = await contract.symbol()
     const decimals: number = await contract.decimals()
-    return new TokenAsset(contractAddress, name, symbol, decimals)
+    return new ERC20Asset(contractAddress, name, symbol, decimals)
   }
 
   getTransferData (contractAddress: string, to: string, amount: bigint): string {

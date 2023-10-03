@@ -1,10 +1,10 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { type JRC20Asset } from '../asset'
-import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, JEVMBlockchain, type JVMBlockchain } from '../chain'
+import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, type JEVMBlockchain, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { SocotraJUNEChain } from '../network'
 import { fetchUtxos, type Secp256k1Output, type Utxo } from '../transaction'
-import { CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
+import { AtomicDenomination, CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import {
   type ExecutableOperation,
@@ -228,7 +228,7 @@ export class CrossManager {
         spending.chain = jvm
         spending.assetId = jvm.assetId
         if (fee.type === FeeType.Deposit) {
-          spending.amount /= JEVMBlockchain.AtomicDenomination
+          spending.amount /= AtomicDenomination
         }
         spendings.push(spending)
       })
@@ -282,7 +282,7 @@ export class CrossManager {
     if (typeof importedJRC20 !== 'undefined') {
       const sender: string = account.getAccount(juneChain.id).addresses[0]
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
-      cross.amount /= JEVMBlockchain.AtomicDenomination
+      cross.amount /= AtomicDenomination
       const fee: EVMFeeData = await estimateEVMDepositJRC20(
         this.provider.jevm[juneChain.id],
         sender,
@@ -315,7 +315,7 @@ export class CrossManager {
       const assetId: string = destinationAssetId === cross.assetId ? spendingAssetId : destinationAssetId
       const amount: bigint =
         cross.source.id === juneChain.id && destinationAssetId === juneChain.assetId
-          ? importFee.amount * JEVMBlockchain.AtomicDenomination
+          ? importFee.amount * AtomicDenomination
           : importFee.amount
       spendings.push(new BaseSpending(cross.source, amount, assetId))
     } else {
@@ -333,7 +333,7 @@ export class CrossManager {
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[0], summary.fees[1])
       // jevm cross transactions amount must be changed because of atomic denominator
       if (cross.source.vmId === JEVM_ID && cross.assetId === cross.source.assetId) {
-        cross.amount /= JEVMBlockchain.AtomicDenomination
+        cross.amount /= AtomicDenomination
       }
       cross.source = jvmChain
       cross.destination = destination
@@ -343,7 +343,7 @@ export class CrossManager {
       const jrc20Import: boolean = lastFee.type === FeeType.Deposit
       let extraFeeAmount: bigint = BigInt(0)
       if (jrc20Import) {
-        extraFeeAmount = lastFee.amount / JEVMBlockchain.AtomicDenomination
+        extraFeeAmount = lastFee.amount / AtomicDenomination
       }
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[2], summary.fees[3], extraFeeAmount)
       return

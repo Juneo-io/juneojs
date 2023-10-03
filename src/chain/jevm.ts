@@ -1,10 +1,11 @@
 import { ethers } from 'ethers'
-import { isHex } from '../utils'
-import { AssetId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
+import { ChainError, isHex } from '../utils'
+import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
 import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from './solidity'
 import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
 import { AbstractBlockchain } from './chain'
+import { type MCNProvider } from '../juneo'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
 export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
@@ -14,9 +15,6 @@ export const NativeAssetCallContract: string = '0x010000000000000000000000000000
 
 export class JEVMBlockchain extends AbstractBlockchain {
   static readonly SendEtherGasLimit: bigint = BigInt(21_000)
-  static readonly AtomicSignatureCost: bigint = BigInt(1_000)
-  static readonly AtomicBaseCost: bigint = BigInt(10_000)
-  static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
   override asset: JEVMGasToken
   chainId: bigint
   baseFee: bigint
@@ -57,6 +55,10 @@ export class JEVMBlockchain extends AbstractBlockchain {
     }
   }
 
+  protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
+    throw new Error('not implemented')
+  }
+
   validateAddress (address: string): boolean {
     return ethers.isAddress(address)
   }
@@ -70,6 +72,9 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (AssetId.validate(assetId)) {
       return await api.eth_getAssetBalance(address, 'pending', assetId)
     }
+    if (!JEVMBlockchain.isContractAddress(assetId)) {
+      throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
+    }
     // from here should only be solidity smart contract
     const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
     if (contract === null) {
@@ -77,29 +82,6 @@ export class JEVMBlockchain extends AbstractBlockchain {
     } else {
       return await contract.queryBalance(assetId, address)
     }
-  }
-
-  private calculateAtomicGas (size: bigint, signaturesCount: bigint): bigint {
-    return size + JEVMBlockchain.AtomicSignatureCost * signaturesCount + JEVMBlockchain.AtomicBaseCost
-  }
-
-  estimateAtomicExportGas (exportedAssets: string[], importFeeAssetId: string): bigint {
-    const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      exportedAssets,
-      this.assetId,
-      importFeeAssetId
-    )
-    const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
-  }
-
-  estimateAtomicImportGas (inputsCount: number, outputsCount: number): bigint {
-    const size: number = JEVMImportTransaction.estimateSize(inputsCount, outputsCount)
-    return this.calculateAtomicGas(BigInt(size), BigInt(inputsCount))
-  }
-
-  calculateAtomicCost (gas: bigint, baseFee: bigint): bigint {
-    return (gas * baseFee) / JEVMBlockchain.AtomicDenomination
   }
 
   static isContractAddress (assetId: string): boolean {

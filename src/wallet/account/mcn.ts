@@ -24,13 +24,11 @@ import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
-  private readonly provider: MCNProvider
   private readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
-    this.provider = provider
     this.addAccount(new JVMAccount(provider, wallet))
     this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {

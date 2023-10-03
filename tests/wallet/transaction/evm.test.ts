@@ -38,7 +38,7 @@ describe("Send Operations", () => {
   });
 
   test("should correctly create a SendOperation instance", async () => {
-    // Create a new instance of SendOperation
+    // valid
     const operation = new SendOperation(
       mockBlockchain,
       mockAssetId,
@@ -52,6 +52,7 @@ describe("Send Operations", () => {
   });
 
   test("should perform the send operation correctly", async () => {
+    // valid
     const operation = new SendOperation(
       mockBlockchain,
       mockAssetId,
@@ -67,6 +68,7 @@ describe("Send Operations", () => {
   });
 
   test("should not create a send operation with a value of -1", async () => {
+    // invalid
     const operation = new SendOperation(
       mockBlockchain,
       mockAssetId,
@@ -81,6 +83,7 @@ describe("Send Operations", () => {
   });
 
   test("should not create a send operation with a value bigger than balance", async () => {
+    // invalid
     const operation = new SendOperation(
       mockBlockchain,
       mockAssetId,
@@ -95,6 +98,7 @@ describe("Send Operations", () => {
   });
 
   test("Should not send ERC20 tokens", async () => {
+    // invalid
     const operation = new SendOperation(
       mockBlockchain,
       SocotraEUROC1AssetId,
@@ -109,6 +113,7 @@ describe("Send Operations", () => {
   });
 
   test("Should send ERC20 tokens", async () => {
+    // valid
     await account.fetchAllBalances();
     const operation = new SendOperation(
       mockBlockchain,

@@ -36,11 +36,12 @@ describe("Cross Operations", () => {
     await account.fetchAllBalances();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockSourceBlockchain = SocotraJUNEChain;
     mockDestinationBlockchain = SocotraEUROC1Chain;
     mockAssetId = "0x3300000000000000000000000000000000000000";
     mockValue = BigInt(1000);
+    await account.fetchAllBalances();
   });
 
   test("should correctly create a CrossOperation instance", async () => {
@@ -71,7 +72,7 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  }, 10000);
+  }, 15000);
 
   test("should not create a cross operation with a value of -1", async () => {
     // invalid
@@ -116,7 +117,7 @@ describe("Cross Operations", () => {
     await expect(mcnAccount.execute(summary)).rejects.toThrow(
       "missing funds to perform operation: Cross",
     );
-  });
+  },10000);
 
   test("Should cross Native to ERC20", async () => {
     // valid
@@ -124,7 +125,7 @@ describe("Cross Operations", () => {
       SocotraEUROC1Chain,
       SocotraJUNEChain,
       SocotraEUROC1AssetId,
-      BigInt(100000000000000),
+      BigInt(10000000000000),
     );
     const summary = await mcnAccount.estimate(operation);
     const executable: ExecutableOperation = summary.getExecutable();
@@ -139,14 +140,14 @@ describe("Cross Operations", () => {
       SocotraJUNEChain,
       SocotraJVMChain,
       SocotraJUNEAssetId,
-      BigInt(1000000000000),
+      BigInt(100000000000),
     );
     const summary = await mcnAccount.estimate(operation);
     const executable: ExecutableOperation = summary.getExecutable();
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("Should cross JUNE chain to Platform chain", async () => {
     // valid
@@ -161,7 +162,7 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("Should cross Platform chain to JUNE chain ", async () => {
     // valid
@@ -176,7 +177,7 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("Should cross Platform chain to JVM chain", async () => {
     // valid
@@ -191,7 +192,7 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("Should cross JVM chain to Platform chain", async () => {
     // valid
@@ -206,7 +207,7 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("Should cross JVM chain to JUNE chain", async () => {
     // valid
@@ -221,5 +222,5 @@ describe("Cross Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 });

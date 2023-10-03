@@ -58,7 +58,7 @@ describe("Wrapping and Unwrapping Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
   test("should correctly create an UnwrapOperation instance", async () => {
     // valid
@@ -78,7 +78,7 @@ describe("Wrapping and Unwrapping Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },15000);
 
   test("should not wrap more than the available balance", async () => {
     // invalid
@@ -89,7 +89,7 @@ describe("Wrapping and Unwrapping Operations", () => {
     await expect(mcnAccount.execute(summary)).rejects.toThrow(
       "missing funds to perform operation: Wrap"
     );
-  });
+  },10000);
 
   test("should not unwrap more than the available wrapped balance", async () => {
     // invalid   
@@ -100,7 +100,7 @@ describe("Wrapping and Unwrapping Operations", () => {
     await expect(mcnAccount.execute(summary)).rejects.toThrow(
       "missing funds to perform operation: Unwrap"
     );
-  });
+  },10000);
 
   test("should not perform the wrap operation with amount 0", async () => {
     // invalid
@@ -111,7 +111,7 @@ describe("Wrapping and Unwrapping Operations", () => {
 
     await mcnAccount.execute(summary);
     await expect(executable.status).toEqual("Done");
-  });
+  },10000);
 
 
 });

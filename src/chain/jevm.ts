@@ -3,7 +3,7 @@ import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
 import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
-import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
+import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType } from '../asset'
 import { AbstractBlockchain } from './chain'
 import { type MCNProvider } from '../juneo'
 
@@ -20,8 +20,9 @@ export class JEVMBlockchain extends AbstractBlockchain {
   chainId: bigint
   baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
-  contractManager: ContractManager = new ContractManager()
   jrc20Assets: JRC20Asset[]
+  private readonly erc20Handler: ERC20ContractHandler
+  private readonly contractManager: ContractManager = new ContractManager()
 
   constructor (
     name: string,
@@ -40,21 +41,24 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
-    this.contractManager.registerHandler(new ERC20ContractHandler(this.ethProvider))
+    this.erc20Handler = new ERC20ContractHandler(this.ethProvider)
+    this.contractManager.registerHandler(this.erc20Handler)
   }
 
-  /**
-   * @deprecated
-   * TODO to update -> use chain.getAsset
-   * then TokenAsset.type if === ERC20 = OK
-   */
-  async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
-    const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
-    if (handler === null) {
-      return '0x'
-    } else {
-      return handler.getTransferData(assetId, to, amount)
+  async getContractTransactionData (
+    provider: MCNProvider,
+    assetId: string,
+    to: string,
+    amount: bigint
+  ): Promise<string> {
+    // could rather use contract manager but it would require one extra network call
+    // we avoid it if the asset is already registered
+    const asset: TokenAsset = await this.getAsset(provider, assetId)
+    const erc20Types: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
+    if (erc20Types.includes(asset.type)) {
+      return this.erc20Handler.getTransferData(assetId, to, amount)
     }
+    return '0x'
   }
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
@@ -86,10 +90,9 @@ export class JEVMBlockchain extends AbstractBlockchain {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
     const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
-    if (handler === null) {
-      return BigInt(0)
-    } else {
+    if (handler !== null) {
       return await handler.queryBalance(assetId, address)
     }
+    return BigInt(0)
   }
 }

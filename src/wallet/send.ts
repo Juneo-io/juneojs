@@ -28,7 +28,9 @@ export class SendManager {
     const isContract: boolean = isContractAddress(assetId)
     const to: string = isContract ? assetId : address
     const value: bigint = isContract ? BigInt(0) : amount
-    const data: string = isContract ? await api.chain.getContractTransactionData(assetId, address, amount) : '0x'
+    const data: string = isContract
+      ? await api.chain.getContractTransactionData(this.provider, assetId, address, amount)
+      : '0x'
     return await estimateEVMTransfer(api, assetId, wallet.address, to, value, data, FeeType.BaseFee)
   }
 

@@ -8,7 +8,6 @@ export interface Blockchain {
   asset: TokenAsset
   assetId: string
   aliases: string[]
-  registeredAssets: Map<string, TokenAsset>
 
   getAsset: (provider: MCNProvider, assetId: string) => Promise<TokenAsset>
 

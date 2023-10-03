@@ -67,7 +67,7 @@ export class ERC20ContractHandler implements ContractHandler {
   }
 
   getTransferData (contractAddress: string, to: string, amount: bigint): string {
-    const contract: ethers.Contract = this.getContract(contractAddress)
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.ERC20ABI)
     return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 

@@ -22,14 +22,12 @@ import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { WrapManager } from '../wrap'
 import { AbstractChainAccount } from './account'
 import { Balance } from './balance'
-import { type TokenAsset } from '../../asset'
 import { type MCNProvider } from '../../juneo'
 
 export class EVMAccount extends AbstractChainAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
   override chainWallet: JEVMWallet
-  readonly registeredAssets: string[] = []
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
 
@@ -94,39 +92,31 @@ export class EVMAccount extends AbstractChainAccount {
       )
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
     }
-    // should not be needed because of spend but in some cases this can be usefull e.g. sending to self
-    await this.fetchAllBalances()
-  }
-
-  registerAssets (assets: TokenAsset[] | string[]): void {
-    for (let i = 0; i < assets.length; i++) {
-      const assetId: string = typeof assets[i] === 'string' ? (assets[i] as string) : (assets[i] as TokenAsset).assetId
-      // no need to register chain asset id as it is already calculated as gas balance
-      if (assetId === this.chain.assetId || this.registeredAssets.includes(assetId)) {
-        continue
+    // could be replaced with correct spend and fund but just sync all now for simplicity
+    // if replaced it should take some extra cases into account e.g. sending to self
+    const assets = new Set<string>()
+    // refresh balances of all sent assets to sync it
+    for (const asset of summary.spendings) {
+      const assetId: string = asset.assetId
+      if (!assets.has(assetId)) {
+        assets.add(assetId)
       }
-      this.registeredAssets.push(assetId)
     }
+    // refresh balances of all created values in case it was sent to self
+    for (const [assetId] of summary.values) {
+      if (!assets.has(assetId)) {
+        assets.add(assetId)
+      }
+    }
+    await this.fetchAllBalances(assets.values())
   }
 
   async fetchBalance (assetId: string): Promise<void> {
     if (!this.balances.has(assetId)) {
-      // prefer using function instead of pushing it directly to cover more cases
-      this.registerAssets([assetId])
       this.balances.set(assetId, new Balance())
     }
     const balance: Balance = this.balances.get(assetId) as Balance
     const address: string = this.chainWallet.getAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
-  }
-
-  async fetchAllBalances (): Promise<void> {
-    const fetchers: Array<Promise<void>> = []
-    // guarantee gas balance
-    fetchers.push(this.fetchBalance(this.chain.assetId))
-    for (let j = 0; j < this.registeredAssets.length; j++) {
-      fetchers.push(this.fetchBalance(this.registeredAssets[j]))
-    }
-    await Promise.all(fetchers)
   }
 }

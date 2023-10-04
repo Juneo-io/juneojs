@@ -9,6 +9,10 @@ export interface Blockchain {
   assetId: string
   aliases: string[]
 
+  getRegisteredAssets: () => IterableIterator<TokenAsset>
+
+  addRegisteredAsset: (asset: TokenAsset) => void
+
   getAsset: (provider: MCNProvider, assetId: string) => Promise<TokenAsset>
 
   validateAddress: (address: string, hrp?: string) => boolean
@@ -41,6 +45,10 @@ export abstract class AbstractBlockchain implements Blockchain {
       this.addRegisteredAsset(asset)
     }
     this.addRegisteredAsset(asset)
+  }
+
+  getRegisteredAssets (): IterableIterator<TokenAsset> {
+    return this.registeredAssets.values()
   }
 
   addRegisteredAsset (asset: TokenAsset): void {

@@ -37,7 +37,9 @@ export interface ChainAccount {
 
   fetchBalance: (assetId: string) => Promise<void>
 
-  fetchAllBalances: () => Promise<void>
+  fetchAllBalances: (
+    assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
+  ) => Promise<void>
 
   estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
 
@@ -83,7 +85,16 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   abstract fetchBalance (assetId: string): Promise<void>
 
-  abstract fetchAllBalances (): Promise<void>
+  async fetchAllBalances (
+    assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
+  ): Promise<void> {
+    const fetchers: Array<Promise<void>> = []
+    for (const asset of assets) {
+      const assetId: string = typeof asset === 'string' ? asset : asset.assetId
+      fetchers.push(this.fetchBalance(assetId))
+    }
+    await Promise.all(fetchers)
+  }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
@@ -113,10 +124,13 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   async fetchBalance (assetId: string): Promise<void> {
     // there is currently no other way to do it only with utxos
     // a seperated indexing of each asset is needed to be able to do it
-    await this.fetchAllBalances()
+    await this.refreshBalances()
   }
 
-  async fetchAllBalances (): Promise<void> {
+  override async fetchAllBalances (
+    assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
+  ): Promise<void> {
+    // assets here are not useful because of utxos
     if (this.fetching) {
       return
     }
@@ -124,6 +138,10 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
     this.calculateBalances()
     this.fetching = false
+  }
+
+  protected async refreshBalances (): Promise<void> {
+    await this.fetchAllBalances([])
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>

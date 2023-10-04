@@ -51,7 +51,7 @@ export class MCNAccount {
   async fetchAllBalances (): Promise<void> {
     const promises: Array<Promise<void>> = []
     this.chainAccounts.forEach((account) => {
-      promises.push(account.fetchAllBalances())
+      promises.push(account.fetchAllBalances(account.chain.getRegisteredAssets()))
     })
     await Promise.all(promises)
   }
@@ -139,7 +139,7 @@ export class MCNAccount {
     // most of the operations require to refetch balances but error could have cancelled it
     // try to restore a proper state by fetching them all
     for (const chain of summary.getChains()) {
-      await this.getAccount(chain.id).fetchAllBalances()
+      await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
     }
     this.executingChains = []
     throw error

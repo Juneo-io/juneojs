@@ -94,21 +94,7 @@ export class EVMAccount extends AbstractChainAccount {
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self
-    const assets = new Set<string>()
-    // refresh balances of all sent assets to sync it
-    for (const asset of summary.spendings) {
-      const assetId: string = asset.assetId
-      if (!assets.has(assetId)) {
-        assets.add(assetId)
-      }
-    }
-    // refresh balances of all created values in case it was sent to self
-    for (const [assetId] of summary.values) {
-      if (!assets.has(assetId)) {
-        assets.add(assetId)
-      }
-    }
-    await this.fetchAllBalances(assets.values())
+    await this.fetchAllBalances(summary.getAssets().values())
   }
 
   async fetchBalance (assetId: string): Promise<void> {

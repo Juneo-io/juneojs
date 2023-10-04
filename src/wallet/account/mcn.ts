@@ -139,9 +139,15 @@ export class MCNAccount {
       return
     }
     // most of the operations require to refetch balances but error could have cancelled it
-    // try to restore a proper state by fetching them all
-    for (const chain of summary.getChains()) {
-      await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
+    // try to restore a proper state by fetching them all. In the case of errors in more
+    // complex such as those with a range higher than Chain we fetch it everywhere
+    if (summary.operation.range !== NetworkOperationRange.Chain) {
+      for (const chain of summary.getChains()) {
+        await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
+      }
+    } else {
+      const operation: ChainNetworkOperation = summary.operation as ChainNetworkOperation
+      await this.getAccount(operation.chain.id).fetchAllBalances(summary.getAssets().values())
     }
     this.executingChains = []
     throw error

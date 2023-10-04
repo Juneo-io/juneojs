@@ -1,6 +1,7 @@
 import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
+import { type MCNProvider } from '../../juneo'
 import { type Utxo, fetchUtxos } from '../../transaction'
 import { getUtxosAmountValues, type AssetValue } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
@@ -15,9 +16,20 @@ export interface ChainAccount {
   chainWallet: VMWallet
   addresses: string[]
 
-  hasBalance: (asset: TokenAsset) => boolean
+  /**
+   * Gets the balance from this account of an asset.
+   * @param asset An asset from which to get the balance.
+   * @returns An AssetValue containing the value of the balance of the provided asset.
+   */
+  getAssetBalance: (asset: TokenAsset) => AssetValue
 
-  getBalance: (asset: TokenAsset) => AssetValue
+  /**
+   * Gets the balance from this account of an asset id.
+   * @param provider A provider to retrieve the asset data from.
+   * @param assetId An asset id from which to get the balance.
+   * @returns An AssetValue containing the value of the balance of the provided asset.
+   */
+  getBalance: (provider: MCNProvider, assetId: string) => Promise<AssetValue>
 
   getValue: (assetId: string) => bigint
 
@@ -46,17 +58,13 @@ export abstract class AbstractChainAccount implements ChainAccount {
     this.addresses.push(this.chainWallet.getAddress())
   }
 
-  hasBalance (asset: TokenAsset): boolean {
-    return this.balances.has(asset.assetId)
+  getAssetBalance (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getValue(asset.assetId))
   }
 
-  /**
-   * Gets the balance from this account of an asset.
-   * @param asset The asset from which to get the balance.
-   * @returns An AssetValue containing the value of the balance of the provided asset.
-   */
-  getBalance (asset: TokenAsset): AssetValue {
-    return asset.getAssetValue(this.getValue(asset.assetId))
+  async getBalance (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+    const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
+    return this.getAssetBalance(asset)
   }
 
   getValue (assetId: string): bigint {
@@ -82,11 +90,11 @@ export abstract class AbstractChainAccount implements ChainAccount {
   abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected spend (spendings: Spending[]): void {
-    spendings.forEach((spending) => {
+    for (const spending of spendings) {
       if (this.balances.has(spending.assetId)) {
         ;(this.balances.get(spending.assetId) as Balance).spend(spending.amount)
       }
-    })
+    }
   }
 }
 
@@ -125,12 +133,10 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)
     const utxos: Utxo[] = []
-    this.utxoSet.forEach((utxo) => {
+    for (const utxo of this.utxoSet) {
       let spent: boolean = false
-      for (let i = 0; i < spendings.length; i++) {
-        const spending: UtxoSpending = spendings[i]
-        for (let j = 0; j < spending.utxos.length; j++) {
-          const spend: Utxo = spending.utxos[j]
+      for (const spending of spendings) {
+        for (const spend of spending.utxos) {
           const sameTransaction: boolean = spend.transactionId.transactionId === utxo.transactionId.transactionId
           const sameIndex: boolean = spend.utxoIndex === utxo.utxoIndex
           if (sameTransaction && sameIndex) {
@@ -145,24 +151,24 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       if (!spent) {
         utxos.push(utxo)
       }
-    })
+    }
     this.utxoSet = utxos
   }
 
   private calculateBalances (): void {
     const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
-    values.forEach((value, key) => {
+    for (const [key, value] of values) {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())
       }
       const balance: Balance = this.balances.get(key) as Balance
       balance.update(value)
-    })
-    this.balances.forEach((balance, key) => {
+    }
+    for (const [key, balance] of this.balances) {
       // force all balances that no longer have a value from calculation to 0 in order to prevent desync
       if (!values.has(key) && balance.getValue() !== BigInt(0)) {
         balance.update(BigInt(0))
       }
-    })
+    }
   }
 }

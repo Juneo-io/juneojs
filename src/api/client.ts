@@ -10,18 +10,24 @@ const DefaultProtocol: string = 'https'
 const Protocols: string[] = ['http', 'https']
 
 export class JuneoClient {
-  private protocol: string = DefaultProtocol
-  private host: string = ''
   private nextRequestId: number = 1
+  private protocol: string = DefaultProtocol
+  host: string = ''
 
   private constructor () {}
 
-  setAddress (address: string): void {
+  static parse (address: string): JuneoClient {
+    const client: JuneoClient = new JuneoClient()
+    client.parseAddress(address)
+    return client
+  }
+
+  parseAddress (address: string): void {
     const protocolSplit: string[] = address.split('://')
     const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
     const host: string = protocolSplit.length > 1 ? protocolSplit[1] : protocolSplit[0]
     this.setProtocol(protocol)
-    this.setHost(host)
+    this.host = host
   }
 
   setProtocol (protocol: string): void {
@@ -31,28 +37,12 @@ export class JuneoClient {
     this.protocol = protocol
   }
 
-  setHost (host: string): void {
-    this.host = host
+  getProtocol (): string {
+    return this.protocol
   }
 
-  static parse (address: string): JuneoClient {
-    const client: JuneoClient = new JuneoClient()
-    client.setAddress(address)
-    return client
-  }
-
-  private async post (endpoint: string, data: any): Promise<AxiosResponse> {
-    return await axios
-      .post(endpoint, data, {
-        method: 'post',
-        baseURL: `${this.protocol}://${this.host}`,
-        headers: HttpHeaders,
-        responseType: 'json',
-        responseEncoding: 'utf8'
-      })
-      .catch((error) => {
-        throw new NetworkError(error.message)
-      })
+  getNextRequestId (): number {
+    return this.nextRequestId
   }
 
   async rpcCall (endpoint: string, request: JsonRpcRequest): Promise<JsonRpcResponse> {
@@ -70,6 +60,20 @@ export class JuneoClient {
       throw new JsonRpcError(data.error.message)
     }
     return new JsonRpcResponse(data.jsonrpc, data.id, data.result)
+  }
+
+  private async post (endpoint: string, data: any): Promise<AxiosResponse> {
+    return await axios
+      .post(endpoint, data, {
+        method: 'post',
+        baseURL: `${this.protocol}://${this.host}`,
+        headers: HttpHeaders,
+        responseType: 'json',
+        responseEncoding: 'utf8'
+      })
+      .catch((error) => {
+        throw new NetworkError(error.message)
+      })
   }
 }
 

@@ -1,10 +1,17 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, type FeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { type Blockchain, JEVMBlockchain, NativeAssetCallContract } from '../../chain'
+import { type Blockchain, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
 import { ChainOperationSummary, type UnwrapOperation, type WrapOperation } from '../operation'
 import { BaseSpending } from './transaction'
-import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
+import {
+  getUtxosAmountValues,
+  getImportUserInputs,
+  AtomicDenomination,
+  calculateAtomicCost,
+  estimateAtomicExportGas,
+  estimateAtomicImportGas
+} from '../../utils'
 import {
   type JEVMExportTransaction,
   type JEVMImportTransaction,
@@ -76,7 +83,7 @@ export async function estimateEVMTransfer (
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   if (assetId === api.chain.assetId) {
     const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    const gasLimit: bigint = JEVMBlockchain.SendEtherGasLimit
+    const gasLimit: bigint = SendEtherGasLimit
     return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
   }
   const gasLimit: bigint = await api.chain.ethProvider
@@ -243,10 +250,10 @@ export async function estimateEVMExportTransaction (
   assetId: string,
   destination: Blockchain
 ): Promise<BaseFeeData> {
-  const gasLimit: bigint = api.chain.estimateAtomicExportGas([assetId], destination.assetId)
+  const gasLimit: bigint = estimateAtomicExportGas(api.chain.assetId, [assetId], destination.assetId)
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   // the evm export fee is paid in gas so it must be multiplied by the atomic denominator
-  const fee: bigint = api.chain.calculateAtomicCost(gasLimit, gasPrice) * JEVMBlockchain.AtomicDenomination
+  const fee: bigint = calculateAtomicCost(gasLimit, gasPrice) * AtomicDenomination
   return new BaseFeeData(api.chain, fee, FeeType.ExportFee)
 }
 
@@ -267,10 +274,10 @@ export async function sendEVMExportTransaction (
   }
   // exportations of the gas token must be divided by atomic denomination
   if (assetId === api.chain.assetId) {
-    amount /= JEVMBlockchain.AtomicDenomination
+    amount /= AtomicDenomination
   }
   // fee is also gas token
-  const feeAmount: bigint = fee.amount / JEVMBlockchain.AtomicDenomination
+  const feeAmount: bigint = fee.amount / AtomicDenomination
   const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const nonce: bigint = await api.eth_getTransactionCount(wallet.getAddress(api.chain), 'pending')
   const transaction: JEVMExportTransaction = buildJEVMExportTransaction(
@@ -290,13 +297,9 @@ export async function estimateEVMImportTransaction (
   inputsCount: number,
   outputsCount: number
 ): Promise<BaseFeeData> {
-  const gasLimit: bigint = api.chain.estimateAtomicImportGas(inputsCount, outputsCount)
+  const gasLimit: bigint = estimateAtomicImportGas(inputsCount, outputsCount)
   const gasPrice: bigint = await estimateEVMGasPrice(api)
-  const fee: BaseFeeData = new BaseFeeData(
-    api.chain,
-    api.chain.calculateAtomicCost(gasLimit, gasPrice),
-    FeeType.ImportFee
-  )
+  const fee: BaseFeeData = new BaseFeeData(api.chain, calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
   // import fee is paid with utxos from shared memory so using JNT asset
   fee.asset = api.chain.asset.nativeAsset
   return fee

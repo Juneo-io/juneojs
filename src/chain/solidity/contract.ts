@@ -1,42 +1,41 @@
 import { ethers } from 'ethers'
 import * as abi from './abi'
 import { AssetId } from '../../transaction'
+import { ERC20Asset, type TokenAsset } from '../../asset'
 
-export class ContractHandler {
-  private readonly adapters: ContractAdapter[] = []
+export class ContractManager {
+  private readonly handlers: ContractHandler[] = []
 
-  async getAdapter (contractAddress: string): Promise<ContractAdapter | null> {
-    for (let i: number = 0; i < this.adapters.length; i++) {
-      const adapter: ContractAdapter = this.adapters[i]
-      if (await adapter.instanceOf(contractAddress)) {
-        return adapter
+  async getHandler (contractAddress: string): Promise<ContractHandler | null> {
+    for (let i: number = 0; i < this.handlers.length; i++) {
+      const handler: ContractHandler = this.handlers[i]
+      if (await handler.instanceOf(contractAddress)) {
+        return handler
       }
     }
     return null
   }
 
-  registerAdapter (adapter: ContractAdapter): void {
-    // register at first position because of getAdapter iteration implementation
-    // since specific adapter may have common functions with default ones
+  registerHandler (handler: ContractHandler): void {
+    // register at first position because of getHandler iteration implementation
+    // since specific handler may have common functions with default ones
     // it is preferable to check if it is part of those first.
-    // Should do a better getAdapter function in the future
-    this.adapters.unshift(adapter)
-  }
-
-  registerAdapters (adapters: ContractAdapter[]): void {
-    adapters.forEach((adapter) => {
-      this.adapters.unshift(adapter)
-    })
+    // Should do a better getHandler function in the future
+    this.handlers.unshift(handler)
   }
 }
 
-export interface ContractAdapter {
+export interface ContractHandler {
   instanceOf: (contractAddress: string) => Promise<boolean>
+
   queryBalance: (contractAddress: string, address: string) => Promise<bigint>
+
+  queryTokenData: (contractAddress: string) => Promise<TokenAsset>
+
   getTransferData: (contractAddress: string, to: string, amount: bigint) => string
 }
 
-export class ERC20ContractAdapter implements ContractAdapter {
+export class ERC20ContractHandler implements ContractHandler {
   protected readonly provider: ethers.JsonRpcProvider
 
   constructor (provider: ethers.JsonRpcProvider) {
@@ -59,8 +58,16 @@ export class ERC20ContractAdapter implements ContractAdapter {
     return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
   }
 
-  getTransferData (contractAddress: string, to: string, amount: bigint): string {
+  async queryTokenData (contractAddress: string): Promise<TokenAsset> {
     const contract: ethers.Contract = this.getContract(contractAddress)
+    const name: string = await contract.name()
+    const symbol: string = await contract.symbol()
+    const decimals: number = await contract.decimals()
+    return new ERC20Asset(contractAddress, name, symbol, decimals)
+  }
+
+  getTransferData (contractAddress: string, to: string, amount: bigint): string {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.ERC20ABI)
     return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 

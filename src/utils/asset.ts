@@ -17,11 +17,11 @@ export class AssetValue {
    * Get an AssetValue from a string and the expected decimals.
    * The string can already contains some of the decimals if they are separated by a dot.
    * If there are more decimals in the provided string than in the decimals value, they will be truncated to decimals value.
-   * @param value The string that contains the value to use.
+   * @param value A string that contains the value to use.
    * @param decimals The number of decimals to format the value with.
    * @returns A new AssetValue with a value formatted from the provided string and decimals.
    */
-  static from (value: string, decimals: number): AssetValue {
+  static fromString (value: string, decimals: number): AssetValue {
     const split: string[] = value.split('.')
     let tail: string = ''
     if (split.length > 1) {

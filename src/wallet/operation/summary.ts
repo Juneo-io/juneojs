@@ -18,6 +18,8 @@ export interface OperationSummary {
 
   getExecutable: () => ExecutableOperation
 
+  getAssets: () => Set<string>
+
   getChains: () => Blockchain[]
 }
 
@@ -38,6 +40,24 @@ abstract class AbstractOperationSummary implements OperationSummary {
 
   getExecutable (): ExecutableOperation {
     return this.executable
+  }
+
+  getAssets (): Set<string> {
+    const assets = new Set<string>()
+    // refresh balances of all sent assets to sync it
+    for (const asset of this.spendings) {
+      const assetId: string = asset.assetId
+      if (!assets.has(assetId)) {
+        assets.add(assetId)
+      }
+    }
+    // refresh balances of all created values in case it was sent to self
+    for (const [assetId] of this.values) {
+      if (!assets.has(assetId)) {
+        assets.add(assetId)
+      }
+    }
+    return assets
   }
 
   abstract getChains (): Blockchain[]

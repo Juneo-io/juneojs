@@ -4,6 +4,7 @@ import { type MCN, SocotraNetwork, type Supernet } from './network'
 
 export class MCNProvider {
   mcn: MCN
+  client: JuneoClient
   info: InfoAPI
   platform: PlatformAPI
   jvm: JVMAPI
@@ -11,6 +12,7 @@ export class MCNProvider {
 
   constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
+    this.client = client
     this.info = new InfoAPI(client)
     this.platform = new PlatformAPI(client, this.mcn.primary.platform)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)

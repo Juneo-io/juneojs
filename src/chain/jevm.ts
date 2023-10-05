@@ -1,10 +1,11 @@
 import { ethers } from 'ethers'
-import { isHex } from '../utils'
-import { AssetId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
+import { ChainError, fetchJNT, isContractAddress } from '../utils'
+import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { type ContractAdapter, ContractHandler, ERC20ContractAdapter } from './solidity'
-import { type TokenAsset, type JRC20Asset, type JEVMGasToken } from '../asset'
+import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
+import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType } from '../asset'
 import { AbstractBlockchain } from './chain'
+import { type MCNProvider } from '../juneo'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
 export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
@@ -12,17 +13,16 @@ export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
+export const SendEtherGasLimit: bigint = BigInt(21_000)
+
 export class JEVMBlockchain extends AbstractBlockchain {
-  static readonly SendEtherGasLimit: bigint = BigInt(21_000)
-  static readonly AtomicSignatureCost: bigint = BigInt(1_000)
-  static readonly AtomicBaseCost: bigint = BigInt(10_000)
-  static readonly AtomicDenomination: bigint = BigInt(1_000_000_000)
   override asset: JEVMGasToken
   chainId: bigint
   baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
-  contractHandler: ContractHandler
   jrc20Assets: JRC20Asset[]
+  private readonly erc20Handler: ERC20ContractHandler
+  private readonly contractManager: ContractManager = new ContractManager()
 
   constructor (
     name: string,
@@ -41,20 +41,35 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
-    this.contractHandler = new ContractHandler()
-    this.contractHandler.registerAdapters([new ERC20ContractAdapter(this.ethProvider)])
+    this.erc20Handler = new ERC20ContractHandler(this.ethProvider)
+    this.contractManager.registerHandler(this.erc20Handler)
   }
 
-  /**
-   * @deprecated
-   */
-  async getContractTransactionData (assetId: string, to: string, amount: bigint): Promise<string> {
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
-    if (contract === null) {
-      return '0x'
-    } else {
-      return contract.getTransferData(assetId, to, amount)
+  async getContractTransactionData (
+    provider: MCNProvider,
+    assetId: string,
+    to: string,
+    amount: bigint
+  ): Promise<string> {
+    // could rather use contract manager but it would require one extra network call
+    // we avoid it if the asset is already registered
+    const asset: TokenAsset = await this.getAsset(provider, assetId)
+    const erc20Types: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
+    if (erc20Types.includes(asset.type)) {
+      return this.erc20Handler.getTransferData(assetId, to, amount)
     }
+    return '0x'
+  }
+
+  protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
+    if (isContractAddress(assetId)) {
+      const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+      if (handler === null) {
+        throw new ChainError(`contract address ${assetId} does not implement a compatible interface`)
+      }
+      return await handler.queryTokenData(assetId)
+    }
+    return await fetchJNT(provider, assetId)
   }
 
   validateAddress (address: string): boolean {
@@ -71,39 +86,13 @@ export class JEVMBlockchain extends AbstractBlockchain {
       return await api.eth_getAssetBalance(address, 'pending', assetId)
     }
     // from here should only be solidity smart contract
-    const contract: ContractAdapter | null = await this.contractHandler.getAdapter(assetId)
-    if (contract === null) {
-      return BigInt(0)
-    } else {
-      return await contract.queryBalance(assetId, address)
+    if (!isContractAddress(assetId)) {
+      throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-  }
-
-  private calculateAtomicGas (size: bigint, signaturesCount: bigint): bigint {
-    return size + JEVMBlockchain.AtomicSignatureCost * signaturesCount + JEVMBlockchain.AtomicBaseCost
-  }
-
-  estimateAtomicExportGas (exportedAssets: string[], importFeeAssetId: string): bigint {
-    const signaturesCount: number = JEVMExportTransaction.estimateSignaturesCount(
-      exportedAssets,
-      this.assetId,
-      importFeeAssetId
-    )
-    const size: number = JEVMExportTransaction.estimateSize(signaturesCount)
-    return this.calculateAtomicGas(BigInt(size), BigInt(signaturesCount))
-  }
-
-  estimateAtomicImportGas (inputsCount: number, outputsCount: number): bigint {
-    const size: number = JEVMImportTransaction.estimateSize(inputsCount, outputsCount)
-    return this.calculateAtomicGas(BigInt(size), BigInt(inputsCount))
-  }
-
-  calculateAtomicCost (gas: bigint, baseFee: bigint): bigint {
-    return (gas * baseFee) / JEVMBlockchain.AtomicDenomination
-  }
-
-  static isContractAddress (assetId: string): boolean {
-    // ethers.isAddress supports also ICAP addresses so check if it is hex too
-    return isHex(assetId) && ethers.isAddress(assetId)
+    const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+    if (handler !== null) {
+      return await handler.queryBalance(assetId, address)
+    }
+    return BigInt(0)
   }
 }

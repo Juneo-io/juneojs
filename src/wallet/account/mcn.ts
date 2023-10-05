@@ -24,13 +24,11 @@ import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
-  private readonly provider: MCNProvider
   private readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
-    this.provider = provider
     this.addAccount(new JVMAccount(provider, wallet))
     this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {
@@ -50,11 +48,14 @@ export class MCNAccount {
     return this.chainAccounts.get(chainId) as ChainAccount
   }
 
-  async fetchAllBalances (): Promise<void> {
+  /**
+   * Fetch the balances of all the registered assets of the chains of the accounts.
+   */
+  async fetchChainsBalances (): Promise<void> {
     const promises: Array<Promise<void>> = []
-    this.chainAccounts.forEach((account) => {
-      promises.push(account.fetchAllBalances())
-    })
+    for (const account of this.chainAccounts.values()) {
+      promises.push(account.fetchAllBalances(account.chain.getRegisteredAssets()))
+    }
     await Promise.all(promises)
   }
 
@@ -129,6 +130,7 @@ export class MCNAccount {
       },
       (err) => {
         error = err
+        executable.status = NetworkOperationStatus.Error
       }
     )
     if (error === undefined) {
@@ -136,12 +138,16 @@ export class MCNAccount {
       this.executingChains = []
       return
     }
-    // error occured case
-    executable.status = NetworkOperationStatus.Error
     // most of the operations require to refetch balances but error could have cancelled it
-    // try to restore a proper state by fetching them all
-    for (const chain of summary.getChains()) {
-      await this.getAccount(chain.id).fetchAllBalances()
+    // try to restore a proper state by fetching them all. In the case of errors in more
+    // complex such as those with a range higher than Chain we fetch it everywhere
+    if (summary.operation.range !== NetworkOperationRange.Chain) {
+      for (const chain of summary.getChains()) {
+        await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
+      }
+    } else {
+      const operation: ChainNetworkOperation = summary.operation as ChainNetworkOperation
+      await this.getAccount(operation.chain.id).fetchAllBalances(summary.getAssets().values())
     }
     this.executingChains = []
     throw error
@@ -150,22 +156,22 @@ export class MCNAccount {
   verifySpendings (summary: OperationSummary): Spending[] {
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
     const faulty: Spending[] = []
-    spendings.forEach((spending) => {
+    for (const spending of spendings.values()) {
       const account: ChainAccount = this.getAccount(spending.chain.id)
       if (spending.amount > account.getValue(spending.assetId)) {
         faulty.push(spending)
       }
-    })
+    }
     return faulty
   }
 
   verifyChains (chains: Blockchain[]): string[] {
     const faulty: string[] = []
-    chains.forEach((chain) => {
+    for (const chain of chains) {
       if (this.executingChains.includes(chain.id)) {
         faulty.push(chain.id)
       }
-    })
+    }
     return faulty
   }
 }

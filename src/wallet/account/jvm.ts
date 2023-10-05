@@ -46,6 +46,6 @@ export class JVMAccount extends UtxoAccount {
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
-    await super.fetchAllBalances()
+    await super.refreshBalances()
   }
 }

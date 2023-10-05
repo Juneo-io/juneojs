@@ -96,6 +96,10 @@ export abstract class AbstractChainAccount implements ChainAccount {
     await Promise.all(fetchers)
   }
 
+  async fetchAllChainBalances (): Promise<void> {
+    await this.fetchAllBalances(this.chain.getRegisteredAssets())
+  }
+
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
 
   abstract execute (summary: ChainOperationSummary): Promise<void>

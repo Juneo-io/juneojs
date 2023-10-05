@@ -1,7 +1,6 @@
 import { BytesData, JuneoBuffer } from '../utils/bytes'
 import { TypeError } from '../utils/errors'
 import * as encoding from '../utils/encoding'
-import { SignatureLength } from '../utils'
 
 export const AddressSize: number = 20
 export const AssetIdSize: number = 32
@@ -9,7 +8,7 @@ export const TransactionIdSize: number = 32
 export const BlockchainIdSize: number = 32
 export const SupernetIdSize: number = 32
 export const DynamicIdSize: number = 32
-export const SignatureSize: number = SignatureLength
+export const SignatureSize: number = 65
 export const NodeIdSize: number = 20
 
 export class Address extends BytesData {

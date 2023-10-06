@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/'
 import { DecodingError } from './errors'
 import * as bech32 from 'bech32'
 import bs58 from 'bs58'

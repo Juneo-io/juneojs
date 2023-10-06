@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/'
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
 import { Signature, recoverPublicKey, getPublicKey, signSync } from '@noble/secp256k1'

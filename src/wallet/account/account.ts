@@ -41,7 +41,7 @@ export interface ChainAccount {
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
   ) => Promise<void>
 
-  fetchAllChainBalances (): Promise<void>
+  fetchAllChainBalances: () => Promise<void>
 
   estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
 

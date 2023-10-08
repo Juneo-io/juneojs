@@ -374,7 +374,9 @@ export class CrossManager {
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
       }
-      await juneAccount.fetchAllBalances([cross.assetId, feeData.assetId])
+      // feeData.data.to is the jrc20 address for withdraw transactions
+      // cross.assetId should be jrc20.nativeAssetId here
+      await juneAccount.fetchAllBalances([cross.assetId, feeData.data.to, feeData.assetId])
     }
     const balancesSync: Array<Promise<void>> = []
     let sourceUtxos: Utxo[] = []

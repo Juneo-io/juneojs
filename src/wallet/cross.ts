@@ -204,8 +204,7 @@ export class CrossManager {
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<CrossOperationSummary> {
     const juneChain: JEVMBlockchain = SocotraJUNEChain
-    const values = new Map<string, bigint>()
-    values.set(cross.assetId, cross.amount)
+    const values = new Map<string, bigint>([[cross.assetId, cross.amount]])
     if (this.shouldProxy(cross)) {
       const chains: Blockchain[] = [cross.source, this.provider.jvm.chain, cross.destination]
       const proxyExport: CrossOperation = new CrossOperation(

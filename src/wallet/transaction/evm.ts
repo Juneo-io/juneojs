@@ -146,8 +146,7 @@ export async function estimateEVMWrapOperation (
   const chain: JEVMBlockchain = api.chain
   const data: string = wrap.asset.adapter.getDepositData()
   const type: FeeType = FeeType.Wrap
-  const values = new Map<string, bigint>()
-  values.set(chain.assetId, wrap.amount)
+  const values = new Map<string, bigint>([[chain.assetId, wrap.amount]])
   return await estimateEVMCall(api, from, wrap.asset.address, wrap.amount, data, type).then(
     (fee) => {
       const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
@@ -170,8 +169,7 @@ export async function estimateEVMUnwrapOperation (
   const chain: JEVMBlockchain = api.chain
   const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
   const type: FeeType = FeeType.Unwrap
-  const values = new Map<string, bigint>()
-  values.set(unwrap.asset.assetId, unwrap.amount)
+  const values = new Map<string, bigint>([[unwrap.asset.assetId, unwrap.amount]])
   return await estimateEVMCall(api, from, unwrap.asset.address, BigInt(0), data, type).then(
     (fee) => {
       const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)

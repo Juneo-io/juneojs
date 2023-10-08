@@ -50,8 +50,7 @@ export class EVMAccount extends AbstractChainAccount {
         send.address
       )
       const spending: BaseSpending = new BaseSpending(this.chain, send.amount, send.assetId)
-      const values = new Map<string, bigint>()
-      values.set(send.assetId, send.amount)
+      const values = new Map<string, bigint>([[send.assetId, send.amount]])
       return new ChainOperationSummary(operation, this.chain, fee, [spending, fee.spending], values)
     } else if (operation.type === NetworkOperationType.Wrap) {
       return await estimateEVMWrapOperation(this.api, this.chainWallet.getAddress(), operation as WrapOperation)

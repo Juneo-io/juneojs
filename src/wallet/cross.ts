@@ -11,7 +11,9 @@ import {
   CrossOperationSummary,
   CrossResumeOperationSummary,
   CrossResumeOperation,
-  CrossOperation
+  CrossOperation,
+  DepositResumeOperation,
+  DepositResumeOperationSummary
 } from './operation'
 import {
   estimateEVMExportTransaction,
@@ -481,6 +483,21 @@ export class CrossManager {
     await Promise.all(balancesSync)
   }
 
+  async estimateDepositResumeOperation (
+    operation: DepositResumeOperation,
+    account: MCNAccount
+  ): Promise<DepositResumeOperationSummary> {
+    const api: JEVMAPI = this.provider.jevm[operation.chain.id]
+    const sender: string = this.wallet.getAddress(operation.chain)
+    const fee: EVMFeeData = await estimateEVMDepositJRC20(api, sender, operation.asset, operation.amount)
+    return new DepositResumeOperationSummary(
+      operation,
+      fee,
+      [fee.spending],
+      new Map<string, bigint>([[operation.asset.address, operation.amount]])
+    )
+  }
+
   async estimateCrossResumeOperation (
     operation: CrossResumeOperation,
     account: MCNAccount
@@ -531,6 +548,16 @@ export class CrossManager {
     return new CrossResumeOperationSummary(operation, fee, spendings, values, payImportFee, summaryUtxos)
   }
 
+  async fetchUnfinishedDepositOperations (chain: JEVMBlockchain): Promise<DepositResumeOperation[]> {
+    const operations: DepositResumeOperation[] = []
+    const promises: Array<Promise<void>> = []
+    for (const jrc20 of chain.jrc20Assets) {
+      promises.push(this.fetchUnfinishedJRC20DepositOperation(chain, jrc20, operations))
+    }
+    await Promise.all(promises)
+    return operations
+  }
+
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
     const operations: CrossResumeOperation[] = []
     const chains: Blockchain[] = this.provider.mcn.primary.chains
@@ -540,6 +567,19 @@ export class CrossManager {
     }
     await Promise.all(promises)
     return operations
+  }
+
+  private async fetchUnfinishedJRC20DepositOperation (
+    chain: JEVMBlockchain,
+    jrc20: JRC20Asset,
+    list: DepositResumeOperation[]
+  ): Promise<void> {
+    const api: JEVMAPI = this.provider.jevm[chain.id]
+    const address: string = this.wallet.getAddress(chain)
+    const balance: bigint = await api.eth_getAssetBalance(address, 'pending', jrc20.nativeAssetId)
+    if (balance > BigInt(0)) {
+      list.push(new DepositResumeOperation(chain, jrc20, balance))
+    }
   }
 
   private async fetchUnfinishedChainCrossOperation (chain: Blockchain, list: CrossResumeOperation[]): Promise<void> {
@@ -564,6 +604,21 @@ export class CrossManager {
         list.push(new CrossResumeOperation(source, chain, utxoSet))
       }
     }
+  }
+
+  async executeDepositResumeOperation (summary: DepositResumeOperationSummary, account: EVMAccount): Promise<void> {
+    const operation: DepositResumeOperation = summary.operation
+    const fee: EVMFeeData = summary.fee
+    const api: JEVMAPI = this.provider.jevm[operation.chain.id]
+    const transactionHash: string = await sendEVMTransaction(api, account.chainWallet.evmWallet, fee)
+    const success: boolean = await summary
+      .getExecutable()
+      .addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
+    if (!success) {
+      throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching`)
+    }
+    const jrc20: JRC20Asset = operation.asset
+    await account.fetchAllBalances([fee.assetId, jrc20.nativeAssetId, jrc20.address])
   }
 
   async executeCrossResumeOperation (summary: CrossResumeOperationSummary, account: ChainAccount): Promise<void> {

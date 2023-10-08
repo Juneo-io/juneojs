@@ -112,7 +112,8 @@ export class MCNAccount {
     // verifications are done in it so keep it like that until newer features are added
     const operation: NetworkOperationType = summary.operation.type
     if (operation === NetworkOperationType.Cross) {
-      await this.crossManager.executeCrossOperation(summary as CrossOperationSummary, this)
+      const crossSummary: CrossOperationSummary = summary as CrossOperationSummary
+      await this.executeOperation(crossSummary, this.crossManager.executeCrossOperation(crossSummary, this))
     } else {
       throw new AccountError(`unsupported supernet operation: ${operation}`)
     }
@@ -130,7 +131,10 @@ export class MCNAccount {
       },
       (err) => {
         error = err
-        executable.status = NetworkOperationStatus.Error
+        // only set as error if it has not been handled in the execution layer
+        if (executable.status === NetworkOperationStatus.Executing) {
+          executable.status = NetworkOperationStatus.Error
+        }
       }
     )
     if (error === undefined) {

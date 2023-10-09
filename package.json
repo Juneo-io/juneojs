@@ -9,7 +9,7 @@
     "clean": "rm -rf ./dist",
     "fix": "npm run prettier && npm run lint",
     "lint": "eslint . --ext .ts --fix",
-    "prep": "npm run build && npm run test && npm run fix",
+    "prep": "npm run build && npm run test-unit && npm run fix",
     "prettier": "npx prettier . --write",
     "test": "jest",
     "test-e2e": "jest --roots=./tests/e2e",

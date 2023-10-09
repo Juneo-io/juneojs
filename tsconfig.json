@@ -12,6 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES5", "ES2022"]
   },
-  "exclude": ["node_modules", "tests"],
-  "include": ["src/"]
+  "exclude": ["node_modules"],
+  "include": ["src/", "tests/"]
 }

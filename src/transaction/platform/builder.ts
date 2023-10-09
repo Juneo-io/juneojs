@@ -13,7 +13,8 @@ import {
   CreateChainTransaction,
   CreateSupernetTransaction,
   PlatformExportTransaction,
-  PlatformImportTransaction
+  PlatformImportTransaction,
+  RemoveSupernetValidatorTransaction
 } from './transaction'
 import { Secp256k1OutputOwners, type SupernetAuth, Validator } from './validation'
 
@@ -357,6 +358,34 @@ export function buildCreateChainTransaction (
     typeof vmId === 'string' ? new DynamicId(vmId) : vmId,
     fxIds,
     genesisData,
+    supernetAuth
+  )
+}
+
+export function buildRemoveSupernetValidatorTransaction (
+  utxoSet: Utxo[],
+  sendersAddresses: string[],
+  fee: bigint,
+  chain: PlatformBlockchain,
+  nodeId: string | NodeId,
+  supernetId: string | SupernetId,
+  supernetAuth: SupernetAuth,
+  changeAddress: string,
+  networkId: number,
+  memo: string = ''
+): RemoveSupernetValidatorTransaction {
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(sendersAddresses), [
+    new TransactionFee(chain, fee)
+  ])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
+  return new RemoveSupernetValidatorTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
+    typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
+    typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
     supernetAuth
   )
 }

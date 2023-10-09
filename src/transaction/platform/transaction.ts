@@ -20,17 +20,20 @@ import {
   DynamicIdSize,
   type AssetId,
   type Address,
-  AssetIdSize
+  AssetIdSize,
+  type NodeId,
+  NodeIdSize
 } from '../types'
 import { Validator, Secp256k1OutputOwners, SupernetAuth } from './validation'
 
-const CreateSupernetTransactionTypeId: number = 0x00000010
-const ImportTransactionTypeId: number = 0x00000011
-const ExportTransactionTypeId: number = 0x00000012
 const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d
 const AddDelegatorTransactionTypeId: number = 0x0000000e
 const CreateChainTransactionTypeId: number = 0x0000000f
+const CreateSupernetTransactionTypeId: number = 0x00000010
+const ImportTransactionTypeId: number = 0x00000011
+const ExportTransactionTypeId: number = 0x00000012
+const RemoveSupernetTransactionTypeId: number = 0x00000017
 
 export enum PlatformTransactionStatus {
   Committed = 'Committed',
@@ -477,6 +480,45 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     })
     buffer.writeUInt32(this.genesisData.length)
     buffer.writeString(this.genesisData)
+    buffer.write(supernetAuthBytes)
+    return buffer
+  }
+}
+
+export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction {
+  nodeId: NodeId
+  supernetId: SupernetId
+  supernetAuth: SupernetAuth
+
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    nodeId: NodeId,
+    supernetId: SupernetId,
+    supernetAuth: SupernetAuth
+  ) {
+    super(RemoveSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.nodeId = nodeId
+    this.supernetId = supernetId
+    this.supernetAuth = supernetAuth
+  }
+
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + NodeIdSize + SupernetIdSize + supernetAuthBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.nodeId.serialize())
+    buffer.write(this.supernetId.serialize())
     buffer.write(supernetAuthBytes)
     return buffer
   }

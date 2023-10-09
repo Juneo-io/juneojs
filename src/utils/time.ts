@@ -6,7 +6,7 @@ export function now (): bigint {
 }
 
 export async function sleep (milliseconds: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, milliseconds))
+  await new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
 export function verifyTimeRange (startTime: bigint, endTime: bigint, minPeriod: bigint): void {

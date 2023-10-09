@@ -24,9 +24,7 @@ export class Validator implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      NodeIdSize + 8 + 8 + 8
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(NodeIdSize + 8 + 8 + 8)
     buffer.write(this.nodeId.serialize())
     buffer.writeUInt64(this.startTime)
     buffer.writeUInt64(this.endTime)
@@ -35,9 +33,7 @@ export class Validator implements Serializable {
   }
 
   static parse (data: string | JuneoBuffer): Validator {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     let position: number = 0
     const nodeId: NodeId = new NodeId(buffer.read(position, NodeIdSize).toCB58())
     position += NodeIdSize
@@ -71,16 +67,14 @@ export class Secp256k1OutputOwners implements TransactionOutput {
     buffer.writeUInt64(this.locktime)
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
-    this.addresses.forEach(address => {
+    this.addresses.forEach((address) => {
       buffer.write(address.serialize())
     })
     return buffer
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1OutputOwners {
-    const buffer: JuneoBuffer = typeof data === 'string'
-      ? JuneoBuffer.fromString(data)
-      : data
+    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     let position: number = 4
     const locktime: bigint = buffer.readUInt64(position)
     position += 8
@@ -131,12 +125,10 @@ export class SupernetAuth implements Serializable, Signable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      4 + 4 + this.addressIndices.length * 4
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + 4 + this.addressIndices.length * 4)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.addressIndices.length)
-    this.addressIndices.forEach(indice => {
+    this.addressIndices.forEach((indice) => {
       buffer.writeUInt32(indice)
     })
     return buffer

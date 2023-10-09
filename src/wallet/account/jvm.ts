@@ -1,7 +1,13 @@
 import { type MCNProvider } from '../../juneo'
 import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
 import { AccountError } from '../../utils'
-import { type ExecutableOperation, type NetworkOperation, NetworkOperationType, type ChainOperationSummary, type SendOperation } from '../operation'
+import {
+  type ExecutableOperation,
+  NetworkOperationType,
+  type ChainOperationSummary,
+  type SendOperation,
+  type ChainNetworkOperation
+} from '../operation'
 import { SendManager } from '../send'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -17,7 +23,7 @@ export class JVMAccount extends UtxoAccount {
     this.sendManager = new SendManager(provider, wallet)
   }
 
-  async estimate (operation: NetworkOperation): Promise<ChainOperationSummary> {
+  async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       return await estimateJVMSendOperation(this.provider, this.wallet, operation as SendOperation, this)
     }
@@ -27,15 +33,19 @@ export class JVMAccount extends UtxoAccount {
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings as UtxoSpending[])
     const executable: ExecutableOperation = summary.getExecutable()
-    const operation: NetworkOperation = summary.operation
+    const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendJVM(
-        send.assetId, send.amount, send.address, summary.fee as UtxoFeeData, this.utxoSet
+        send.assetId,
+        send.amount,
+        send.address,
+        summary.fee as UtxoFeeData,
+        this.utxoSet
       )
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
-    await super.fetchAllBalances()
+    await super.refreshBalances()
   }
 }

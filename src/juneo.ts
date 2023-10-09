@@ -1,21 +1,18 @@
-import { JuneoClient, InfoAPI } from './api'
-import { type GetTxFeeResponse } from './api/info/data'
-import { JEVMAPI } from './api/jevm'
-import { JVMAPI } from './api/jvm'
-import { PlatformAPI } from './api/platform'
-import { JEVM_ID, type Supernet, type MCN, type Blockchain, type JEVMBlockchain } from './chain'
-import * as params from './chain/params'
+import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
+import { type Blockchain, JEVM_ID, type JEVMBlockchain } from './chain'
+import { type MCN, SocotraNetwork, type Supernet } from './network'
 
 export class MCNProvider {
   mcn: MCN
+  client: JuneoClient
   info: InfoAPI
-  private feesCache: GetTxFeeResponse | undefined
   platform: PlatformAPI
   jvm: JVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
-  constructor (mcn: MCN = params.SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
+    this.client = client
     this.info = new InfoAPI(client)
     this.platform = new PlatformAPI(client, this.mcn.primary.platform)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)
@@ -29,24 +26,12 @@ export class MCNProvider {
       }
     }
   }
-
-  async getFees (forceUpdate?: boolean): Promise<GetTxFeeResponse> {
-    // explicit boolean comparison to cover undefined case
-    if (forceUpdate === false && this.feesCache !== undefined) {
-      return this.feesCache
-    }
-    this.feesCache = await this.info.getTxFee()
-    return this.feesCache
-  }
-
-  clearCaches (): void {
-    this.feesCache = undefined
-  }
 }
 
 export * from './api'
+export * from './asset'
 export * from './chain'
-export * from './solidity'
+export * from './network'
 export * from './transaction'
 export * from './utils'
 export * from './wallet'

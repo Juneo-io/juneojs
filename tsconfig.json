@@ -1,17 +1,17 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist/",
-        "target": "ES2015",
-        "module": "commonjs",
-        "skipLibCheck": true,
-        "esModuleInterop": true,
-        "declaration": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "declarationMap": true,
-        "allowSyntheticDefaultImports": true,
-        "lib": ["DOM", "ES2016"]
-    },
-    "exclude": ["node_modules", "tests"],
-    "include": ["src/"]
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "target": "ES2022",
+    "module": "commonjs",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES5", "ES2022"]
+  },
+  "exclude": ["node_modules", "tests"],
+  "include": ["src/"]
 }

@@ -6,7 +6,16 @@ import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { sign, type Signable } from '../signature'
 import { CodecId, TransactionStatusFetchDelay, type TransactionStatusFetcher } from '../transaction'
-import { Address, AddressSize, AssetId, AssetIdSize, BlockchainIdSize, type BlockchainId, Signature, TransactionIdSize } from '../types'
+import {
+  Address,
+  AddressSize,
+  AssetId,
+  AssetIdSize,
+  BlockchainIdSize,
+  type BlockchainId,
+  Signature,
+  TransactionIdSize
+} from '../types'
 
 const ImportTransactionTypeId: number = 0
 const ExportTransactionTypeId: number = 1
@@ -15,7 +24,7 @@ export enum JEVMTransactionStatus {
   Accepted = 'Accepted',
   Processing = 'Processing',
   Dropped = 'Dropped',
-  Unknown = 'Unknown'
+  Unknown = 'Unknown',
 }
 
 export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
@@ -33,18 +42,23 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = await this.jevmApi.getTxStatus(this.transactionId).then(value => {
-        return value.status
-      }, () => {
-        return JEVMTransactionStatus.Unknown
-      })
+      this.currentStatus = await this.jevmApi.getTxStatus(this.transactionId).then(
+        (value) => {
+          return value.status
+        },
+        () => {
+          return JEVMTransactionStatus.Unknown
+        }
+      )
       this.attempts += 1
     }
     return this.currentStatus
   }
 
   private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== JEVMTransactionStatus.Unknown && this.currentStatus !== JEVMTransactionStatus.Processing
+    return (
+      this.currentStatus !== JEVMTransactionStatus.Unknown && this.currentStatus !== JEVMTransactionStatus.Processing
+    )
   }
 }
 
@@ -52,7 +66,7 @@ export enum EVMTransactionStatus {
   Success = 'Success',
   Failure = 'Failure',
   Pending = 'Pending',
-  Unknown = 'Unknown'
+  Unknown = 'Unknown',
 }
 
 export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
@@ -182,8 +196,13 @@ export class JEVMExportTransaction implements Serializable {
   inputs: EVMInput[]
   exportedOutputs: TransferableOutput[]
 
-  constructor (networkId: number, blockchainId: BlockchainId, destinationChain: BlockchainId,
-    inputs: EVMInput[], exportedOutputs: TransferableOutput[]) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    destinationChain: BlockchainId,
+    inputs: EVMInput[],
+    exportedOutputs: TransferableOutput[]
+  ) {
     this.networkId = networkId
     this.blockchainId = blockchainId
     this.destinationChain = destinationChain
@@ -200,14 +219,14 @@ export class JEVMExportTransaction implements Serializable {
   serialize (): JuneoBuffer {
     const inputsBytes: JuneoBuffer[] = []
     let inputsSize: number = 0
-    this.inputs.forEach(input => {
+    this.inputs.forEach((input) => {
       const bytes: JuneoBuffer = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
     })
     const outputsBytes: JuneoBuffer[] = []
     let outputsSize: number = 0
-    this.exportedOutputs.forEach(output => {
+    this.exportedOutputs.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
@@ -222,11 +241,11 @@ export class JEVMExportTransaction implements Serializable {
     buffer.write(this.blockchainId.serialize())
     buffer.write(this.destinationChain.serialize())
     buffer.writeUInt32(this.inputs.length)
-    inputsBytes.forEach(input => {
+    inputsBytes.forEach((input) => {
       buffer.write(input)
     })
     buffer.writeUInt32(this.exportedOutputs.length)
-    outputsBytes.forEach(output => {
+    outputsBytes.forEach((output) => {
       buffer.write(output)
     })
     return buffer
@@ -268,8 +287,13 @@ export class JEVMImportTransaction implements Serializable {
   importedInputs: TransferableInput[]
   outputs: EVMOutput[]
 
-  constructor (networkId: number, blockchainId: BlockchainId, sourceChain: BlockchainId,
-    importedInputs: TransferableInput[], outputs: EVMOutput[]) {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    sourceChain: BlockchainId,
+    importedInputs: TransferableInput[],
+    outputs: EVMOutput[]
+  ) {
     this.networkId = networkId
     this.blockchainId = blockchainId
     this.sourceChain = sourceChain
@@ -286,14 +310,14 @@ export class JEVMImportTransaction implements Serializable {
   serialize (): JuneoBuffer {
     const inputsBytes: JuneoBuffer[] = []
     let inputsSize: number = 0
-    this.importedInputs.forEach(input => {
+    this.importedInputs.forEach((input) => {
       const bytes: JuneoBuffer = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
     })
     const outputsBytes: JuneoBuffer[] = []
     let outputsSize: number = 0
-    this.outputs.forEach(output => {
+    this.outputs.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
@@ -308,11 +332,11 @@ export class JEVMImportTransaction implements Serializable {
     buffer.write(this.blockchainId.serialize())
     buffer.write(this.sourceChain.serialize())
     buffer.writeUInt32(this.importedInputs.length)
-    inputsBytes.forEach(input => {
+    inputsBytes.forEach((input) => {
       buffer.write(input)
     })
     buffer.writeUInt32(this.outputs.length)
-    outputsBytes.forEach(output => {
+    outputsBytes.forEach((output) => {
       buffer.write(output)
     })
     return buffer

@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/'
 import { DecodingError } from './errors'
 import * as bech32 from 'bech32'
 import bs58 from 'bs58'
@@ -35,9 +34,7 @@ export function decodeBech32 (value: string): JuneoBuffer {
   if (hrp.length < 1) {
     throw new DecodingError('bech32 hrp missing')
   }
-  return JuneoBuffer.fromBytes(
-    Buffer.from(bech32.bech32.fromWords(bech32.bech32.decode(part).words))
-  )
+  return JuneoBuffer.fromBytes(Buffer.from(bech32.bech32.fromWords(bech32.bech32.decode(part).words)))
 }
 
 export function validateBech32 (value: string, expectedHrp?: string, expectedPrefix: string[] = []): boolean {
@@ -73,9 +70,7 @@ export function decodeCB58 (value: string): JuneoBuffer {
   if (!isBase58(value)) {
     throw new DecodingError('value is not base58')
   }
-  const buffer: JuneoBuffer = JuneoBuffer.fromBytes(
-    Buffer.from(bs58.decode(value))
-  )
+  const buffer: JuneoBuffer = JuneoBuffer.fromBytes(Buffer.from(bs58.decode(value)))
   if (!verifyChecksum(buffer)) {
     throw new DecodingError('value checksum is not valid')
   }

@@ -1,7 +1,6 @@
 import { BytesData, JuneoBuffer } from '../utils/bytes'
 import { TypeError } from '../utils/errors'
 import * as encoding from '../utils/encoding'
-import { SignatureLength } from '../utils'
 
 export const AddressSize: number = 20
 export const AssetIdSize: number = 32
@@ -9,14 +8,12 @@ export const TransactionIdSize: number = 32
 export const BlockchainIdSize: number = 32
 export const SupernetIdSize: number = 32
 export const DynamicIdSize: number = 32
-export const SignatureSize: number = SignatureLength
+export const SignatureSize: number = 65
 export const NodeIdSize: number = 20
 
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
-    const buffer: JuneoBuffer = typeof address === 'string'
-      ? Address.decodeAddress(address)
-      : address
+    const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
@@ -24,9 +21,7 @@ export class Address extends BytesData {
   }
 
   matches (address: string | Address): boolean {
-    const buffer: JuneoBuffer = typeof address === 'string'
-      ? Address.decodeAddress(address)
-      : address.getBuffer()
+    const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address.getBuffer()
     if (buffer.length !== AddressSize) {
       throw new TypeError(`address is not ${AddressSize} bytes long`)
     }
@@ -35,7 +30,7 @@ export class Address extends BytesData {
 
   static toAddresses (values: string[]): Address[] {
     const addresses: Address[] = []
-    values.forEach(value => {
+    values.forEach((value) => {
       addresses.push(new Address(value))
     })
     return addresses

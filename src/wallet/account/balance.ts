@@ -63,7 +63,7 @@ export class Balance {
   }
 
   private callBalanceUpdateEvent (event: BalanceUpdateEvent): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       listener.onBalanceUpdateEvent(event)
     })
   }

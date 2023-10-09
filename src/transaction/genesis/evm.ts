@@ -21,7 +21,7 @@ class EVMGenesis {
 
   generate (): string {
     const alloc: any = {}
-    this.allocations.forEach(allocation => {
+    this.allocations.forEach((allocation) => {
       let address: string = allocation.address
       try {
         address = ethers.getAddress(address).substring(2)
@@ -76,8 +76,12 @@ export class SupernetEVMGenesis extends EVMGenesis {
   allowFeeRecipients: boolean
   feeConfig: SupernetEVMFeeConfig
 
-  constructor (chainId: number, allocations: EVMAllocation[] = [], allowFeeRecipients: boolean = true,
-    feeConfig: SupernetEVMFeeConfig = new SupernetEVMFeeConfig()) {
+  constructor (
+    chainId: number,
+    allocations: EVMAllocation[] = [],
+    allowFeeRecipients: boolean = true,
+    feeConfig: SupernetEVMFeeConfig = new SupernetEVMFeeConfig()
+  ) {
     super(chainId, allocations)
     this.allowFeeRecipients = allowFeeRecipients
     this.feeConfig = feeConfig
@@ -104,10 +108,16 @@ export class SupernetEVMFeeConfig {
   maxBlockGasCost: number
   blockGasCostStep: number
 
-  constructor (gasLimit: number = EVMFeeConfigDefaultGasLimit, targetBlockRate: number = EVMFeeConfigDefaultTargetBlockRate,
-    minBaseFee: number = EVMFeeConfigDefaultMinBaseFee, targetGas: number = EVMFeeConfigDefaultTargetGas,
-    baseFeeChangeDenominator: number = EVMFeeConfigDefaultBaseFeeChangeDenominator, minBlockGasCost: number = EVMFeeConfigDefaultMinBlockGasCost,
-    maxBlockGasCost: number = EVMFeeConfigDefaultMaxBlockGasCost, blockGasCostStep: number = EVMFeeConfigDefaultBlockGasCostStep) {
+  constructor (
+    gasLimit: number = EVMFeeConfigDefaultGasLimit,
+    targetBlockRate: number = EVMFeeConfigDefaultTargetBlockRate,
+    minBaseFee: number = EVMFeeConfigDefaultMinBaseFee,
+    targetGas: number = EVMFeeConfigDefaultTargetGas,
+    baseFeeChangeDenominator: number = EVMFeeConfigDefaultBaseFeeChangeDenominator,
+    minBlockGasCost: number = EVMFeeConfigDefaultMinBlockGasCost,
+    maxBlockGasCost: number = EVMFeeConfigDefaultMaxBlockGasCost,
+    blockGasCostStep: number = EVMFeeConfigDefaultBlockGasCostStep
+  ) {
     this.gasLimit = gasLimit
     this.targetBlockRate = targetBlockRate
     this.minBaseFee = minBaseFee

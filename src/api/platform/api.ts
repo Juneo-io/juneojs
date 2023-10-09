@@ -1,12 +1,28 @@
 import { type PlatformBlockchain } from '../../chain'
 import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetBlockResponse, type GetHeightResponse, type GetTxResponse, type GetTxStatusResponse, type IssueTxResponse } from '../data'
 import {
-  type GetBlockchainsResponse, type GetBlockchainStatusResponse, type GetCurrentSupplyResponse,
-  type GetCurrentValidatorsResponse, type GetMinStakeResponse, type GetPendingValidatorsResponse,
-  type GetStakingAssetIDResponse, type GetSupernetsResponse, type GetTimestampResponse, type GetTotalStakeResponse,
-  type GetValidatorsAtResponse, type SampleValidatorsResponse, type ValidatedByResponse, type ValidatesResponse
+  type GetBlockResponse,
+  type GetHeightResponse,
+  type GetTxResponse,
+  type GetTxStatusResponse,
+  type IssueTxResponse
+} from '../data'
+import {
+  type GetBlockchainsResponse,
+  type GetBlockchainStatusResponse,
+  type GetCurrentSupplyResponse,
+  type GetCurrentValidatorsResponse,
+  type GetMinStakeResponse,
+  type GetPendingValidatorsResponse,
+  type GetStakingAssetIDResponse,
+  type GetSupernetsResponse,
+  type GetTimestampResponse,
+  type GetTotalStakeResponse,
+  type GetValidatorsAtResponse,
+  type SampleValidatorsResponse,
+  type ValidatedByResponse,
+  type ValidatesResponse
 } from './data'
 
 const Service: string = 'platform'
@@ -15,7 +31,7 @@ export class PlatformAPI extends AbstractUtxoAPI {
   chain: PlatformBlockchain
 
   constructor (client: JuneoClient, chain: PlatformBlockchain) {
-    super(client, `/bc/${chain.id}`, Service)
+    super(client, `/ext/bc/${chain.id}`, Service)
     this.chain = chain
   }
 

@@ -1,9 +1,20 @@
 import { type JEVMAPI, type PlatformAPI, type JVMAPI } from '../../api'
 import {
-  EVMTransactionStatus, EVMTransactionStatusFetcher, JEVMTransactionStatus, JEVMTransactionStatusFetcher,
-  PlatformTransactionStatus, PlatformTransactionStatusFetcher, JVMTransactionStatus, JVMTransactionStatusFetcher
+  EVMTransactionStatus,
+  EVMTransactionStatusFetcher,
+  JEVMTransactionStatus,
+  JEVMTransactionStatusFetcher,
+  PlatformTransactionStatus,
+  PlatformTransactionStatusFetcher,
+  JVMTransactionStatus,
+  JVMTransactionStatusFetcher
 } from '../../transaction'
-import { type TransactionType, WalletStatusFetcherTimeout, WalletStatusFetcherDelay, TransactionReceipt } from '../transaction'
+import {
+  type TransactionType,
+  WalletStatusFetcherTimeout,
+  WalletStatusFetcherDelay,
+  TransactionReceipt
+} from '../transaction'
 import { NetworkOperationStatus } from './operation'
 
 export class ExecutableOperation {
@@ -11,10 +22,17 @@ export class ExecutableOperation {
   receipts: TransactionReceipt[] = []
 
   async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, EVMTransactionStatus.Pending, transactionHash)
+    const receipt: TransactionReceipt = new TransactionReceipt(
+      api.chain.id,
+      type,
+      EVMTransactionStatus.Pending,
+      transactionHash
+    )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash)
-      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
+    const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash).fetch(
+      WalletStatusFetcherTimeout,
+      WalletStatusFetcherDelay
+    )
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === EVMTransactionStatus.Failure) {
       this.status = NetworkOperationStatus.Error
@@ -25,10 +43,17 @@ export class ExecutableOperation {
   }
 
   async addTrackedJEVMTransaction (api: JEVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JEVMTransactionStatus.Processing, transactionId)
+    const receipt: TransactionReceipt = new TransactionReceipt(
+      api.chain.id,
+      type,
+      JEVMTransactionStatus.Processing,
+      transactionId
+    )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
+    const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId).fetch(
+      WalletStatusFetcherTimeout,
+      WalletStatusFetcherDelay
+    )
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === JEVMTransactionStatus.Dropped) {
       this.status = NetworkOperationStatus.Error
@@ -38,13 +63,27 @@ export class ExecutableOperation {
     return transactionStatus === JEVMTransactionStatus.Accepted
   }
 
-  async addTrackedPlatformTransaction (api: PlatformAPI, type: TransactionType, transactionId: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, PlatformTransactionStatus.Processing, transactionId)
+  async addTrackedPlatformTransaction (
+    api: PlatformAPI,
+    type: TransactionType,
+    transactionId: string
+  ): Promise<boolean> {
+    const receipt: TransactionReceipt = new TransactionReceipt(
+      api.chain.id,
+      type,
+      PlatformTransactionStatus.Processing,
+      transactionId
+    )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId).fetch(
+      WalletStatusFetcherTimeout,
+      WalletStatusFetcherDelay
+    )
     receipt.transactionStatus = transactionStatus
-    if (transactionStatus === PlatformTransactionStatus.Dropped || transactionStatus === PlatformTransactionStatus.Aborted) {
+    if (
+      transactionStatus === PlatformTransactionStatus.Dropped ||
+      transactionStatus === PlatformTransactionStatus.Aborted
+    ) {
       this.status = NetworkOperationStatus.Error
     } else if (transactionStatus !== PlatformTransactionStatus.Committed) {
       this.status = NetworkOperationStatus.Timeout
@@ -53,10 +92,17 @@ export class ExecutableOperation {
   }
 
   async addTrackedJVMTransaction (api: JVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(api.chain.id, type, JVMTransactionStatus.Processing, transactionId)
+    const receipt: TransactionReceipt = new TransactionReceipt(
+      api.chain.id,
+      type,
+      JVMTransactionStatus.Processing,
+      transactionId
+    )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId)
-      .fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
+    const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId).fetch(
+      WalletStatusFetcherTimeout,
+      WalletStatusFetcherDelay
+    )
     receipt.transactionStatus = transactionStatus
     if (transactionStatus === JVMTransactionStatus.Unknown) {
       this.status = NetworkOperationStatus.Error

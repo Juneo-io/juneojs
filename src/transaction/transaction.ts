@@ -48,8 +48,14 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
   inputs: TransferableInput[]
   memo: string
 
-  constructor (typeId: number, networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string) {
+  constructor (
+    typeId: number,
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string
+  ) {
     this.codecId = CodecId
     this.typeId = typeId
     this.networkId = networkId
@@ -65,7 +71,7 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
 
   getUtxos (): Utxo[] {
     const utxos: Utxo[] = []
-    this.inputs.forEach(transferable => {
+    this.inputs.forEach((transferable) => {
       // should be Utxo here because transaction should be from builder
       // undefined should only be the case if it is an input from parsing bytes
       utxos.push(transferable.input.utxo as Utxo)
@@ -80,14 +86,14 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
   serialize (): JuneoBuffer {
     const outputsBytes: JuneoBuffer[] = []
     let outputsSize: number = 0
-    this.outputs.forEach(output => {
+    this.outputs.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
     })
     const inputsBytes: JuneoBuffer[] = []
     let inputsSize: number = 0
-    this.inputs.forEach(input => {
+    this.inputs.forEach((input) => {
       const bytes: JuneoBuffer = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
@@ -101,11 +107,11 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction, Se
     buffer.writeUInt32(this.networkId)
     buffer.write(this.blockchainId.serialize())
     buffer.writeUInt32(this.outputs.length)
-    outputsBytes.forEach(output => {
+    outputsBytes.forEach((output) => {
       buffer.write(output)
     })
     buffer.writeUInt32(this.inputs.length)
-    inputsBytes.forEach(input => {
+    inputsBytes.forEach((input) => {
       buffer.write(input)
     })
     buffer.writeUInt32(this.memo.length)
@@ -118,9 +124,16 @@ export class AbstractExportTransaction extends AbstractBaseTransaction {
   destinationChain: BlockchainId
   exportedOutputs: TransferableOutput[]
 
-  constructor (typeId: number, networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    destinationChain: BlockchainId, exportedOutputs: TransferableOutput[]) {
+  constructor (
+    typeId: number,
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    destinationChain: BlockchainId,
+    exportedOutputs: TransferableOutput[]
+  ) {
     super(typeId, networkId, blockchainId, outputs, inputs, memo)
     this.destinationChain = destinationChain
     this.exportedOutputs = exportedOutputs
@@ -135,18 +148,16 @@ export class AbstractExportTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const exportedOutputsBytes: JuneoBuffer[] = []
     let exportedOutputsSize: number = 0
-    this.exportedOutputs.forEach(output => {
+    this.exportedOutputs.forEach((output) => {
       const bytes: JuneoBuffer = output.serialize()
       exportedOutputsSize += bytes.length
       exportedOutputsBytes.push(bytes)
     })
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + 4 + exportedOutputsSize
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + exportedOutputsSize)
     buffer.write(baseTransaction)
     buffer.write(this.destinationChain.serialize())
     buffer.writeUInt32(this.exportedOutputs.length)
-    exportedOutputsBytes.forEach(output => {
+    exportedOutputsBytes.forEach((output) => {
       buffer.write(output)
     })
     return buffer
@@ -157,9 +168,16 @@ export class AbstractImportTransaction extends AbstractBaseTransaction {
   sourceChain: BlockchainId
   importedInputs: TransferableInput[]
 
-  constructor (typeId: number, networkId: number, blockchainId: BlockchainId,
-    outputs: TransferableOutput[], inputs: TransferableInput[], memo: string,
-    sourceChain: BlockchainId, importedInputs: TransferableInput[]) {
+  constructor (
+    typeId: number,
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    sourceChain: BlockchainId,
+    importedInputs: TransferableInput[]
+  ) {
     super(typeId, networkId, blockchainId, outputs, inputs, memo)
     this.sourceChain = sourceChain
     this.importedInputs = importedInputs
@@ -174,18 +192,16 @@ export class AbstractImportTransaction extends AbstractBaseTransaction {
     const baseTransaction: JuneoBuffer = super.serialize()
     const importedInputsBytes: JuneoBuffer[] = []
     let importedInputsSize: number = 0
-    this.importedInputs.forEach(input => {
+    this.importedInputs.forEach((input) => {
       const bytes: JuneoBuffer = input.serialize()
       importedInputsSize += bytes.length
       importedInputsBytes.push(bytes)
     })
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + BlockchainIdSize + 4 + importedInputsSize
-    )
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + importedInputsSize)
     buffer.write(baseTransaction)
     buffer.write(this.sourceChain.serialize())
     buffer.writeUInt32(this.importedInputs.length)
-    importedInputsBytes.forEach(input => {
+    importedInputsBytes.forEach((input) => {
       buffer.write(input)
     })
     return buffer

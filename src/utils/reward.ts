@@ -12,38 +12,70 @@ const ConstantPercentage: bigint = PercentDenominator
 
 // used for non Primary supernet rewards
 export function calculate (targetReward: bigint, stakePeriod: bigint, stakeAmount: bigint): bigint {
-  const timePercentage: bigint = stakePeriod * PercentDenominator / MaxStakePeriod
-  const bonusRewards: bigint = stakePeriod * PercentDenominator / MaxStakePeriod * MaxPeriodBonusReward / PercentDenominator
+  const timePercentage: bigint = (stakePeriod * PercentDenominator) / MaxStakePeriod
+  const bonusRewards: bigint =
+    (((stakePeriod * PercentDenominator) / MaxStakePeriod) * MaxPeriodBonusReward) / PercentDenominator
   return getTimeRewardsValue(targetReward, targetReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
 }
 
 export function calculatePrimary (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
-  const timePercentage: bigint = stakePeriod * PercentDenominator / MaxStakePeriod
-  const bonusRewards: bigint = stakePeriod * PercentDenominator / MaxStakePeriod * MaxPeriodBonusReward / PercentDenominator
+  const timePercentage: bigint = (stakePeriod * PercentDenominator) / MaxStakePeriod
+  const bonusRewards: bigint =
+    (((stakePeriod * PercentDenominator) / MaxStakePeriod) * MaxPeriodBonusReward) / PercentDenominator
   return getTimeRewards(currentTime, stakeAmount, bonusRewards, timePercentage)
 }
 
-function getTimeRewards (currentTime: bigint, stakeAmount: bigint, bonusRewards: bigint, timePercentage: bigint): bigint {
+function getTimeRewards (
+  currentTime: bigint,
+  stakeAmount: bigint,
+  bonusRewards: bigint,
+  timePercentage: bigint
+): bigint {
   if (currentTime >= TargetRewardYear) {
     // target period
-    return getTimeRewardsValue(TargetReward, TargetReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
+    return getTimeRewardsValue(
+      TargetReward,
+      TargetReward,
+      bonusRewards,
+      timePercentage,
+      ConstantPercentage,
+      stakeAmount
+    )
   }
   if (currentTime >= DiminishingRewardYear) {
     // diminishing period
-    return getTimeRewardsValue(DiminishingRewardTarget, TargetReward, bonusRewards, timePercentage,
-      getTimeBoundsPercentage(DiminishingRewardYear, TargetRewardYear, currentTime), stakeAmount)
+    return getTimeRewardsValue(
+      DiminishingRewardTarget,
+      TargetReward,
+      bonusRewards,
+      timePercentage,
+      getTimeBoundsPercentage(DiminishingRewardYear, TargetRewardYear, currentTime),
+      stakeAmount
+    )
   }
   if (currentTime >= StartRewardYear) {
     // rewarding period
-    return getTimeRewardsValue(StartReward, DiminishingRewardTarget, bonusRewards, timePercentage,
-      getTimeBoundsPercentage(StartRewardYear, DiminishingRewardYear, currentTime), stakeAmount)
+    return getTimeRewardsValue(
+      StartReward,
+      DiminishingRewardTarget,
+      bonusRewards,
+      timePercentage,
+      getTimeBoundsPercentage(StartRewardYear, DiminishingRewardYear, currentTime),
+      stakeAmount
+    )
   }
   // start period or before
   return getTimeRewardsValue(StartReward, StartReward, bonusRewards, timePercentage, ConstantPercentage, stakeAmount)
 }
 
-function getTimeRewardsValue (lowerValue: bigint, upperValue: bigint, bonusRewards: bigint,
-  timePercentage: bigint, timeBoundsPercentage: bigint, stakeAmount: bigint): bigint {
+function getTimeRewardsValue (
+  lowerValue: bigint,
+  upperValue: bigint,
+  bonusRewards: bigint,
+  timePercentage: bigint,
+  timeBoundsPercentage: bigint,
+  stakeAmount: bigint
+): bigint {
   let rewardsValue: bigint = upperValue - lowerValue
   rewardsValue *= timeBoundsPercentage
   rewardsValue /= PercentDenominator

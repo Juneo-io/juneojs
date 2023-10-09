@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/'
 import * as encoding from './encoding'
 import { ParsingError } from './errors'
 
@@ -46,9 +45,7 @@ export class JuneoBuffer {
   }
 
   writeBuffer (data: Buffer): void {
-    const written: Buffer = this.cursor === 0
-      ? Buffer.alloc(0)
-      : this.bytes.slice(0, this.cursor)
+    const written: Buffer = this.cursor === 0 ? Buffer.alloc(0) : this.bytes.subarray(0, this.cursor)
     this.bytes = Buffer.concat([written, data], this.bytes.length)
     this.cursor += data.length
   }
@@ -62,15 +59,7 @@ export class JuneoBuffer {
   }
 
   writeUInt64 (data: bigint): void {
-    // because Buffer package does not support writing UInt64 using bigint type
-    // we instead split the bigint into 8 bytes to write it
-    // we must do that to keep 64 bits uint precision which would be lost by converting to number type
-    // also bitwise operators are not the same for number and bigint so we are using strings
-    const hex: string = data.toString(16).padStart(16, '0')
-    for (let i: number = 0; i < hex.length; i += 2) {
-      const byte: number = parseInt(hex.substring(i, i + 2), 16)
-      this.cursor = this.bytes.writeUInt8(byte, this.cursor)
-    }
+    this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
   }
 
   writeString (data: string): void {
@@ -87,13 +76,7 @@ export class JuneoBuffer {
   }
 
   readUInt64 (index: number): bigint {
-    // we have the same issue as for writeUInt64 so we fix it here too
-    let hex: string = '0x'
-    for (let i: number = 0; i < 8; i += 1) {
-      const byte: number = this.bytes.readUInt8(index + i)
-      hex = hex.concat(byte.toString(16).padStart(2, '0'))
-    }
-    return BigInt(hex)
+    return this.bytes.readBigUInt64BE(index)
   }
 
   readString (index: number, length: number): string {
@@ -101,7 +84,7 @@ export class JuneoBuffer {
   }
 
   read (index: number, length: number): JuneoBuffer {
-    return JuneoBuffer.fromBytes(this.bytes.slice(index, index + length))
+    return JuneoBuffer.fromBytes(this.bytes.subarray(index, index + length))
   }
 
   toCB58 (): string {
@@ -121,7 +104,7 @@ export class JuneoBuffer {
   }
 
   copyOf (start?: number, end?: number): JuneoBuffer {
-    const buffer: Buffer = this.bytes.slice(start, end)
+    const buffer: Buffer = this.bytes.subarray(start, end)
     return JuneoBuffer.fromBytes(buffer)
   }
 
@@ -132,10 +115,10 @@ export class JuneoBuffer {
   static concat (buffers: JuneoBuffer[]): JuneoBuffer {
     const data: Buffer[] = []
     let length: number = 0
-    buffers.forEach(buffer => {
+    for (const buffer of buffers) {
       data.push(buffer.bytes)
       length += buffer.bytes.length
-    })
+    }
     return JuneoBuffer.fromBytes(Buffer.concat(data, length))
   }
 

@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import {
   Blockchain,
   ChainAccount,
@@ -15,8 +14,9 @@ import {
   SocotraJUNEChain,
   SocotraJVMChain,
   SocotraPlatformChain,
-} from "../../../src/index";
+} from "../../../src";
 dotenv.config();
+
 describe("Cross Operations", () => {
   let mockSourceBlockchain: Blockchain;
   let mockDestinationBlockchain: Blockchain;
@@ -34,7 +34,7 @@ describe("Cross Operations", () => {
 
   // fetch all balances before tests
   beforeAll(async () => {
-    (account as EVMAccount).registerAssets(SocotraJUNEChain.registeredAssets);
+    (account as EVMAccount).fetchAllChainBalances()
     mcnAccount.getAccount(SocotraEUROC1Chain.id);
     mcnAccount.getAccount(SocotraJVMChain.id);
     mcnAccount.getAccount(SocotraPlatformChain.id);
@@ -45,7 +45,7 @@ describe("Cross Operations", () => {
     mockDestinationBlockchain = SocotraEUROC1Chain;
     mockAssetId = "0x3300000000000000000000000000000000000000";
     mockValue = BigInt(1000);
-    await mcnAccount.fetchAllBalances();
+    await mcnAccount.fetchChainsBalances()
   });
 
   describe("Valid Operations EVM", () => {

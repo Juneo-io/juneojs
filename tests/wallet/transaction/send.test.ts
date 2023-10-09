@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import {
   Blockchain,
   ChainAccount,
@@ -13,7 +12,7 @@ import {
   SocotraJUNEAssetId,
   SocotraJUNEChain,
   SocotraJVMChain,
-} from "../../../src/index";
+} from "../../../src";
 dotenv.config();
 
 describe("Send Operations", () => {
@@ -32,7 +31,7 @@ describe("Send Operations", () => {
 
   // fetch all balances before tests
   beforeAll(async () => {
-    (account as EVMAccount).registerAssets(SocotraJUNEChain.registeredAssets);
+    (account as EVMAccount).fetchAllChainBalances()
     mcnAccount.getAccount(SocotraJVMChain.id);
   });
 
@@ -41,7 +40,7 @@ describe("Send Operations", () => {
     mockAssetId = SocotraJUNEAssetId;
     mockValue = BigInt(1000);
     mockRecipient = "0x3c647d88Bc92766075feA7A965CA599CAAB2FD26";
-    await mcnAccount.fetchAllBalances();
+    await mcnAccount.fetchChainsBalances()
   });
 
   describe("Valid Operations EVM", () => {

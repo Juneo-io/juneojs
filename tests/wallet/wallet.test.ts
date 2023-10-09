@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { MCNWallet, SocotraJUNEChain, SocotraPlatformChain } from '../../src/index';
+import { MCNWallet, SocotraJUNEChain, SocotraPlatformChain, validatePrivateKey } from '../../src';
 dotenv.config()
 
 describe('Wallet', (): void => {
@@ -50,14 +50,14 @@ describe('Wallet', (): void => {
   test('Should validate a private key', () => {
     // valid
     const validPrivateKey = '06b5fcd14cae2211e884a0914b6f81c0458a90aefae8cf317bf09e9cd057164b';
-    const isValid = MCNWallet.validatePrivateKey(validPrivateKey);
+    const isValid = validatePrivateKey(validPrivateKey);
     expect(isValid).toBe(true);
   });
   
   test('Should invalidate a private key', () => {
     // invalid
     const invalidPrivateKey = '06b5fcd14cae2211e884a0914b6f81c0458a90efae8cf317bf09e9cd057164c';
-    const isValid = MCNWallet.validatePrivateKey(invalidPrivateKey);
+    const isValid = validatePrivateKey(invalidPrivateKey);
     expect(isValid).toBe(false);
   });
 

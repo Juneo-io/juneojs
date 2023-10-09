@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import {
   ChainAccount,
   DelegateOperation,
@@ -10,7 +9,7 @@ import {
   SocotraPlatformChain,
   StakeManager,
   ValidateOperation,
-} from "../../../src/index";
+} from "../../../src";
 dotenv.config();
 
 describe("StakeManager", (): void => {
@@ -30,7 +29,7 @@ describe("StakeManager", (): void => {
 
   // fetch all balances before tests
   beforeEach(async () => {
-    await account.fetchAllBalances();
+    await account.fetchAllChainBalances()
   });
 
   describe("Valid Operations", () => {

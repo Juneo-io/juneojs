@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import {
   Blockchain,
   ChainAccount,
@@ -14,8 +13,7 @@ import {
   UnwrapOperation,
   WrapOperation,
   WrappedAsset,
-} from "../../../src/index";
-
+} from "../../../src";
 dotenv.config();
 
 describe("Wrapping and Unwrapping Operations", () => {
@@ -33,9 +31,9 @@ describe("Wrapping and Unwrapping Operations", () => {
 
   // fetch all balances before tests
   beforeAll(async () => {
-    (account as EVMAccount).registerAssets(SocotraJUNEChain.registeredAssets);
+    (account as EVMAccount).fetchAllChainBalances()
     mcnAccount.getAccount(SocotraBCH1Chain.id);
-    await mcnAccount.fetchAllBalances();
+    await mcnAccount.fetchChainsBalances()
   });
 
   beforeEach(() => {

@@ -12,7 +12,9 @@ import {
   NetworkOperationRange,
   type ChainNetworkOperation,
   type CrossResumeOperation,
-  type CrossOperation
+  type CrossOperation,
+  type DepositResumeOperation,
+  type DepositResumeOperationSummary
 } from '../operation'
 import { type ChainAccount } from './account'
 import { EVMAccount } from './evm'
@@ -22,6 +24,7 @@ import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
+import { SocotraJUNEChain } from '../../network'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -59,6 +62,10 @@ export class MCNAccount {
     await Promise.all(promises)
   }
 
+  async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {
+    return await this.crossManager.fetchUnfinishedDepositOperations(SocotraJUNEChain)
+  }
+
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {
     return await this.crossManager.fetchUnfinishedCrossOperations()
   }
@@ -69,6 +76,9 @@ export class MCNAccount {
     }
     if (operation.type === NetworkOperationType.CrossResume) {
       return await this.crossManager.estimateCrossResumeOperation(operation as CrossResumeOperation, this)
+    }
+    if (operation.type === NetworkOperationType.DepositResume) {
+      return await this.crossManager.estimateDepositResumeOperation(operation as DepositResumeOperation, this)
     }
     if (operation.range !== NetworkOperationRange.Chain) {
       throw new AccountError(`unsupported operation range: ${operation.range}`)
@@ -96,6 +106,15 @@ export class MCNAccount {
         summary,
         this.crossManager.executeCrossResumeOperation(resumeSummary, this.getAccount(resumeSummary.chain.id))
       )
+    } else if (summary.operation.type === NetworkOperationType.DepositResume) {
+      const resumeSummary: DepositResumeOperationSummary = summary as DepositResumeOperationSummary
+      await this.executeOperation(
+        summary,
+        this.crossManager.executeDepositResumeOperation(
+          resumeSummary,
+          this.getAccount(resumeSummary.chain.id) as EVMAccount
+        )
+      )
     } else if (range === NetworkOperationRange.Chain) {
       const chainSummary: ChainOperationSummary = summary as ChainOperationSummary
       const account: ChainAccount = this.getAccount(chainSummary.chain.id)
@@ -112,7 +131,8 @@ export class MCNAccount {
     // verifications are done in it so keep it like that until newer features are added
     const operation: NetworkOperationType = summary.operation.type
     if (operation === NetworkOperationType.Cross) {
-      await this.crossManager.executeCrossOperation(summary as CrossOperationSummary, this)
+      const crossSummary: CrossOperationSummary = summary as CrossOperationSummary
+      await this.executeOperation(crossSummary, this.crossManager.executeCrossOperation(crossSummary, this))
     } else {
       throw new AccountError(`unsupported supernet operation: ${operation}`)
     }
@@ -130,7 +150,10 @@ export class MCNAccount {
       },
       (err) => {
         error = err
-        executable.status = NetworkOperationStatus.Error
+        // only set as error if it has not been handled in the execution layer
+        if (executable.status === NetworkOperationStatus.Executing) {
+          executable.status = NetworkOperationStatus.Error
+        }
       }
     )
     if (error === undefined) {

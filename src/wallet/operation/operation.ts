@@ -1,5 +1,5 @@
-import { type WrappedAsset } from '../../asset'
-import { type Blockchain } from '../../chain'
+import { type JRC20Asset, type WrappedAsset } from '../../asset'
+import { type JEVMBlockchain, type Blockchain } from '../../chain'
 import { type MCN } from '../../network'
 import { type Utxo } from '../../transaction'
 
@@ -7,6 +7,7 @@ export enum NetworkOperationType {
   Send = 'Send',
   Cross = 'Cross',
   CrossResume = 'Cross resume',
+  DepositResume = 'Deposit resume',
   Bridge = 'Bridge',
   Validate = 'Validate',
   Delegate = 'Delegate',
@@ -141,5 +142,18 @@ export class CrossResumeOperation extends ChainNetworkOperation {
     this.source = source
     this.destination = destination
     this.utxoSet = utxoSet
+  }
+}
+
+export class DepositResumeOperation extends ChainNetworkOperation {
+  override chain: JEVMBlockchain
+  asset: JRC20Asset
+  amount: bigint
+
+  constructor (chain: JEVMBlockchain, asset: JRC20Asset, amount: bigint) {
+    super(NetworkOperationType.DepositResume, chain)
+    this.chain = chain
+    this.asset = asset
+    this.amount = amount
   }
 }

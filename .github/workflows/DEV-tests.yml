@@ -1,6 +1,7 @@
 name: DEV build and tests
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - dev
 

@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "target": "ES2015",
+    "target": "ES2022",
     "module": "commonjs",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
     "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "declarationMap": true,
-    "allowSyntheticDefaultImports": true,
-    "lib": ["DOM", "ES2016"]
+    "lib": ["ES5", "ES2022"]
   },
   "exclude": ["node_modules", "tests"],
   "include": ["src/"]

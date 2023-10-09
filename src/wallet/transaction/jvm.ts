@@ -53,8 +53,7 @@ export async function estimateJVMSendOperation (
   account: JVMAccount
 ): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
-  const values = new Map<string, bigint>()
-  values.set(send.assetId, send.amount)
+  const values = new Map<string, bigint>([[send.assetId, send.amount]])
   return await estimateJVMBaseTransaction(
     provider,
     wallet,

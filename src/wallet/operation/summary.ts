@@ -1,13 +1,14 @@
 import { type PlatformBlockchain, type Blockchain } from '../../chain'
 import { type Utxo } from '../../transaction'
-import { type UtxoFeeData, type FeeData, type Spending } from '../transaction'
+import { type UtxoFeeData, type FeeData, type Spending, type EVMFeeData } from '../transaction'
 import { ExecutableOperation } from './executable'
 import {
   type Staking,
   type NetworkOperation,
   type CrossResumeOperation,
   type ChainNetworkOperation,
-  type CrossOperation
+  type CrossOperation,
+  type DepositResumeOperation
 } from './operation'
 
 export interface OperationSummary {
@@ -142,5 +143,16 @@ export class CrossResumeOperationSummary extends ChainOperationSummary {
     this.importFee = importFee
     this.payImportFee = payImportFee
     this.utxoSet = utxoSet
+  }
+}
+
+export class DepositResumeOperationSummary extends ChainOperationSummary {
+  override operation: DepositResumeOperation
+  fee: EVMFeeData
+
+  constructor (operation: DepositResumeOperation, fee: EVMFeeData, spendings: Spending[], values: Map<string, bigint>) {
+    super(operation, operation.chain, fee, spendings, values)
+    this.operation = operation
+    this.fee = fee
   }
 }

@@ -50,6 +50,10 @@ export class JuneoBuffer {
     this.cursor += data.length
   }
 
+  writeUInt8 (data: number): void {
+    this.cursor = this.bytes.writeUInt8(data, this.cursor)
+  }
+
   writeUInt16 (data: number): void {
     this.cursor = this.bytes.writeUInt16BE(data, this.cursor)
   }
@@ -65,6 +69,10 @@ export class JuneoBuffer {
   writeString (data: string): void {
     // Buffer.write returns the amount of bytes written instead of the cursor
     this.cursor += this.bytes.write(data, this.cursor)
+  }
+
+  readUInt8 (index: number): number {
+    return this.bytes.readUInt8(index)
   }
 
   readUInt16 (index: number): number {

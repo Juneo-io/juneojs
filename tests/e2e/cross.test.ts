@@ -23,7 +23,6 @@ describe('Cross Operations', () => {
 
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
 
-  // fetch all balances before tests
   beforeAll(async () => {
     mcnAccount.getAccount(SocotraEUROC1Chain.id)
     mcnAccount.getAccount(SocotraJVMChain.id)

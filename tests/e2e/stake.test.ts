@@ -32,8 +32,7 @@ describe('Stake', (): void => {
   const currentDateToBigint = BigInt(currentDateInSeconds) + BigInt(30)
   const oneDayInSeconds = currentDateToBigint + BigInt(86400)
 
-  // fetch all balances before tests
-  beforeEach(async () => {
+  beforeAll(async () => {
     await account.fetchAllChainBalances()
   })
 

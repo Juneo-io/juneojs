@@ -20,7 +20,6 @@ describe('Wrapping and Unwrapping Operations', () => {
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
 
-  // fetch all balances before tests
   beforeAll(async () => {
     mcnAccount.getAccount(SocotraBCH1Chain.id)
   })

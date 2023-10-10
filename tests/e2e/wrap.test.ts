@@ -29,7 +29,7 @@ describe('Wrapping and Unwrapping Operations', () => {
 
   // fetch all balances before tests
   beforeAll(async () => {
-    ;await (account as EVMAccount).fetchAllChainBalances()
+    await (account as EVMAccount).fetchAllChainBalances()
     mcnAccount.getAccount(SocotraBCH1Chain.id)
     await mcnAccount.fetchChainsBalances()
   })

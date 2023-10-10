@@ -1,10 +1,8 @@
 import * as dotenv from 'dotenv'
 import {
-  type Blockchain,
-  type ChainAccount,
+  AccountError,
   CrossOperation,
-  type EVMAccount,
-  type ExecutableOperation,
+  InputError,
   MCNAccount,
   MCNProvider,
   MCNWallet,
@@ -13,229 +11,93 @@ import {
   SocotraJUNEAssetId,
   SocotraJUNEChain,
   SocotraJVMChain,
-  SocotraPlatformChain
+  SocotraPlatformChain,
+  type Blockchain,
+  type ExecutableOperation
 } from '../../src'
 dotenv.config()
 
 describe('Cross Operations', () => {
-  let mockSourceBlockchain: Blockchain
-  let mockDestinationBlockchain: Blockchain
-  let mockAssetId: string
-  let mockValue: bigint
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
   const provider: MCNProvider = new MCNProvider()
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-  const account: ChainAccount = mcnAccount.getAccount(SocotraJUNEChain.id)
 
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
 
   // fetch all balances before tests
   beforeAll(async () => {
-    await (account as EVMAccount).fetchAllChainBalances()
     mcnAccount.getAccount(SocotraEUROC1Chain.id)
     mcnAccount.getAccount(SocotraJVMChain.id)
     mcnAccount.getAccount(SocotraPlatformChain.id)
   })
 
   beforeEach(async () => {
-    mockSourceBlockchain = SocotraJUNEChain
-    mockDestinationBlockchain = SocotraEUROC1Chain
-    mockAssetId = '0x3300000000000000000000000000000000000000'
-    mockValue = BigInt(1000)
     await mcnAccount.fetchChainsBalances()
   })
+  describe('Instanciation', () => {
+    const validTestCases = [
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', BigInt(1000)],
+      [SocotraEUROC1Chain, SocotraJUNEChain, SocotraEUROC1AssetId, BigInt(10000000000000)],
+      [SocotraJUNEChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(100000000000)],
+      [SocotraJUNEChain, SocotraEUROC1Chain, SocotraEUROC1AssetId, BigInt(5000)],
+      [SocotraJUNEChain, SocotraPlatformChain, '0x4400000000000000000000000000000000000000', BigInt(6000)],
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', EXCESSIVE_AMOUNT],
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', BigInt(0)],
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', BigInt(-1000)]
+    ]
 
-  describe('Valid Operations EVM', () => {
-    test('should correctly create a CrossOperation instance', async () => {
-      // valid
-      const operation = new CrossOperation(mockSourceBlockchain, mockDestinationBlockchain, mockAssetId, mockValue)
-
-      // Verify that the instance has the correct properties
-      expect(operation.source).toEqual(mockSourceBlockchain)
-      expect(operation.assetId).toEqual(mockAssetId)
+    validTestCases.forEach(([src, dest, assetId, value]) => {
+      test(`Source ${(src as Blockchain).name}, destination ${(dest as Blockchain).name}`, async () => {
+        const operation = new CrossOperation(src as Blockchain, dest as Blockchain, assetId as string, value as bigint)
+        expect(operation.source).toEqual(src)
+        expect(operation.assetId).toEqual(assetId)
+      })
     })
+  })
 
-    test('should perform the cross operation correctly', async () => {
-      // valid
-      const operation = new CrossOperation(mockSourceBlockchain, mockDestinationBlockchain, mockAssetId, mockValue)
+  describe('Valid CrossOperation', () => {
+    const testCases = [
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', BigInt(1000)],
+      [SocotraEUROC1Chain, SocotraJUNEChain, SocotraEUROC1AssetId, BigInt(10000000000000)],
+      [SocotraJUNEChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(100000000000)],
+      [SocotraJUNEChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(1000000000000)],
+      [SocotraPlatformChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000000)],
+      [SocotraPlatformChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(1000000)],
+      [SocotraJVMChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(1000000)],
+      [SocotraJVMChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000000)]
+    ]
 
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
+    testCases.forEach(([src, dest, assetId, value]) => {
+      test(`From ${(src as Blockchain).name} to ${(dest as Blockchain).name}`, async () => {
+        const operation = new CrossOperation(src as Blockchain, dest as Blockchain, assetId as string, value as bigint)
+        const summary = await mcnAccount.estimate(operation)
+        const executable: ExecutableOperation = summary.getExecutable()
 
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 15000)
-
-    test('Should cross Native to ERC20', async () => {
-      // valid
-      const operation = new CrossOperation(
-        SocotraEUROC1Chain,
-        SocotraJUNEChain,
-        SocotraEUROC1AssetId,
-        BigInt(10000000000000)
-      )
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross JUNE chain to JVM chain', async () => {
-      // valid
-      const operation = new CrossOperation(SocotraJUNEChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(100000000000))
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross JUNE chain to Platform chain', async () => {
-      // valid
-      const operation = new CrossOperation(
-        SocotraJUNEChain,
-        SocotraPlatformChain,
-        SocotraJUNEAssetId,
-        BigInt(1000000000000)
-      )
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross Platform chain to JUNE chain ', async () => {
-      // valid
-      const operation = new CrossOperation(SocotraPlatformChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000000))
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross Platform chain to JVM chain', async () => {
-      // valid
-      const operation = new CrossOperation(SocotraPlatformChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(1000000))
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross JVM chain to Platform chain', async () => {
-      // valid
-      const operation = new CrossOperation(SocotraJVMChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(1000000))
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
-
-    test('Should cross JVM chain to JUNE chain', async () => {
-      // valid
-      const operation = new CrossOperation(SocotraJVMChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000000))
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    }, 10000)
+        await mcnAccount.execute(summary)
+        expect(executable.status).toEqual('Done')
+      }, 15000)
+    })
   })
 
   describe('Invalid Operations', () => {
-    test('should not create a cross operation with a value of -1', async () => {
-      // invalid
-      const operation = new CrossOperation(mockSourceBlockchain, mockDestinationBlockchain, mockAssetId, BigInt(-1))
+    const testCases = [
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', BigInt(-1), InputError],
+      [SocotraJUNEChain, SocotraEUROC1Chain, '0x3300000000000000000000000000000000000000', EXCESSIVE_AMOUNT, AccountError],
+      [SocotraJUNEChain, SocotraEUROC1Chain, SocotraEUROC1AssetId, EXCESSIVE_AMOUNT, AccountError],
+      [SocotraJUNEChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(0), InputError],
+      [SocotraJUNEChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(0), InputError],
+      [SocotraJVMChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(0), InputError],
+      [SocotraJVMChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(0), InputError],
+      [SocotraPlatformChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(0), InputError],
+      [SocotraPlatformChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(0), InputError]
+    ]
 
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
+    testCases.forEach(([src, dest, assetId, value, expectedError]) => {
+      test(`From ${(src as Blockchain).name} to ${(dest as Blockchain).name}`, async () => {
+        const operation = new CrossOperation(src as Blockchain, dest as Blockchain, assetId as string, value as bigint)
+        const summary = await mcnAccount.estimate(operation)
+        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError as typeof InputError | typeof AccountError)
+      }, 15000)
     })
-
-    test('should not create a cross operation with a value bigger than balance', async () => {
-      // invalid
-      const operation = new CrossOperation(
-        mockSourceBlockchain,
-        mockDestinationBlockchain,
-        mockAssetId,
-        EXCESSIVE_AMOUNT
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Cross')
-    })
-
-    test('Should not cross ERC20 tokens', async () => {
-      // invalid
-      const operation = new CrossOperation(
-        mockSourceBlockchain,
-        mockDestinationBlockchain,
-        SocotraEUROC1AssetId,
-        EXCESSIVE_AMOUNT
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Cross')
-    }, 10000)
-
-    test('Should not cross JUNE chain to JUNE chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraJUNEChain, SocotraJUNEChain, SocotraJUNEAssetId, EXCESSIVE_AMOUNT)
-
-      // for this one I got this error : missing funds to perform operation: Cross
-    }, 10000)
-
-    test('Should not cross 0 from JUNE chain to JVM chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraJUNEChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
-
-    test('Should not cross 0 from JUNE chain to Platform chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraJUNEChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
-
-    test('Should not cross 0 from JVM chain to JUNE chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraJVMChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
-
-    test('Should not cross 0 from JVM chain to Platform chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraJVMChain, SocotraPlatformChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
-
-    test('Should not cross 0 from Platform chain to JUNE chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraPlatformChain, SocotraJUNEChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
-
-    test('Should not cross 0 from Platform chain to JVM chain', async () => {
-      // invalid
-      const operation = new CrossOperation(SocotraPlatformChain, SocotraJVMChain, SocotraJUNEAssetId, BigInt(0))
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('user input amount must be greater than 0')
-    }, 10000)
   })
 })

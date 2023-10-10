@@ -10,6 +10,8 @@ export const SupernetIdSize: number = 32
 export const DynamicIdSize: number = 32
 export const SignatureSize: number = 65
 export const NodeIdSize: number = 20
+export const BLSPublicKeySize: number = 48
+export const BLSSignatureSize: number = 96
 
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
@@ -140,5 +142,31 @@ export class DynamicId extends BytesData {
     buffer.writeString(value)
     super(buffer)
     this.value = value
+  }
+}
+
+export class BLSPublicKey extends BytesData {
+  publicKey: string
+
+  constructor (publicKey: string) {
+    const buffer: JuneoBuffer = encoding.decodeCHex(publicKey)
+    if (buffer.length !== BLSPublicKeySize) {
+      throw new TypeError(`bls public key is not ${BLSPublicKeySize} bytes long`)
+    }
+    super(buffer)
+    this.publicKey = publicKey
+  }
+}
+
+export class BLSSignature extends BytesData {
+  signature: string
+
+  constructor (signature: string) {
+    const buffer: JuneoBuffer = encoding.decodeCHex(signature)
+    if (buffer.length !== BLSSignatureSize) {
+      throw new TypeError(`bls signature is not ${BLSSignatureSize} bytes long`)
+    }
+    super(buffer)
+    this.signature = signature
   }
 }

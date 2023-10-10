@@ -4,7 +4,7 @@ import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
 import { type TransactionOutput } from '../output'
 import { type Signable } from '../signature'
-import { Address, AddressSize, NodeId, NodeIdSize, Signature } from '../types'
+import { Address, AddressSize, type BLSPublicKey, type BLSSignature, NodeId, NodeIdSize, Signature } from '../types'
 
 export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
 export const SubnetAuthTypeId: number = 0x0000000a
@@ -132,5 +132,15 @@ export class SupernetAuth implements Serializable, Signable {
       buffer.writeUInt32(indice)
     })
     return buffer
+  }
+}
+
+export class ProofOfPossession {
+  publicKey: BLSPublicKey
+  signature: BLSSignature
+
+  constructor (publicKey: BLSPublicKey, signature: BLSSignature) {
+    this.publicKey = publicKey
+    this.signature = signature
   }
 }

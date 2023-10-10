@@ -1,11 +1,7 @@
 import { MCNProvider, SocotraJUNEChain, SocotraNetwork } from '../../../src'
 
-describe('InfoAPI e2e tests', () => {
+describe('InfoAPI tests', () => {
   const provider: MCNProvider = new MCNProvider()
-
-  beforeEach(() => {
-    // Initialisation si nécessaire
-  })
 
   describe('isBootstrapped', () => {
     test('Return true for a bootstrapped chain', async () => {

@@ -6,6 +6,7 @@ import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
 import { type Utxo } from '../utxo'
+import { type SupernetAuth, type BLSSigner } from './supernet'
 import {
   AddDelegatorTransaction,
   AddPermissionlessDelegatorTransaction,
@@ -19,7 +20,7 @@ import {
   RemoveSupernetValidatorTransaction,
   TransformSupernetTransaction
 } from './transaction'
-import { Secp256k1OutputOwners, type SupernetAuth, Validator, type BLSSigner } from './validation'
+import { Secp256k1OutputOwners, Validator } from './validation'
 
 export function buildPlatformExportTransaction (
   userInputs: UserInput[],

@@ -24,7 +24,8 @@ import {
   type NodeId,
   NodeIdSize
 } from '../types'
-import { Validator, Secp256k1OutputOwners, SupernetAuth, type BLSSigner } from './validation'
+import { SupernetAuth, type BLSSigner } from './supernet'
+import { Validator, Secp256k1OutputOwners } from './validation'
 
 const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d

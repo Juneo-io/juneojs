@@ -1,158 +1,82 @@
 import * as dotenv from 'dotenv'
 import {
-  type Blockchain,
-  type ChainAccount,
-  type EVMAccount,
-  type ExecutableOperation,
+  AccountError,
   MCNAccount,
   MCNProvider,
   MCNWallet,
   SendOperation,
   SocotraEUROC1AssetId,
+  SocotraEUROC1Chain,
   SocotraJUNEAssetId,
   SocotraJUNEChain,
-  SocotraJVMChain
+  SocotraJVMChain,
+  type ExecutableOperation
 } from '../../src'
+
 dotenv.config()
 
 describe('Send Operations', () => {
-  let mockBlockchain: Blockchain
-  let mockAssetId: string
-  let mockValue: bigint
-  let mockRecipient: string
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
   const provider: MCNProvider = new MCNProvider()
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-  const account: ChainAccount = mcnAccount.getAccount(SocotraJUNEChain.id)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
 
-  // fetch all balances before tests
   beforeAll(async () => {
-    await (account as EVMAccount).fetchAllChainBalances()
-    mcnAccount.getAccount(SocotraJVMChain.id)
-  })
-
-  beforeEach(async () => {
-    mockBlockchain = SocotraJUNEChain
-    mockAssetId = SocotraJUNEAssetId
-    mockValue = BigInt(1000)
-    mockRecipient = '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
     await mcnAccount.fetchChainsBalances()
   })
 
-  describe('Valid Operations EVM', () => {
-    test('should correctly create a SendOperation instance', async () => {
-      // valid
-      const operation = new SendOperation(mockBlockchain, mockAssetId, mockValue, mockRecipient)
+  describe('EVM Send Operations', () => {
+    describe('Valid Operations', () => {
+      test.each([
+        ['JUNE-Chain with JUNEAssetId', SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'],
+        ['JUNE-Chain with ETH1AssetId', SocotraJUNEChain, '0x2d00000000000000000000000000000000000000', BigInt(1), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'],
+        ['ETH1-Chain with ETH1AssetId', SocotraEUROC1Chain, SocotraEUROC1AssetId, BigInt(10000000000000), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26']
+      ])('%s', async (description, chain, assetId, value, recipient) => {
+        const operation = new SendOperation(chain, assetId, value, recipient)
+        const summary = await mcnAccount.estimate(operation)
+        const executable: ExecutableOperation = summary.getExecutable()
 
-      // Verify that the instance has the correct properties
-      expect(operation.chain).toEqual(mockBlockchain)
-      expect(operation.assetId).toEqual(mockAssetId)
+        await mcnAccount.execute(summary)
+        expect(executable.status).toEqual('Done')
+      })
     })
 
-    test('should perform the send operation correctly', async () => {
-      // valid
-      const operation = new SendOperation(mockBlockchain, mockAssetId, mockValue, mockRecipient)
-
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    })
-
-    test('Should send ERC20 tokens', async () => {
-      // valid
-      const operation = new SendOperation(
-        mockBlockchain,
-        '0x2d00000000000000000000000000000000000000',
-        BigInt(1),
-        mockRecipient
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
+    describe('Invalid Operations', () => {
+      test.each([
+        ['JUNE-Chain with negative value', SocotraJUNEChain, SocotraJUNEAssetId, BigInt(-1), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', RangeError],
+        ['JUNE-Chain with excessive amount', SocotraJUNEChain, SocotraJUNEAssetId, EXCESSIVE_AMOUNT, '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', AccountError],
+        ['JUNE-Chain with excessive amount and different assetId', SocotraJUNEChain, SocotraEUROC1AssetId, EXCESSIVE_AMOUNT, '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', AccountError]
+      ])('%s', async (description, chain, assetId, value, recipient, expectedError) => {
+        const operation = new SendOperation(chain, assetId, value, recipient)
+        const summary = await mcnAccount.estimate(operation)
+        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+      })
     })
   })
 
-  describe('Invalid Operations EVM', () => {
-    test('should not create a send operation with a value of -1', async () => {
-      // invalid
-      const operation = new SendOperation(mockBlockchain, mockAssetId, BigInt(-1), mockRecipient)
+  describe('JVM Send Operations', () => {
+    describe('Valid Operations', () => {
+      test.each([
+        ['JVM-Chain with JUNEAssetId', SocotraJVMChain, SocotraJUNEAssetId, BigInt(10000000), 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal']
+      ])('%s', async (description, chain, assetId, value, recipient) => {
+        const operation = new SendOperation(chain, assetId, value, recipient)
+        const summary = await mcnAccount.estimate(operation)
+        const executable: ExecutableOperation = summary.getExecutable()
 
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow(
-        'unsigned value cannot be negative (fault="overflow", operation="getUint", value=-1, code=NUMERIC_FAULT, version=6.7.1)'
-      )
+        await mcnAccount.execute(summary)
+        expect(executable.status).toEqual('Done')
+      })
     })
 
-    test('should not create a send operation with a value bigger than balance', async () => {
-      // invalid
-      const operation = new SendOperation(mockBlockchain, mockAssetId, EXCESSIVE_AMOUNT, mockRecipient)
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Send')
-    })
-
-    test('Should not send ERC20 tokens', async () => {
-      // invalid
-      const operation = new SendOperation(mockBlockchain, SocotraEUROC1AssetId, EXCESSIVE_AMOUNT, mockRecipient)
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Send')
-    })
-  })
-
-  describe('Valid Operations JVM', () => {
-    test('Should send JUNE on JVM chain', async () => {
-      // valid
-      const operation = new SendOperation(
-        SocotraJVMChain,
-        SocotraJUNEAssetId,
-        BigInt(10000000),
-        'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal'
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    })
-  })
-
-  describe('Invalid Operations JVM', () => {
-    test('Should not send more than JUNE balance on JVM chain', async () => {
-      // invalid
-      const operation = new SendOperation(
-        SocotraJVMChain,
-        SocotraJUNEAssetId,
-        EXCESSIVE_AMOUNT,
-        'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal'
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Send')
-    })
-
-    test('Should not send 0 JUNE on JVM chain', async () => {
-      // invalid
-      const operation = new SendOperation(
-        SocotraJVMChain,
-        SocotraJUNEAssetId,
-        BigInt(0),
-        'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal'
-      )
-
-      const summary = await mcnAccount.estimate(operation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow(
-        "Cannot read properties of undefined (reading 'length')"
-      )
+    describe('Invalid Operations', () => {
+      test.each([
+        ['JVM-Chain with excessive amount', SocotraJVMChain, SocotraJUNEAssetId, EXCESSIVE_AMOUNT, 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal', AccountError],
+        ['JVM-Chain with zero value', SocotraJVMChain, SocotraJUNEAssetId, BigInt(0), 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal', TypeError]
+      ])('%s', async (description, chain, assetId, value, recipient, expectedError) => {
+        const operation = new SendOperation(chain, assetId, value, recipient)
+        const summary = await mcnAccount.estimate(operation)
+        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+      })
     })
   })
 })

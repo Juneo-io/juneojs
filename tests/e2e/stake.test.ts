@@ -1,18 +1,23 @@
 import * as dotenv from 'dotenv'
 import {
-  type ChainAccount,
+  AccountError,
+  DecodingError,
   DelegateOperation,
-  type ExecutableOperation,
+  JsonRpcError,
   MCNAccount,
   MCNProvider,
   MCNWallet,
   SocotraPlatformChain,
+  StakeError,
   StakeManager,
-  ValidateOperation
+  TimeError,
+  ValidateOperation,
+  type ChainAccount,
+  type ExecutableOperation
 } from '../../src'
 dotenv.config()
 
-describe('StakeManager', (): void => {
+describe('Stake', (): void => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
   const provider: MCNProvider = new MCNProvider()
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
@@ -20,19 +25,110 @@ describe('StakeManager', (): void => {
 
   // for now we take this nodeID. maybe in the future we can select the node Id with a function
   const nodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
-  const currentDateInSeconds = Math.round(new Date().getTime() / 1000)
-  const currentDateToBigint = BigInt(currentDateInSeconds) + BigInt(30)
+
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
+  const currentDateInSeconds = Math.round(new Date().getTime() / 1000)
+  const currentDateToBigint = BigInt(currentDateInSeconds) + BigInt(30)
+  const oneDayInSeconds = currentDateToBigint + BigInt(86400)
 
   // fetch all balances before tests
   beforeEach(async () => {
     await account.fetchAllChainBalances()
   })
 
-  describe('Valid Operations', () => {
-    test('Should estimate validation fee', async () => {
-      // valid
+  describe('ValidateOperation', () => {
+    describe('Invalid estimate Operations', () => {
+      test.each([
+        ['Wrong nodeId', 'wrong node id', BigInt(10000000), DecodingError]
+      ])('%s', async (description, nodeId, amount, expectedError) => {
+        const validateOperation = new ValidateOperation(
+          provider.mcn,
+          nodeId,
+          amount,
+          currentDateToBigint,
+          oneDayInSeconds
+        )
+        await expect(mcnAccount.estimate(validateOperation)).rejects.toThrow(expectedError)
+      })
+    })
+
+    describe('Invalid execute Operations', () => {
+      test.each([
+        ['Amount less than min stake', nodeId, BigInt(1), StakeError],
+        ['Duplicate validate transaction', nodeId, BigInt(1000000000), JsonRpcError]
+      ])('%s', async (description, nodeId, amount, expectedError) => {
+        const validateOperation = new ValidateOperation(
+          provider.mcn,
+          nodeId,
+          amount,
+          currentDateToBigint,
+          oneDayInSeconds
+        )
+        const summary = await mcnAccount.estimate(validateOperation)
+        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('DelegateOperation', () => {
+    describe('Valid Operations', () => {
+      test.each([
+        ['Delegate transaction', nodeId, BigInt(10000000), DONE_STATUS]
+      ])('%s', async (description, nodeId, amount, expectedStatus) => {
+        const delegateOperation = new DelegateOperation(
+          provider.mcn,
+          nodeId,
+          amount,
+          currentDateToBigint,
+          oneDayInSeconds
+        )
+        const summary = await mcnAccount.estimate(delegateOperation)
+        const executable: ExecutableOperation = summary.getExecutable()
+
+        await mcnAccount.execute(summary)
+        expect(executable.status).toEqual(expectedStatus)
+      })
+    })
+
+    describe('Invalid estimate Operations', () => {
+      test.each([
+        ['Wrong nodeId checksum', 'P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sG', BigInt(10000000), DecodingError],
+        ['Wrong nodeId format', 'wrong node id', BigInt(10000000), DecodingError]
+      ])('%s', async (description, nodeId, amount, expectedError) => {
+        const delegateOperation = new DelegateOperation(
+          provider.mcn,
+          nodeId,
+          amount,
+          currentDateToBigint,
+          oneDayInSeconds
+        )
+        await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow(expectedError)
+      })
+    })
+
+    describe('Invalid execute Operations', () => {
+      test.each([
+        ['Amount less than min stake', nodeId, BigInt(1), StakeError],
+        ['Amount bigger than balance', nodeId, EXCESSIVE_AMOUNT, AccountError],
+        ['Wrong end time', nodeId, BigInt(10000000), TimeError, BigInt(currentDateToBigint) - BigInt(1000)],
+        ['Wrong start time', nodeId, BigInt(10000000), TimeError, BigInt(currentDateToBigint) - BigInt(40), oneDayInSeconds]
+      ])('%s', async (description, nodeId, amount, expectedError, startTime = currentDateToBigint, endTime = oneDayInSeconds) => {
+        const delegateOperation = new DelegateOperation(
+          provider.mcn,
+          nodeId,
+          amount,
+          startTime,
+          endTime
+        )
+        const summary = await mcnAccount.estimate(delegateOperation)
+        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('StakeManager', () => {
+    test('Estimate validation fee', async () => {
       const stakeManager = new StakeManager(provider, wallet.getWallet(provider.platform.chain))
       const feeData = await stakeManager.estimateValidationFee(
         nodeId,
@@ -44,115 +140,12 @@ describe('StakeManager', (): void => {
       expect(feeData.amount).toEqual(BigInt(0))
     })
 
-    test('Should make a delegate transaction', async () => {
-      // valid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(10000000), // 0.01 JUNE
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(delegateOperation)
-      const executable: ExecutableOperation = summary.getExecutable()
-
-      await mcnAccount.execute(summary)
-      expect(executable.status).toEqual(DONE_STATUS)
-    })
-
-    test('Should correctly estimate validation reward', () => {
-      // valid
+    test('Estimate validation reward', () => {
       const reward = StakeManager.estimateValidationReward(BigInt(12960000), BigInt(100000000000))
       expect(reward).toEqual(expect.any(BigInt))
     })
-  })
 
-  describe('Invalid Operations', () => {
-    test('Should not make a delegate transaction with amount less than min stake', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(1),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(delegateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('amount 1 is less than min stake 10000000')
-    })
-
-    test('Should not make a delegate transaction with amount bigger than balance', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        nodeId,
-        EXCESSIVE_AMOUNT,
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(delegateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('missing funds to perform operation: Delegate')
-    })
-
-    test('Should not make a delegate transaction with wrong nodeId', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        'P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sG',
-        BigInt(10000000),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow('value checksum is not valid')
-    })
-
-    test('Should not make a delegate transaction with wrong nodeId', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        'wrong node id',
-        BigInt(10000000),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow('value is not base58')
-    })
-
-    test('Should not make a delegate transaction with wrong end time', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(10000000),
-        currentDateToBigint,
-        currentDateToBigint - BigInt(10) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(delegateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('end time must be after start time')
-    })
-
-    test('Should not make a delegate transaction with wrong start time', async () => {
-      // invalid
-      const delegateOperation = new DelegateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(10000000),
-        currentDateToBigint - BigInt(40),
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(delegateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow('start time must be in the future')
-    })
-
-    test('Should throw an error for invalid staking values', () => {
-      // invalid
+    test('Invalid staking values', () => {
       expect(() => {
         StakeManager.verifyStakingValues(
           BigInt(1000),
@@ -162,52 +155,7 @@ describe('StakeManager', (): void => {
           BigInt(1633037200),
           BigInt(3600)
         )
-      }).toThrow()
-    })
-
-    test('Should not make a validate transaction with amount less than min stake', async () => {
-      // invalid
-      const validateOperation = new ValidateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(1),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(validateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow(
-        `amount 1 is less than min stake ${provider.mcn.stakeConfig.minValidatorStake}`
-      )
-    })
-
-    test('Should not make a validate transaction with wrong nodeId', async () => {
-      // invalid
-      const validateOperation = new ValidateOperation(
-        provider.mcn,
-        'wrong node id',
-        BigInt(10000000),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      await expect(mcnAccount.estimate(validateOperation)).rejects.toThrow('value is not base58')
-    })
-
-    test('Should not make a duplicate validate transaction', async () => {
-      // invalid
-      const validateOperation = new ValidateOperation(
-        provider.mcn,
-        nodeId,
-        BigInt(1000000000),
-        currentDateToBigint,
-        currentDateToBigint + BigInt(86400) // 1 day
-      )
-
-      const summary = await mcnAccount.estimate(validateOperation)
-      await expect(mcnAccount.execute(summary)).rejects.toThrow(
-        "couldn't issue tx: attempted to issue duplicate validation for NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL"
-      )
+      }).toThrow(StakeError)
     })
   })
 })

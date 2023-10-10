@@ -9,6 +9,9 @@ import { Address, AddressSize, type BLSPublicKey, type BLSSignature, NodeId, Nod
 export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
 export const SubnetAuthTypeId: number = 0x0000000a
 
+export const PrimarySignerTypeId: number = 0x1b
+export const EmptySignerTypeId: number = 0x1c
+
 export class Validator implements Serializable {
   static Size: number = 44
   nodeId: NodeId
@@ -135,12 +138,59 @@ export class SupernetAuth implements Serializable, Signable {
   }
 }
 
-export class ProofOfPossession {
+export class ProofOfPossession implements Serializable {
   publicKey: BLSPublicKey
   signature: BLSSignature
 
   constructor (publicKey: BLSPublicKey, signature: BLSSignature) {
     this.publicKey = publicKey
     this.signature = signature
+  }
+
+  serialize (): JuneoBuffer {
+    const publicKeyBytes: JuneoBuffer = this.publicKey.serialize()
+    const signatureBytes: JuneoBuffer = this.signature.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + publicKeyBytes.length + signatureBytes.length)
+    buffer.write(publicKeyBytes)
+    buffer.write(signatureBytes)
+    return buffer
+  }
+}
+
+export class BLSSigner implements Serializable {
+  typeId: number
+
+  constructor (typeId: number) {
+    this.typeId = typeId
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(1)
+    buffer.writeUInt8(this.typeId)
+    return buffer
+  }
+}
+
+export class PrimarySigner extends BLSSigner {
+  signer: ProofOfPossession
+
+  constructor (signer: ProofOfPossession) {
+    super(PrimarySignerTypeId)
+    this.signer = signer
+  }
+
+  serialize (): JuneoBuffer {
+    const baseBytes: JuneoBuffer = super.serialize()
+    const signerBytes: JuneoBuffer = this.signer.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseBytes.length + signerBytes.length)
+    buffer.write(baseBytes)
+    buffer.write(signerBytes)
+    return buffer
+  }
+}
+
+export class EmptySignature extends BLSSigner {
+  constructor () {
+    super(EmptySignerTypeId)
   }
 }

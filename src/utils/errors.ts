@@ -5,7 +5,7 @@ const NOT_IMPLEMENTED_CODE: string = 'Not implemented'
 const PROTOCOL_CODE: string = 'Protocol error'
 const DECODING_CODE: string = 'Decoding error'
 const WALLET_CODE: string = 'Wallet error'
-const TYPE_CODE: string = 'Type error'
+const JUNEO_TYPE_CODE: string = 'Juneo type error'
 const PARSING_CODE: string = 'Parsing error'
 const INPUT_CODE: string = 'Input error'
 const OUTPUT_CODE: string = 'Output error'
@@ -81,10 +81,10 @@ export class WalletError extends JuneoError {
   }
 }
 
-export class TypeError extends JuneoError {
+export class JuneoTypeError extends JuneoError {
   constructor (message: string) {
-    super(message, TYPE_CODE)
-    Object.setPrototypeOf(this, TypeError.prototype)
+    super(message, JUNEO_TYPE_CODE)
+    Object.setPrototypeOf(this, JuneoTypeError.prototype)
   }
 }
 

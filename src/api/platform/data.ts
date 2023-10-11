@@ -119,7 +119,7 @@ export interface SupernetData {
 }
 
 export interface GetTimestampResponse {
-  time: string
+  timestamp: string
 }
 
 export interface GetTotalStakeResponse {

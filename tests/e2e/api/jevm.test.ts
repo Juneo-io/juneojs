@@ -8,6 +8,8 @@ describe('JEVMAPI tests', () => {
       ['241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm']
     ])('Correct transaction for txID', async (txID) => {
       const result = await provider.jevm[SocotraJUNEChain.id].getTx(txID)
+      expect(result.blockHeight).toBeDefined()
+      expect(result.encoding).toBeDefined()
       expect(result.tx).toBeDefined()
     })
 

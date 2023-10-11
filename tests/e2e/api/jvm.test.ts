@@ -15,6 +15,9 @@ describe('JVMAPI tests', () => {
     ])('Asset description for %s', async (assetId, expectedName) => {
       const result: GetAssetDescriptionResponse = await provider.jvm.getAssetDescription(assetId)
       expect(result.name).toEqual(expectedName)
+      expect(result.symbol).toBeDefined()
+      expect(result.denomination).toBeDefined()
+      expect(result.assetID).toBeDefined()
     })
 
     test.failing.each([
@@ -40,7 +43,8 @@ describe('JVMAPI tests', () => {
       ['should handle undefined input', undefined]
     ])('%s', async (description, height) => {
       const result: GetBlockResponse = await provider.jvm.getBlockByHeight(height as any)
-      expect(result).toBeDefined()
+      expect(result.block).toBeDefined()
+      expect(result.encoding).toBeDefined()
     })
 
     test.failing.each([
@@ -56,7 +60,7 @@ describe('JVMAPI tests', () => {
   describe('getHeight', () => {
     test('Should return height', async () => {
       const result: GetHeightResponse = await provider.jvm.getHeight()
-      expect(result).toBeDefined()
+      expect(result.height).toBeDefined()
     })
   })
 
@@ -66,7 +70,8 @@ describe('JVMAPI tests', () => {
       ['should be defined for valid txID', '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS']
     ])('%s', async (description, txID) => {
       const result: GetTxResponse = await provider.jvm.getTx(txID)
-      expect(result).toBeDefined()
+      expect(result.encoding).toBeDefined()
+      expect(result.tx).toBeDefined()
     })
 
     test.failing.each([

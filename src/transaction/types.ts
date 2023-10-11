@@ -20,6 +20,7 @@ function validateData (data: any): void {
 
 export class Address extends BytesData {
   constructor (address: string | JuneoBuffer) {
+    validateData(address)
     const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address
     if (buffer.length !== AddressSize) {
       throw new JuneoTypeError(`address is not ${AddressSize} bytes long`)
@@ -28,6 +29,7 @@ export class Address extends BytesData {
   }
 
   matches (address: string | Address): boolean {
+    validateData(address)
     const buffer: JuneoBuffer = typeof address === 'string' ? Address.decodeAddress(address) : address.getBuffer()
     if (buffer.length !== AddressSize) {
       throw new JuneoTypeError(`address is not ${AddressSize} bytes long`)
@@ -36,15 +38,17 @@ export class Address extends BytesData {
   }
 
   static toAddresses (values: string[]): Address[] {
+    if (values.length < 1) {
+      throw new JuneoTypeError('provided values length should be greater than 0')
+    }
     const addresses: Address[] = []
-    values.forEach((value) => {
+    for (const value of values) {
       addresses.push(new Address(value))
-    })
+    }
     return addresses
   }
 
   private static decodeAddress (address: string): JuneoBuffer {
-    validateData(address)
     if (encoding.isHex(address)) {
       return encoding.decodeHex(address)
     } else {

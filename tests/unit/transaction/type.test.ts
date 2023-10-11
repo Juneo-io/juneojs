@@ -1,4 +1,4 @@
-import { Address, AssetId, BlockchainId, DecodingError, JuneoTypeError, TransactionId } from '../../../src'
+import { Address, AssetId, BlockchainId, DecodingError, JuneoTypeError, NodeId, TransactionId } from '../../../src'
 
 describe('juneojs type test', () => {
   describe('Address class tests', () => {
@@ -159,6 +159,33 @@ describe('juneojs type test', () => {
         ['BlockchainId with upper bound size', '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2oq', DecodingError]
       ])('%s', (description, blockchainId, expectedError) => {
         expect(() => new BlockchainId(blockchainId as any)).toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('Signature class tests', () => {
+    // TODO: Add tests for Signature class
+  })
+
+  describe('NodeId class tests', () => {
+    describe('Constructor', () => {
+      test.each([
+        ['Valid NodeId with dash', 'NodeID-3VELiL3Hp6uFjAoFZEJpjM7PvQebidBGM'],
+        ['Valid NodeId with dash', 'NodeID-6SBf3r6drpPgRyd5vmyKZgAKo7zXhHpEN']
+      ])('%s', (description, nodeId) => {
+        expect(new NodeId(nodeId)).toBeInstanceOf(NodeId)
+      })
+
+      test.each([
+        ['Invalid NodeId size', 'NodeID-2pSSuo2uiViPQT96GowYPK5wJBkddD7GqxaXK3kzn9YZHi92E', DecodingError],
+        ['Invalid NodeId size without prefix', '2pSSuo2uiViPQT96GowYPK5wJBkddD7GqxaXK3kzn9YZHi92E', DecodingError],
+        ['Null NodeId', null, DecodingError],
+        ['Undefined NodeId', undefined, DecodingError],
+        ['Empty string', '', DecodingError],
+        ['NodeId with special characters', 'NodeID-2pSSuo2ui@#ViPQT96GowYPK5wJBk', DecodingError],
+        ['NodeId with upper case', 'NodeID-2PSSUO2UIVIPQT96GOWYPK5WJBKDDD7GQXAXK3KZN9YZHI92EQ', DecodingError]
+      ])('%s', (description, nodeId, expectedError) => {
+        expect(() => new NodeId(nodeId as any)).toThrow(expectedError)
       })
     })
   })

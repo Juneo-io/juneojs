@@ -3,7 +3,6 @@ import { MCNProvider, SocotraEUROC1AssetId, SocotraJUNEChain } from '../../../sr
 describe('JEVMAPI tests', () => {
   const provider: MCNProvider = new MCNProvider()
 
-  // Pour getTx
   describe('getTx', () => {
     test.each([
       ['241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm']
@@ -24,12 +23,16 @@ describe('JEVMAPI tests', () => {
 
   describe('getTxStatus', () => {
     test.each([
-      ['241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm', 'ExpectedStatus1']
-    ])('Status Accepted for txID', async (txID, expectedStatus) => {
+      ['241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm']
+    ])('Status Accepted for txID', async (txID) => {
       const result = await provider.jevm[SocotraJUNEChain.id].getTxStatus(txID)
       expect(result.status).toEqual('Accepted')
       expect(result.blockHeight).toEqual('4976404')
     })
+  })
+
+  describe('issueTx', () => {
+    // TODO : find a way to test issueTx
   })
 
   describe('eth_getAssetBalance', () => {

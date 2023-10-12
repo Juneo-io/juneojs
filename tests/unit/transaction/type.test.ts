@@ -1,4 +1,4 @@
-import { Address, AssetId, BlockchainId, DecodingError, JuneoTypeError, NodeId, TransactionId } from '../../../src'
+import { Address, AssetId, BLSPublicKey, BLSSignature, BlockchainId, DecodingError, DynamicId, JuneoTypeError, NodeId, TransactionId } from '../../../src'
 
 describe('juneojs type test', () => {
   describe('Address class tests', () => {
@@ -186,6 +186,56 @@ describe('juneojs type test', () => {
         ['NodeId with upper case', 'NodeID-2PSSUO2UIVIPQT96GOWYPK5WJBKDDD7GQXAXK3KZN9YZHI92EQ', DecodingError]
       ])('%s', (description, nodeId, expectedError) => {
         expect(() => new NodeId(nodeId as any)).toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('DynamicId class tests', () => {
+    describe('Constructor', () => {
+      test.each([
+        ['Valid DynamicId with short value', 'shortValue'],
+        ['Valid DynamicId with number value', '123456'],
+        ['Valid DynamicId with special characters', '!@#$%^&*()'],
+        ['Valid DynamicId with empty string', ''],
+        ['Valid DynamicId with long value', 'ThisIsALongValueThatExceedsDynamicIdSize']
+      ])('%s', (description, value) => {
+        expect(new DynamicId(value)).toBeInstanceOf(DynamicId)
+      })
+
+      test.each([
+        ['Invalid DynamicId with long value', 'ThisIsALongValueThatExceedsDynamicIdSize', JuneoTypeError],
+        ['Null DynamicId', null, JuneoTypeError],
+        ['Undefined DynamicId', undefined, JuneoTypeError]
+      ])('%s', (description, value, expectedError) => {
+        expect(() => new DynamicId(value as any)).toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('BLSPublicKey class tests', () => {
+    describe('Constructor', () => {
+      test.each([
+        ['Invalid BLSPublicKey size', 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3', DecodingError],
+        ['Null BLSPublicKey', null, DecodingError],
+        ['Undefined BLSPublicKey', undefined, DecodingError],
+        ['Empty string', '', DecodingError],
+        ['BLSPublicKey with special characters', 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3!!', DecodingError]
+      ])('%s', (description, publicKey, expectedError) => {
+        expect(() => new BLSPublicKey(publicKey as any)).toThrow(expectedError)
+      })
+    })
+  })
+
+  describe('BLSSignature class tests', () => {
+    describe('Constructor', () => {
+      test.each([
+        ['Invalid BLSSignature size', 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3', DecodingError],
+        ['Null BLSSignature', null, DecodingError],
+        ['Undefined BLSSignature', undefined, DecodingError],
+        ['Empty string', '', DecodingError],
+        ['BLSSignature with special characters', 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3!!', DecodingError]
+      ])('%s', (description, signature, expectedError) => {
+        expect(() => new BLSSignature(signature as any)).toThrow(expectedError)
       })
     })
   })

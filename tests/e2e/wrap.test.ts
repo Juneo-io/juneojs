@@ -1,107 +1,138 @@
-import * as dotenv from 'dotenv'
 import {
   AccountError,
   MCNAccount,
   MCNProvider,
   MCNWallet,
-  SocotraBCH1Chain,
   SocotraJUNEChain,
   SocotraWJUNEAsset,
   UnwrapOperation,
   WrapOperation,
-  type ExecutableOperation
+  type ExecutableOperation,
+  NetworkOperationRange,
+  NetworkOperationType,
+  SocotraNetwork
 } from '../../src'
+import * as dotenv from 'dotenv'
 dotenv.config()
 
-describe('Wrapping and Unwrapping Operations', () => {
+describe('Wrapping operations', () => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider()
+  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
-
-  beforeAll(async () => {
-    mcnAccount.getAccount(SocotraBCH1Chain.id)
-  })
+  const DEFAULT_TIMEOUT: number = 10_000
+  const juneChain = SocotraJUNEChain
+  const wJuneAsset = SocotraWJUNEAsset
 
   beforeEach(async () => {
     await mcnAccount.fetchChainsBalances()
   })
 
   describe('WrapOperation', () => {
-    describe('Instanciation', () => {
-      test.each([
-        ['WrapOperation instance', SocotraJUNEChain, SocotraWJUNEAsset, BigInt(1000)]
-      ])('%s', async (description, blockchain, asset, amount) => {
-        const operation = new WrapOperation(blockchain, asset, amount)
-
-        expect(operation.chain).toEqual(blockchain)
-        expect(operation.asset).toEqual(asset)
-        expect(operation.amount).toEqual(amount)
-      })
+    describe('Instantiation', () => {
+      test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000) }])(
+        '$#) $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount }) => {
+          const operation = new WrapOperation(blockchain, asset, amount)
+          expect(operation.chain).toEqual(blockchain)
+          expect(operation.asset).toEqual(asset)
+          expect(operation.amount).toEqual(amount)
+          expect(operation.range).toEqual(NetworkOperationRange.Chain)
+          expect(operation.type).toEqual(NetworkOperationType.Wrap)
+        }
+      )
     })
 
-    describe('Valid WrapOperation', () => {
-      test.each([
-        ['Wrap operation correctly', SocotraJUNEChain, SocotraWJUNEAsset, BigInt(1000), DONE_STATUS]
-      ])('%s', async (description, blockchain, asset, amount, expectedStatus) => {
-        const operation = new WrapOperation(blockchain, asset, amount)
-        const summary = await mcnAccount.estimate(operation)
-        const executable: ExecutableOperation = summary.getExecutable()
-
-        await mcnAccount.execute(summary)
-        expect(executable.status).toEqual(expectedStatus)
-      }, 10000)
+    describe('Valid wrap', () => {
+      test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000), expectedStatus: DONE_STATUS }])(
+        '$#) $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount, expectedStatus }) => {
+          const operation = new WrapOperation(blockchain, asset, amount)
+          const summary = await mcnAccount.estimate(operation)
+          await mcnAccount.execute(summary)
+          const executable: ExecutableOperation = summary.getExecutable()
+          expect(executable.status).toEqual(expectedStatus)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
 
-    describe('Invalid WrapOperation', () => {
+    describe('Invalid wrap', () => {
       test.each([
-        ['Wrap more than the available balance', SocotraJUNEChain, SocotraWJUNEAsset, EXCESSIVE_AMOUNT, AccountError],
-        ['Wrap operation with amount 0', SocotraJUNEChain, SocotraWJUNEAsset, BigInt(0), AccountError]
-      ])('%s', async (description, blockchain, asset, amount, expectedStatus) => {
-        const operation = new WrapOperation(blockchain, asset, amount)
-        const summary = await mcnAccount.estimate(operation)
-
-        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedStatus)
-      }, 10000)
+        {
+          description: 'More than available balance',
+          blockchain: juneChain,
+          asset: wJuneAsset,
+          amount: EXCESSIVE_AMOUNT,
+          expectedStatus: AccountError
+        },
+        {
+          description: 'Zero amount',
+          blockchain: juneChain,
+          asset: wJuneAsset,
+          amount: BigInt(0),
+          expectedStatus: AccountError
+        }
+      ])(
+        '$#) $description $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount, expectedStatus }) => {
+          const operation = new WrapOperation(blockchain, asset, amount)
+          const summary = await mcnAccount.estimate(operation)
+          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedStatus)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
   })
 
   describe('UnwrapOperation', () => {
-    describe('Instanciation', () => {
-      test.each([
-        ['UnwrapOperation instance', SocotraJUNEChain, SocotraWJUNEAsset, BigInt(1000)]
-      ])('%s', async (description, blockchain, asset, amount) => {
-        const operation = new UnwrapOperation(blockchain, asset, amount)
-
-        expect(operation.chain).toEqual(blockchain)
-        expect(operation.asset).toEqual(asset)
-        expect(operation.amount).toEqual(amount)
-      })
+    describe('Instantiation', () => {
+      test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000) }])(
+        '$#) $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount }) => {
+          const operation = new UnwrapOperation(blockchain, asset, amount)
+          expect(operation.chain).toEqual(blockchain)
+          expect(operation.asset).toEqual(asset)
+          expect(operation.amount).toEqual(amount)
+          expect(operation.range).toEqual(NetworkOperationRange.Chain)
+          expect(operation.type).toEqual(NetworkOperationType.Unwrap)
+        }
+      )
     })
 
-    describe('Valid UnwrapOperation', () => {
-      test.each([
-        ['Unwrap operation correctly', SocotraJUNEChain, SocotraWJUNEAsset, BigInt(1000), DONE_STATUS]
-      ])('%s', async (description, blockchain, asset, amount, expectedStatus) => {
-        const operation = new UnwrapOperation(blockchain, asset, amount)
-        const summary = await mcnAccount.estimate(operation)
-        const executable: ExecutableOperation = summary.getExecutable()
-
-        await mcnAccount.execute(summary)
-        expect(executable.status).toEqual(expectedStatus)
-      }, 15000)
+    describe('Valid unwrap', () => {
+      test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000), expectedStatus: DONE_STATUS }])(
+        '$#) $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount, expectedStatus }) => {
+          const operation = new UnwrapOperation(blockchain, asset, amount)
+          const summary = await mcnAccount.estimate(operation)
+          await mcnAccount.execute(summary)
+          const executable: ExecutableOperation = summary.getExecutable()
+          expect(executable.status).toEqual(expectedStatus)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
 
-    describe('Invalid UnwrapOperation', () => {
+    describe('Invalid unwrap', () => {
       test.each([
-        ['Unwrap more than the available wrapped balance', SocotraJUNEChain, SocotraWJUNEAsset, EXCESSIVE_AMOUNT, AccountError]
-      ])('%s', async (description, blockchain, asset, amount, expectedError) => {
-        const operation = new UnwrapOperation(blockchain, asset, amount)
-        const summary = await mcnAccount.estimate(operation)
-
-        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
-      }, 10000)
+        {
+          description: 'More than available wrapped balance',
+          blockchain: juneChain,
+          asset: wJuneAsset,
+          amount: EXCESSIVE_AMOUNT,
+          expectedError: AccountError
+        }
+      ])(
+        '$#) $description $amount $asset.name in $blockchain.name',
+        async ({ blockchain, asset, amount, expectedError }) => {
+          const operation = new UnwrapOperation(blockchain, asset, amount)
+          const summary = await mcnAccount.estimate(operation)
+          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
   })
 })

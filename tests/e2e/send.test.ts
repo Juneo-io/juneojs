@@ -1,82 +1,163 @@
-import * as dotenv from 'dotenv'
 import {
   AccountError,
   MCNAccount,
   MCNProvider,
   MCNWallet,
   SendOperation,
-  SocotraEUROC1AssetId,
   SocotraEUROC1Chain,
-  SocotraJUNEAssetId,
   SocotraJUNEChain,
   SocotraJVMChain,
-  type ExecutableOperation
+  type ExecutableOperation,
+  SocotraNetwork
 } from '../../src'
-
+import * as dotenv from 'dotenv'
 dotenv.config()
 
-describe('Send Operations', () => {
+describe('Send operations', () => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider()
+  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
+  const DONE_STATUS = 'Done'
+  const DEFAULT_TIMEOUT: number = 10_000
+  const juneChain = SocotraJUNEChain
+  const euroChain = SocotraEUROC1Chain
+  const jvmChain = SocotraJVMChain
 
   beforeAll(async () => {
     await mcnAccount.fetchChainsBalances()
   })
 
-  describe('EVM Send Operations', () => {
-    describe('Valid Operations', () => {
+  describe('EVM send', () => {
+    describe('Valid execute', () => {
       test.each([
-        ['JUNE-Chain with JUNEAssetId', SocotraJUNEChain, SocotraJUNEAssetId, BigInt(1000), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'],
-        ['JUNE-Chain with ETH1AssetId', SocotraJUNEChain, '0x2d00000000000000000000000000000000000000', BigInt(1), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'],
-        ['ETH1-Chain with ETH1AssetId', SocotraEUROC1Chain, SocotraEUROC1AssetId, BigInt(10000000000000), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26']
-      ])('%s', async (description, chain, assetId, value, recipient) => {
-        const operation = new SendOperation(chain, assetId, value, recipient)
-        const summary = await mcnAccount.estimate(operation)
-        const executable: ExecutableOperation = summary.getExecutable()
-
-        await mcnAccount.execute(summary)
-        expect(executable.status).toEqual('Done')
-      })
+        {
+          chain: juneChain,
+          assetId: juneChain.assetId,
+          symbol: juneChain.asset.symbol,
+          value: BigInt(1_000),
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
+        },
+        {
+          chain: juneChain,
+          assetId: '0x2d00000000000000000000000000000000000000',
+          symbol: 'ETH.e',
+          value: BigInt(1),
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
+        },
+        {
+          chain: euroChain,
+          assetId: euroChain.assetId,
+          symbol: euroChain.asset.symbol,
+          value: BigInt(10_000_000_000_000),
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
+        }
+      ])(
+        '$#) $value $symbol in $chain.name to $recipient',
+        async ({ chain, assetId, value, recipient }) => {
+          const operation = new SendOperation(chain, assetId, value, recipient)
+          const summary = await mcnAccount.estimate(operation)
+          await mcnAccount.execute(summary)
+          const executable: ExecutableOperation = summary.getExecutable()
+          expect(executable.status).toEqual(DONE_STATUS)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
 
-    describe('Invalid Operations', () => {
+    describe('Invalid execute', () => {
       test.each([
-        ['JUNE-Chain with negative value', SocotraJUNEChain, SocotraJUNEAssetId, BigInt(-1), '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', RangeError],
-        ['JUNE-Chain with excessive amount', SocotraJUNEChain, SocotraJUNEAssetId, EXCESSIVE_AMOUNT, '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', AccountError],
-        ['JUNE-Chain with excessive amount and different assetId', SocotraJUNEChain, SocotraEUROC1AssetId, EXCESSIVE_AMOUNT, '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26', AccountError]
-      ])('%s', async (description, chain, assetId, value, recipient, expectedError) => {
-        const operation = new SendOperation(chain, assetId, value, recipient)
-        const summary = await mcnAccount.estimate(operation)
-        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
-      })
+        {
+          description: 'Negative value',
+          chain: juneChain,
+          assetId: juneChain.assetId,
+          symbol: juneChain.asset.symbol,
+          value: BigInt(-1),
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
+          expectedError: RangeError
+        },
+        {
+          description: 'Excessive amount',
+          chain: juneChain,
+          assetId: juneChain.assetId,
+          symbol: juneChain.asset.symbol,
+          value: EXCESSIVE_AMOUNT,
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
+          expectedError: AccountError
+        },
+        {
+          description: 'Excessive amount and different assetId',
+          chain: juneChain,
+          assetId: euroChain.assetId,
+          symbol: euroChain.asset.symbol,
+          value: EXCESSIVE_AMOUNT,
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
+          expectedError: AccountError
+        }
+      ])(
+        '$#) $description $value $symbol in $chain.name to $recipient',
+        async ({ chain, assetId, value, recipient, expectedError }) => {
+          const operation = new SendOperation(chain, assetId, value, recipient)
+          const summary = await mcnAccount.estimate(operation)
+          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
   })
 
-  describe('JVM Send Operations', () => {
-    describe('Valid Operations', () => {
+  describe('JVM send', () => {
+    describe('Valid execute', () => {
       test.each([
-        ['JVM-Chain with JUNEAssetId', SocotraJVMChain, SocotraJUNEAssetId, BigInt(10000000), 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal']
-      ])('%s', async (description, chain, assetId, value, recipient) => {
-        const operation = new SendOperation(chain, assetId, value, recipient)
-        const summary = await mcnAccount.estimate(operation)
-        const executable: ExecutableOperation = summary.getExecutable()
-
-        await mcnAccount.execute(summary)
-        expect(executable.status).toEqual('Done')
-      })
+        {
+          chain: jvmChain,
+          assetId: jvmChain.assetId,
+          symbol: jvmChain.asset.symbol,
+          value: BigInt(10_000_000),
+          recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal'
+        }
+      ])(
+        '$#) $value $symbol in $chain.name to $recipient',
+        async ({ chain, assetId, value, recipient }) => {
+          const operation = new SendOperation(chain, assetId, value, recipient)
+          const summary = await mcnAccount.estimate(operation)
+          await mcnAccount.execute(summary)
+          const executable: ExecutableOperation = summary.getExecutable()
+          expect(executable.status).toEqual(DONE_STATUS)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
 
-    describe('Invalid Operations', () => {
+    describe('Invalid execute', () => {
       test.each([
-        ['JVM-Chain with excessive amount', SocotraJVMChain, SocotraJUNEAssetId, EXCESSIVE_AMOUNT, 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal', AccountError],
-        ['JVM-Chain with zero value', SocotraJVMChain, SocotraJUNEAssetId, BigInt(0), 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal', TypeError]
-      ])('%s', async (description, chain, assetId, value, recipient, expectedError) => {
-        const operation = new SendOperation(chain, assetId, value, recipient)
-        const summary = await mcnAccount.estimate(operation)
-        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
-      })
+        {
+          description: 'Excessive amount',
+          chain: jvmChain,
+          assetId: jvmChain.assetId,
+          symbol: jvmChain.asset.symbol,
+          value: EXCESSIVE_AMOUNT,
+          recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal',
+          expectedError: AccountError
+        },
+        {
+          description: 'Zero value',
+          chain: jvmChain,
+          assetId: jvmChain.assetId,
+          symbol: jvmChain.asset.symbol,
+          value: BigInt(0),
+          recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal',
+          expectedError: TypeError
+        }
+      ])(
+        '$#) $description $value $symbol in $chain.name to $recipient',
+        async ({ chain, assetId, value, recipient, expectedError }) => {
+          const operation = new SendOperation(chain, assetId, value, recipient)
+          const summary = await mcnAccount.estimate(operation)
+          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+        },
+        DEFAULT_TIMEOUT
+      )
     })
   })
 })

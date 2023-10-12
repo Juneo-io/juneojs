@@ -1,28 +1,6 @@
 import { JuneoBuffer } from '../../../src'
 
 describe('juneojs utils test', () => {
-  interface MethodMap {
-    writeUInt8: (buffer: JuneoBuffer, value: number) => void
-    readUInt8: (buffer: JuneoBuffer, index: number) => number
-    writeUInt16: (buffer: JuneoBuffer, value: number) => void
-    readUInt16: (buffer: JuneoBuffer, index: number) => number
-    writeUInt32: (buffer: JuneoBuffer, value: number) => void
-    readUInt32: (buffer: JuneoBuffer, index: number) => number
-    writeUInt64: (buffer: JuneoBuffer, value: bigint) => void
-    readUInt64: (buffer: JuneoBuffer, index: number) => bigint
-  }
-
-  const methods: MethodMap = {
-    writeUInt8: (buffer, value) => { buffer.writeUInt8(value) },
-    readUInt8: (buffer, index) => buffer.readUInt8(index),
-    writeUInt16: (buffer, value) => { buffer.writeUInt16(value) },
-    readUInt16: (buffer, index) => buffer.readUInt16(index),
-    writeUInt32: (buffer, value) => { buffer.writeUInt32(value) },
-    readUInt32: (buffer, index) => buffer.readUInt32(index),
-    writeUInt64: (buffer, value) => { buffer.writeUInt64(value) },
-    readUInt64: (buffer, index) => buffer.readUInt64(index)
-  }
-
   describe('BytesData class tests', () => {
     // TODO write tests for BytesData class
   })
@@ -72,8 +50,8 @@ describe('juneojs utils test', () => {
         ['write and read UInt64 with max value', 8, 'writeUInt64', 'readUInt64', BigInt('18446744073709551615')]
       ])('%s', (description, size, writeMethodName, readMethodName, value) => {
         const buffer = JuneoBuffer.alloc(size);
-        (methods[writeMethodName as keyof MethodMap] as any)(buffer, value)
-        expect((methods[readMethodName as keyof MethodMap] as any)(buffer, 0)).toBe(value)
+        (buffer[writeMethodName as keyof JuneoBuffer] as any)(value)
+        expect((buffer[readMethodName as keyof JuneoBuffer] as any)(0)).toBe(value)
       })
 
       test.each([
@@ -84,7 +62,7 @@ describe('juneojs utils test', () => {
       ])('%s', (description, size, writeMethodName, value) => {
         const buffer = JuneoBuffer.alloc(size)
         expect(() => {
-          (methods[writeMethodName as keyof MethodMap] as any)(buffer, value)
+          (buffer[writeMethodName as keyof JuneoBuffer] as any)(value)
         }).toThrow()
       })
     })
@@ -136,11 +114,11 @@ describe('juneojs utils test', () => {
         ['Convert empty buffer to Hex', 32, 'writeUInt8', 0, 'toHex', 'q'],
         ['Convert filled buffer to Hex', 32, 'writeUInt8', 255, 'toHex', 'Hs8Q']
       ])('%s', (description, bufferSize, fillMethod, fillValue, conversionMethod, expectedOutput) => {
-        const buffer = JuneoBuffer.alloc(bufferSize)
-        methods[fillMethod as keyof MethodMap](buffer, fillValue)
+        const buffer = JuneoBuffer.alloc(bufferSize);
+        (buffer[fillMethod as keyof JuneoBuffer] as any)(fillValue)
 
-        // Vous pouvez également ajouter une méthode de conversion à MethodMap si nécessaire
-        expect(methods[conversionMethod as keyof MethodMap](buffer)).toBe(expectedOutput)
+        // Utilisation d'une assertion de type pour la méthode de conversion
+        expect((buffer[conversionMethod as keyof JuneoBuffer] as any)()).toBe(expectedOutput)
       })
     })
 

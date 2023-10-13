@@ -1,5 +1,5 @@
-import { JuneoBuffer } from '../../src'
-import * as encoding from '../../src/utils/encoding'
+import { JuneoBuffer } from '../../../src'
+import * as encoding from '../../../src/utils/encoding'
 
 describe('Encoding', (): void => {
   test('Verify checksum', (): void => {

@@ -44,7 +44,7 @@ describe('Wrapping operations', () => {
       )
     })
 
-    describe('Valid wrap', () => {
+    describe('Valid execute', () => {
       test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000), expectedStatus: DONE_STATUS }])(
         '$#) $amount $asset.name in $blockchain.name',
         async ({ blockchain, asset, amount, expectedStatus }) => {
@@ -58,7 +58,7 @@ describe('Wrapping operations', () => {
       )
     })
 
-    describe('Invalid wrap', () => {
+    describe('Invalid execute', () => {
       test.each([
         {
           description: 'More than available balance',
@@ -101,7 +101,7 @@ describe('Wrapping operations', () => {
       )
     })
 
-    describe('Valid unwrap', () => {
+    describe('Valid execute', () => {
       test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000), expectedStatus: DONE_STATUS }])(
         '$#) $amount $asset.name in $blockchain.name',
         async ({ blockchain, asset, amount, expectedStatus }) => {
@@ -115,7 +115,7 @@ describe('Wrapping operations', () => {
       )
     })
 
-    describe('Invalid unwrap', () => {
+    describe('Invalid execute', () => {
       test.each([
         {
           description: 'More than available wrapped balance',

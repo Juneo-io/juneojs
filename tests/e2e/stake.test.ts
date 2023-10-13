@@ -12,7 +12,8 @@ import {
   ValidateOperation,
   type ChainAccount,
   type ExecutableOperation,
-  now
+  now,
+  SocotraNetwork
 } from '../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -20,7 +21,7 @@ dotenv.config()
 const DEFAULT_TIMEOUT: number = 10_000
 const ONE_DAY: bigint = BigInt(86_400)
 
-const provider: MCNProvider = new MCNProvider()
+const provider: MCNProvider = new MCNProvider(SocotraNetwork)
 const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'

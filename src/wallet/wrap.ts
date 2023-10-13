@@ -5,6 +5,7 @@ import { type JEVMBlockchain } from '../chain'
 import { type EVMFeeData, FeeType, estimateEVMCall, sendEVMTransaction } from './transaction'
 import { type WrappedAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
+import { AmountError } from '../utils'
 
 export class WrapManager {
   private readonly api: JEVMAPI
@@ -43,6 +44,9 @@ export class WrapManager {
   }
 
   async wrap (asset: WrappedAsset, amount: bigint, feeData?: EVMFeeData): Promise<string> {
+    if (amount < BigInt(1)) {
+      throw new AmountError(`cannot wrap zero or negative amount got: ${amount}`)
+    }
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateWrapFee(asset, amount)
     }
@@ -50,6 +54,9 @@ export class WrapManager {
   }
 
   async unwrap (asset: WrappedAsset, amount: bigint, feeData?: EVMFeeData): Promise<string> {
+    if (amount < BigInt(1)) {
+      throw new AmountError(`cannot unwrap zero or negative amount got: ${amount}`)
+    }
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateUnwrapFee(asset, amount)
     }

@@ -10,7 +10,8 @@ import {
   type ExecutableOperation,
   NetworkOperationRange,
   NetworkOperationType,
-  SocotraNetwork
+  SocotraNetwork,
+  AmountError
 } from '../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -72,7 +73,7 @@ describe('Wrapping operations', () => {
           blockchain: juneChain,
           asset: wJuneAsset,
           amount: BigInt(0),
-          expectedStatus: AccountError
+          expectedStatus: AmountError
         }
       ])(
         '$#) $description $amount $asset.name in $blockchain.name',

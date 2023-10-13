@@ -169,11 +169,7 @@ describe('PlatformAPI', () => {
   describe('getTimestamp', () => {
     test('Returns platform timestamp', async () => {
       const result = await provider.platform.getTimestamp()
-
-      //  TODO change to timestamp
-      // expect(result.timestamp).toBeDefined()
-
-      expect(result).toBeDefined()
+      expect(result.timestamp).toBeDefined()
     })
   })
 

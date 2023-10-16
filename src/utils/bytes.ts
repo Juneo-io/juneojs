@@ -35,12 +35,12 @@ export class JuneoBuffer {
   private cursor: number = 0
   length: number
 
-  private constructor (length: number) {
-    if (length < 0) {
-      throw new CapacityError('cannot allocate negative length')
+  private constructor (size: number) {
+    if (size < 0) {
+      throw new CapacityError('cannot allocate negative size')
     }
-    this.bytes = Buffer.alloc(length)
-    this.length = length
+    this.bytes = Buffer.alloc(size)
+    this.length = size
   }
 
   private verifyWriteIndexes (length: number): void {
@@ -88,7 +88,10 @@ export class JuneoBuffer {
 
   private verifyReadIndexes (index: number, length: number): void {
     if (index < 0) {
-      throw new CapacityError(`cannot read at negative index ${index}`)
+      throw new CapacityError(`cannot read at negative index but got ${index}`)
+    }
+    if (length < 1) {
+      throw new CapacityError(`read length must be greater than 0 but got ${length}`)
     }
     if (index + length > this.length) {
       throw new CapacityError(`reading at ${index} with length of ${length} to capacity of ${this.length}`)
@@ -141,7 +144,19 @@ export class JuneoBuffer {
     return Buffer.from(this.bytes)
   }
 
-  copyOf (start?: number, end?: number): JuneoBuffer {
+  copyOf (start: number = 0, end: number = this.length): JuneoBuffer {
+    if (start === null || end === null) {
+      throw new CapacityError(`cannot have null indices but got ${start} and ${end}`)
+    }
+    if (start > end) {
+      throw new CapacityError('start index cannot be higher than end')
+    }
+    if (start < 0) {
+      throw new CapacityError(`cannot start at negative index but got ${start}`)
+    }
+    if (end > this.length) {
+      throw new CapacityError(`end index ${end} out of bounds of ${this.length}`)
+    }
     const buffer: Buffer = this.bytes.subarray(start, end)
     return JuneoBuffer.fromBytes(buffer)
   }

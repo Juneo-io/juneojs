@@ -17,6 +17,7 @@ const CROSS_CODE: string = 'Cross error'
 const TIME_CODE: string = 'Time error'
 const STAKE_CODE: string = 'Stake error'
 const AMOUNT_CODE: string = 'Amount error'
+const CAPACITY_CODE: string = 'Capacity error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -162,5 +163,12 @@ export class AmountError extends JuneoError {
   constructor (message: string) {
     super(message, AMOUNT_CODE)
     Object.setPrototypeOf(this, AmountError.prototype)
+  }
+}
+
+export class CapacityError extends JuneoError {
+  constructor (message: string) {
+    super(message, CAPACITY_CODE)
+    Object.setPrototypeOf(this, CapacityError.prototype)
   }
 }

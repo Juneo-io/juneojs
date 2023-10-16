@@ -80,10 +80,10 @@ export class JuneoBuffer {
     this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
   }
 
-  writeString (data: string): void {
+  writeString (data: string, encoding: BufferEncoding = 'utf8'): void {
     this.verifyWriteIndexes(data.length)
     // Buffer.write returns the amount of bytes written instead of the cursor
-    this.cursor += this.bytes.write(data, this.cursor)
+    this.cursor += this.bytes.write(data, this.cursor, encoding)
   }
 
   private verifyReadIndexes (index: number, length: number): void {
@@ -118,9 +118,9 @@ export class JuneoBuffer {
     return this.bytes.readBigUInt64BE(index)
   }
 
-  readString (index: number, length: number): string {
+  readString (index: number, length: number, encoding: BufferEncoding = 'utf8'): string {
     this.verifyReadIndexes(index, length)
-    return this.read(index, length).bytes.toString()
+    return this.read(index, length).bytes.toString(encoding)
   }
 
   read (index: number, length: number): JuneoBuffer {

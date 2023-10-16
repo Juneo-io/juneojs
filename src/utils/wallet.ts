@@ -98,7 +98,7 @@ export function validatePrivateKey (data: string): boolean {
   if (data.includes(JVMPrivateKeyPrefix)) {
     const split: string[] = data.split('-')
     const base58: boolean = split.length > 1 && isBase58(split[1])
-    return base58 && decodeCB58(split[1]).length === PrivateKeyLength
+    return base58 && decodeCB58(split[1]).length === PrivateKeyLength / 2
   }
   return false
 }

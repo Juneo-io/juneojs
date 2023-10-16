@@ -36,6 +36,9 @@ export class JuneoBuffer {
   length: number
 
   private constructor (length: number) {
+    if (length < 0) {
+      throw new CapacityError('cannot allocate negative length')
+    }
     this.bytes = Buffer.alloc(length)
     this.length = length
   }

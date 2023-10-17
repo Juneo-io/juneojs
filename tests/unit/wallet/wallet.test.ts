@@ -1,5 +1,12 @@
 import * as dotenv from 'dotenv'
-import { MCNWallet, SocotraJUNEChain, SocotraPlatformChain, WalletError, validatePrivateKey } from '../../../src'
+import {
+  MCNWallet,
+  SocotraJUNEChain,
+  SocotraJVMChain,
+  SocotraPlatformChain,
+  WalletError,
+  validatePrivateKey
+} from '../../../src'
 dotenv.config()
 
 describe('MCNWallet', (): void => {
@@ -60,26 +67,41 @@ describe('MCNWallet', (): void => {
     }
   )
 
-  // TODO refactor to test get address of given chain type
-  // e.g. Get address from JVM Chain / from Platform Chain / from JEVM Chain
-  test('Should get an address for a given chain', () => {
-    // valid
-    const wallet = MCNWallet.generate(12)
-    const address = wallet.getAddress(SocotraJUNEChain)
-    expect(address).toBeDefined()
+  describe('getAddress', () => {
+    test.each([
+      {
+        mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
+        chain: SocotraJVMChain,
+        address: 'JVM-socotra17p4punu4589yqfzgv044tl546dnwvf2pd2k6j4'
+      },
+      {
+        mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
+        chain: SocotraJUNEChain,
+        address: '0xf44b80bf950058b087F47d88fDB71686c4beFef8'
+      }
+    ])('$chain.name address: $address', ({ mnemonic, chain, address }): void => {
+      const wallet: MCNWallet = MCNWallet.recover(mnemonic)
+      expect(wallet.getAddress(chain)).toBe(address)
+    })
   })
 
-  // TODO refactor to test get wallet of given chain type
-  // e.g. Get wallet from JVM Chain / from Platform Chain / from JEVM Chain
-  test('Should get a chain wallet', () => {
-    // valid
-    const wallet = MCNWallet.generate(12)
-    const chainWallet = wallet.getWallet(SocotraJUNEChain)
-    expect(chainWallet).toBeDefined()
+  describe('getWallet', () => {
+    test.each([
+      {
+        mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
+        chain: SocotraJVMChain
+      },
+      {
+        mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
+        chain: SocotraJUNEChain
+      }
+    ])('$chain.name wallet from: $mnemonic', ({ mnemonic, chain }): void => {
+      const wallet: MCNWallet = MCNWallet.recover(mnemonic)
+      expect(wallet.getWallet(chain)).toBeDefined()
+    })
   })
 
-  test('Should get all chain wallets', () => {
-    // valid
+  test('getWallets', () => {
     const wallet = MCNWallet.generate(12)
     wallet.getAddress(SocotraJUNEChain)
     wallet.getAddress(SocotraPlatformChain)

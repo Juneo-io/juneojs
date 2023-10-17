@@ -25,8 +25,7 @@ export class MCN {
   }
 
   getChain (chainId: string): Blockchain | undefined {
-    for (let i: number = 0; i < this.supernets.length; i++) {
-      const supernet: Supernet = this.supernets[i]
+    for (const supernet of this.supernets) {
       const chain: Blockchain | undefined = supernet.getChain(chainId)
       if (chain !== undefined) {
         return chain
@@ -71,8 +70,7 @@ export class Supernet {
   }
 
   getChain (chainId: string): Blockchain | undefined {
-    for (let i: number = 0; i < this.chains.length; i++) {
-      const chain: Blockchain = this.chains[i]
+    for (const chain of this.chains) {
       if (chain.id === chainId) {
         return chain
       }

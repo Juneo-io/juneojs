@@ -7,8 +7,7 @@ export class ContractManager {
   private readonly handlers: ContractHandler[] = []
 
   async getHandler (contractAddress: string): Promise<ContractHandler | null> {
-    for (let i: number = 0; i < this.handlers.length; i++) {
-      const handler: ContractHandler = this.handlers[i]
+    for (const handler of this.handlers) {
       if (await handler.instanceOf(contractAddress)) {
         return handler
       }

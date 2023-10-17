@@ -244,8 +244,7 @@ export class CrossManager {
     let spendingAssetId: string = cross.assetId
     let exportedJRC20: JRC20Asset | undefined
     if (cross.source.id === juneChain.id) {
-      for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
-        const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
+      for (const jrc20 of juneChain.jrc20Assets) {
         if (jrc20.address === cross.assetId) {
           exportedJRC20 = jrc20
           fees.push(new BaseFeeData(juneChain, BigInt(0), FeeType.Withdraw))
@@ -257,8 +256,7 @@ export class CrossManager {
     }
     let importedJRC20: JRC20Asset | undefined
     if (cross.destination.id === juneChain.id && cross.assetId !== juneChain.assetId) {
-      for (let i = 0; i < juneChain.jrc20Assets.length; i++) {
-        const jrc20: JRC20Asset = juneChain.jrc20Assets[i]
+      for (const jrc20 of juneChain.jrc20Assets) {
         if (jrc20.nativeAssetId === cross.assetId) {
           importedJRC20 = jrc20
           break

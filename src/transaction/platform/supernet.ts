@@ -27,8 +27,7 @@ export class SupernetAuth implements Serializable, Signable {
     const threshold: number = this.rewardsOwner.threshold
     for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
       const address: Address = this.rewardsOwner.addresses[i]
-      for (let j = 0; j < wallets.length; j++) {
-        const wallet: VMWallet = wallets[j]
+      for (const wallet of wallets) {
         if (address.matches(wallet.getJuneoAddress())) {
           signatures.push(new Signature(wallet.sign(sha256(bytes))))
           break

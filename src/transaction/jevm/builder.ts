@@ -1,6 +1,6 @@
 import { InputError, OutputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
-import { type Spendable, type TransferableInput, UserInput } from '../input'
+import { type TransferableInput, UserInput } from '../input'
 import { type UserOutput } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId } from '../types'
@@ -73,8 +73,7 @@ export function buildTransactionEVMOutputs (
     }
   })
   // verifying that inputs have the funds to pay for the spent amounts
-  for (let i: number = 0; i < inputs.length; i++) {
-    const input: Spendable = inputs[i]
+  for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
     const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId) as bigint) : BigInt(0)
     const available: bigint = availableAmounts[assetId]

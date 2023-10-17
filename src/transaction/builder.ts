@@ -86,12 +86,11 @@ function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<strin
 
 export function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
   const indices: number[] = []
-  for (let i: number = 0; i < signers.length; i++) {
-    const signer: Address = signers[i]
-    for (let j: number = 0; j < addresses.length; j++) {
-      const address: Address = addresses[j]
+  for (const signer of signers) {
+    for (let i: number = 0; i < addresses.length; i++) {
+      const address: Address = addresses[i]
       if (signer.matches(address)) {
-        indices.push(j)
+        indices.push(i)
         break
       }
     }
@@ -146,8 +145,7 @@ export function buildTransactionOutputs (
   outputs = mergeSecp256k1Outputs(outputs)
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
-  for (let i: number = 0; i < inputs.length; i++) {
-    const input: Spendable = inputs[i]
+  for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
     const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId) as bigint) : BigInt(0)
     const available: bigint = availableAmounts.has(assetId) ? (availableAmounts.get(assetId) as bigint) : BigInt(0)

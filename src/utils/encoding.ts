@@ -63,6 +63,9 @@ export function encodeCB58 (buffer: JuneoBuffer): string {
 }
 
 export function isBase58 (value: string): boolean {
+  if (value === '') {
+    return false
+  }
   return /^[A-HJ-NP-Za-km-z1-9]*$/.test(value)
 }
 

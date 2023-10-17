@@ -1,5 +1,5 @@
 import * as encoding from './encoding'
-import { ParsingError } from './errors'
+import { CapacityError, ParsingError } from './errors'
 
 export interface Serializable {
   serialize: () => JuneoBuffer
@@ -35,9 +35,18 @@ export class JuneoBuffer {
   private cursor: number = 0
   length: number
 
-  private constructor (length: number) {
-    this.bytes = Buffer.alloc(length)
-    this.length = length
+  private constructor (size: number) {
+    if (size < 0) {
+      throw new CapacityError('cannot allocate negative size')
+    }
+    this.bytes = Buffer.alloc(size)
+    this.length = size
+  }
+
+  private verifyWriteIndexes (length: number): void {
+    if (this.cursor + length > this.length) {
+      throw new CapacityError(`writing at ${this.cursor} with length of ${length} to capacity of ${this.length}`)
+    }
   }
 
   write (data: JuneoBuffer): void {
@@ -45,53 +54,77 @@ export class JuneoBuffer {
   }
 
   writeBuffer (data: Buffer): void {
+    this.verifyWriteIndexes(data.length)
     const written: Buffer = this.cursor === 0 ? Buffer.alloc(0) : this.bytes.subarray(0, this.cursor)
-    this.bytes = Buffer.concat([written, data], this.bytes.length)
+    this.bytes = Buffer.concat([written, data], this.length)
     this.cursor += data.length
   }
 
   writeUInt8 (data: number): void {
+    this.verifyWriteIndexes(1)
     this.cursor = this.bytes.writeUInt8(data, this.cursor)
   }
 
   writeUInt16 (data: number): void {
+    this.verifyWriteIndexes(2)
     this.cursor = this.bytes.writeUInt16BE(data, this.cursor)
   }
 
   writeUInt32 (data: number): void {
+    this.verifyWriteIndexes(4)
     this.cursor = this.bytes.writeUInt32BE(data, this.cursor)
   }
 
   writeUInt64 (data: bigint): void {
+    this.verifyWriteIndexes(8)
     this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
   }
 
-  writeString (data: string): void {
+  writeString (data: string, encoding: BufferEncoding = 'utf8'): void {
+    this.verifyWriteIndexes(data.length)
     // Buffer.write returns the amount of bytes written instead of the cursor
-    this.cursor += this.bytes.write(data, this.cursor)
+    this.cursor += this.bytes.write(data, this.cursor, encoding)
+  }
+
+  private verifyReadIndexes (index: number, length: number): void {
+    if (index < 0) {
+      throw new CapacityError(`cannot read at negative index but got ${index}`)
+    }
+    if (length < 1) {
+      throw new CapacityError(`read length must be greater than 0 but got ${length}`)
+    }
+    if (index + length > this.length) {
+      throw new CapacityError(`reading at ${index} with length of ${length} to capacity of ${this.length}`)
+    }
   }
 
   readUInt8 (index: number): number {
+    this.verifyReadIndexes(index, 1)
     return this.bytes.readUInt8(index)
   }
 
   readUInt16 (index: number): number {
+    this.verifyReadIndexes(index, 2)
     return this.bytes.readUInt16BE(index)
   }
 
   readUInt32 (index: number): number {
+    this.verifyReadIndexes(index, 4)
     return this.bytes.readUInt32BE(index)
   }
 
   readUInt64 (index: number): bigint {
+    this.verifyReadIndexes(index, 8)
     return this.bytes.readBigUInt64BE(index)
   }
 
-  readString (index: number, length: number): string {
-    return this.read(index, length).bytes.toString()
+  readString (index: number, length: number, encoding: BufferEncoding = 'utf8'): string {
+    this.verifyReadIndexes(index, length)
+    return this.read(index, length).bytes.toString(encoding)
   }
 
   read (index: number, length: number): JuneoBuffer {
+    this.verifyReadIndexes(index, length)
     return JuneoBuffer.fromBytes(this.bytes.subarray(index, index + length))
   }
 
@@ -111,7 +144,19 @@ export class JuneoBuffer {
     return Buffer.from(this.bytes)
   }
 
-  copyOf (start?: number, end?: number): JuneoBuffer {
+  copyOf (start: number = 0, end: number = this.length): JuneoBuffer {
+    if (start === null || end === null) {
+      throw new CapacityError(`cannot have null indices but got ${start} and ${end}`)
+    }
+    if (start > end) {
+      throw new CapacityError('start index cannot be higher than end')
+    }
+    if (start < 0) {
+      throw new CapacityError(`cannot start at negative index but got ${start}`)
+    }
+    if (end > this.length) {
+      throw new CapacityError(`end index ${end} out of bounds of ${this.length}`)
+    }
     const buffer: Buffer = this.bytes.subarray(start, end)
     return JuneoBuffer.fromBytes(buffer)
   }

@@ -61,6 +61,7 @@ export class AssetId extends BytesData {
   assetId: string
 
   constructor (assetId: string) {
+    validateData(assetId)
     const buffer: JuneoBuffer = encoding.decodeCB58(assetId)
     if (buffer.length !== AssetIdSize) {
       throw new JuneoTypeError(`asset id is not ${AssetIdSize} bytes long`)
@@ -70,6 +71,7 @@ export class AssetId extends BytesData {
   }
 
   static validate (assetId: string): boolean {
+    validateData(assetId)
     if (!encoding.isBase58(assetId)) {
       return false
     }
@@ -82,6 +84,7 @@ export class TransactionId extends BytesData {
   transactionId: string
 
   constructor (transactionId: string) {
+    validateData(transactionId)
     const buffer: JuneoBuffer = encoding.decodeCB58(transactionId)
     if (buffer.length !== TransactionIdSize) {
       throw new JuneoTypeError(`transaction id is not ${TransactionIdSize} bytes long`)
@@ -95,6 +98,7 @@ export class BlockchainId extends BytesData {
   blockchainId: string
 
   constructor (blockchainId: string) {
+    validateData(blockchainId)
     const buffer: JuneoBuffer = encoding.decodeCB58(blockchainId)
     if (buffer.length !== BlockchainIdSize) {
       throw new JuneoTypeError(`blockchain id is not ${BlockchainIdSize} bytes long`)
@@ -106,6 +110,7 @@ export class BlockchainId extends BytesData {
 
 export class Signature extends BytesData {
   constructor (signature: JuneoBuffer) {
+    validateData(signature)
     if (signature.length !== SignatureSize) {
       throw new JuneoTypeError(`signature is not ${SignatureSize} bytes long`)
     }
@@ -117,6 +122,7 @@ export class NodeId extends BytesData {
   nodeId: string
 
   constructor (nodeId: string) {
+    validateData(nodeId)
     const split: string[] = nodeId.split('-')
     const parsedNodeId = split.length > 1 ? split[1] : split[0]
     const buffer: JuneoBuffer = encoding.decodeCB58(parsedNodeId)
@@ -132,6 +138,7 @@ export class SupernetId extends BytesData {
   supernetId: string
 
   constructor (supernetId: string) {
+    validateData(supernetId)
     const buffer: JuneoBuffer = encoding.decodeCB58(supernetId)
     if (buffer.length !== SupernetIdSize) {
       throw new JuneoTypeError(`supernet id is not ${SupernetIdSize} bytes long`)
@@ -145,6 +152,7 @@ export class DynamicId extends BytesData {
   value: string
 
   constructor (value: string) {
+    validateData(value)
     const buffer: JuneoBuffer = JuneoBuffer.alloc(DynamicIdSize)
     if (value.length > buffer.length) {
       throw new JuneoTypeError(`${value} is longer than ${DynamicIdSize} bytes`)
@@ -159,6 +167,7 @@ export class BLSPublicKey extends BytesData {
   publicKey: string
 
   constructor (publicKey: string) {
+    validateData(publicKey)
     const buffer: JuneoBuffer = encoding.decodeCHex(publicKey)
     if (buffer.length !== BLSPublicKeySize) {
       throw new JuneoTypeError(`bls public key is not ${BLSPublicKeySize} bytes long`)
@@ -172,6 +181,7 @@ export class BLSSignature extends BytesData {
   signature: string
 
   constructor (signature: string) {
+    validateData(signature)
     const buffer: JuneoBuffer = encoding.decodeCHex(signature)
     if (buffer.length !== BLSSignatureSize) {
       throw new JuneoTypeError(`bls signature is not ${BLSSignatureSize} bytes long`)

@@ -39,7 +39,7 @@ describe('JEVMAPI', () => {
         address: '0x9b31d8C5Dd49fCdE96218895f96a6eC1ea894529',
         block: '0x4BF7C5',
         asset: SocotraEUROC1Asset,
-        expectedBalance: BigInt(204_427_130n)
+        expectedBalance: BigInt(204_427_130)
       }
     ])('$asset.symbol balance of $address at block $block', async ({ address, block, asset, expectedBalance }) => {
       const result = await provider.jevm[SocotraJUNEChain.id].eth_getAssetBalance(address, block, asset.assetId)
@@ -96,7 +96,7 @@ describe('JEVMAPI', () => {
       {
         address: '0x9b31d8C5Dd49fCdE96218895f96a6eC1ea894529',
         block: '0x4BF7C5',
-        expectedBalance: BigInt(38_623609074_512286678n)
+        expectedBalance: BigInt(38_623609074_512286678)
       }
     ])('Valid from $address at block $block', async ({ address, block, expectedBalance }) => {
       const result = await provider.jevm[SocotraJUNEChain.id].eth_getBalance(address, block)

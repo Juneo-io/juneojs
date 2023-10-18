@@ -1,4 +1,4 @@
-import { AssetValue } from '../../src'
+import { AssetValue } from '../../../src'
 
 describe('AssetValue', (): void => {
   test('Readable value rounded', (): void => {

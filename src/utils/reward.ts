@@ -69,17 +69,17 @@ function getTimeRewards (
 }
 
 function getTimeRewardsValue (
-  lowerValue: bigint,
-  upperValue: bigint,
+  lowerTimeValueTargetReward: bigint,
+  upperTimeValueTargetReward: bigint,
   bonusRewards: bigint,
   timePercentage: bigint,
   timeBoundsPercentage: bigint,
   stakeAmount: bigint
 ): bigint {
-  let rewardsValue: bigint = upperValue - lowerValue
+  let rewardsValue: bigint = upperTimeValueTargetReward - lowerTimeValueTargetReward
   rewardsValue *= timeBoundsPercentage
   rewardsValue /= PercentDenominator
-  rewardsValue += lowerValue
+  rewardsValue += lowerTimeValueTargetReward
   rewardsValue += PercentDenominator
   rewardsValue += bonusRewards
   rewardsValue *= stakeAmount

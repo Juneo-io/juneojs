@@ -84,7 +84,7 @@ export class Utxo {
     position += 4
     const assetId: AssetId = new AssetId(buffer.read(position, AssetIdSize).toCB58())
     position += AssetIdSize
-    const outputBuffer: JuneoBuffer = buffer.read(position, buffer.length - 1)
+    const outputBuffer: JuneoBuffer = buffer.read(position, buffer.length - position)
     const output: TransactionOutput = TransferableOutput.parseOutput(outputBuffer)
     return new Utxo(transactionId, utxoIndex, assetId, output)
   }

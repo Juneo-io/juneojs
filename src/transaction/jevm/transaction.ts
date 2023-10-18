@@ -157,9 +157,9 @@ export class EVMInput implements Serializable, Signable, Spendable {
   sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
     const signatures: Signature[] = []
     const address: Address = this.address
-    for (let i = 0; i < wallets.length; i++) {
-      if (address.matches(wallets[i].getAddress())) {
-        signatures.push(new Signature(wallets[i].sign(sha256(bytes))))
+    for (const wallet of wallets) {
+      if (address.matches(wallet.getAddress())) {
+        signatures.push(new Signature(wallet.sign(sha256(bytes))))
         break
       }
     }

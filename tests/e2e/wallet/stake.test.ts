@@ -18,7 +18,7 @@ import {
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-const DEFAULT_TIMEOUT: number = 10_000
+const DEFAULT_TIMEOUT: number = 30_000
 const ONE_DAY: bigint = BigInt(86_400)
 
 const provider: MCNProvider = new MCNProvider(SocotraNetwork)

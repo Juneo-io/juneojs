@@ -49,7 +49,7 @@ describe('Send operations', () => {
           chain: euroChain,
           assetId: euroChain.assetId,
           symbol: euroChain.asset.symbol,
-          value: BigInt(10_000_000_000_000),
+          value: BigInt('10000000000000'),
           recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
         }
       ])(

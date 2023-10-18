@@ -79,7 +79,7 @@ describe('Bytes', () => {
           size: 8,
           writeMethodName: 'writeUInt64',
           readMethodName: 'readUInt64',
-          value: BigInt(9007199254740991)
+          value: BigInt('9007199254740991')
         },
         {
           description: 'Max value',
@@ -116,7 +116,7 @@ describe('Bytes', () => {
         {
           size: 7,
           writeMethodName: 'writeUInt64',
-          value: BigInt(9007199254740991)
+          value: BigInt('9007199254740991')
         }
       ])(
         'Insufficient buffer size: $writeMethodName (size of $size) value of $value',

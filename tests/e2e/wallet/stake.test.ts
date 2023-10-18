@@ -203,7 +203,7 @@ describe('StakeManager', () => {
   )
 
   test('Estimate validation reward', () => {
-    const reward = StakeManager.estimateValidationReward(BigInt(12_960_000), BigInt(100_000_000_000))
+    const reward = StakeManager.estimateValidationReward(BigInt('12960000'), BigInt('100000000000'))
     expect(reward).toEqual(expect.any(BigInt))
   })
 

@@ -11,7 +11,6 @@ import {
   TransactionId
 } from '../../../src'
 
-// TODO use types.serialize().toHex() and compare to expected hex values in tests
 describe('Types', () => {
   describe('Address', () => {
     describe('Constructor', () => {

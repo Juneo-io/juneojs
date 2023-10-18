@@ -6,6 +6,8 @@ on:
 
 jobs:
   prod_test:
+    env:
+      MNEMONIC: ${{ secrets.MNEMONIC }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

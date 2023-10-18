@@ -47,14 +47,14 @@ describe('Cross operations', () => {
         destination: juneChain,
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
-        value: BigInt(10_000_000_000_000)
+        value: BigInt('10000000000000')
       },
       {
         source: juneChain,
         destination: jvmChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt(100_000_000_000)
+        value: BigInt('100000000000')
       },
       {
         source: juneChain,
@@ -120,21 +120,21 @@ describe('Cross operations', () => {
         destination: juneChain,
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
-        value: BigInt(10_000_000_000_000)
+        value: BigInt('10000000000000')
       },
       {
         source: juneChain,
         destination: jvmChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt(100_000_000_000)
+        value: BigInt('100000000000')
       },
       {
         source: juneChain,
         destination: platformChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt(1_000_000_000_000)
+        value: BigInt('1000000000000')
       },
       {
         source: platformChain,

@@ -11,7 +11,6 @@ import {
   TransactionId
 } from '../../../src'
 
-// TODO use types.serialize().toHex() and compare to expected hex values in tests
 describe('Types', () => {
   describe('Address', () => {
     describe('Constructor', () => {
@@ -56,6 +55,16 @@ describe('Types', () => {
         }
       ])('$description: $address', ({ address, expectedError }) => {
         expect(() => new Address(address as any)).toThrow(expectedError)
+      })
+    })
+
+    describe('serialization', () => {
+      test.each([
+        { address: '0x7afbc3a061a707cef0b9b4d34be525f7b0d3d649', result: '7afbc3a061a707cef0b9b4d34be525f7b0d3d649' },
+        { address: '0xb52db2d7ec7731d386c4bbb83c6a11194c0c6d94', result: 'b52db2d7ec7731d386c4bbb83c6a11194c0c6d94' }
+      ])('Serialize: $address', ({ address, result }) => {
+        const addrInstance = new Address(address).serialize().toHex()
+        expect(addrInstance).toBe(result)
       })
     })
 
@@ -199,6 +208,22 @@ describe('Types', () => {
       })
     })
 
+    describe('serialization', () => {
+      test.each([
+        {
+          assetId: '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2',
+          result: '2sC7LPyJguMWdJztKGUa35ABj7KRh1WSNQThLWhdxhJJwGdhv2'
+        },
+        {
+          assetId: 'G3mH67ubqNAJB6txHTHFtFzH56ynrhd2ynJrUk6RjT9iBzXbK',
+          result: 'G3mH67ubqNAJB6txHTHFtFzH56ynrhd2ynJrUk6RjT9iBzXbK'
+        }
+      ])('Serialize: $assetId', ({ assetId, result }) => {
+        const assetInstance = new AssetId(assetId).serialize().toCB58()
+        expect(assetInstance).toBe(result)
+      })
+    })
+
     describe('validate', () => {
       test.each([
         {
@@ -303,6 +328,21 @@ describe('Types', () => {
     })
   })
 
+  describe('serialization', () => {
+    test.each([
+      {
+        transactionId: '2pSSuo2uiViPQT96GowYPK5wJBkddD7GqxaXK3kzn9YZHi92Eq',
+        result: '2pSSuo2uiViPQT96GowYPK5wJBkddD7GqxaXK3kzn9YZHi92Eq'
+      },
+      {
+        transactionId: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS',
+        result: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS'
+      }
+    ])('Serialize: $transactionId', ({ transactionId, result }) => {
+      expect(new TransactionId(transactionId).serialize().toCB58()).toBe(result)
+    })
+  })
+
   describe('BlockchainId', () => {
     describe('Constructor', () => {
       test.each([
@@ -361,6 +401,25 @@ describe('Types', () => {
         }
       ])('$description', ({ blockchainId, expectedError }) => {
         expect(() => new BlockchainId(blockchainId as any)).toThrow(expectedError)
+      })
+
+      describe('serialization', () => {
+        test.each([
+          {
+            blockchainId: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o',
+            result: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o'
+          },
+          {
+            blockchainId: 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN',
+            result: 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN'
+          },
+          {
+            blockchainId: 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5',
+            result: 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5'
+          }
+        ])('Serialize: $blockchainId', ({ blockchainId, result }) => {
+          expect(new BlockchainId(blockchainId).serialize().toCB58()).toBe(result)
+        })
       })
     })
   })
@@ -423,6 +482,17 @@ describe('Types', () => {
     })
   })
 
+  describe('serialization', () => {
+    test.each([
+      { nodeId: 'NodeID-3VELiL3Hp6uFjAoFZEJpjM7PvQebidBGM', result: '3VELiL3Hp6uFjAoFZEJpjM7PvQebidBGM' },
+      { nodeId: 'NodeID-6SBf3r6drpPgRyd5vmyKZgAKo7zXhHpEN', result: '6SBf3r6drpPgRyd5vmyKZgAKo7zXhHpEN' },
+      { nodeId: '3VELiL3Hp6uFjAoFZEJpjM7PvQebidBGM', result: '3VELiL3Hp6uFjAoFZEJpjM7PvQebidBGM' },
+      { nodeId: '6SBf3r6drpPgRyd5vmyKZgAKo7zXhHpEN', result: '6SBf3r6drpPgRyd5vmyKZgAKo7zXhHpEN' }
+    ])('Serialize: $nodeId', ({ nodeId, result }) => {
+      expect(new NodeId(nodeId).serialize().toCB58()).toBe(result)
+    })
+  })
+
   describe('DynamicId', () => {
     describe('Constructor', () => {
       test.each([
@@ -444,6 +514,33 @@ describe('Types', () => {
         { description: 'Undefined DynamicId', value: undefined, expectedError: JuneoTypeError }
       ])('$description', ({ value, expectedError }) => {
         expect(() => new DynamicId(value as any)).toThrow(expectedError)
+      })
+    })
+
+    describe('serialization', () => {
+      test.each([
+        {
+          description: 'Short value',
+          value: 'shortValue',
+          result: '73686f727456616c756500000000000000000000000000000000000000000000'
+        },
+        {
+          description: 'Number value',
+          value: '123456',
+          result: '3132333435360000000000000000000000000000000000000000000000000000'
+        },
+        {
+          description: 'Special characters',
+          value: '!@#$%^&*()',
+          result: '21402324255e262a282900000000000000000000000000000000000000000000'
+        },
+        {
+          description: 'Empty string',
+          value: '',
+          result: '0000000000000000000000000000000000000000000000000000000000000000'
+        }
+      ])('$description serialization', ({ value, result }) => {
+        expect(new DynamicId(value).serialize().toHex()).toBe(result)
       })
     })
   })

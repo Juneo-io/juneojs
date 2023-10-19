@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { HDNodeWallet, Wallet } from 'ethers'
 import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
 import {
   ECKeyPair,
@@ -10,16 +10,35 @@ import {
 } from '../utils'
 import * as encoding from '../utils/encoding'
 import * as bip39 from 'bip39'
-import hdKey from 'hdkey'
 import { MainNetwork } from '../network'
 
-const EVMHdPath = "m/44'/60'/0'/0/0"
-const JVMHdPath = "m/44'/9000'/0'/0/0"
+const EVMHdPath = "m/44'/60'/0'/0"
+const JVMHdPath = "m/44'/9000'/0'/0"
+
+class NodeManager {
+  mnemonic: string
+  evmHdWallet: HDNodeWallet
+  jvmHdWallet: HDNodeWallet
+
+  constructor (mnemonic: string) {
+    this.mnemonic = mnemonic
+    this.evmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', EVMHdPath)
+    this.jvmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', JVMHdPath)
+  }
+
+  deriveEVMPrivateKey (index: number): string {
+    return this.evmHdWallet.deriveChild(index).privateKey.substring(2)
+  }
+
+  deriveJVMPrivateKey (index: number): string {
+    return this.jvmHdWallet.deriveChild(index).privateKey.substring(2)
+  }
+}
 
 export class MCNWallet {
   hrp: string
   mnemonic: string | undefined
-  private hdNode: hdKey | undefined
+  private nodeManager: NodeManager | undefined
   privateKey: string | undefined
   chainsWallets = new Map<string, VMWallet>()
 
@@ -67,8 +86,8 @@ export class MCNWallet {
 
   private buildJVMWallet (chain: Blockchain): JVMWallet {
     let wallet: JVMWallet | undefined
-    if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(JVMHdPath).privateKey.toString('hex')
+    if (this.nodeManager !== undefined) {
+      const privateKey = this.nodeManager.deriveJVMPrivateKey(0)
       wallet = new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JVMWallet(this.privateKey, this.hrp, chain)
@@ -81,8 +100,9 @@ export class MCNWallet {
 
   private buildJEVMWallet (chain: Blockchain): JEVMWallet {
     let wallet: JEVMWallet | undefined
-    if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(EVMHdPath).privateKey.toString('hex')
+    if (this.nodeManager !== undefined) {
+      const privateKey = this.nodeManager.deriveEVMPrivateKey(0)
+      console.log(privateKey)
       wallet = new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       wallet = new JEVMWallet(this.privateKey, this.hrp, chain)
@@ -98,7 +118,7 @@ export class MCNWallet {
       throw new WalletError('invalid mnemonic provided')
     }
     this.mnemonic = mnemonic
-    this.hdNode = hdKey.fromMasterSeed(bip39.mnemonicToSeedSync(mnemonic))
+    this.nodeManager = new NodeManager(mnemonic)
   }
 
   static recover (data: string, hrp?: string): MCNWallet {

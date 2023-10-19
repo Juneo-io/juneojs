@@ -41,7 +41,7 @@ export class Validator implements Serializable {
   }
 }
 
-export class Secp256k1OutputOwners implements TransactionOutput {
+export class Secp256k1OutputOwners implements Serializable, TransactionOutput {
   readonly typeId: number = Secp256k1OutputOwnersTypeId
   locktime: bigint
   threshold: number

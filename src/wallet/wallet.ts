@@ -1,4 +1,4 @@
-import { HDNodeWallet, Wallet } from 'ethers'
+import { HDNodeWallet, Mnemonic, Wallet, randomBytes } from 'ethers'
 import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
 import {
   ECKeyPair,
@@ -9,7 +9,6 @@ import {
   WalletError
 } from '../utils'
 import * as encoding from '../utils/encoding'
-import * as bip39 from 'bip39'
 import { MainNetwork } from '../network'
 
 const EVMHdPath = "m/44'/60'/0'/0"
@@ -37,9 +36,9 @@ class NodeManager {
 
 export class MCNWallet {
   hrp: string
-  mnemonic: string | undefined
-  private nodeManager: NodeManager | undefined
-  privateKey: string | undefined
+  mnemonic?: string
+  private nodeManager?: NodeManager
+  privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
   private constructor (hrp: string = MainNetwork.hrp) {
@@ -114,7 +113,7 @@ export class MCNWallet {
   }
 
   private setMnemonic (mnemonic: string): void {
-    if (!bip39.validateMnemonic(mnemonic)) {
+    if (!Mnemonic.isValidMnemonic(mnemonic)) {
       throw new WalletError('invalid mnemonic provided')
     }
     this.mnemonic = mnemonic
@@ -122,7 +121,7 @@ export class MCNWallet {
   }
 
   static recover (data: string, hrp?: string): MCNWallet {
-    if (bip39.validateMnemonic(data)) {
+    if (Mnemonic.isValidMnemonic(data)) {
       const wallet: MCNWallet = new MCNWallet(hrp)
       wallet.setMnemonic(data)
       return wallet
@@ -147,7 +146,7 @@ export class MCNWallet {
       throw new WalletError('words count must be 12 or 24')
     }
     const strength: number = words === 12 ? 128 : 256
-    const mnemonic = bip39.generateMnemonic(strength)
+    const mnemonic = Mnemonic.fromEntropy(randomBytes(strength / 8)).phrase
     const wallet = MCNWallet.recover(mnemonic, hrp)
     return wallet
   }

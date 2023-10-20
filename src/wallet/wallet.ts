@@ -36,8 +36,8 @@ class NodeManager {
 
 export class MCNWallet {
   hrp: string
-  mnemonic?: string
   private nodeManager?: NodeManager
+  mnemonic?: string
   privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
@@ -65,9 +65,9 @@ export class MCNWallet {
 
   getWallets (): VMWallet[] {
     const wallets: VMWallet[] = []
-    this.chainsWallets.forEach((wallet) => {
+    for (const wallet of this.chainsWallets.values()) {
       wallets.push(wallet)
-    })
+    }
     return wallets
   }
 
@@ -84,40 +84,31 @@ export class MCNWallet {
   }
 
   private buildJVMWallet (chain: Blockchain): JVMWallet {
-    let wallet: JVMWallet | undefined
     if (this.nodeManager !== undefined) {
       const privateKey = this.nodeManager.deriveJVMPrivateKey(0)
-      wallet = new JVMWallet(privateKey, this.hrp, chain)
+      return new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
-      wallet = new JVMWallet(this.privateKey, this.hrp, chain)
+      return new JVMWallet(this.privateKey, this.hrp, chain)
     }
-    if (wallet === undefined) {
-      throw new WalletError('missing recovery data to build wallet')
-    }
-    return wallet
+    throw new WalletError('missing recovery data to build wallet')
   }
 
   private buildJEVMWallet (chain: Blockchain): JEVMWallet {
-    let wallet: JEVMWallet | undefined
     if (this.nodeManager !== undefined) {
       const privateKey = this.nodeManager.deriveEVMPrivateKey(0)
-      console.log(privateKey)
-      wallet = new JEVMWallet(privateKey, this.hrp, chain)
+      return new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
-      wallet = new JEVMWallet(this.privateKey, this.hrp, chain)
+      return new JEVMWallet(this.privateKey, this.hrp, chain)
     }
-    if (wallet === undefined) {
-      throw new WalletError('missing recovery data to build wallet')
-    }
-    return wallet
+    throw new WalletError('missing recovery data to build wallet')
   }
 
   private setMnemonic (mnemonic: string): void {
     if (!Mnemonic.isValidMnemonic(mnemonic)) {
       throw new WalletError('invalid mnemonic provided')
     }
-    this.mnemonic = mnemonic
     this.nodeManager = new NodeManager(mnemonic)
+    this.mnemonic = mnemonic
   }
 
   static recover (data: string, hrp?: string): MCNWallet {

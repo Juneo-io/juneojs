@@ -71,10 +71,16 @@ export const LocalPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   ['P'],
   jntAssets
 )
-export const LocalJVMChain: JVMBlockchain = new JVMBlockchain('JVM-Chain', '', LocalJUNEAsset, ['JVM'], jntAssets)
+export const LocalJVMChain: JVMBlockchain = new JVMBlockchain(
+  'JVM-Chain',
+  'iW34hpDXuFRv1JqjXAXzhDrmTFjgBdPjc2RShvzGe3zjfS4YF',
+  LocalJUNEAsset,
+  ['JVM'],
+  jntAssets
+)
 export const LocalJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  '',
+  'XUzaEoKMTYfXzBAf7Avj48ULpNKtp8eDqA7XsqwSaerHfSUji',
   new JEVMGasToken(LocalJUNEAsset),
   BigInt(200001),
   BigInt('0'),
@@ -84,7 +90,7 @@ export const LocalJUNEChain: JEVMBlockchain = new JEVMBlockchain(
 
 export const LocalETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain',
-  '',
+  'kYHGpm2VVjZUM7pqBesaHZRJBhHdC9QRj9Nd9VyBDzbRyGogC',
   new JEVMGasToken(LocalETH1Asset),
   BigInt(200002),
   BigInt('0'),
@@ -94,7 +100,7 @@ export const LocalETH1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'mBTC1-Chain',
-  '',
+  'fRpR8iBy97PXeugvbXpYxnLZFJn7sy6fUQs6ZNp7KU6VNDaCn',
   new JEVMGasToken(LocalMBTC1Asset),
   BigInt(200003),
   BigInt('0'),
@@ -104,7 +110,7 @@ export const LocalMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DOGE1-Chain',
-  '',
+  '2rn6KpgRBfnJ7WKhgP5JCGwAMmUs1bLnpsYLaip2dEu3nhAM4W',
   new JEVMGasToken(LocalDOGE1Asset),
   BigInt(200004),
   BigInt('0'),
@@ -114,7 +120,7 @@ export const LocalDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',
-  '',
+  'eKSKvEaeMMY6giRENQ473gDXFsEBYbPedrtv7yeJBnXNyYpmV',
   new JEVMGasToken(LocalUSDT1Asset),
   BigInt(200006),
   BigInt('0'),
@@ -124,7 +130,7 @@ export const LocalUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DAI1-Chain',
-  '',
+  '29rRiNoArirgpxui3L6YYtLJwAKkXRhEXHK75FouSAjqZwvT22',
   new JEVMGasToken(LocalDAI1Asset),
   BigInt(200007),
   BigInt('0'),
@@ -134,7 +140,7 @@ export const LocalDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalEUROC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'EUROC1-Chain',
-  '',
+  'V8FXXAUXYm7AkXrRex7jrFvQ5ZnW9EeSeRwsWEYUqECZRPq8w',
   new JEVMGasToken(LocalEUROC1Asset),
   BigInt(200008),
   BigInt('0'),
@@ -144,7 +150,7 @@ export const LocalEUROC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'LTC1-Chain',
-  '',
+  'A8h2bUcXvRhy39CwTSqfMgJr3mxSHvbk3r1opqFgSp9mj8rEA',
   new JEVMGasToken(LocalLTC1Asset),
   BigInt(200009),
   BigInt('0'),
@@ -154,7 +160,7 @@ export const LocalLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalXLM1Chain: JEVMBlockchain = new JEVMBlockchain(
   'XLM1-Chain',
-  '',
+  '2GVXieb3jVY159xE59NyjNWymzaqJsy6ARsXxBbDz4sbSeqkUh',
   new JEVMGasToken(LocalXLM1Asset),
   BigInt(200010),
   BigInt('0'),
@@ -164,7 +170,7 @@ export const LocalXLM1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'BCH1-Chain',
-  '',
+  'vdBEzHtv4chmKK9bm2utMpCWnXtGygygwSLB6GAdCVwuuFeNb',
   new JEVMGasToken(LocalBCH1Asset),
   BigInt(200011),
   BigInt('0'),
@@ -174,7 +180,7 @@ export const LocalBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
   'PAXG1-Chain',
-  '',
+  'QPQgkxtfx3QkRydNXri8LVcYKh9R3Y5Z2TnA2GbjpxVHxFuzi',
   new JEVMGasToken(LocalPAXG1Asset),
   BigInt(200012),
   BigInt('0'),
@@ -184,7 +190,7 @@ export const LocalPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'XSGD1-Chain',
-  '',
+  'T4JgH3Mso84HrNN78ytM71kdfKsxDjt27fkdTRFC6nXfwwtLQ',
   new JEVMGasToken(LocalXSGD1Asset),
   BigInt(200015),
   BigInt('0'),
@@ -194,7 +200,7 @@ export const LocalXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalETC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETC1-Chain',
-  '',
+  's4WgDnS3qmNTY9NQQWcbE1AULLgdmHjnj3fDBjBdqhMAxjtcU',
   new JEVMGasToken(LocalETC1Asset),
   BigInt(200016),
   BigInt('0'),
@@ -204,7 +210,7 @@ export const LocalETC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalR1000Chain: JEVMBlockchain = new JEVMBlockchain(
   'R1000-Chain',
-  '',
+  '2CyecVstLCni9ccdRmkuYRGYprFeQGMmbXz5XwZK4ufi3WN1bE',
   new JEVMGasToken(LocalR1000Asset),
   BigInt(200017),
   BigInt('0'),
@@ -214,7 +220,7 @@ export const LocalR1000Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const LocalR10Chain: JEVMBlockchain = new JEVMBlockchain(
   'R10-Chain',
-  '',
+  'p24EfTFS6KScKDyPu1g9o14gDVcVqu6a2yAYn2LC6X6pMod8H',
   new JEVMGasToken(LocalR10Asset),
   BigInt(200018),
   BigInt('0'),

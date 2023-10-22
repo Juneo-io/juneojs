@@ -26,7 +26,7 @@ export interface TransactionStatusFetcher {
   fetch: (timeout: number, delay: number) => Promise<string>
 }
 
-export interface UnsignedTransaction {
+export interface UnsignedTransaction extends Serializable {
   codecId: number
   typeId: number
   networkId: number
@@ -39,7 +39,7 @@ export interface UnsignedTransaction {
   signTransaction: (wallets: VMWallet[]) => JuneoBuffer
 }
 
-export abstract class AbstractBaseTransaction implements UnsignedTransaction, Serializable {
+export abstract class AbstractBaseTransaction implements UnsignedTransaction {
   codecId: number
   typeId: number
   networkId: number

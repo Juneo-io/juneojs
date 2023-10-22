@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers'
+import { HDNodeWallet, Mnemonic, Wallet, randomBytes } from 'ethers'
 import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
 import {
   ECKeyPair,
@@ -9,18 +9,36 @@ import {
   WalletError
 } from '../utils'
 import * as encoding from '../utils/encoding'
-import * as bip39 from 'bip39'
-import hdKey from 'hdkey'
 import { MainNetwork } from '../network'
 
-const EVMHdPath = "m/44'/60'/0'/0/0"
-const JVMHdPath = "m/44'/9000'/0'/0/0"
+const EVMHdPath = "m/44'/60'/0'/0"
+const JVMHdPath = "m/44'/9000'/0'/0"
+
+class NodeManager {
+  mnemonic: string
+  evmHdWallet: HDNodeWallet
+  jvmHdWallet: HDNodeWallet
+
+  constructor (mnemonic: string) {
+    this.mnemonic = mnemonic
+    this.evmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', EVMHdPath)
+    this.jvmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', JVMHdPath)
+  }
+
+  deriveEVMPrivateKey (index: number): string {
+    return this.evmHdWallet.deriveChild(index).privateKey.substring(2)
+  }
+
+  deriveJVMPrivateKey (index: number): string {
+    return this.jvmHdWallet.deriveChild(index).privateKey.substring(2)
+  }
+}
 
 export class MCNWallet {
   hrp: string
-  mnemonic: string | undefined
-  private hdNode: hdKey | undefined
-  privateKey: string | undefined
+  private nodeManager?: NodeManager
+  mnemonic?: string
+  privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
   private constructor (hrp: string = MainNetwork.hrp) {
@@ -47,9 +65,9 @@ export class MCNWallet {
 
   getWallets (): VMWallet[] {
     const wallets: VMWallet[] = []
-    this.chainsWallets.forEach((wallet) => {
+    for (const wallet of this.chainsWallets.values()) {
       wallets.push(wallet)
-    })
+    }
     return wallets
   }
 
@@ -66,43 +84,35 @@ export class MCNWallet {
   }
 
   private buildJVMWallet (chain: Blockchain): JVMWallet {
-    let wallet: JVMWallet | undefined
-    if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(JVMHdPath).privateKey.toString('hex')
-      wallet = new JVMWallet(privateKey, this.hrp, chain)
+    if (this.nodeManager !== undefined) {
+      const privateKey = this.nodeManager.deriveJVMPrivateKey(0)
+      return new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
-      wallet = new JVMWallet(this.privateKey, this.hrp, chain)
+      return new JVMWallet(this.privateKey, this.hrp, chain)
     }
-    if (wallet === undefined) {
-      throw new WalletError('missing recovery data to build wallet')
-    }
-    return wallet
+    throw new WalletError('missing recovery data to build wallet')
   }
 
   private buildJEVMWallet (chain: Blockchain): JEVMWallet {
-    let wallet: JEVMWallet | undefined
-    if (this.hdNode !== undefined) {
-      const privateKey = this.hdNode.derive(EVMHdPath).privateKey.toString('hex')
-      wallet = new JEVMWallet(privateKey, this.hrp, chain)
+    if (this.nodeManager !== undefined) {
+      const privateKey = this.nodeManager.deriveEVMPrivateKey(0)
+      return new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
-      wallet = new JEVMWallet(this.privateKey, this.hrp, chain)
+      return new JEVMWallet(this.privateKey, this.hrp, chain)
     }
-    if (wallet === undefined) {
-      throw new WalletError('missing recovery data to build wallet')
-    }
-    return wallet
+    throw new WalletError('missing recovery data to build wallet')
   }
 
   private setMnemonic (mnemonic: string): void {
-    if (!bip39.validateMnemonic(mnemonic)) {
+    if (!Mnemonic.isValidMnemonic(mnemonic)) {
       throw new WalletError('invalid mnemonic provided')
     }
+    this.nodeManager = new NodeManager(mnemonic)
     this.mnemonic = mnemonic
-    this.hdNode = hdKey.fromMasterSeed(bip39.mnemonicToSeedSync(mnemonic))
   }
 
   static recover (data: string, hrp?: string): MCNWallet {
-    if (bip39.validateMnemonic(data)) {
+    if (Mnemonic.isValidMnemonic(data)) {
       const wallet: MCNWallet = new MCNWallet(hrp)
       wallet.setMnemonic(data)
       return wallet
@@ -127,7 +137,7 @@ export class MCNWallet {
       throw new WalletError('words count must be 12 or 24')
     }
     const strength: number = words === 12 ? 128 : 256
-    const mnemonic = bip39.generateMnemonic(strength)
+    const mnemonic = Mnemonic.fromEntropy(randomBytes(strength / 8)).phrase
     const wallet = MCNWallet.recover(mnemonic, hrp)
     return wallet
   }

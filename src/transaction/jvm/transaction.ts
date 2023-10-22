@@ -1,62 +1,15 @@
-import { type JVMAPI } from '../../api/jvm'
-import { sleep } from '../../utils'
+import { JuneoBuffer } from '../../utils'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import {
-  AbstractBaseTransaction,
-  AbstractExportTransaction,
-  AbstractImportTransaction,
-  TransactionStatusFetchDelay,
-  type TransactionStatusFetcher
-} from '../transaction'
+import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
+import { type InitialState } from './operation'
 
 const BaseTransactionTypeId: number = 0x00000000
-const ExportTransactionTypeId: number = 0x00000004
+const CreateAssetTransactionTypeId: number = 0x00000001
 const ImportTransactionTypeId: number = 0x00000003
-
-export enum JVMTransactionStatus {
-  Accepted = 'Accepted',
-  Processing = 'Processing',
-  Unknown = 'Unknown',
-}
-
-export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
-  jvmApi: JVMAPI
-  private attempts: number = 0
-  transactionId: string
-  currentStatus: string = JVMTransactionStatus.Unknown
-
-  constructor (jvmApi: JVMAPI, transactionId: string) {
-    this.jvmApi = jvmApi
-    this.transactionId = transactionId
-  }
-
-  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
-    const maxAttempts: number = timeout / delay
-    this.currentStatus = JVMTransactionStatus.Processing
-    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
-      await this.jvmApi.getTx(this.transactionId).then(
-        () => {
-          this.currentStatus = JVMTransactionStatus.Accepted
-        },
-        (error) => {
-          if (error.message !== 'not found') {
-            return this.currentStatus
-          }
-        }
-      )
-      this.attempts += 1
-    }
-    return this.currentStatus
-  }
-
-  private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== JVMTransactionStatus.Unknown && this.currentStatus !== JVMTransactionStatus.Processing
-  }
-}
+const ExportTransactionTypeId: number = 0x00000004
 
 export class BaseTransaction extends AbstractBaseTransaction {
   constructor (
@@ -99,5 +52,59 @@ export class JVMImportTransaction extends AbstractImportTransaction {
     importedInputs: TransferableInput[]
   ) {
     super(ImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
+  }
+}
+
+export class CreateAssetTransaction extends AbstractBaseTransaction {
+  name: string
+  symbol: string
+  denomination: number
+  initialStates: InitialState[]
+
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    name: string,
+    symbol: string,
+    denomination: number,
+    initialStates: InitialState[]
+  ) {
+    super(CreateAssetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.name = name
+    this.symbol = symbol
+    this.denomination = denomination
+    this.initialStates = initialStates
+  }
+
+  getSignables (): Signable[] {
+    return this.inputs
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const initialStatesBytes: JuneoBuffer[] = []
+    let initialStatesBytesSize: number = 0
+    for (const state of this.initialStates) {
+      const bytes: JuneoBuffer = state.serialize()
+      initialStatesBytesSize += bytes.length
+      initialStatesBytes.push(bytes)
+    }
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + 2 + this.name.length + 2 + this.symbol.length + 1 + 4 + initialStatesBytesSize
+    )
+    buffer.write(baseTransaction)
+    buffer.writeUInt16(this.name.length)
+    buffer.writeString(this.name)
+    buffer.writeUInt16(this.symbol.length)
+    buffer.writeString(this.symbol)
+    buffer.writeUInt8(this.denomination)
+    buffer.writeUInt32(this.initialStates.length)
+    for (const bytes of initialStatesBytes) {
+      buffer.write(bytes)
+    }
+    return buffer
   }
 }

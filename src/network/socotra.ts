@@ -105,7 +105,7 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5',
   new JEVMGasToken(SocotraJUNEAsset),
   BigInt(220001),
-  BigInt(48),
+  BigInt('48000000000'),
   SocotraAddress,
   ['JUNE'],
   [SocotraWJUNEAsset, ...jrc20Assets],

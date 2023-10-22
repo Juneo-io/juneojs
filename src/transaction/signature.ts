@@ -6,12 +6,12 @@ export interface Signable {
   sign: (bytes: JuneoBuffer, wallets: VMWallet[]) => Signature[]
 }
 
-export interface TransactionCredentials {
+export interface TransactionCredentials extends Serializable {
   typeId: number
   signatures: Signature[]
 }
 
-export class Secp256k1Credentials implements TransactionCredentials, Serializable {
+export class Secp256k1Credentials implements TransactionCredentials {
   typeId: number = 0x00000009
   signatures: Signature[]
 

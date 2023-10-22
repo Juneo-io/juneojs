@@ -1,11 +1,13 @@
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
 import { type Utxo } from '../utxo'
-import { BaseTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
+import { BaseTransaction, CreateAssetTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 import { Address, BlockchainId } from '../types'
 import { type UserOutput, type TransferableOutput } from '../output'
 import { InputError } from '../../utils'
 import { TransactionFee } from '../transaction'
+import { type InitialState } from './operation'
+import { type JVMBlockchain } from '../../chain'
 
 export function buildJVMBaseTransaction (
   userInputs: UserInput[],
@@ -159,5 +161,39 @@ export function buildJVMImportTransaction (
     memo,
     new BlockchainId(sourceId),
     importedInputs
+  )
+}
+
+export function buildJVMCreateAssetTransaction (
+  utxoSet: Utxo[],
+  sendersAddresses: string[],
+  fee: bigint,
+  chain: JVMBlockchain,
+  changeAddress: string,
+  networkId: number,
+  memo: string = '',
+  name: string,
+  symbol: string,
+  denomination: number,
+  initialStates: InitialState[]
+): CreateAssetTransaction {
+  if (initialStates.length < 1) {
+    throw new InputError('initial states cannot be empty')
+  }
+  const feeData = new TransactionFee(chain, fee)
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(sendersAddresses), [
+    feeData
+  ])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, feeData, changeAddress)
+  return new CreateAssetTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
+    name,
+    symbol,
+    denomination,
+    initialStates
   )
 }

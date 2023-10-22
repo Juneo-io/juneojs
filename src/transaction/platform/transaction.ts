@@ -1,16 +1,8 @@
-import { type PlatformAPI } from '../../api/platform'
-import { JuneoBuffer } from '../../utils/bytes'
-import { sleep } from '../../utils/time'
+import { JuneoBuffer } from '../../utils'
 import { TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import {
-  AbstractBaseTransaction,
-  AbstractExportTransaction,
-  AbstractImportTransaction,
-  TransactionStatusFetchDelay,
-  type TransactionStatusFetcher
-} from '../transaction'
+import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import {
   BlockchainIdSize,
   BlockchainId,
@@ -38,50 +30,6 @@ const RemoveSupernetTransactionTypeId: number = 0x00000017
 const TransformSupernetTransactionTypeId: number = 0x00000018
 const AddPermissionlessValidatorTransactionTypeId: number = 0x00000019
 const AddPermissionlessDelegatorTransactionTypeId: number = 0x0000001a
-
-export enum PlatformTransactionStatus {
-  Committed = 'Committed',
-  Aborted = 'Aborted',
-  Processing = 'Processing',
-  Dropped = 'Dropped',
-  Unknown = 'Unknown',
-}
-
-export class PlatformTransactionStatusFetcher implements TransactionStatusFetcher {
-  platformApi: PlatformAPI
-  private attempts: number = 0
-  transactionId: string
-  currentStatus: string = PlatformTransactionStatus.Unknown
-
-  constructor (platformApi: PlatformAPI, transactionId: string) {
-    this.platformApi = platformApi
-    this.transactionId = transactionId
-  }
-
-  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
-    const maxAttempts: number = timeout / delay
-    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
-      this.currentStatus = await this.platformApi.getTxStatus(this.transactionId).then(
-        (value) => {
-          return value.status
-        },
-        () => {
-          return PlatformTransactionStatus.Unknown
-        }
-      )
-      this.attempts += 1
-    }
-    return this.currentStatus
-  }
-
-  private isCurrentStatusSettled (): boolean {
-    return (
-      this.currentStatus !== PlatformTransactionStatus.Unknown &&
-      this.currentStatus !== PlatformTransactionStatus.Processing
-    )
-  }
-}
 
 export class PlatformExportTransaction extends AbstractExportTransaction {
   constructor (

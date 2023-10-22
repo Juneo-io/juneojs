@@ -6,9 +6,9 @@ export const Secp256k1OutputTypeId: number = 0x00000007
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
-  output: TransactionOutput & Serializable
+  output: TransactionOutput
 
-  constructor (assetId: AssetId, output: TransactionOutput & Serializable) {
+  constructor (assetId: AssetId, output: TransactionOutput) {
     this.assetId = assetId
     this.output = output
   }
@@ -37,7 +37,7 @@ export class TransferableOutput implements Serializable {
     )
   }
 
-  static parseOutput (data: string | JuneoBuffer): TransactionOutput & Serializable {
+  static parseOutput (data: string | JuneoBuffer): TransactionOutput {
     const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     const typeId: number = buffer.readUInt32(0)
     if (typeId === Secp256k1OutputTypeId) {
@@ -51,20 +51,20 @@ export class TransferableOutput implements Serializable {
 export class UserOutput extends TransferableOutput {
   isChange: boolean
 
-  constructor (assetId: AssetId, output: TransactionOutput & Serializable, isChange: boolean) {
+  constructor (assetId: AssetId, output: TransactionOutput, isChange: boolean) {
     super(assetId, output)
     this.isChange = isChange
   }
 }
 
-export interface TransactionOutput {
+export interface TransactionOutput extends Serializable {
   typeId: number
   locktime: bigint
   threshold: number
   addresses: Address[]
 }
 
-export class Secp256k1Output implements TransactionOutput, Serializable {
+export class Secp256k1Output implements TransactionOutput {
   readonly typeId: number = Secp256k1OutputTypeId
   amount: bigint
   locktime: bigint

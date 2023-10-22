@@ -44,14 +44,9 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
-  input: TransactionInput & Serializable
+  input: TransactionInput
 
-  constructor (
-    transactionId: TransactionId,
-    utxoIndex: number,
-    assetId: AssetId,
-    input: TransactionInput & Serializable
-  ) {
+  constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, input: TransactionInput) {
     this.transactionId = transactionId
     this.utxoIndex = utxoIndex
     this.assetId = assetId
@@ -123,7 +118,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
     )
   }
 
-  static parseInput (data: string | JuneoBuffer): TransactionInput & Serializable {
+  static parseInput (data: string | JuneoBuffer): TransactionInput {
     const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
     const typeId: number = buffer.readUInt32(0)
     if (typeId === Secp256k1InputTypeId) {
@@ -134,14 +129,14 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   }
 }
 
-export interface TransactionInput {
+export interface TransactionInput extends Serializable {
   utxo: Utxo | undefined
   typeId: number
   amount: bigint
   addressIndices: number[]
 }
 
-export class Secp256k1Input implements TransactionInput, Serializable {
+export class Secp256k1Input implements TransactionInput {
   utxo: Utxo | undefined
   readonly typeId: number = Secp256k1InputTypeId
   amount: bigint

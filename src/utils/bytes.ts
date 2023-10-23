@@ -43,6 +43,10 @@ export class JuneoBuffer {
     this.length = size
   }
 
+  getCursor (): number {
+    return this.cursor
+  }
+
   private verifyWriteIndexes (length: number): void {
     if (this.cursor + length > this.length) {
       throw new CapacityError(`writing at ${this.cursor} with length of ${length} to capacity of ${this.length}`)

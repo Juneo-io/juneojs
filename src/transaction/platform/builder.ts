@@ -418,14 +418,35 @@ export function buildTransformSupernetTransaction (
   networkId: number,
   memo: string = ''
 ): TransformSupernetTransaction {
-  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(sendersAddresses), [
-    new TransactionFee(chain, fee)
-  ])
-  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
+  const userInput: UserInput = new UserInput(
+    assetId.assetId,
+    chain,
+    maximumSupply - initialSupply,
+    changeAddress,
+    chain
+  )
+  const inputs: TransferableInput[] = buildTransactionInputs(
+    [userInput],
+    utxoSet,
+    Address.toAddresses(sendersAddresses),
+    [new TransactionFee(chain, fee)]
+  )
+  const outputs: UserOutput[] = buildTransactionOutputs(
+    [userInput],
+    inputs,
+    new TransactionFee(chain, fee),
+    changeAddress
+  )
+  const changeOutputs: TransferableOutput[] = []
+  for (const output of outputs) {
+    if (output.isChange) {
+      changeOutputs.push(output)
+    }
+  }
   return new TransformSupernetTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs,
     inputs,
     memo,
     supernetId,

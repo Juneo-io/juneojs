@@ -169,13 +169,13 @@ export function buildJVMCreateAssetTransaction (
   sendersAddresses: string[],
   fee: bigint,
   chain: JVMBlockchain,
-  changeAddress: string,
-  networkId: number,
-  memo: string = '',
   name: string,
   symbol: string,
   denomination: number,
-  initialStates: InitialState[]
+  initialStates: InitialState[],
+  changeAddress: string,
+  networkId: number,
+  memo: string = ''
 ): CreateAssetTransaction {
   if (initialStates.length < 1) {
     throw new InputError('initial states cannot be empty')

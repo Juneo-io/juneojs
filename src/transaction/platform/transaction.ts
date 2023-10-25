@@ -479,10 +479,8 @@ export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction 
 export class TransformSupernetTransaction extends AbstractBaseTransaction {
   supernetId: SupernetId
   assetId: AssetId
-  initialSupply: bigint
-  maximumSupply: bigint
-  minConsumptionRate: bigint
-  maxConsumptionRate: bigint
+  rewardsPoolSupply: bigint
+  rewardShare: bigint
   minValidatorStake: bigint
   maxValidatorStake: bigint
   minStakeDuration: number
@@ -501,10 +499,8 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     memo: string,
     supernetId: SupernetId,
     assetId: AssetId,
-    initialSupply: bigint,
-    maximumSupply: bigint,
-    minConsumptionRate: bigint,
-    maxConsumptionRate: bigint,
+    rewardsPoolSupply: bigint,
+    rewardShare: bigint,
     minValidatorStake: bigint,
     maxValidatorStake: bigint,
     minStakeDuration: number,
@@ -518,10 +514,8 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     super(TransformSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.supernetId = supernetId
     this.assetId = assetId
-    this.initialSupply = initialSupply
-    this.maximumSupply = maximumSupply
-    this.minConsumptionRate = minConsumptionRate
-    this.maxConsumptionRate = maxConsumptionRate
+    this.rewardsPoolSupply = rewardsPoolSupply
+    this.rewardShare = rewardShare
     this.minValidatorStake = minValidatorStake
     this.maxValidatorStake = maxValidatorStake
     this.minStakeDuration = minStakeDuration
@@ -548,8 +542,6 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
         8 +
         8 +
         8 +
-        8 +
-        8 +
         4 +
         4 +
         4 +
@@ -561,15 +553,13 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     buffer.write(baseTransaction)
     buffer.write(this.supernetId.serialize())
     buffer.write(this.assetId.serialize())
-    buffer.writeUInt64(this.initialSupply)
-    buffer.writeUInt64(this.maximumSupply)
-    buffer.writeUInt64(this.minConsumptionRate)
-    buffer.writeUInt64(this.maxConsumptionRate)
+    buffer.writeUInt64(this.rewardsPoolSupply)
+    buffer.writeUInt64(this.rewardShare)
     buffer.writeUInt64(this.minValidatorStake)
     buffer.writeUInt64(this.maxValidatorStake)
-    buffer.readUInt32(this.minStakeDuration)
-    buffer.readUInt32(this.maxStakeDuration)
-    buffer.readUInt32(this.minDelegationFee)
+    buffer.writeUInt32(this.minStakeDuration)
+    buffer.writeUInt32(this.maxStakeDuration)
+    buffer.writeUInt32(this.minDelegationFee)
     buffer.writeUInt64(this.minDelegatorStake)
     buffer.writeUInt8(this.maxValidatorWeightFactor)
     buffer.writeUInt32(this.uptimeRequirement)

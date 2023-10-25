@@ -15,7 +15,7 @@ const LocalStakeConfig: StakeConfig = new StakeConfig(
 )
 const LocalAddress: string = 'http://127.0.0.1:9650'
 
-export const LocalJUNEAssetId: string = 'TkqWFm94JPFVS3DoodMrnEHnztRALDacu6yM6AhpgD3ZrSXDc'
+export const LocalJUNEAssetId: string = 'CJNB9rL9AoeL1yXhx91hL7aN6cgMUHsJJBHL5KhkJGuWDewrc'
 export const LocalETH1AssetId: string = 'nktDJbBBuDqR39T4FxVZq3UEKUGa7x99irKgbQQRxDWXUHbg4'
 export const LocalMBTC1AssetId: string = 'u2ZYLhvGCMb2a2uCJYWmokzrs5nH5AzheZtuFeAEc4ew8s1y6'
 export const LocalDOGE1AssetId: string = '2moVWus1GJhY8u758r7RkYyMDohzVYsGCeKLtnKXGeEair3xzM'
@@ -73,14 +73,14 @@ export const LocalPlatformChain: PlatformBlockchain = new PlatformBlockchain(
 )
 export const LocalJVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM-Chain',
-  'iW34hpDXuFRv1JqjXAXzhDrmTFjgBdPjc2RShvzGe3zjfS4YF',
+  '2b67xnViKRFPTLHjhaaeTFsDWbWo3q8ASS631ztvyWoc316RUL',
   LocalJUNEAsset,
   ['JVM'],
   jntAssets
 )
 export const LocalJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  'XUzaEoKMTYfXzBAf7Avj48ULpNKtp8eDqA7XsqwSaerHfSUji',
+  '2rwGLc5X9zRricpnnHyQnT56ytfBVKG1h2QFnGJGYz85xy38aE',
   new JEVMGasToken(LocalJUNEAsset),
   BigInt(200001),
   BigInt('0'),

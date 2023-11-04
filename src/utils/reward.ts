@@ -7,24 +7,34 @@ const TargetReward: bigint = BigInt(6_7000) // 6.7%
 
 const MaxPeriodBonusReward: bigint = BigInt(2_0000) // 2%
 const PrecisionConstant: bigint = BigInt(1_000_000)
+const MinStakePeriod: bigint = BigInt(86_400)
 const MaxStakePeriod: bigint = BigInt(31_536_000)
 
 // used for non Primary supernet rewards
 export function calculate (targetReward: bigint, stakePeriod: bigint, stakeAmount: bigint): bigint {
-  const stakePeriodRatio: bigint = (stakePeriod * PrecisionConstant) / MaxStakePeriod
-  const periodBonusReward: bigint = (stakePeriodRatio * MaxPeriodBonusReward) / PrecisionConstant
+  const periodBonusReward: bigint = getStakePeriodBonusReward(stakePeriod)
   const rewardPercentage: bigint = targetReward + periodBonusReward
-  return (stakeAmount * rewardPercentage) / PrecisionConstant
+  const stakePeriodRatio: bigint = (stakePeriod * PrecisionConstant) / MaxStakePeriod
+  const effectiveRewardPercentage: bigint = (rewardPercentage * stakePeriodRatio) / PrecisionConstant
+  return (stakeAmount * effectiveRewardPercentage) / PrecisionConstant
 }
 
 export function calculatePrimary (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
+  const periodBonusReward: bigint = getStakePeriodBonusReward(stakePeriod)
+  const rewardPercentage: bigint = getCurrentPrimaryReward(currentTime) + periodBonusReward
   const stakePeriodRatio: bigint = (stakePeriod * PrecisionConstant) / MaxStakePeriod
-  const periodBonusReward: bigint = (stakePeriodRatio * MaxPeriodBonusReward) / PrecisionConstant
-  const rewardPercentage: bigint = getTimeReward(currentTime) + periodBonusReward
-  return (stakeAmount * rewardPercentage) / PrecisionConstant
+  const effectiveRewardPercentage: bigint = (rewardPercentage * stakePeriodRatio) / PrecisionConstant
+  return (stakeAmount * effectiveRewardPercentage) / PrecisionConstant
 }
 
-function getTimeReward (currentTime: bigint): bigint {
+function getStakePeriodBonusReward (stakePeriod: bigint): bigint {
+  const adjustedStakePeriod: bigint = (stakePeriod - MinStakePeriod) * PrecisionConstant
+  const adjustedMaxStakePeriod: bigint = MaxStakePeriod - MinStakePeriod
+  const adjustedStakePeriodRatio: bigint = adjustedStakePeriod / adjustedMaxStakePeriod
+  return (adjustedStakePeriodRatio * MaxPeriodBonusReward) / PrecisionConstant
+}
+
+function getCurrentPrimaryReward (currentTime: bigint): bigint {
   if (currentTime >= TargetRewardYear) {
     return TargetReward
   }
@@ -47,14 +57,6 @@ function getTimeReward (currentTime: bigint): bigint {
 }
 
 function getRewardPercentage (lowerReward: bigint, upperReward: bigint, remainingTimeBoundsPercentage: bigint): bigint {
-  // reached target reward year or before start year
-  if (lowerReward === upperReward) {
-    return lowerReward
-  }
-  // reached reward epoch bounds
-  if (remainingTimeBoundsPercentage === BigInt(0)) {
-    return lowerReward
-  }
   const diminishingPercentage: bigint = upperReward - lowerReward
   const remainingPercentage: bigint = (diminishingPercentage * remainingTimeBoundsPercentage) / PrecisionConstant
   return remainingPercentage + lowerReward

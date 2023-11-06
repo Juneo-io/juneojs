@@ -1,4 +1,3 @@
-import { describe, expect, test } from '@jest/globals'
 import { calculate, calculatePrimary } from '../../../src'
 
 describe('Reward Calculation Tests', () => {

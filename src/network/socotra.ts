@@ -5,7 +5,7 @@ import { PrimarySupernet, StakeConfig, MCN } from './network'
 const SocotraNetworkId: number = 2
 const SocotraHrp: string = 'socotra'
 const SocotraStakeConfig: StakeConfig = new StakeConfig(
-  // 80%, 1, 100000, 0.01, 1 day, 365 days
+  // 80%, 1, 1_000_000, 0.01, 1 day, 365 days
   0.8,
   BigInt(1_000000000),
   BigInt(1_000_000_000000000),
@@ -111,7 +111,6 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   [SocotraWJUNEAsset, ...jrc20Assets],
   jrc20Assets
 )
-
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain',
   'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN',

@@ -1,10 +1,6 @@
 import { type Blockchain, type PlatformBlockchain, type JVMBlockchain } from '../chain'
 import { SocotraNetwork } from './socotra'
 
-export const TestNetwork: MCN = SocotraNetwork
-// TODO Update when mainnet is online
-export const MainNetwork: MCN = TestNetwork
-
 export class MCN {
   address: string
   id: number

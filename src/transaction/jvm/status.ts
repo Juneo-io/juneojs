@@ -30,7 +30,7 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
         },
         (error) => {
           if (error.message !== 'not found') {
-            return this.currentStatus
+            this.currentStatus = JVMTransactionStatus.Unknown
           }
         }
       )

@@ -23,14 +23,17 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
 
   async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
     const maxAttempts: number = timeout / delay
+    this.currentStatus = PlatformTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = await this.platformApi.getTxStatus(this.transactionId).then(
+      await this.platformApi.getTxStatus(this.transactionId).then(
         (value) => {
-          return value.status
+          this.currentStatus = value.status
         },
-        () => {
-          return PlatformTransactionStatus.Unknown
+        (error) => {
+          if (error.message !== 'not found') {
+            this.currentStatus = PlatformTransactionStatus.Unknown
+          }
         }
       )
       this.attempts += 1

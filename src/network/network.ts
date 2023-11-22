@@ -1,4 +1,5 @@
 import { type Blockchain, type PlatformBlockchain, type JVMBlockchain } from '../chain'
+import { SocotraNetwork } from './socotra'
 
 export class MCN {
   address: string

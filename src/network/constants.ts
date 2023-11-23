@@ -1,5 +1,5 @@
-import { MCN } from "./network"
-import { SocotraNetwork } from "./socotra"
+import { type MCN } from './network'
+import { SocotraNetwork } from './socotra'
 
 export const TestNetwork: MCN = SocotraNetwork
 // TODO Update when mainnet is online

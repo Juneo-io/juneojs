@@ -66,7 +66,7 @@ export const Socotra2JVMChain: JVMBlockchain = new JVMBlockchain(
 const jrc20Assets: JRC20Asset[] = []
 export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  '1CnBvoVHKF235NjRFP7J1qZRkrPZrjBCYX6KN6k5FvFTno6eG',
+  'nnbDXwoU6GBusCfGU5Etr5NDAtsHq8ndYsbsW3mBE87g9kULP',
   new JEVMGasToken(Socotra2JUNEAsset),
   BigInt(101003),
   BigInt('48000000000'),

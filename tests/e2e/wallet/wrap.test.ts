@@ -11,18 +11,19 @@ import {
   NetworkOperationRange,
   NetworkOperationType,
   SocotraNetwork,
-  AmountError
+  AmountError,
+  JuneoClient
 } from '../../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
 describe('Wrapping operations', () => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
+  const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse("http://172.232.42.69:9650"))
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
-  const DEFAULT_TIMEOUT: number = 30_000
+  const DEFAULT_TIMEOUT: number = 60_000
   const juneChain = SocotraJUNEChain
   const wJuneAsset = SocotraWJUNEAsset
 

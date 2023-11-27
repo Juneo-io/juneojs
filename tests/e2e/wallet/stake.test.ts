@@ -13,15 +13,16 @@ import {
   type ChainAccount,
   type ExecutableOperation,
   now,
-  SocotraNetwork
+  SocotraNetwork,
+  JuneoClient
 } from '../../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-const DEFAULT_TIMEOUT: number = 30_000
+const DEFAULT_TIMEOUT: number = 60_000
 const ONE_DAY: bigint = BigInt(86_400)
 
-const provider: MCNProvider = new MCNProvider(SocotraNetwork)
+const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse("http://172.232.42.69:9650"))
 const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'

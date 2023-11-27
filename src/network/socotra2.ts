@@ -1,6 +1,7 @@
 import { JNTAsset, type JRC20Asset, JEVMGasToken } from '../asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
 import { PrimarySupernet, StakeConfig, MCN } from './network'
+import { SocotraJUNEChain } from './socotra'
 
 const Socotra2NetworkId: number = 46
 const Socotra2Hrp: string = 'socotra'
@@ -13,7 +14,7 @@ const Socotra2StakeConfig: StakeConfig = new StakeConfig(
   BigInt(14 * 24 * 3600),
   BigInt(365 * 24 * 3600)
 )
-const Socotra2Address: string = 'http://172.232.157.50:9650'
+const Socotra2Address: string = 'https://api.socotra-testnet.network:9650'
 
 export const Socotra2JUNEAssetId: string = 'HviVNFzh2nCqyi7bQxw6pt5fUPjZC8r3DCDrt7mRmScZS2zp5'
 export const Socotra2USDT1AssetId: string = 'Ld5aCozSMQ1hC5jdXS3mhGNgoYVjVDe8zPTtPSbs4xS5JQSfJ'
@@ -170,7 +171,8 @@ export const Socotra2PrimarySupernet: PrimarySupernet = new PrimarySupernet(
   '11111111111111111111111111111111LpoYY',
   [Socotra2PlatformChain, Socotra2JVMChain, Socotra2JUNEChain],
   Socotra2PlatformChain,
-  Socotra2JVMChain
+  Socotra2JVMChain,
+  SocotraJUNEChain
 )
 
 export const Socotra2Network: MCN = new MCN(

@@ -8,6 +8,7 @@ export class MCNProvider {
   info: InfoAPI
   platform: PlatformAPI
   jvm: JVMAPI
+  june: JEVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
   constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
@@ -16,9 +17,14 @@ export class MCNProvider {
     this.info = new InfoAPI(client)
     this.platform = new PlatformAPI(client, this.mcn.primary.platform)
     this.jvm = new JVMAPI(client, this.mcn.primary.jvm)
+    this.june = new JEVMAPI(client, this.mcn.primary.june)
+    this.jevm[this.mcn.primary.june.id] = this.june
     for (const supernet of this.mcn.supernets) {
       for (const chain of supernet.chains) {
-        if (chain.vmId === JEVM_ID) {
+        if (chain.vmId !== JEVM_ID) {
+          continue
+        }
+        if (chain.id !== this.mcn.primary.june.id) {
           this.jevm[chain.id] = new JEVMAPI(client, chain as JEVMBlockchain)
         }
       }

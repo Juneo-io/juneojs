@@ -1,7 +1,6 @@
 import { JNTAsset, type JRC20Asset, JEVMGasToken } from '../asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
 import { PrimarySupernet, StakeConfig, MCN } from './network'
-import { SocotraJUNEChain } from './socotra'
 
 const Socotra2NetworkId: number = 46
 const Socotra2Hrp: string = 'socotra'
@@ -172,7 +171,7 @@ export const Socotra2PrimarySupernet: PrimarySupernet = new PrimarySupernet(
   [Socotra2PlatformChain, Socotra2JVMChain, Socotra2JUNEChain],
   Socotra2PlatformChain,
   Socotra2JVMChain,
-  SocotraJUNEChain
+  Socotra2JUNEChain
 )
 
 export const Socotra2Network: MCN = new MCN(

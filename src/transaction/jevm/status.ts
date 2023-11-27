@@ -24,12 +24,14 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await sleep(delay)
-      this.currentStatus = await this.jevmApi.getTxStatus(this.transactionId).then(
+      await this.jevmApi.getTxStatus(this.transactionId).then(
         (value) => {
-          return value.status
+          this.currentStatus = value.status
         },
-        () => {
-          return JEVMTransactionStatus.Unknown
+        (error) => {
+          if (error.message !== 'not found') {
+            this.currentStatus = JEVMTransactionStatus.Unknown
+          }
         }
       )
       this.attempts += 1

@@ -251,7 +251,8 @@ export const LocalPrimarySupernet: PrimarySupernet = new PrimarySupernet(
     LocalR10Chain
   ],
   LocalPlatformChain,
-  LocalJVMChain
+  LocalJVMChain,
+  LocalJUNEChain
 )
 
 export const LocalNetwork: MCN = new MCN(LocalAddress, LocalNetworkId, LocalHrp, LocalStakeConfig, LocalPrimarySupernet)

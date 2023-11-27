@@ -1,4 +1,4 @@
-import { type Blockchain, type PlatformBlockchain, type JVMBlockchain } from '../chain'
+import { type Blockchain, type PlatformBlockchain, type JVMBlockchain, type JEVMBlockchain } from '../chain'
 
 export class MCN {
   address: string
@@ -82,10 +82,18 @@ export class Supernet {
 export class PrimarySupernet extends Supernet {
   platform: PlatformBlockchain
   jvm: JVMBlockchain
+  june: JEVMBlockchain
 
-  constructor (id: string, chains: Blockchain[], platform: PlatformBlockchain, jvm: JVMBlockchain) {
+  constructor (
+    id: string,
+    chains: Blockchain[],
+    platform: PlatformBlockchain,
+    jvm: JVMBlockchain,
+    june: JEVMBlockchain
+  ) {
     super(id, chains)
     this.platform = platform
     this.jvm = jvm
+    this.june = june
   }
 }

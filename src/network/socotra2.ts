@@ -13,7 +13,7 @@ const Socotra2StakeConfig: StakeConfig = new StakeConfig(
   BigInt(14 * 24 * 3600),
   BigInt(365 * 24 * 3600)
 )
-const Socotra2Address: string = 'https://api.socotra-testnet.network:9650'
+const Socotra2Address: string = 'https://api.socotra-testnet.network'
 
 export const Socotra2JUNEAssetId: string = 'HviVNFzh2nCqyi7bQxw6pt5fUPjZC8r3DCDrt7mRmScZS2zp5'
 export const Socotra2USDT1AssetId: string = 'Ld5aCozSMQ1hC5jdXS3mhGNgoYVjVDe8zPTtPSbs4xS5JQSfJ'

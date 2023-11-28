@@ -1,4 +1,4 @@
-import { JNTAsset, type JRC20Asset, JEVMGasToken } from '../asset'
+import { JNTAsset, type JRC20Asset, JEVMGasToken, WrappedAsset } from '../asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
 import { PrimarySupernet, StakeConfig, MCN } from './network'
 
@@ -64,6 +64,12 @@ export const Socotra2JVMChain: JVMBlockchain = new JVMBlockchain(
   jntAssets
 )
 const jrc20Assets: JRC20Asset[] = []
+export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
+  '0xC984ae20d0Fed3B974959BCbd1721167214CDeD9',
+  'Wrapped JUNE',
+  'wJUNE',
+  18
+)
 export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
   'nnbDXwoU6GBusCfGU5Etr5NDAtsHq8ndYsbsW3mBE87g9kULP',
@@ -72,7 +78,7 @@ export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   BigInt('48000000000'),
   Socotra2Address,
   ['JUNE'],
-  [...jrc20Assets],
+  [Socotra2WJUNEAsset, ...jrc20Assets],
   jrc20Assets
 )
 export const Socotra2USDT1Chain: JEVMBlockchain = new JEVMBlockchain(

@@ -1,6 +1,6 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI, type JVMAPI } from '../api'
-import { type MCNWallet, type VMWallet } from './wallet'
+import { type JEVMWallet, type MCNWallet, type VMWallet } from './wallet'
 import {
   FeeType,
   type EVMFeeData,
@@ -45,7 +45,7 @@ export class SendManager {
       feeData = await this.estimateSendEVM(chainId, assetId, amount, address)
     }
     const api: JEVMAPI = this.provider.jevm[chainId]
-    const wallet: ethers.Wallet = this.wallet.getJEVMWallet(api.chain).evmWallet
+    const wallet: JEVMWallet = this.wallet.getJEVMWallet(api.chain)
     return await sendEVMTransaction(api, wallet, feeData)
   }
 

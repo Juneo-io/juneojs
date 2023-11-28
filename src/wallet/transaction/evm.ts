@@ -10,7 +10,8 @@ import {
   AtomicDenomination,
   calculateAtomicCost,
   estimateAtomicExportGas,
-  estimateAtomicImportGas
+  estimateAtomicImportGas,
+  TransactionError
 } from '../../utils'
 import {
   type JEVMExportTransaction,
@@ -21,7 +22,7 @@ import {
   buildJEVMImportTransaction,
   fetchUtxos
 } from '../../transaction'
-import { type VMWallet, type MCNWallet } from '../wallet'
+import { type VMWallet, type MCNWallet, type JEVMWallet } from '../wallet'
 import { type JRC20Asset } from '../../asset'
 import { type MCNProvider } from '../../juneo'
 
@@ -30,6 +31,8 @@ const DefaultUnwrapEstimate: bigint = BigInt(45_000)
 const DefaultTransferEstimate: bigint = BigInt(200_000)
 const DefaultWithdrawEstimate: bigint = BigInt(100_000)
 const DefaultDepositEstimate: bigint = BigInt(100_000)
+
+const MaxInvalidNonceAttempts: number = 5
 
 export class EVMTransactionData {
   from: string
@@ -63,6 +66,17 @@ export class EVMFeeData extends BaseFeeData {
     this.gasLimit = gasLimit
     this.data = data
   }
+}
+
+export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchronize: boolean): Promise<bigint> {
+  if (synchronize || !wallet.synchronized) {
+    wallet.synchronized = true
+    // In the future may set unsync if error occurs in sync process.
+    // Verify that it would not negatively impact any other logics before.
+    // Not doing it now because of doubt it could fail somewhere else.
+    return await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
+  }
+  return wallet.nonce++
 }
 
 export async function estimateEVMGasPrice (api: JEVMAPI): Promise<bigint> {
@@ -112,9 +126,13 @@ export async function estimateEVMCall (
 ): Promise<EVMFeeData> {
   const gasPrice: bigint = await estimateEVMGasPrice(api)
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
+    blockTag: 'pending',
     from,
     to,
     value,
+    // TODO Add it as parameter
+    // Warning to not use getWalletNonce() as it increments cached nonce.
+    // nonce: Number(nonce),
     chainId: api.chain.chainId,
     gasPrice,
     data
@@ -123,19 +141,33 @@ export async function estimateEVMCall (
   return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
 }
 
-export async function sendEVMTransaction (api: JEVMAPI, wallet: ethers.Wallet, feeData: EVMFeeData): Promise<string> {
-  const nonce: bigint = await api.eth_getTransactionCount(wallet.address, 'pending')
-  const transaction: string = await wallet.signTransaction({
+export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {
+  const unsignedTransaction: ethers.TransactionRequest = {
     from: wallet.address,
     to: feeData.data.to,
     value: feeData.data.value,
-    nonce: Number(nonce),
+    nonce: Number(await getWalletNonce(wallet, api, false)),
     chainId: api.chain.chainId,
     gasLimit: feeData.gasLimit,
     gasPrice: feeData.gasPrice,
     data: feeData.data.data
-  })
-  return await api.eth_sendRawTransaction(transaction)
+  }
+  for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
+    const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
+    const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
+      if ((error.message as string).includes('nonce')) {
+        return undefined
+      }
+      // Non nonce related error decrement nonce to avoid resyncing later.
+      wallet.nonce--
+      throw error
+    })
+    if (typeof transactionId === 'string') {
+      return transactionId
+    }
+    unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
+  }
+  throw new TransactionError('could not provide a valid nonce')
 }
 
 export async function estimateEVMWrapOperation (

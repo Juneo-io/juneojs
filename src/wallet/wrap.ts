@@ -1,6 +1,5 @@
-import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
-import { type MCNWallet } from './wallet'
+import { type JEVMWallet, type MCNWallet } from './wallet'
 import { type JEVMBlockchain } from '../chain'
 import { type EVMFeeData, FeeType, estimateEVMCall, sendEVMTransaction } from './transaction'
 import { type WrappedAsset } from '../asset'
@@ -9,22 +8,22 @@ import { AmountError } from '../utils'
 
 export class WrapManager {
   private readonly api: JEVMAPI
-  private readonly wallet: ethers.Wallet
+  private readonly wallet: JEVMWallet
 
-  constructor (api: JEVMAPI, wallet: ethers.Wallet) {
+  constructor (api: JEVMAPI, wallet: JEVMWallet) {
     this.api = api
     this.wallet = wallet
   }
 
   static from (provider: MCNProvider, wallet: MCNWallet, chain: JEVMBlockchain): WrapManager {
     const api: JEVMAPI = provider.jevm[chain.id]
-    return new WrapManager(api, wallet.getJEVMWallet(api.chain).evmWallet)
+    return new WrapManager(api, wallet.getJEVMWallet(api.chain))
   }
 
   async estimateWrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMCall(
       this.api,
-      this.wallet.address,
+      this.wallet.getAddress(),
       asset.address,
       BigInt(amount),
       asset.adapter.getDepositData(),
@@ -35,7 +34,7 @@ export class WrapManager {
   async estimateUnwrapFee (asset: WrappedAsset, amount: bigint): Promise<EVMFeeData> {
     return await estimateEVMCall(
       this.api,
-      this.wallet.address,
+      this.wallet.getAddress(),
       asset.address,
       BigInt(0),
       asset.adapter.getWithdrawData(amount),

@@ -168,7 +168,20 @@ export const Socotra2LTC1Chain: JEVMBlockchain = new JEVMBlockchain(
 
 export const Socotra2PrimarySupernet: PrimarySupernet = new PrimarySupernet(
   '11111111111111111111111111111111LpoYY',
-  [Socotra2PlatformChain, Socotra2JVMChain, Socotra2JUNEChain],
+  [
+    Socotra2PlatformChain,
+    Socotra2JVMChain,
+    Socotra2JUNEChain,
+    Socotra2USDT1Chain,
+    Socotra2USD1Chain,
+    Socotra2DAI1Chain,
+    Socotra2EUR1Chain,
+    Socotra2SGD1Chain,
+    Socotra2GLD1Chain,
+    Socotra2MBTC1Chain,
+    Socotra2DOGE1Chain,
+    Socotra2LTC1Chain
+  ],
   Socotra2PlatformChain,
   Socotra2JVMChain,
   Socotra2JUNEChain

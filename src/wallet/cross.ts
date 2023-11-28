@@ -366,7 +366,7 @@ export class CrossManager {
       const api: JEVMAPI = this.provider.jevm[juneChain.id]
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
-      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
+      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
@@ -458,7 +458,7 @@ export class CrossManager {
       const api: JEVMAPI = this.provider.jevm[juneChain.id]
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = lastFee as EVMFeeData
-      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet.evmWallet, feeData)
+      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
@@ -609,7 +609,7 @@ export class CrossManager {
     const operation: DepositResumeOperation = summary.operation
     const fee: EVMFeeData = summary.fee
     const api: JEVMAPI = this.provider.jevm[operation.chain.id]
-    const transactionHash: string = await sendEVMTransaction(api, account.chainWallet.evmWallet, fee)
+    const transactionHash: string = await sendEVMTransaction(api, account.chainWallet, fee)
     const success: boolean = await summary
       .getExecutable()
       .addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)

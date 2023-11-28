@@ -199,6 +199,8 @@ export class JVMWallet extends AbstractVMWallet {
 
 export class JEVMWallet extends AbstractVMWallet {
   evmWallet: Wallet
+  nonce: bigint = BigInt(0)
+  synchronized: boolean = false
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)

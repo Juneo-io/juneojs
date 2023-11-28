@@ -36,7 +36,7 @@ export class EVMAccount extends AbstractChainAccount {
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
     this.chainWallet = this.wallet.getJEVMWallet(this.chain)
-    this.wrapManager = new WrapManager(this.api, this.chainWallet.evmWallet)
+    this.wrapManager = new WrapManager(this.api, this.chainWallet)
     this.sendManager = new SendManager(provider, wallet)
   }
 

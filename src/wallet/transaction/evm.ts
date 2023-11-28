@@ -11,7 +11,8 @@ import {
   calculateAtomicCost,
   estimateAtomicExportGas,
   estimateAtomicImportGas,
-  TransactionError
+  TransactionError,
+  sleep
 } from '../../utils'
 import {
   type JEVMExportTransaction,
@@ -165,6 +166,7 @@ export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeD
     if (typeof transactionId === 'string') {
       return transactionId
     }
+    await sleep(1000)
     unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
   }
   throw new TransactionError('could not provide a valid nonce')
@@ -309,17 +311,39 @@ export async function sendEVMExportTransaction (
   // fee is also gas token
   const feeAmount: bigint = fee.amount / AtomicDenomination
   const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
-  const nonce: bigint = await api.eth_getTransactionCount(wallet.getAddress(api.chain), 'pending')
-  const transaction: JEVMExportTransaction = buildJEVMExportTransaction(
-    [new UserInput(assetId, api.chain, amount, address, destination)],
-    wallet.getAddress(api.chain),
-    nonce,
-    exportAddress,
-    feeAmount,
-    sendImportFee ? importFee : BigInt(0),
-    provider.mcn.id
-  )
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  const evmWallet: JEVMWallet = wallet.getJEVMWallet(api.chain)
+  let nonce: bigint = await getWalletNonce(evmWallet, api, false)
+  for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
+    const unsignedTransaction: JEVMExportTransaction = buildJEVMExportTransaction(
+      [new UserInput(assetId, api.chain, amount, address, destination)],
+      wallet.getAddress(api.chain),
+      nonce,
+      exportAddress,
+      feeAmount,
+      sendImportFee ? importFee : BigInt(0),
+      provider.mcn.id
+    )
+    const transaction: string = unsignedTransaction.signTransaction([wallet.getWallet(api.chain)]).toCHex()
+    const transactionId: string | undefined = await api
+      .issueTx(transaction)
+      .then((response) => {
+        return response.txID
+      })
+      .catch((error) => {
+        if ((error.message as string).includes('nonce')) {
+          return undefined
+        }
+        // Non nonce related error decrement nonce to avoid resyncing later.
+        evmWallet.nonce--
+        throw error
+      })
+    if (typeof transactionId === 'string') {
+      return transactionId
+    }
+    await sleep(1000)
+    nonce = await getWalletNonce(evmWallet, api, true)
+  }
+  throw new TransactionError('could not provide a valid nonce')
 }
 
 export async function estimateEVMImportTransaction (

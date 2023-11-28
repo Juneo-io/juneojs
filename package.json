@@ -1,6 +1,6 @@
 {
   "name": "juneojs",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
     "@jest/globals": "29.7.0",
     "@types/jest": "29.5.10",
     "@types/node": "20.10.0",
-    "@typescript-eslint/eslint-plugin": "6.12.0",
+    "@typescript-eslint/eslint-plugin": "6.13.1",
     "eslint": "8.54.0",
     "eslint-config-prettier": "9.0.0",
     "eslint-config-standard-with-typescript": "40.0.0",

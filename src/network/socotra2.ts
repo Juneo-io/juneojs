@@ -1,4 +1,4 @@
-import { JNTAsset, type JRC20Asset, JEVMGasToken, WrappedAsset } from '../asset'
+import { JNTAsset, JRC20Asset, JEVMGasToken, WrappedAsset } from '../asset'
 import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
 import { PrimarySupernet, StakeConfig, MCN } from './network'
 
@@ -63,7 +63,17 @@ export const Socotra2JVMChain: JVMBlockchain = new JVMBlockchain(
   ['JVM'],
   jntAssets
 )
-const jrc20Assets: JRC20Asset[] = []
+const jrc20Assets: JRC20Asset[] = [
+  new JRC20Asset('0x2d00000000000000000000000000000000000000', 'USDT.e', 'USDT.e', 9, Socotra2USDT1AssetId),
+  new JRC20Asset('0x2e00000000000000000000000000000000000000', 'USD1.e', 'USD1.e', 9, Socotra2USD1AssetId),
+  new JRC20Asset('0x2f00000000000000000000000000000000000000', 'DAI.e', 'DAI.e', 9, Socotra2DAI1AssetId),
+  new JRC20Asset('0x3000000000000000000000000000000000000000', 'EUR1.e', 'EUR1.e', 9, Socotra2EUR1AssetId),
+  new JRC20Asset('0x3100000000000000000000000000000000000000', 'SGD1.e', 'SGD1.e', 9, Socotra2SGD1AssetId),
+  new JRC20Asset('0x3200000000000000000000000000000000000000', 'GLD1.e', 'GLD1.e', 9, Socotra2GLD1AssetId),
+  new JRC20Asset('0x3300000000000000000000000000000000000000', 'mBTC.a', 'mBTC.a', 9, Socotra2MBTC1AssetId),
+  new JRC20Asset('0x3400000000000000000000000000000000000000', 'DOGE.b', 'DOGE.b', 9, Socotra2DOGE1AssetId),
+  new JRC20Asset('0x3500000000000000000000000000000000000000', 'LTC.b', 'LTC.b', 9, Socotra2LTC1AssetId)
+]
 export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
   '0xC984ae20d0Fed3B974959BCbd1721167214CDeD9',
   'Wrapped JUNE',

@@ -82,7 +82,7 @@ export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
 )
 export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  'nnbDXwoU6GBusCfGU5Etr5NDAtsHq8ndYsbsW3mBE87g9kULP',
+  'ieJEHSN4hCt74dafPvZSwoe9Fa12fmF4Ze496V63VM2DgKtRJ',
   new JEVMGasToken(Socotra2JUNEAsset),
   BigInt(101003),
   BigInt('48000000000'),

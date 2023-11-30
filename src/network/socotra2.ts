@@ -75,7 +75,7 @@ const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x3500000000000000000000000000000000000000', 'LTC.b', 'LTC.b', 9, Socotra2LTC1AssetId)
 ]
 export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
-  '0xC984ae20d0Fed3B974959BCbd1721167214CDeD9',
+  '0xDce22197228e8Ae74bC9D07539A29Ea9F6DE372a',
   'Wrapped JUNE',
   'wJUNE',
   18

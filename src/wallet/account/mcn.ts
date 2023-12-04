@@ -24,7 +24,6 @@ import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { SocotraJUNEChain } from '../../network'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
@@ -63,7 +62,7 @@ export class MCNAccount {
   }
 
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {
-    return await this.crossManager.fetchUnfinishedDepositOperations(SocotraJUNEChain)
+    return await this.crossManager.fetchUnfinishedDepositOperations()
   }
 
   async fetchUnfinishedCrossOperations (): Promise<CrossResumeOperation[]> {

@@ -168,7 +168,7 @@ export class BLSPublicKey extends BytesData {
 
   constructor (publicKey: string) {
     validateData(publicKey)
-    const buffer: JuneoBuffer = encoding.decodeCHex(publicKey)
+    const buffer: JuneoBuffer = encoding.decodeHex(publicKey)
     if (buffer.length !== BLSPublicKeySize) {
       throw new JuneoTypeError(`bls public key is not ${BLSPublicKeySize} bytes long`)
     }
@@ -182,7 +182,7 @@ export class BLSSignature extends BytesData {
 
   constructor (signature: string) {
     validateData(signature)
-    const buffer: JuneoBuffer = encoding.decodeCHex(signature)
+    const buffer: JuneoBuffer = encoding.decodeHex(signature)
     if (buffer.length !== BLSSignatureSize) {
       throw new JuneoTypeError(`bls signature is not ${BLSSignatureSize} bytes long`)
     }

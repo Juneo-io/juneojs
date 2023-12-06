@@ -27,6 +27,7 @@ const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
 const ExportTransactionTypeId: number = 0x00000012
 const RemoveSupernetTransactionTypeId: number = 0x00000017
+const TransferSupernetOwnershipTransactionTypeId: number = 0x00000021
 const TransformSupernetTransactionTypeId: number = 0x00000018
 const AddPermissionlessValidatorTransactionTypeId: number = 0x00000019
 const AddPermissionlessDelegatorTransactionTypeId: number = 0x0000001a
@@ -433,6 +434,46 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     buffer.writeUInt32(this.genesisData.length)
     buffer.writeString(this.genesisData)
     buffer.write(supernetAuthBytes)
+    return buffer
+  }
+}
+
+export class TransferSupernetOwnershipTransaction extends AbstractBaseTransaction {
+  supernetId: SupernetId
+  supernetAuth: SupernetAuth
+  owner: Secp256k1OutputOwners
+
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    supernetId: SupernetId,
+    supernetAuth: SupernetAuth,
+    owner: Secp256k1OutputOwners
+  ) {
+    super(TransferSupernetOwnershipTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.supernetId = supernetId
+    this.supernetAuth = supernetAuth
+    this.owner = owner
+  }
+
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const ownerBytes: JuneoBuffer = this.owner.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + SupernetIdSize + supernetAuthBytes.length + ownerBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.supernetId.serialize())
+    buffer.write(supernetAuthBytes)
+    buffer.write(ownerBytes)
     return buffer
   }
 }

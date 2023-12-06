@@ -520,7 +520,7 @@ export function buildAddPermissionlessValidatorTransaction (
   return new AddPermissionlessValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,
@@ -584,7 +584,7 @@ export function buildAddPermissionlessDelegatorTransaction (
   return new AddPermissionlessDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,

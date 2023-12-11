@@ -551,7 +551,7 @@ describe('Types', () => {
         {
           description: 'Invalid size',
           publicKey: 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3',
-          expectedError: DecodingError
+          expectedError: JuneoTypeError
         },
         {
           description: 'Null BLSPublicKey',
@@ -585,7 +585,7 @@ describe('Types', () => {
         {
           description: 'Invalid size',
           signature: 'e330cdf5219b896d0a3383d3da8c7d23b0608cbc37ca77dee37bfbd0b379f3',
-          expectedError: DecodingError
+          expectedError: JuneoTypeError
         },
         {
           description: 'Null BLSSignature',

@@ -3,8 +3,6 @@ import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
 import { Signature, recoverPublicKey, getPublicKey, signSync } from '@noble/secp256k1'
 import { JuneoBuffer } from './bytes'
 
-export const SignatureLength: number = 65
-
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
   const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
   return JuneoBuffer.fromBytes(Buffer.from(ripemd160(buffer.getBytes())))

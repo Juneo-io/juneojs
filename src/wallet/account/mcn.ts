@@ -16,13 +16,14 @@ import {
   type DepositResumeOperation,
   type DepositResumeOperationSummary
 } from '../operation'
-import { type ChainAccount } from './account'
+import { AccountType, type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
+import { type Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -80,10 +81,15 @@ export class MCNAccount {
       return await this.crossManager.estimateDepositResumeOperation(operation as DepositResumeOperation, this)
     }
     if (operation.range !== NetworkOperationRange.Chain) {
-      throw new AccountError(`unsupported operation range: ${operation.range}`)
+      throw new AccountError(`unsupported operation ${operation.type} for range: ${operation.range}`)
     }
     const chainOperation: ChainNetworkOperation = operation as ChainNetworkOperation
     const account: ChainAccount = this.getAccount(chainOperation.chain.id)
+    // current utxo txs builders/helpers require utxos ids to mount transactions
+    // until this is changed we need to fetch utxos prior to operation estimation
+    if (account.type === AccountType.Utxo) {
+      await account.fetchAllChainBalances()
+    }
     return await account.estimate(chainOperation)
   }
 
@@ -93,7 +99,7 @@ export class MCNAccount {
       executable.status = NetworkOperationStatus.Error
       throw new AccountError('an operation is already being executed on a chain')
     }
-    if (!skipVerifications && this.verifySpendings(summary).length > 0) {
+    if (!skipVerifications && (await this.verifySpendings(summary)).length > 0) {
       executable.status = NetworkOperationStatus.Error
       throw new AccountError(`missing funds to perform operation: ${summary.operation.type}`)
     }
@@ -175,8 +181,17 @@ export class MCNAccount {
     throw error
   }
 
-  verifySpendings (summary: OperationSummary): Spending[] {
+  async verifySpendings (summary: OperationSummary): Promise<Spending[]> {
     const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
+    const promises: Array<Promise<void>> = []
+    for (const spending of spendings.values()) {
+      const assetId: string = spending.assetId
+      const account: ChainAccount = this.getAccount(spending.chain.id)
+      if (account.getValue(assetId) < spending.amount) {
+        promises.push(account.fetchBalance(assetId))
+      }
+    }
+    await Promise.all(promises)
     const faulty: Spending[] = []
     for (const spending of spendings.values()) {
       const account: ChainAccount = this.getAccount(spending.chain.id)

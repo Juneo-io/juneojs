@@ -20,7 +20,7 @@ import {
 import { SendManager } from '../send'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { WrapManager } from '../wrap'
-import { AbstractChainAccount } from './account'
+import { AbstractChainAccount, AccountType } from './account'
 import { Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
 
@@ -32,7 +32,7 @@ export class EVMAccount extends AbstractChainAccount {
   private readonly sendManager: SendManager
 
   constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
-    super(provider.jevm[chainId].chain, wallet)
+    super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
     this.chainWallet = this.wallet.getJEVMWallet(this.chain)

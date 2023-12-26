@@ -6,8 +6,8 @@ import { type Address, type BLSPublicKey, type BLSSignature, Signature } from '.
 import { type Secp256k1OutputOwners } from './validation'
 
 export const SupernetAuthTypeId: number = 0x0000000a
-export const PrimarySignerTypeId: number = 0x1b
-export const EmptySignerTypeId: number = 0x1c
+export const EmptySignerTypeId: number = 0x0000001b
+export const PrimarySignerTypeId: number = 0x0000001c
 
 export class SupernetAuth implements Serializable, Signable {
   readonly typeId: number = SupernetAuthTypeId
@@ -63,7 +63,7 @@ export class ProofOfPossession implements Serializable {
   serialize (): JuneoBuffer {
     const publicKeyBytes: JuneoBuffer = this.publicKey.serialize()
     const signatureBytes: JuneoBuffer = this.signature.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + publicKeyBytes.length + signatureBytes.length)
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(publicKeyBytes.length + signatureBytes.length)
     buffer.write(publicKeyBytes)
     buffer.write(signatureBytes)
     return buffer
@@ -78,8 +78,8 @@ export class BLSSigner implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(1)
-    buffer.writeUInt8(this.typeId)
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(4)
+    buffer.writeUInt32(this.typeId)
     return buffer
   }
 }

@@ -18,6 +18,7 @@ import {
   PlatformExportTransaction,
   PlatformImportTransaction,
   RemoveSupernetValidatorTransaction,
+  TransferSupernetOwnershipTransaction,
   TransformSupernetTransaction
 } from './transaction'
 import { Secp256k1OutputOwners, Validator } from './validation'
@@ -394,6 +395,40 @@ export function buildRemoveSupernetValidatorTransaction (
   )
 }
 
+export function buildTransferSupernetOwnershipTransaction (
+  utxoSet: Utxo[],
+  sendersAddresses: string[],
+  fee: bigint,
+  chain: PlatformBlockchain,
+  supernetId: string | SupernetId,
+  supernetAuth: SupernetAuth,
+  supernetAuthAddresses: string[],
+  supernetAuthThreshold: number,
+  changeAddress: string,
+  networkId: number,
+  memo: string = ''
+): TransferSupernetOwnershipTransaction {
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(sendersAddresses), [
+    new TransactionFee(chain, fee)
+  ])
+  const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
+  const owner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
+    BigInt(0),
+    supernetAuthThreshold,
+    Address.toAddresses(supernetAuthAddresses)
+  )
+  return new TransferSupernetOwnershipTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    outputs,
+    inputs,
+    memo,
+    typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
+    supernetAuth,
+    owner
+  )
+}
+
 export function buildTransformSupernetTransaction (
   utxoSet: Utxo[],
   sendersAddresses: string[],
@@ -401,13 +436,18 @@ export function buildTransformSupernetTransaction (
   chain: PlatformBlockchain,
   supernetId: SupernetId,
   assetId: AssetId,
-  rewardsPoolSupply: bigint,
-  rewardShare: bigint,
+  initialRewardPoolSupply: bigint,
+  startRewardShare: bigint,
+  startRewardTime: bigint,
+  targetRewardShare: bigint,
+  targetRewardTime: bigint,
   minValidatorStake: bigint,
   maxValidatorStake: bigint,
   minStakeDuration: number,
   maxStakeDuration: number,
+  stakePeriodRewardShare: bigint,
   minDelegationFee: number,
+  maxDelegationFee: number,
   minDelegatorStake: bigint,
   maxValidatorWeightFactor: number,
   uptimeRequirement: number,
@@ -416,7 +456,7 @@ export function buildTransformSupernetTransaction (
   networkId: number,
   memo: string = ''
 ): TransformSupernetTransaction {
-  const userInput: UserInput = new UserInput(assetId.assetId, chain, rewardsPoolSupply, changeAddress, chain)
+  const userInput: UserInput = new UserInput(assetId.assetId, chain, initialRewardPoolSupply, changeAddress, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -443,13 +483,18 @@ export function buildTransformSupernetTransaction (
     memo,
     supernetId,
     assetId,
-    rewardsPoolSupply,
-    rewardShare,
+    initialRewardPoolSupply,
+    startRewardShare,
+    startRewardTime,
+    targetRewardShare,
+    targetRewardTime,
     minValidatorStake,
     maxValidatorStake,
     minStakeDuration,
     maxStakeDuration,
+    stakePeriodRewardShare,
     minDelegationFee,
+    maxDelegationFee,
     minDelegatorStake,
     maxValidatorWeightFactor,
     uptimeRequirement,
@@ -510,7 +555,7 @@ export function buildAddPermissionlessValidatorTransaction (
   return new AddPermissionlessValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,
@@ -574,7 +619,7 @@ export function buildAddPermissionlessDelegatorTransaction (
   return new AddPermissionlessDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),
-    outputs,
+    changeOutputs, // only using change outputs because of stake
     inputs,
     memo,
     validator,

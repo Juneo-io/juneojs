@@ -1,3 +1,5 @@
+import { now } from '../../utils'
+
 export enum BalanceStatus {
   Updating = 'Updating',
   Done = 'Done',
@@ -16,8 +18,12 @@ export interface BalanceListener {
   onBalanceUpdateEvent: (event: BalanceUpdateEvent) => void
 }
 
+// 30 seconds between updates
+const UpdateTimeValidity: bigint = BigInt(30)
+
 export class Balance {
   private readonly listeners: BalanceListener[] = []
+  private lastUpdate: bigint = BigInt(0)
   private status: BalanceStatus = BalanceStatus.Done
   private value: bigint = BigInt(0)
 
@@ -29,8 +35,10 @@ export class Balance {
     if (this.status === BalanceStatus.Updating) {
       return
     }
+    this.status = BalanceStatus.Updating
     const event: BalanceUpdateEvent = new BalanceUpdateEvent(this.value)
     this.value = value
+    this.status = BalanceStatus.Done
     event.value = value
     this.callBalanceUpdateEvent(event)
   }
@@ -45,6 +53,10 @@ export class Balance {
     this.status = BalanceStatus.Done
     event.value = this.value
     this.callBalanceUpdateEvent(event)
+  }
+
+  shouldUpdate (): boolean {
+    return now() < this.lastUpdate + UpdateTimeValidity
   }
 
   getStatus (): BalanceStatus {
@@ -63,6 +75,7 @@ export class Balance {
   }
 
   private callBalanceUpdateEvent (event: BalanceUpdateEvent): void {
+    this.lastUpdate = now()
     this.listeners.forEach((listener) => {
       listener.onBalanceUpdateEvent(event)
     })

@@ -9,7 +9,13 @@ import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
 import { Balance, type BalanceListener } from './balance'
 
+export enum AccountType {
+  Nonce,
+  Utxo,
+}
+
 export interface ChainAccount {
+  readonly type: AccountType
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
   wallet: MCNWallet
@@ -49,13 +55,15 @@ export interface ChainAccount {
 }
 
 export abstract class AbstractChainAccount implements ChainAccount {
+  type: AccountType
   chain: Blockchain
   balances = new Map<string, Balance>()
   wallet: MCNWallet
   chainWallet: VMWallet
   addresses: string[] = []
 
-  constructor (chain: Blockchain, wallet: MCNWallet) {
+  constructor (type: AccountType, chain: Blockchain, wallet: MCNWallet) {
+    this.type = type
     this.chain = chain
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
@@ -73,6 +81,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   getValue (assetId: string): bigint {
     if (!this.balances.has(assetId)) {
+      this.balances.set(assetId, new Balance())
       return BigInt(0)
     }
     return (this.balances.get(assetId) as Balance).getValue()
@@ -108,8 +117,10 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   protected spend (spendings: Spending[]): void {
     for (const spending of spendings) {
-      if (this.balances.has(spending.assetId)) {
-        ;(this.balances.get(spending.assetId) as Balance).spend(spending.amount)
+      const exists: boolean = this.balances.has(spending.assetId)
+      const balance: Balance = exists ? (this.balances.get(spending.assetId) as Balance) : new Balance()
+      if (exists) {
+        balance.spend(spending.amount)
       }
     }
   }
@@ -122,7 +133,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   protected fetching: boolean = false
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
-    super(chain, wallet)
+    super(AccountType.Utxo, chain, wallet)
     this.utxoApi = utxoApi
     this.sourceChain = sourceChain
   }

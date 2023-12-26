@@ -25,10 +25,6 @@ describe('Send operations', () => {
   const euroChain = SocotraEUROC1Chain
   const jvmChain = SocotraJVMChain
 
-  beforeAll(async () => {
-    await mcnAccount.fetchChainsBalances()
-  })
-
   describe('EVM send', () => {
     describe('Valid execute', () => {
       test.each([

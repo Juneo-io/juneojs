@@ -27,6 +27,7 @@ const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
 const ExportTransactionTypeId: number = 0x00000012
 const RemoveSupernetTransactionTypeId: number = 0x00000017
+const TransferSupernetOwnershipTransactionTypeId: number = 0x00000021
 const TransformSupernetTransactionTypeId: number = 0x00000018
 const AddPermissionlessValidatorTransactionTypeId: number = 0x00000019
 const AddPermissionlessDelegatorTransactionTypeId: number = 0x0000001a
@@ -437,6 +438,46 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
   }
 }
 
+export class TransferSupernetOwnershipTransaction extends AbstractBaseTransaction {
+  supernetId: SupernetId
+  supernetAuth: SupernetAuth
+  owner: Secp256k1OutputOwners
+
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    supernetId: SupernetId,
+    supernetAuth: SupernetAuth,
+    owner: Secp256k1OutputOwners
+  ) {
+    super(TransferSupernetOwnershipTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.supernetId = supernetId
+    this.supernetAuth = supernetAuth
+    this.owner = owner
+  }
+
+  getSignables (): Signable[] {
+    return [...this.inputs, this.supernetAuth]
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction: JuneoBuffer = super.serialize()
+    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
+    const ownerBytes: JuneoBuffer = this.owner.serialize()
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      baseTransaction.length + SupernetIdSize + supernetAuthBytes.length + ownerBytes.length
+    )
+    buffer.write(baseTransaction)
+    buffer.write(this.supernetId.serialize())
+    buffer.write(supernetAuthBytes)
+    buffer.write(ownerBytes)
+    return buffer
+  }
+}
+
 export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction {
   nodeId: NodeId
   supernetId: SupernetId
@@ -479,13 +520,18 @@ export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction 
 export class TransformSupernetTransaction extends AbstractBaseTransaction {
   supernetId: SupernetId
   assetId: AssetId
-  rewardsPoolSupply: bigint
-  rewardShare: bigint
+  initialRewardPoolSupply: bigint
+  startRewardShare: bigint
+  startRewardTime: bigint
+  targetRewardShare: bigint
+  targetRewardTime: bigint
   minValidatorStake: bigint
   maxValidatorStake: bigint
   minStakeDuration: number
   maxStakeDuration: number
+  stakePeriodRewardShare: bigint
   minDelegationFee: number
+  maxDelegationFee: number
   minDelegatorStake: bigint
   maxValidatorWeightFactor: number
   uptimeRequirement: number
@@ -499,13 +545,18 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     memo: string,
     supernetId: SupernetId,
     assetId: AssetId,
-    rewardsPoolSupply: bigint,
-    rewardShare: bigint,
+    initialRewardPoolSupply: bigint,
+    startRewardShare: bigint,
+    startRewardTime: bigint,
+    targetRewardShare: bigint,
+    targetRewardTime: bigint,
     minValidatorStake: bigint,
     maxValidatorStake: bigint,
     minStakeDuration: number,
     maxStakeDuration: number,
+    stakePeriodRewardShare: bigint,
     minDelegationFee: number,
+    maxDelegationFee: number,
     minDelegatorStake: bigint,
     maxValidatorWeightFactor: number,
     uptimeRequirement: number,
@@ -514,13 +565,18 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     super(TransformSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.supernetId = supernetId
     this.assetId = assetId
-    this.rewardsPoolSupply = rewardsPoolSupply
-    this.rewardShare = rewardShare
+    this.initialRewardPoolSupply = initialRewardPoolSupply
+    this.startRewardShare = startRewardShare
+    this.startRewardTime = startRewardTime
+    this.targetRewardShare = targetRewardShare
+    this.targetRewardTime = targetRewardTime
     this.minValidatorStake = minValidatorStake
     this.maxValidatorStake = maxValidatorStake
     this.minStakeDuration = minStakeDuration
     this.maxStakeDuration = maxStakeDuration
+    this.stakePeriodRewardShare = stakePeriodRewardShare
     this.minDelegationFee = minDelegationFee
+    this.maxDelegationFee = maxDelegationFee
     this.minDelegatorStake = minDelegatorStake
     this.maxValidatorWeightFactor = maxValidatorWeightFactor
     this.uptimeRequirement = uptimeRequirement
@@ -542,7 +598,12 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
         8 +
         8 +
         8 +
+        8 +
+        8 +
+        8 +
         4 +
+        4 +
+        8 +
         4 +
         4 +
         8 +
@@ -553,13 +614,18 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
     buffer.write(baseTransaction)
     buffer.write(this.supernetId.serialize())
     buffer.write(this.assetId.serialize())
-    buffer.writeUInt64(this.rewardsPoolSupply)
-    buffer.writeUInt64(this.rewardShare)
+    buffer.writeUInt64(this.initialRewardPoolSupply)
+    buffer.writeUInt64(this.startRewardShare)
+    buffer.writeUInt64(this.startRewardTime)
+    buffer.writeUInt64(this.targetRewardShare)
+    buffer.writeUInt64(this.targetRewardTime)
     buffer.writeUInt64(this.minValidatorStake)
     buffer.writeUInt64(this.maxValidatorStake)
     buffer.writeUInt32(this.minStakeDuration)
     buffer.writeUInt32(this.maxStakeDuration)
+    buffer.writeUInt64(this.stakePeriodRewardShare)
     buffer.writeUInt32(this.minDelegationFee)
+    buffer.writeUInt32(this.maxDelegationFee)
     buffer.writeUInt64(this.minDelegatorStake)
     buffer.writeUInt8(this.maxValidatorWeightFactor)
     buffer.writeUInt32(this.uptimeRequirement)

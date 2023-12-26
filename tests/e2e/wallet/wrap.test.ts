@@ -27,10 +27,6 @@ describe('Wrapping operations', () => {
   const juneChain = SocotraJUNEChain
   const wJuneAsset = SocotraWJUNEAsset
 
-  beforeEach(async () => {
-    await mcnAccount.fetchChainsBalances()
-  })
-
   describe('WrapOperation', () => {
     describe('Instantiation', () => {
       test.each([{ blockchain: juneChain, asset: wJuneAsset, amount: BigInt(1000) }])(

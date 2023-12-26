@@ -39,7 +39,6 @@ describe('Staking operations', (): void => {
     // TODO create time provider utils to manage those tests
     currentTime = now() + BigInt(30)
     tomorrow = currentTime + ONE_DAY
-    await account.fetchAllChainBalances()
   })
 
   test.todo('operations instantiations')

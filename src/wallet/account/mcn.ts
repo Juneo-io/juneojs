@@ -27,7 +27,7 @@ import { type Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
-  private readonly chainAccounts = new Map<string, ChainAccount>()
+  readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly jvmAccount: JVMAccount
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
@@ -55,6 +55,7 @@ export class MCNAccount {
   }
 
   /**
+   * @deprecated
    * Fetch the balances of all the registered assets of the chains of the accounts.
    */
   async fetchChainsBalances (): Promise<void> {

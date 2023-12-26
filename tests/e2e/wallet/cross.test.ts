@@ -30,10 +30,6 @@ describe('Cross operations', () => {
   const platformChain = SocotraPlatformChain
   const jvmChain = SocotraJVMChain
 
-  beforeEach(async () => {
-    await mcnAccount.fetchChainsBalances()
-  })
-
   describe('Instantiation', () => {
     test.each([
       {

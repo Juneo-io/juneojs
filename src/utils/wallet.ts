@@ -2,7 +2,7 @@ import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
-import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType } from '../wallet'
+import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType, type MCNAccount } from '../wallet'
 import { sha256, rmd160 } from './crypto'
 import { isHex, hasHexPrefix, decodeCB58, isBase58, encodeBech32 } from './encoding'
 import { WalletError } from './errors'
@@ -105,4 +105,15 @@ export function validatePrivateKey (data: string): boolean {
 
 export function encodeJuneoAddress (publicKey: string, hrp: string): string {
   return encodeBech32(hrp, rmd160(sha256(publicKey)))
+}
+
+/**
+ * Fetch the balances of all the registered assets of the chains of the accounts.
+ */
+export async function fetchAllChainsBalances (account: MCNAccount): Promise<void> {
+  const promises: Array<Promise<void>> = []
+  for (const chainAccount of account.chainAccounts.values()) {
+    promises.push(chainAccount.fetchAllBalances(chainAccount.chain.getRegisteredAssets()))
+  }
+  await Promise.all(promises)
 }

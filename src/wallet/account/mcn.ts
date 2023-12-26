@@ -28,11 +28,14 @@ import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
   private readonly chainAccounts = new Map<string, ChainAccount>()
+  private readonly jvmAccount: JVMAccount
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
-    this.addAccount(new JVMAccount(provider, wallet))
+    const jvmAccount: JVMAccount = new JVMAccount(provider, wallet)
+    this.addAccount(jvmAccount)
+    this.jvmAccount = jvmAccount
     this.addAccount(new PlatformAccount(provider, wallet))
     for (const chainId in provider.jevm) {
       this.addAccount(new EVMAccount(provider, chainId, wallet))
@@ -72,13 +75,16 @@ export class MCNAccount {
 
   async estimate (operation: NetworkOperation): Promise<OperationSummary> {
     if (operation.type === NetworkOperationType.Cross) {
-      return await this.crossManager.estimateCrossOperation(operation as CrossOperation, this)
+      const crossOperation: CrossOperation = operation as CrossOperation
+      // JVM balance might be needed for proxy and is mandatory if so before estimation
+      await this.jvmAccount.fetchAllChainBalances()
+      return await this.crossManager.estimateCrossOperation(crossOperation, this)
     }
     if (operation.type === NetworkOperationType.CrossResume) {
       return await this.crossManager.estimateCrossResumeOperation(operation as CrossResumeOperation, this)
     }
     if (operation.type === NetworkOperationType.DepositResume) {
-      return await this.crossManager.estimateDepositResumeOperation(operation as DepositResumeOperation, this)
+      return await this.crossManager.estimateDepositResumeOperation(operation as DepositResumeOperation)
     }
     if (operation.range !== NetworkOperationRange.Chain) {
       throw new AccountError(`unsupported operation ${operation.type} for range: ${operation.range}`)
@@ -187,7 +193,7 @@ export class MCNAccount {
     for (const spending of spendings.values()) {
       const assetId: string = spending.assetId
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (account.getValue(assetId) < spending.amount) {
+      if (account.getValue(assetId) < spending.amount || (account.balances.get(assetId) as Balance).shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }

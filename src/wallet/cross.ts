@@ -483,10 +483,7 @@ export class CrossManager {
     await Promise.all(balancesSync)
   }
 
-  async estimateDepositResumeOperation (
-    operation: DepositResumeOperation,
-    account: MCNAccount
-  ): Promise<DepositResumeOperationSummary> {
+  async estimateDepositResumeOperation (operation: DepositResumeOperation): Promise<DepositResumeOperationSummary> {
     const api: JEVMAPI = this.provider.jevm[operation.chain.id]
     const sender: string = this.wallet.getAddress(operation.chain)
     const fee: EVMFeeData = await estimateEVMDepositJRC20(api, sender, operation.asset, operation.amount)

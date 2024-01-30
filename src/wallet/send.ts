@@ -50,7 +50,7 @@ export class SendManager {
   }
 
   async estimateSendJVM (assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
-    return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, address, utxoSet)
+    return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, [address], 1, utxoSet)
   }
 
   async sendJVM (

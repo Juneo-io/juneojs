@@ -207,7 +207,7 @@ export async function sendPlatformExportTransaction (
   }
   const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const transaction: UnsignedTransaction = buildPlatformExportTransaction(
-    [new UserInput(assetId, api.chain, amount, address, destination)],
+    [new UserInput(assetId, api.chain, amount, [address], 1, destination)],
     utxoSet,
     [sender],
     exportAddress,

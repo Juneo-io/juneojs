@@ -51,7 +51,7 @@ export function getImportUserInputs (
   for (const [key, value] of values) {
     const amount: bigint = key === feeAssetId ? value - feeAmount : value
     if (amount > BigInt(0)) {
-      inputs.push(new UserInput(key, source, amount, address, destination))
+      inputs.push(new UserInput(key, source, amount, [address], 1, destination))
     }
   }
   return inputs

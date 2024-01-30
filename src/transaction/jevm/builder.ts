@@ -54,7 +54,10 @@ export function buildTransactionEVMOutputs (
   const outputs: EVMOutput[] = []
   userInputs.forEach((input) => {
     const assetId: string = input.assetId
-    outputs.push(new EVMOutput(new Address(input.address), input.amount, new AssetId(assetId)))
+    if (input.addresses.length !== 1) {
+      throw new InputError('user input must have a unique address for EVM output')
+    }
+    outputs.push(new EVMOutput(new Address(input.addresses[0]), input.amount, new AssetId(assetId)))
     let spentAmount: bigint = input.amount
     if (spentAmounts.has(assetId)) {
       spentAmount += spentAmounts.get(assetId) as bigint
@@ -114,7 +117,7 @@ export function buildJEVMExportTransaction (
   const fixedUserInputs: UserInput[] = []
   userInputs.forEach((input) => {
     fixedUserInputs.push(
-      new UserInput(input.assetId, input.sourceChain, input.amount, exportAddress, input.destinationChain)
+      new UserInput(input.assetId, input.sourceChain, input.amount, [exportAddress], 1, input.destinationChain)
     )
   })
   if (destinationFeeData.amount > BigInt(0)) {
@@ -124,7 +127,8 @@ export function buildJEVMExportTransaction (
         destinationFeeData.assetId,
         userInputs[0].sourceChain,
         destinationFeeData.amount,
-        exportAddress,
+        [exportAddress],
+        1,
         userInputs[0].destinationChain
       )
     )

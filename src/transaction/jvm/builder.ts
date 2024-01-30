@@ -75,7 +75,7 @@ export function buildJVMExportTransaction (
   const fixedUserInputs: UserInput[] = []
   userInputs.forEach((input) => {
     fixedUserInputs.push(
-      new UserInput(input.assetId, input.sourceChain, input.amount, exportAddress, input.destinationChain)
+      new UserInput(input.assetId, input.sourceChain, input.amount, [exportAddress], 1, input.destinationChain)
     )
   })
   if (destinationFeeData.amount > BigInt(0)) {
@@ -85,7 +85,8 @@ export function buildJVMExportTransaction (
         destinationFeeData.assetId,
         userInputs[0].sourceChain,
         destinationFeeData.amount,
-        exportAddress,
+        [exportAddress],
+        1,
         userInputs[0].destinationChain
       )
     )

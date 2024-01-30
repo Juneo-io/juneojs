@@ -11,7 +11,8 @@ export class UserInput {
   assetId: string
   sourceChain: Blockchain
   amount: bigint
-  address: string
+  addresses: string[]
+  threshold: number
   destinationChain: Blockchain
   locktime: bigint
 
@@ -19,7 +20,8 @@ export class UserInput {
     assetId: string,
     sourceChain: Blockchain,
     amount: bigint,
-    address: string,
+    addresses: string[],
+    threshold: number,
     destinationChain: Blockchain,
     locktime: bigint = BigInt(0)
   ) {
@@ -29,7 +31,8 @@ export class UserInput {
       throw new InputError('user input amount must be greater than 0')
     }
     this.amount = amount
-    this.address = address
+    this.addresses = addresses
+    this.threshold = threshold
     this.destinationChain = destinationChain
     this.locktime = locktime
   }

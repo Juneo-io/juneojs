@@ -268,7 +268,7 @@ export class CrossManager {
     const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
     if (fees[0].type === FeeType.Withdraw) {
-      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      const sender: string = account.getAccount(juneChain.id).address
       const amount: bigint = cross.amount + importFee.amount
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
         this.provider.jevm[juneChain.id],
@@ -280,7 +280,7 @@ export class CrossManager {
       spendings.push(fee.spending)
     }
     if (typeof importedJRC20 !== 'undefined') {
-      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      const sender: string = account.getAccount(juneChain.id).address
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
       cross.amount /= AtomicDenomination
       const fee: EVMFeeData = await estimateEVMDepositJRC20(
@@ -388,7 +388,7 @@ export class CrossManager {
       cross.destination,
       cross.assetId,
       cross.amount,
-      destinationAccount.addresses[0],
+      destinationAccount.address,
       cross.sendImportFee,
       importFee,
       exportFee,

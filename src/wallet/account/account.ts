@@ -20,7 +20,7 @@ export interface ChainAccount {
   readonly balances: Map<string, Balance>
   wallet: MCNWallet
   chainWallet: VMWallet
-  addresses: string[]
+  address: string
 
   /**
    * Gets the balance from this account of an asset.
@@ -60,14 +60,14 @@ export abstract class AbstractChainAccount implements ChainAccount {
   balances = new Map<string, Balance>()
   wallet: MCNWallet
   chainWallet: VMWallet
-  addresses: string[] = []
+  address: string
 
   constructor (type: AccountType, chain: Blockchain, wallet: MCNWallet) {
     this.type = type
     this.chain = chain
     this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
-    this.addresses.push(this.chainWallet.getAddress())
+    this.address = this.chainWallet.getAddress()
   }
 
   getAssetBalance (asset: TokenAsset): AssetValue {
@@ -152,7 +152,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       return
     }
     this.fetching = true
-    this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
+    this.utxoSet = await fetchUtxos(this.utxoApi, [this.address], this.sourceChain)
     this.calculateBalances()
     this.fetching = false
   }

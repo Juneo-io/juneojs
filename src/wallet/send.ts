@@ -49,19 +49,26 @@ export class SendManager {
     return await sendEVMTransaction(api, wallet, feeData)
   }
 
-  async estimateSendJVM (assetId: string, amount: bigint, address: string, utxoSet?: Utxo[]): Promise<UtxoFeeData> {
-    return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, [address], 1, utxoSet)
+  async estimateSendJVM (
+    assetId: string,
+    amount: bigint,
+    addresses: string[],
+    threshold: number,
+    utxoSet?: Utxo[]
+  ): Promise<UtxoFeeData> {
+    return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, addresses, threshold, utxoSet)
   }
 
   async sendJVM (
     assetId: string,
     amount: bigint,
-    address: string,
+    addresses: string[],
+    threshold: number,
     feeData?: UtxoFeeData,
     utxoSet?: Utxo[]
   ): Promise<string> {
     if (typeof feeData === 'undefined') {
-      feeData = await this.estimateSendJVM(assetId, amount, address, utxoSet)
+      feeData = await this.estimateSendJVM(assetId, amount, addresses, threshold, utxoSet)
     }
     const api: JVMAPI = this.provider.jvm
     const wallet: VMWallet = this.wallet.getWallet(api.chain)

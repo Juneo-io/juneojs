@@ -5,6 +5,7 @@ import { type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
   Send = 'Send',
+  SendMultiSig = 'Send multisig',
   Cross = 'Cross',
   CrossResume = 'Cross resume',
   DepositResume = 'Deposit resume',
@@ -55,6 +56,21 @@ export class SendOperation extends ChainNetworkOperation {
     this.assetId = assetId
     this.amount = amount
     this.address = address
+  }
+}
+
+export class SendMultiSigOperation extends ChainNetworkOperation {
+  assetId: string
+  amount: bigint
+  addresses: string[]
+  threshold: number
+
+  constructor (chain: Blockchain, assetId: string, amount: bigint, addresses: string[], threshold: number) {
+    super(NetworkOperationType.SendMultiSig, chain)
+    this.assetId = assetId
+    this.amount = amount
+    this.addresses = addresses
+    this.threshold = threshold
   }
 }
 

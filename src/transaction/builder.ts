@@ -116,11 +116,8 @@ export function buildTransactionOutputs (
         new Secp256k1Output(
           input.amount,
           input.locktime,
-          // for now threshold will only be 1
-          1,
-          // if we want to create a single output with multiple addresses
-          // e.g. multisig we need to do changes here
-          [new Address(input.address)]
+          input.threshold,
+          Address.toAddresses(input.addresses)
         ),
         false
       )

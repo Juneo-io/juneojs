@@ -4,7 +4,7 @@ import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
 import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
 import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType } from '../asset'
-import { AbstractBlockchain } from './chain'
+import { AbstractBlockchain, VMAccountType } from './chain'
 import { type MCNProvider } from '../juneo'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
@@ -35,7 +35,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     registeredAssets: TokenAsset[] = [],
     jrc20Assets: JRC20Asset[] = []
   ) {
-    super(name, id, JEVM_ID, asset, aliases, registeredAssets)
+    super(name, id, JEVM_ID, VMAccountType.Nonce, asset, aliases, registeredAssets)
     this.asset = asset
     this.chainId = chainId
     this.baseFee = baseFee

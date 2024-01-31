@@ -315,7 +315,7 @@ export async function sendEVMExportTransaction (
   let nonce: bigint = await getWalletNonce(evmWallet, api, false)
   for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
     const unsignedTransaction: JEVMExportTransaction = buildJEVMExportTransaction(
-      [new UserInput(assetId, api.chain, amount, address, destination)],
+      [new UserInput(assetId, api.chain, amount, [address], 1, destination)],
       wallet.getAddress(api.chain),
       nonce,
       exportAddress,

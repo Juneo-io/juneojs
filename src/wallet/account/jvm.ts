@@ -6,7 +6,8 @@ import {
   NetworkOperationType,
   type ChainOperationSummary,
   type SendOperation,
-  type ChainNetworkOperation
+  type ChainNetworkOperation,
+  type SendMultiSigOperation
 } from '../operation'
 import { SendManager } from '../send'
 import { type MCNWallet } from '../wallet'
@@ -39,7 +40,19 @@ export class JVMAccount extends UtxoAccount {
       const transactionHash: string = await this.sendManager.sendJVM(
         send.assetId,
         send.amount,
-        send.address,
+        [send.address],
+        1,
+        summary.fee as UtxoFeeData,
+        this.utxoSet
+      )
+      await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
+    } else if (operation.type === NetworkOperationType.SendMultiSig) {
+      const send: SendMultiSigOperation = operation as SendMultiSigOperation
+      const transactionHash: string = await this.sendManager.sendJVM(
+        send.assetId,
+        send.amount,
+        send.addresses,
+        send.threshold,
         summary.fee as UtxoFeeData,
         this.utxoSet
       )

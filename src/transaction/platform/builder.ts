@@ -60,7 +60,7 @@ export function buildPlatformExportTransaction (
   const fixedUserInputs: UserInput[] = []
   userInputs.forEach((input) => {
     fixedUserInputs.push(
-      new UserInput(input.assetId, input.sourceChain, input.amount, exportAddress, input.destinationChain)
+      new UserInput(input.assetId, input.sourceChain, input.amount, [exportAddress], 1, input.destinationChain)
     )
   })
   if (destinationFeeData.amount > BigInt(0)) {
@@ -70,7 +70,8 @@ export function buildPlatformExportTransaction (
         destinationFeeData.assetId,
         userInputs[0].sourceChain,
         destinationFeeData.amount,
-        exportAddress,
+        [exportAddress],
+        1,
         userInputs[0].destinationChain
       )
     )
@@ -165,7 +166,7 @@ export function buildAddValidatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -225,7 +226,7 @@ export function buildAddDelegatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -456,7 +457,8 @@ export function buildTransformSupernetTransaction (
   networkId: number,
   memo: string = ''
 ): TransformSupernetTransaction {
-  const userInput: UserInput = new UserInput(assetId.assetId, chain, initialRewardPoolSupply, changeAddress, chain)
+  // TODO when multisig update [changeAddress] and threshold
+  const userInput: UserInput = new UserInput(assetId.assetId, chain, initialRewardPoolSupply, [changeAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -520,7 +522,7 @@ export function buildAddPermissionlessValidatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddPermissionlessValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -584,7 +586,7 @@ export function buildAddPermissionlessDelegatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddPermissionlessDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddress, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,

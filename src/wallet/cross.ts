@@ -273,7 +273,7 @@ export class CrossManager {
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
         this.provider.jevm[juneChain.id],
         sender,
-        exportedJRC20 as JRC20Asset,
+        exportedJRC20!,
         amount
       )
       fees[0] = fee
@@ -513,7 +513,7 @@ export class CrossManager {
     )
     let hasFeeValue: boolean = false
     if (values.has(fee.assetId)) {
-      const value: bigint = values.get(fee.assetId) as bigint
+      const value: bigint = values.get(fee.assetId)!
       hasFeeValue = value >= fee.amount
       // if importing more than one asset and one of those is the fee asset recalculate import with correct outputs count
       if (outputsCount > 1 && value > fee.amount) {
@@ -539,7 +539,7 @@ export class CrossManager {
       }
     }
     if (hasFeeValue && !payImportFee) {
-      const value: bigint = values.get(fee.assetId) as bigint
+      const value: bigint = values.get(fee.assetId)!
       values.set(fee.assetId, value - fee.amount)
     }
     return new CrossResumeOperationSummary(operation, fee, spendings, values, payImportFee, summaryUtxos)

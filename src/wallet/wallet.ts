@@ -56,7 +56,7 @@ export class MCNWallet {
     if (!this.chainsWallets.has(chain.id)) {
       this.setChainWallet(chain)
     }
-    return this.chainsWallets.get(chain.id) as VMWallet
+    return this.chainsWallets.get(chain.id)!
   }
 
   getJEVMWallet (chain: JEVMBlockchain): JEVMWallet {

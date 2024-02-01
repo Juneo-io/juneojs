@@ -17,7 +17,7 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
     if (!values.has(key)) {
       values.set(key, new BaseSpending(spending.chain, spending.amount, spending.assetId))
     } else {
-      ;(values.get(key) as Spending).amount += spending.amount
+      ;(values.get(key)!).amount += spending.amount
     }
   }
   return values
@@ -32,7 +32,7 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
     let value: bigint = (utxo.output as Secp256k1Output).amount
     const assetId: string = utxo.assetId.assetId
     if (values.has(assetId)) {
-      value += values.get(assetId) as bigint
+      value += values.get(assetId)!
     }
     values.set(assetId, value)
   }

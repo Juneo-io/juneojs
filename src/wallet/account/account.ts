@@ -84,14 +84,14 @@ export abstract class AbstractChainAccount implements ChainAccount {
       this.balances.set(assetId, new Balance())
       return BigInt(0)
     }
-    return (this.balances.get(assetId) as Balance).getValue()
+    return (this.balances.get(assetId)!).getValue()
   }
 
   addBalanceListener (assetId: string, listener: BalanceListener): void {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    ;(this.balances.get(assetId) as Balance).registerEvents(listener)
+    ;(this.balances.get(assetId)!).registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
@@ -118,7 +118,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   protected spend (spendings: Spending[]): void {
     for (const spending of spendings) {
       const exists: boolean = this.balances.has(spending.assetId)
-      const balance: Balance = exists ? (this.balances.get(spending.assetId) as Balance) : new Balance()
+      const balance: Balance = exists ? (this.balances.get(spending.assetId)!) : new Balance()
       if (exists) {
         balance.spend(spending.amount)
       }
@@ -196,7 +196,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())
       }
-      const balance: Balance = this.balances.get(key) as Balance
+      const balance: Balance = this.balances.get(key)!
       balance.update(value)
     }
     for (const [key, balance] of this.balances) {

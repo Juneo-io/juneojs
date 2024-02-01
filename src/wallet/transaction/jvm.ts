@@ -12,7 +12,7 @@ import {
 } from '../../transaction'
 import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
 import { type JVMAccount } from '../account'
-import { ChainOperationSummary, SendUtxoOperation, type SendOperation } from '../operation'
+import { ChainOperationSummary, type SendUtxoOperation, type SendOperation } from '../operation'
 import { type MCNWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'

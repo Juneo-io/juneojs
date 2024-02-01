@@ -66,7 +66,14 @@ export class SendUtxoOperation extends ChainNetworkOperation {
   threshold: number
   locktime: bigint
 
-  constructor (chain: Blockchain, assetId: string, amount: bigint, addresses: string[], threshold: number, locktime: bigint = BigInt(0)) {
+  constructor (
+    chain: Blockchain,
+    assetId: string,
+    amount: bigint,
+    addresses: string[],
+    threshold: number,
+    locktime: bigint = BigInt(0)
+  ) {
     super(NetworkOperationType.SendUtxo, chain)
     this.assetId = assetId
     this.amount = amount

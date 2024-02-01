@@ -74,7 +74,7 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction {
     this.inputs.forEach((transferable) => {
       // should be Utxo here because transaction should be from builder
       // undefined should only be the case if it is an input from parsing bytes
-      utxos.push(transferable.input.utxo as Utxo)
+      utxos.push(transferable.input.utxo!)
     })
     return utxos
   }

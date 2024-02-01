@@ -23,7 +23,6 @@ import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
-import { type Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -51,7 +50,7 @@ export class MCNAccount {
     if (!this.chainAccounts.has(chainId)) {
       throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
     }
-    return this.chainAccounts.get(chainId) as ChainAccount
+    return this.chainAccounts.get(chainId)!
   }
 
   /**
@@ -194,7 +193,7 @@ export class MCNAccount {
     for (const spending of spendings.values()) {
       const assetId: string = spending.assetId
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (account.getValue(assetId) < spending.amount || (account.balances.get(assetId) as Balance).shouldUpdate()) {
+      if (account.getValue(assetId) < spending.amount || (account.balances.get(assetId)!).shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }

@@ -100,7 +100,7 @@ export class EVMAccount extends AbstractChainAccount {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    const balance: Balance = this.balances.get(assetId) as Balance
+    const balance: Balance = this.balances.get(assetId)!
     const address: string = this.chainWallet.getAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }

@@ -57,7 +57,16 @@ export class SendManager {
     utxoSet?: Utxo[],
     locktime: bigint = BigInt(0)
   ): Promise<UtxoFeeData> {
-    return await estimateJVMBaseTransaction(this.provider, this.wallet, assetId, amount, addresses, threshold, utxoSet, locktime)
+    return await estimateJVMBaseTransaction(
+      this.provider,
+      this.wallet,
+      assetId,
+      amount,
+      addresses,
+      threshold,
+      utxoSet,
+      locktime
+    )
   }
 
   async sendJVM (

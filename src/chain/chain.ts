@@ -3,7 +3,7 @@ import { type MCNProvider } from '../juneo'
 
 export enum VMAccountType {
   Utxo = 'Utxo',
-  Nonce = 'Nonce'
+  Nonce = 'Nonce',
 }
 
 export interface Blockchain {
@@ -66,7 +66,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   async getAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
     if (this.registeredAssets.has(assetId)) {
-      return this.registeredAssets.get(assetId) as TokenAsset
+      return this.registeredAssets.get(assetId)!
     }
     const asset: TokenAsset = await this.fetchAsset(provider, assetId)
     this.addRegisteredAsset(asset)

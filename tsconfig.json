@@ -10,8 +10,8 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES5", "ES2022"]
+    "lib": ["ES5", "ES2022"],
   },
   "exclude": ["node_modules/", "tests/"],
-  "include": ["src/"]
+  "include": ["src/"],
 }

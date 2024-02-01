@@ -1,5 +1,5 @@
 import { type MCNProvider } from '../../juneo'
-import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation } from '../transaction'
+import { TransactionType, type UtxoFeeData, type UtxoSpending, estimateJVMSendOperation, estimateJVMSendUtxoOperation } from '../transaction'
 import { AccountError } from '../../utils'
 import {
   type ExecutableOperation,
@@ -7,7 +7,7 @@ import {
   type ChainOperationSummary,
   type SendOperation,
   type ChainNetworkOperation,
-  type SendMultiSigOperation
+  type SendUtxoOperation
 } from '../operation'
 import { SendManager } from '../send'
 import { type MCNWallet } from '../wallet'
@@ -27,6 +27,8 @@ export class JVMAccount extends UtxoAccount {
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       return await estimateJVMSendOperation(this.provider, this.wallet, operation as SendOperation, this)
+    } else if (operation.type === NetworkOperationType.SendUtxo) {
+      return await estimateJVMSendUtxoOperation(this.provider, this.wallet, operation as SendUtxoOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -46,15 +48,16 @@ export class JVMAccount extends UtxoAccount {
         this.utxoSet
       )
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
-    } else if (operation.type === NetworkOperationType.SendMultiSig) {
-      const send: SendMultiSigOperation = operation as SendMultiSigOperation
+    } else if (operation.type === NetworkOperationType.SendUtxo) {
+      const send: SendUtxoOperation = operation as SendUtxoOperation
       const transactionHash: string = await this.sendManager.sendJVM(
         send.assetId,
         send.amount,
         send.addresses,
         send.threshold,
         summary.fee as UtxoFeeData,
-        this.utxoSet
+        this.utxoSet,
+        send.locktime
       )
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }

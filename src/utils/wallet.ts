@@ -113,7 +113,7 @@ export function encodeJuneoAddress (publicKey: string, hrp: string): string {
 export async function fetchAllChainsBalances (account: MCNAccount): Promise<void> {
   const promises: Array<Promise<void>> = []
   for (const chainAccount of account.chainAccounts.values()) {
-    promises.push(chainAccount.fetchAllBalances(chainAccount.chain.getRegisteredAssets()))
+    promises.push(chainAccount.fetchAllChainBalances())
   }
   await Promise.all(promises)
 }

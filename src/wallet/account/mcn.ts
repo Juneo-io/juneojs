@@ -53,18 +53,6 @@ export class MCNAccount {
     return this.chainAccounts.get(chainId)!
   }
 
-  /**
-   * @deprecated
-   * Fetch the balances of all the registered assets of the chains of the accounts.
-   */
-  async fetchChainsBalances (): Promise<void> {
-    const promises: Array<Promise<void>> = []
-    for (const account of this.chainAccounts.values()) {
-      promises.push(account.fetchAllBalances(account.chain.getRegisteredAssets()))
-    }
-    await Promise.all(promises)
-  }
-
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {
     return await this.crossManager.fetchUnfinishedDepositOperations()
   }

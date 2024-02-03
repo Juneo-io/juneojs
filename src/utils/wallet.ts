@@ -1,11 +1,10 @@
-import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
+import { type JEVMAPI } from '../api'
 import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { type Utxo, Secp256k1OutputTypeId, type Secp256k1Output, UserInput } from '../transaction'
+import { UserInput } from '../transaction'
 import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType, type MCNAccount } from '../wallet'
 import { sha256, rmd160 } from './crypto'
 import { isHex, hasHexPrefix, decodeCB58, isBase58, encodeBech32 } from './encoding'
-import { WalletError } from './errors'
 
 export const JVMPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
@@ -17,24 +16,8 @@ export function sortSpendings (spendings: Spending[]): Map<string, Spending> {
     if (!values.has(key)) {
       values.set(key, new BaseSpending(spending.chain, spending.amount, spending.assetId))
     } else {
-      ;(values.get(key)!).amount += spending.amount
+      values.get(key)!.amount += spending.amount
     }
-  }
-  return values
-}
-
-export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<string, bigint> {
-  const values = new Map<string, bigint>()
-  for (const utxo of utxoSet) {
-    if (utxo.sourceChain !== source || utxo.output.typeId !== Secp256k1OutputTypeId) {
-      continue
-    }
-    let value: bigint = (utxo.output as Secp256k1Output).amount
-    const assetId: string = utxo.assetId.assetId
-    if (values.has(assetId)) {
-      value += values.get(assetId)!
-    }
-    values.set(assetId, value)
   }
   return values
 }
@@ -55,18 +38,6 @@ export function getImportUserInputs (
     }
   }
   return inputs
-}
-
-export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {
-  const vmId: string = chain.vmId
-  if (vmId === JVM_ID) {
-    return provider.jvm
-  } else if (vmId === PLATFORMVM_ID) {
-    return provider.platform
-  } else if (vmId === JEVM_ID) {
-    return provider.jevm[chain.id]
-  }
-  throw new WalletError(`unsupported vm id does not provide utxo api: ${vmId}`)
 }
 
 export async function trackJuneoTransaction (

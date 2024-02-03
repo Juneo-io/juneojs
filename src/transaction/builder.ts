@@ -1,7 +1,6 @@
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput } from './output'
-import { type Utxo } from './utxo'
+import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput, type Utxo } from './output'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
@@ -76,7 +75,7 @@ export function buildTransactionInputs (
 function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
   let complete: boolean = true
   targets.forEach((target, key) => {
-    if (!gathereds.has(key) || (gathereds.get(key)!) < target) {
+    if (!gathereds.has(key) || gathereds.get(key)! < target) {
       complete = false
       return false
     }
@@ -139,8 +138,8 @@ export function buildTransactionOutputs (
   // also adding extra outputs to avoid losses if we have unspent values
   for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId)!) : BigInt(0)
-    const available: bigint = availableAmounts.has(assetId) ? (availableAmounts.get(assetId)!) : BigInt(0)
+    const spent: bigint = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
+    const available: bigint = availableAmounts.has(assetId) ? availableAmounts.get(assetId)! : BigInt(0)
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')
     }
@@ -183,7 +182,7 @@ function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
       key += address.serialize().toHex()
     })
     if (spendings.has(key)) {
-      const out: TransactionOutput = (spendings.get(key)!).output
+      const out: TransactionOutput = spendings.get(key)!.output
       ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
     } else {
       mergedOutputs.push(output)

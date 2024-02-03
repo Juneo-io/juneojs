@@ -3,14 +3,13 @@ import { type Blockchain, type JVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
   type Utxo,
-  fetchUtxos,
   type UnsignedTransaction,
   buildJVMBaseTransaction,
   UserInput,
   buildJVMExportTransaction,
   buildJVMImportTransaction
 } from '../../transaction'
-import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
+import { getUtxosAmountValues, getImportUserInputs, fetchUtxos } from '../../utils'
 import { type JVMAccount } from '../account'
 import { ChainOperationSummary, type SendUtxoOperation, type SendOperation } from '../operation'
 import { type MCNWallet } from '../wallet'

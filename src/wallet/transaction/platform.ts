@@ -4,7 +4,6 @@ import { type MCNProvider } from '../../juneo'
 import {
   Validator,
   type Utxo,
-  fetchUtxos,
   type UnsignedTransaction,
   buildAddValidatorTransaction,
   buildAddDelegatorTransaction,
@@ -13,7 +12,7 @@ import {
   UserInput,
   buildPlatformImportTransaction
 } from '../../transaction'
-import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
+import { getUtxosAmountValues, getImportUserInputs, fetchUtxos } from '../../utils'
 import { type PlatformAccount } from '../account'
 import {
   ChainOperationSummary,

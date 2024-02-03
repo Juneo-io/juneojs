@@ -1,9 +1,9 @@
 import { type Blockchain } from '../chain'
 import { JuneoBuffer, ParsingError, sha256, type Serializable, SignatureError, InputError } from '../utils'
 import { type VMWallet } from '../wallet'
+import { type Utxo } from './output'
 import { type Signable } from './signature'
 import { type Address, AssetId, AssetIdSize, Signature, TransactionId, TransactionIdSize } from './types'
-import { type Utxo } from './utxo'
 
 const Secp256k1InputTypeId: number = 0x00000005
 

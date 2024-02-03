@@ -2,10 +2,9 @@ import { type Blockchain } from '../chain'
 import { JuneoBuffer, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet'
 import { TransferableInput } from './input'
-import { TransferableOutput } from './output'
+import { TransferableOutput, type Utxo } from './output'
 import { type Signable, sign } from './signature'
 import { type BlockchainId, BlockchainIdSize } from './types'
-import { type Utxo } from './utxo'
 
 export const CodecId: number = 0
 export const TransactionStatusFetchDelay: number = 500

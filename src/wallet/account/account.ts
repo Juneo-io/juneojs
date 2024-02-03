@@ -2,8 +2,8 @@ import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type Utxo, fetchUtxos } from '../../transaction'
-import { getUtxosAmountValues, type AssetValue } from '../../utils'
+import { type Utxo } from '../../transaction'
+import { getUtxosAmountValues, type AssetValue, fetchUtxos } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -84,14 +84,14 @@ export abstract class AbstractChainAccount implements ChainAccount {
       this.balances.set(assetId, new Balance())
       return BigInt(0)
     }
-    return (this.balances.get(assetId)!).getValue()
+    return this.balances.get(assetId)!.getValue()
   }
 
   addBalanceListener (assetId: string, listener: BalanceListener): void {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    ;(this.balances.get(assetId)!).registerEvents(listener)
+    this.balances.get(assetId)!.registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
@@ -118,7 +118,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   protected spend (spendings: Spending[]): void {
     for (const spending of spendings) {
       const exists: boolean = this.balances.has(spending.assetId)
-      const balance: Balance = exists ? (this.balances.get(spending.assetId)!) : new Balance()
+      const balance: Balance = exists ? this.balances.get(spending.assetId)! : new Balance()
       if (exists) {
         balance.spend(spending.amount)
       }

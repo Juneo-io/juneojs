@@ -2,10 +2,9 @@ import { type PlatformBlockchain } from '../../chain'
 import { InputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
-import { type UserOutput, TransferableOutput, Secp256k1Output } from '../output'
+import { type UserOutput, TransferableOutput, Secp256k1Output, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
-import { type Utxo } from '../utxo'
 import { type SupernetAuth, type BLSSigner } from './supernet'
 import {
   AddDelegatorTransaction,

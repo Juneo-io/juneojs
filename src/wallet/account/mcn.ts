@@ -181,7 +181,7 @@ export class MCNAccount {
     for (const spending of spendings.values()) {
       const assetId: string = spending.assetId
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (account.getValue(assetId) < spending.amount || (account.balances.get(assetId)!).shouldUpdate()) {
+      if (account.getValue(assetId) < spending.amount || account.balances.get(assetId)!.shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }

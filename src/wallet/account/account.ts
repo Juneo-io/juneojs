@@ -3,7 +3,7 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type Utxo } from '../../transaction'
-import { getUtxosAmountValues, type AssetValue, fetchUtxos } from '../../utils'
+import { getUtxosAmountValues, type AssetValue, fetchUtxos, now } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -128,6 +128,8 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
 export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
+  utxoSetMultiSig: Utxo[] = []
+  utxoSetTimelocked: Utxo[] = []
   utxoApi: AbstractUtxoAPI
   sourceChain?: string
   protected fetching: boolean = false
@@ -153,6 +155,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     }
     this.fetching = true
     this.utxoSet = await fetchUtxos(this.utxoApi, [this.address], this.sourceChain)
+    this.sortUtxoSet()
     this.calculateBalances()
     this.fetching = false
   }
@@ -188,6 +191,23 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       }
     }
     this.utxoSet = utxos
+  }
+
+  private sortUtxoSet (): void {
+    const spendableUtxoSet: Utxo[] = []
+    this.utxoSetMultiSig = []
+    this.utxoSetTimelocked = []
+    const currentTime: bigint = now()
+    for (const utxo of this.utxoSet) {
+      if (utxo.output.locktime > currentTime) {
+        this.utxoSetTimelocked.push(utxo)
+      } else if (utxo.output.threshold > 1) {
+        this.utxoSetMultiSig.push(utxo)
+      } else {
+        spendableUtxoSet.push(utxo)
+      }
+    }
+    this.utxoSet = spendableUtxoSet
   }
 
   private calculateBalances (): void {

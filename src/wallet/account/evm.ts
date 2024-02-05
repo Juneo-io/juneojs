@@ -93,7 +93,7 @@ export class EVMAccount extends AbstractChainAccount {
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self
-    await this.fetchAllBalances(summary.getAssets().values())
+    await this.fetchBalances(summary.getAssets().values())
   }
 
   async fetchBalance (assetId: string): Promise<void> {

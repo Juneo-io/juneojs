@@ -43,7 +43,7 @@ export interface ChainAccount {
 
   fetchBalance: (assetId: string) => Promise<void>
 
-  fetchAllBalances: (
+  fetchBalances: (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
   ) => Promise<void>
 
@@ -96,7 +96,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   abstract fetchBalance (assetId: string): Promise<void>
 
-  async fetchAllBalances (
+  async fetchBalances (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
   ): Promise<void> {
     const fetchers: Array<Promise<void>> = []
@@ -108,7 +108,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   }
 
   async fetchAllChainBalances (): Promise<void> {
-    await this.fetchAllBalances(this.chain.getRegisteredAssets())
+    await this.fetchBalances(this.chain.getRegisteredAssets())
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
@@ -146,7 +146,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     await this.refreshBalances()
   }
 
-  override async fetchAllBalances (
+  override async fetchBalances (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
   ): Promise<void> {
     // assets here are not useful because of utxos
@@ -161,7 +161,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   }
 
   protected async refreshBalances (): Promise<void> {
-    await this.fetchAllBalances([])
+    await this.fetchBalances([])
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>

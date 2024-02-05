@@ -165,11 +165,11 @@ export class MCNAccount {
     // complex such as those with a range higher than Chain we fetch it everywhere
     if (summary.operation.range !== NetworkOperationRange.Chain) {
       for (const chain of summary.getChains()) {
-        await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
+        await this.getAccount(chain.id).fetchAllChainBalances()
       }
     } else {
       const operation: ChainNetworkOperation = summary.operation as ChainNetworkOperation
-      await this.getAccount(operation.chain.id).fetchAllBalances(summary.getAssets().values())
+      await this.getAccount(operation.chain.id).fetchBalances(summary.getAssets().values())
     }
     this.executingChains = []
     throw error

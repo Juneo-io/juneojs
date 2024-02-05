@@ -18,9 +18,9 @@ export interface ChainAccount {
   readonly type: AccountType
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
-  wallet: MCNWallet
   chainWallet: VMWallet
   address: string
+  signers: VMWallet[]
 
   /**
    * Gets the balance from this account of an asset.
@@ -38,6 +38,8 @@ export interface ChainAccount {
   getBalance: (provider: MCNProvider, assetId: string) => Promise<AssetValue>
 
   getValue: (assetId: string) => bigint
+
+  getSignersAddresses: () => string[]
 
   addBalanceListener: (assetId: string, listener: BalanceListener) => void
 
@@ -58,16 +60,16 @@ export abstract class AbstractChainAccount implements ChainAccount {
   type: AccountType
   chain: Blockchain
   balances = new Map<string, Balance>()
-  wallet: MCNWallet
   chainWallet: VMWallet
   address: string
+  signers: VMWallet[] = []
 
   constructor (type: AccountType, chain: Blockchain, wallet: MCNWallet) {
     this.type = type
     this.chain = chain
-    this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
     this.address = this.chainWallet.getAddress()
+    this.signers.push(this.chainWallet)
   }
 
   getAssetBalance (asset: TokenAsset): AssetValue {
@@ -85,6 +87,14 @@ export abstract class AbstractChainAccount implements ChainAccount {
       return BigInt(0)
     }
     return this.balances.get(assetId)!.getValue()
+  }
+
+  getSignersAddresses (): string[] {
+    const addresses: string[] = []
+    for (const signer of this.signers) {
+      addresses.push(signer.getAddress())
+    }
+    return addresses
   }
 
   addBalanceListener (assetId: string, listener: BalanceListener): void {
@@ -130,9 +140,9 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoSetMultiSig: Utxo[] = []
   utxoSetTimelocked: Utxo[] = []
-  utxoApi: AbstractUtxoAPI
-  sourceChain?: string
   protected fetching: boolean = false
+  private readonly sourceChain?: string
+  private readonly utxoApi: AbstractUtxoAPI
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
     super(AccountType.Utxo, chain, wallet)
@@ -201,13 +211,33 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
         this.utxoSetTimelocked.push(utxo)
-      } else if (utxo.output.threshold > 1) {
+      } else if (this.hasThreshold(utxo)) {
         this.utxoSetMultiSig.push(utxo)
       } else {
         spendableUtxoSet.push(utxo)
       }
     }
     this.utxoSet = spendableUtxoSet
+  }
+
+  private hasThreshold (utxo: Utxo): boolean {
+    let value: number = 1
+    // There could be duplicate addresses in signers list. User could input a mnemonic and then a private key in the vault.
+    // Make sure every address is only used once when verifying the threshold.
+    const usedAddresses = new Set<string>()
+    for (const address of utxo.output.addresses) {
+      for (const signer of this.signers) {
+        if (!usedAddresses.has(signer.getAddress()) && address.matches(signer.getAddress())) {
+          value += 1
+          if (value >= utxo.output.threshold) {
+            return true
+          }
+          usedAddresses.add(signer.getAddress())
+          continue
+        }
+      }
+    }
+    return false
   }
 
   private calculateBalances (): void {

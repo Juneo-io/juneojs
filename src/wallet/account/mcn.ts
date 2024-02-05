@@ -1,5 +1,5 @@
 import { AccountError, sortSpendings } from '../../utils'
-import { type MCNWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import {
   NetworkOperationType,
   NetworkOperationStatus,
@@ -51,6 +51,15 @@ export class MCNAccount {
       throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
     }
     return this.chainAccounts.get(chainId)!
+  }
+
+  addSignerAccount (account: MCNAccount): void {
+    for (const chainAccount of this.chainAccounts.values()) {
+      if (chainAccount.type === AccountType.Utxo) {
+        const signer: VMWallet = account.getAccount(chainAccount.chain.id).chainWallet
+        chainAccount.signers.push(signer)
+      }
+    }
   }
 
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {

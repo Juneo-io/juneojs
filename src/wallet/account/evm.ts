@@ -35,15 +35,16 @@ export class EVMAccount extends AbstractChainAccount {
     super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
-    this.chainWallet = this.wallet.getJEVMWallet(this.chain)
+    this.chainWallet = wallet.getJEVMWallet(this.chain)
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
-    this.sendManager = new SendManager(provider, wallet)
+    this.sendManager = new SendManager(provider)
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fee: EVMFeeData = await this.sendManager.estimateSendEVM(
+        this.chainWallet,
         this.chain.id,
         send.assetId,
         send.amount,
@@ -67,6 +68,7 @@ export class EVMAccount extends AbstractChainAccount {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendEVM(
+        this.chainWallet,
         this.chain.id,
         send.assetId,
         send.amount,

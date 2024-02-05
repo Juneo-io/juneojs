@@ -71,7 +71,7 @@ export async function estimatePlatformAddValidatorTransaction (
 
 export async function estimatePlatformValidateOperation (
   provider: MCNProvider,
-  wallet: MCNWallet,
+  wallet: VMWallet,
   validate: ValidateOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
@@ -89,7 +89,7 @@ export async function estimatePlatformValidateOperation (
   const values = new Map<string, bigint>()
   return await estimatePlatformAddValidatorTransaction(
     provider,
-    wallet.getWallet(chain),
+    wallet,
     validator,
     ValidationShare,
     account.utxoSet
@@ -141,7 +141,7 @@ export async function estimatePlatformAddDelegatorTransaction (
 
 export async function estimatePlatformDelegateOperation (
   provider: MCNProvider,
-  wallet: MCNWallet,
+  wallet: VMWallet,
   delegate: DelegateOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
@@ -157,12 +157,7 @@ export async function estimatePlatformDelegateOperation (
     delegate.amount
   )
   const values = new Map<string, bigint>()
-  return await estimatePlatformAddDelegatorTransaction(
-    provider,
-    wallet.getWallet(chain),
-    validator,
-    account.utxoSet
-  ).then(
+  return await estimatePlatformAddDelegatorTransaction(provider, wallet, validator, account.utxoSet).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
       return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)

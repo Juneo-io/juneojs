@@ -22,7 +22,7 @@ async function getJVMBaseTxFee (provider: MCNProvider, type: FeeType): Promise<B
 
 export async function estimateJVMBaseTransaction (
   provider: MCNProvider,
-  wallet: MCNWallet,
+  account: JVMAccount,
   assetId: string,
   amount: bigint,
   addresses: string[],
@@ -32,15 +32,15 @@ export async function estimateJVMBaseTransaction (
 ): Promise<UtxoFeeData> {
   const api: JVMAPI = provider.jvm
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [wallet.getAddress(api.chain)])
+    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
   }
   const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
   const transaction: UnsignedTransaction = buildJVMBaseTransaction(
-    [new UserInput(assetId, api.chain, amount, addresses, threshold, api.chain)],
+    [new UserInput(assetId, api.chain, amount, addresses, threshold, api.chain, locktime)],
     utxoSet,
-    [wallet.getAddress(api.chain)],
+    account.getSignersAddresses(),
     fee.amount,
-    wallet.getAddress(api.chain),
+    account.address,
     provider.mcn.id,
     api.chain.id
   )
@@ -49,15 +49,14 @@ export async function estimateJVMBaseTransaction (
 
 export async function estimateJVMSendOperation (
   provider: MCNProvider,
-  wallet: MCNWallet,
-  send: SendOperation,
-  account: JVMAccount
+  account: JVMAccount,
+  send: SendOperation
 ): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
   const values = new Map<string, bigint>([[send.assetId, send.amount]])
   return await estimateJVMBaseTransaction(
     provider,
-    wallet,
+    account,
     send.assetId,
     send.amount,
     [send.address],
@@ -84,15 +83,14 @@ export async function estimateJVMSendOperation (
 
 export async function estimateJVMSendUtxoOperation (
   provider: MCNProvider,
-  wallet: MCNWallet,
-  send: SendUtxoOperation,
-  account: JVMAccount
+  account: JVMAccount,
+  send: SendUtxoOperation
 ): Promise<ChainOperationSummary> {
   const chain: JVMBlockchain = provider.jvm.chain
   const values = new Map<string, bigint>([[send.assetId, send.amount]])
   return await estimateJVMBaseTransaction(
     provider,
-    wallet,
+    account,
     send.assetId,
     send.amount,
     send.addresses,

@@ -8,7 +8,6 @@ import {
   type UtxoFeeData,
   estimateJVMBaseTransaction
 } from './transaction'
-import { type Utxo } from '../transaction'
 import { type JVMAccount, type MCNProvider } from '../juneo'
 import { isContractAddress } from '../utils'
 

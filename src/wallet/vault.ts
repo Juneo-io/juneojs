@@ -3,7 +3,7 @@ import { type MCNAccount } from './account'
 
 export class MCNVault {
   private readonly provider: MCNProvider
-  private mainAccount: MCNAccount
+  private readonly mainAccount: MCNAccount
   private readonly accounts = new Map<string, MCNAccount>()
 
   constructor (provider: MCNProvider, mainAccount: MCNAccount, accounts: MCNAccount[]) {

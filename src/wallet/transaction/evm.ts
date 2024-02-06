@@ -12,7 +12,8 @@ import {
   estimateAtomicExportGas,
   estimateAtomicImportGas,
   TransactionError,
-  sleep
+  sleep,
+  fetchUtxos
 } from '../../utils'
 import {
   type JEVMExportTransaction,
@@ -20,8 +21,7 @@ import {
   UserInput,
   type Utxo,
   buildJEVMExportTransaction,
-  buildJEVMImportTransaction,
-  fetchUtxos
+  buildJEVMImportTransaction
 } from '../../transaction'
 import { type VMWallet, type MCNWallet, type JEVMWallet } from '../wallet'
 import { type JRC20Asset } from '../../asset'

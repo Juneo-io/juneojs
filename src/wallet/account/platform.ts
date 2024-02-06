@@ -32,9 +32,19 @@ export class PlatformAccount extends UtxoAccount {
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Validate) {
-      return await estimatePlatformValidateOperation(this.provider, this.wallet, operation as ValidateOperation, this)
+      return await estimatePlatformValidateOperation(
+        this.provider,
+        this.chainWallet,
+        operation as ValidateOperation,
+        this
+      )
     } else if (operation.type === NetworkOperationType.Delegate) {
-      return await estimatePlatformDelegateOperation(this.provider, this.wallet, operation as DelegateOperation, this)
+      return await estimatePlatformDelegateOperation(
+        this.provider,
+        this.chainWallet,
+        operation as DelegateOperation,
+        this
+      )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }

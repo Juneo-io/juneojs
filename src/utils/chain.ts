@@ -48,7 +48,7 @@ export async function fetchJNT (provider: MCNProvider, assetId: string): Promise
   }
   const jvm: JVMAPI = provider.jvm
   if (jvm.chain.registeredAssets.has(assetId)) {
-    return jvm.chain.registeredAssets.get(assetId) as TokenAsset
+    return jvm.chain.registeredAssets.get(assetId)!
   }
   const response: GetAssetDescriptionResponse = await jvm.getAssetDescription(assetId).catch((error) => {
     throw new ChainError(`could not fetch asset id ${assetId}: ${error.message}`)

@@ -2,8 +2,15 @@ import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
 import { type JRC20Asset } from '../asset'
 import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, type JEVMBlockchain, type JVMBlockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { fetchUtxos, type Secp256k1Output, type Utxo } from '../transaction'
-import { AtomicDenomination, CrossError, getUtxoAPI, getUtxosAmountValues, trackJuneoTransaction } from '../utils'
+import { type Secp256k1Output, type Utxo } from '../transaction'
+import {
+  AtomicDenomination,
+  CrossError,
+  getUtxoAPI,
+  getUtxosAmountValues,
+  trackJuneoTransaction,
+  fetchUtxos
+} from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import {
   type ExecutableOperation,
@@ -268,19 +275,19 @@ export class CrossManager {
     const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
     if (fees[0].type === FeeType.Withdraw) {
-      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      const sender: string = account.getAccount(juneChain.id).address
       const amount: bigint = cross.amount + importFee.amount
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
         this.provider.jevm[juneChain.id],
         sender,
-        exportedJRC20 as JRC20Asset,
+        exportedJRC20!,
         amount
       )
       fees[0] = fee
       spendings.push(fee.spending)
     }
     if (typeof importedJRC20 !== 'undefined') {
-      const sender: string = account.getAccount(juneChain.id).addresses[0]
+      const sender: string = account.getAccount(juneChain.id).address
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
       cross.amount /= AtomicDenomination
       const fee: EVMFeeData = await estimateEVMDepositJRC20(
@@ -374,7 +381,7 @@ export class CrossManager {
       }
       // feeData.data.to is the jrc20 address for withdraw transactions
       // cross.assetId should be jrc20.nativeAssetId here
-      await juneAccount.fetchAllBalances([cross.assetId, feeData.data.to, feeData.assetId])
+      await juneAccount.fetchBalances([cross.assetId, feeData.data.to, feeData.assetId])
     }
     const balancesSync: Array<Promise<void>> = []
     let sourceUtxos: Utxo[] = []
@@ -388,7 +395,7 @@ export class CrossManager {
       cross.destination,
       cross.assetId,
       cross.amount,
-      destinationAccount.addresses[0],
+      destinationAccount.address,
       cross.sendImportFee,
       importFee,
       exportFee,
@@ -412,7 +419,7 @@ export class CrossManager {
     if (cross.sendImportFee && exportFee.assetId !== importFee.assetId && cross.assetId !== importFee.assetId) {
       exportTransactionAssets.push(importFee.assetId)
     }
-    balancesSync.push(sourceAccount.fetchAllBalances(exportTransactionAssets))
+    balancesSync.push(sourceAccount.fetchBalances(exportTransactionAssets))
     const utxoApi: AbstractUtxoAPI = getUtxoAPI(this.provider, cross.destination)
     // fetch imported utxos
     const destinationUtxos: Utxo[] = await fetchUtxos(
@@ -450,9 +457,9 @@ export class CrossManager {
       importTransactionAssets.push(importFee.assetId)
     }
     if (deposit) {
-      await destinationAccount.fetchAllBalances(importTransactionAssets)
+      await destinationAccount.fetchBalances(importTransactionAssets)
     } else {
-      balancesSync.push(destinationAccount.fetchAllBalances(importTransactionAssets))
+      balancesSync.push(destinationAccount.fetchBalances(importTransactionAssets))
     }
     if (deposit) {
       const juneChain: JEVMBlockchain = this.provider.june.chain
@@ -477,7 +484,7 @@ export class CrossManager {
       if (typeof jrc20 !== 'undefined') {
         depositAssets.push(jrc20.address)
       }
-      balancesSync.push(juneAccount.fetchAllBalances(depositAssets))
+      balancesSync.push(juneAccount.fetchBalances(depositAssets))
     }
     // wait for all balances to be synced before returning
     await Promise.all(balancesSync)
@@ -513,7 +520,7 @@ export class CrossManager {
     )
     let hasFeeValue: boolean = false
     if (values.has(fee.assetId)) {
-      const value: bigint = values.get(fee.assetId) as bigint
+      const value: bigint = values.get(fee.assetId)!
       hasFeeValue = value >= fee.amount
       // if importing more than one asset and one of those is the fee asset recalculate import with correct outputs count
       if (outputsCount > 1 && value > fee.amount) {
@@ -539,7 +546,7 @@ export class CrossManager {
       }
     }
     if (hasFeeValue && !payImportFee) {
-      const value: bigint = values.get(fee.assetId) as bigint
+      const value: bigint = values.get(fee.assetId)!
       values.set(fee.assetId, value - fee.amount)
     }
     return new CrossResumeOperationSummary(operation, fee, spendings, values, payImportFee, summaryUtxos)
@@ -616,7 +623,7 @@ export class CrossManager {
       throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching`)
     }
     const jrc20: JRC20Asset = operation.asset
-    await account.fetchAllBalances([fee.assetId, jrc20.nativeAssetId, jrc20.address])
+    await account.fetchBalances([fee.assetId, jrc20.nativeAssetId, jrc20.address])
   }
 
   async executeCrossResumeOperation (summary: CrossResumeOperationSummary, account: ChainAccount): Promise<void> {
@@ -638,7 +645,7 @@ export class CrossManager {
     if (!importSuccess) {
       throw new CrossError(`error during cross resume transaction ${importTransactionId} status fetching`)
     }
-    const promises: Array<Promise<void>> = [account.fetchAllBalances(summary.values.keys())]
+    const promises: Array<Promise<void>> = [account.fetchBalances(summary.values.keys())]
     if (!summary.values.has(summary.importFee.assetId)) {
       promises.push(account.fetchBalance(summary.importFee.assetId))
     }

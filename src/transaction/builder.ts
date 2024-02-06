@@ -1,7 +1,6 @@
 import { InputError, OutputError } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput } from './output'
-import { type Utxo } from './utxo'
+import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput, type Utxo } from './output'
 import * as time from '../utils/time'
 import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
@@ -18,7 +17,7 @@ export function buildTransactionInputs (
       const assetId: string = fee.assetId
       let targetAmount: bigint = BigInt(fee.amount)
       if (targetAmounts.has(assetId)) {
-        targetAmount += targetAmounts.get(assetId) as bigint
+        targetAmount += targetAmounts.get(assetId)!
       }
       targetAmounts.set(assetId, targetAmount)
     }
@@ -28,7 +27,7 @@ export function buildTransactionInputs (
     const assetId: string = input.assetId
     let targetAmount: bigint = BigInt(input.amount)
     if (targetAmounts.has(assetId)) {
-      targetAmount += targetAmounts.get(assetId) as bigint
+      targetAmount += targetAmounts.get(assetId)!
     }
     targetAmounts.set(assetId, targetAmount)
   })
@@ -63,7 +62,7 @@ export function buildTransactionInputs (
     const assetId: string = utxo.assetId.assetId
     let gathered: bigint = BigInt(output.amount)
     if (gatheredAmounts.has(assetId)) {
-      gathered += gatheredAmounts.get(assetId) as bigint
+      gathered += gatheredAmounts.get(assetId)!
     }
     gatheredAmounts.set(assetId, gathered)
   }
@@ -76,7 +75,7 @@ export function buildTransactionInputs (
 function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
   let complete: boolean = true
   targets.forEach((target, key) => {
-    if (!gathereds.has(key) || (gathereds.get(key) as bigint) < target) {
+    if (!gathereds.has(key) || gathereds.get(key)! < target) {
       complete = false
       return false
     }
@@ -113,19 +112,14 @@ export function buildTransactionOutputs (
     outputs.push(
       new UserOutput(
         new AssetId(input.assetId),
-        new Secp256k1Output(
-          input.amount,
-          input.locktime,
-          input.threshold,
-          Address.toAddresses(input.addresses)
-        ),
+        new Secp256k1Output(input.amount, input.locktime, input.threshold, Address.toAddresses(input.addresses)),
         false
       )
     )
     const assetId: string = input.assetId
     let spentAmount: bigint = BigInt(input.amount)
     if (spentAmounts.has(assetId)) {
-      spentAmount += spentAmounts.get(assetId) as bigint
+      spentAmount += spentAmounts.get(assetId)!
     }
     spentAmounts.set(assetId, spentAmount)
   })
@@ -135,7 +129,7 @@ export function buildTransactionOutputs (
     const assetId: string = input.getAssetId().assetId
     let amount: bigint = BigInt(input.getAmount())
     if (availableAmounts.has(assetId)) {
-      amount += availableAmounts.get(assetId) as bigint
+      amount += availableAmounts.get(assetId)!
     }
     availableAmounts.set(assetId, amount)
   })
@@ -144,8 +138,8 @@ export function buildTransactionOutputs (
   // also adding extra outputs to avoid losses if we have unspent values
   for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId) as bigint) : BigInt(0)
-    const available: bigint = availableAmounts.has(assetId) ? (availableAmounts.get(assetId) as bigint) : BigInt(0)
+    const spent: bigint = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
+    const available: bigint = availableAmounts.has(assetId) ? availableAmounts.get(assetId)! : BigInt(0)
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')
     }
@@ -169,7 +163,7 @@ export function buildTransactionOutputs (
     // adding the spending of the change output
     let amount: bigint = available - spent
     if (spentAmounts.has(assetId)) {
-      amount += spentAmounts.get(assetId) as bigint
+      amount += spentAmounts.get(assetId)!
     }
     spentAmounts.set(assetId, amount)
   }
@@ -188,7 +182,7 @@ function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
       key += address.serialize().toHex()
     })
     if (spendings.has(key)) {
-      const out: TransactionOutput = (spendings.get(key) as UserOutput).output
+      const out: TransactionOutput = spendings.get(key)!.output
       ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
     } else {
       mergedOutputs.push(output)

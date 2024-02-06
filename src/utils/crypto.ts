@@ -20,7 +20,7 @@ function recoverPubKey (hash: Buffer, signature: Signature, recovery: number): s
 }
 
 export class ECKeyPair {
-  private readonly privateKey: string
+  readonly privateKey: string
   readonly publicKey: string
 
   constructor (privateKey: string) {

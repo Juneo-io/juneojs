@@ -2,8 +2,8 @@ import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type Utxo, fetchUtxos } from '../../transaction'
-import { getUtxosAmountValues, type AssetValue } from '../../utils'
+import { type Utxo } from '../../transaction'
+import { getUtxosAmountValues, type AssetValue, fetchUtxos, now } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -18,9 +18,9 @@ export interface ChainAccount {
   readonly type: AccountType
   readonly chain: Blockchain
   readonly balances: Map<string, Balance>
-  wallet: MCNWallet
   chainWallet: VMWallet
-  addresses: string[]
+  address: string
+  signers: VMWallet[]
 
   /**
    * Gets the balance from this account of an asset.
@@ -39,11 +39,13 @@ export interface ChainAccount {
 
   getValue: (assetId: string) => bigint
 
+  getSignersAddresses: () => string[]
+
   addBalanceListener: (assetId: string, listener: BalanceListener) => void
 
   fetchBalance: (assetId: string) => Promise<void>
 
-  fetchAllBalances: (
+  fetchBalances: (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
   ) => Promise<void>
 
@@ -58,16 +60,16 @@ export abstract class AbstractChainAccount implements ChainAccount {
   type: AccountType
   chain: Blockchain
   balances = new Map<string, Balance>()
-  wallet: MCNWallet
   chainWallet: VMWallet
-  addresses: string[] = []
+  address: string
+  signers: VMWallet[] = []
 
   constructor (type: AccountType, chain: Blockchain, wallet: MCNWallet) {
     this.type = type
     this.chain = chain
-    this.wallet = wallet
     this.chainWallet = wallet.getWallet(chain)
-    this.addresses.push(this.chainWallet.getAddress())
+    this.address = this.chainWallet.getAddress()
+    this.signers.push(this.chainWallet)
   }
 
   getAssetBalance (asset: TokenAsset): AssetValue {
@@ -84,19 +86,27 @@ export abstract class AbstractChainAccount implements ChainAccount {
       this.balances.set(assetId, new Balance())
       return BigInt(0)
     }
-    return (this.balances.get(assetId) as Balance).getValue()
+    return this.balances.get(assetId)!.getValue()
+  }
+
+  getSignersAddresses (): string[] {
+    const addresses: string[] = []
+    for (const signer of this.signers) {
+      addresses.push(signer.getAddress())
+    }
+    return addresses
   }
 
   addBalanceListener (assetId: string, listener: BalanceListener): void {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    ;(this.balances.get(assetId) as Balance).registerEvents(listener)
+    this.balances.get(assetId)!.registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
 
-  async fetchAllBalances (
+  async fetchBalances (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
   ): Promise<void> {
     const fetchers: Array<Promise<void>> = []
@@ -108,7 +118,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   }
 
   async fetchAllChainBalances (): Promise<void> {
-    await this.fetchAllBalances(this.chain.getRegisteredAssets())
+    await this.fetchBalances(this.chain.getRegisteredAssets())
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
@@ -118,7 +128,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   protected spend (spendings: Spending[]): void {
     for (const spending of spendings) {
       const exists: boolean = this.balances.has(spending.assetId)
-      const balance: Balance = exists ? (this.balances.get(spending.assetId) as Balance) : new Balance()
+      const balance: Balance = exists ? this.balances.get(spending.assetId)! : new Balance()
       if (exists) {
         balance.spend(spending.amount)
       }
@@ -128,9 +138,11 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
 export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
-  utxoApi: AbstractUtxoAPI
-  sourceChain?: string
+  utxoSetMultiSig: Utxo[] = []
+  utxoSetTimelocked: Utxo[] = []
   protected fetching: boolean = false
+  private readonly sourceChain?: string
+  private readonly utxoApi: AbstractUtxoAPI
 
   protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
     super(AccountType.Utxo, chain, wallet)
@@ -144,7 +156,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     await this.refreshBalances()
   }
 
-  override async fetchAllBalances (
+  override async fetchBalances (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>
   ): Promise<void> {
     // assets here are not useful because of utxos
@@ -152,13 +164,14 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       return
     }
     this.fetching = true
-    this.utxoSet = await fetchUtxos(this.utxoApi, this.addresses, this.sourceChain)
+    this.utxoSet = await fetchUtxos(this.utxoApi, [this.address], this.sourceChain)
+    this.sortUtxoSet()
     this.calculateBalances()
     this.fetching = false
   }
 
   protected async refreshBalances (): Promise<void> {
-    await this.fetchAllBalances([])
+    await this.fetchBalances([])
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
@@ -190,13 +203,50 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.utxoSet = utxos
   }
 
+  private sortUtxoSet (): void {
+    const spendableUtxoSet: Utxo[] = []
+    this.utxoSetMultiSig = []
+    this.utxoSetTimelocked = []
+    const currentTime: bigint = now()
+    for (const utxo of this.utxoSet) {
+      if (utxo.output.locktime > currentTime) {
+        this.utxoSetTimelocked.push(utxo)
+      } else if (this.hasThreshold(utxo)) {
+        this.utxoSetMultiSig.push(utxo)
+      } else {
+        spendableUtxoSet.push(utxo)
+      }
+    }
+    this.utxoSet = spendableUtxoSet
+  }
+
+  private hasThreshold (utxo: Utxo): boolean {
+    let value: number = 1
+    // There could be duplicate addresses in signers list. User could input a mnemonic and then a private key in the vault.
+    // Make sure every address is only used once when verifying the threshold.
+    const usedAddresses = new Set<string>()
+    for (const address of utxo.output.addresses) {
+      for (const signer of this.signers) {
+        if (!usedAddresses.has(signer.getAddress()) && address.matches(signer.getAddress())) {
+          value += 1
+          if (value >= utxo.output.threshold) {
+            return true
+          }
+          usedAddresses.add(signer.getAddress())
+          continue
+        }
+      }
+    }
+    return false
+  }
+
   private calculateBalances (): void {
     const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
     for (const [key, value] of values) {
       if (!this.balances.has(key)) {
         this.balances.set(key, new Balance())
       }
-      const balance: Balance = this.balances.get(key) as Balance
+      const balance: Balance = this.balances.get(key)!
       balance.update(value)
     }
     for (const [key, balance] of this.balances) {

@@ -35,15 +35,16 @@ export class EVMAccount extends AbstractChainAccount {
     super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
-    this.chainWallet = this.wallet.getJEVMWallet(this.chain)
+    this.chainWallet = wallet.getJEVMWallet(this.chain)
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
-    this.sendManager = new SendManager(provider, wallet)
+    this.sendManager = new SendManager(provider)
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const fee: EVMFeeData = await this.sendManager.estimateSendEVM(
+        this.chainWallet,
         this.chain.id,
         send.assetId,
         send.amount,
@@ -67,6 +68,7 @@ export class EVMAccount extends AbstractChainAccount {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
       const transactionHash: string = await this.sendManager.sendEVM(
+        this.chainWallet,
         this.chain.id,
         send.assetId,
         send.amount,
@@ -93,14 +95,14 @@ export class EVMAccount extends AbstractChainAccount {
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self
-    await this.fetchAllBalances(summary.getAssets().values())
+    await this.fetchBalances(summary.getAssets().values())
   }
 
   async fetchBalance (assetId: string): Promise<void> {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
     }
-    const balance: Balance = this.balances.get(assetId) as Balance
+    const balance: Balance = this.balances.get(assetId)!
     const address: string = this.chainWallet.getAddress()
     await balance.updateAsync(this.chain.queryEVMBalance(this.api, address, assetId))
   }

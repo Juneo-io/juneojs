@@ -1,10 +1,16 @@
 import { type TokenAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 
+export enum VMAccountType {
+  Utxo = 'Utxo',
+  Nonce = 'Nonce',
+}
+
 export interface Blockchain {
   name: string
   id: string
   vmId: string
+  accountType: VMAccountType
   asset: TokenAsset
   assetId: string
   aliases: string[]
@@ -22,6 +28,7 @@ export abstract class AbstractBlockchain implements Blockchain {
   name: string
   id: string
   vmId: string
+  accountType: VMAccountType
   asset: TokenAsset
   assetId: string
   aliases: string[]
@@ -31,6 +38,7 @@ export abstract class AbstractBlockchain implements Blockchain {
     name: string,
     id: string,
     vmId: string,
+    accountType: VMAccountType,
     asset: TokenAsset,
     aliases: string[] = [],
     registeredAssets: TokenAsset[] = []
@@ -38,6 +46,7 @@ export abstract class AbstractBlockchain implements Blockchain {
     this.name = name
     this.id = id
     this.vmId = vmId
+    this.accountType = accountType
     this.asset = asset
     this.assetId = asset.assetId
     this.aliases = aliases
@@ -57,7 +66,7 @@ export abstract class AbstractBlockchain implements Blockchain {
 
   async getAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
     if (this.registeredAssets.has(assetId)) {
-      return this.registeredAssets.get(assetId) as TokenAsset
+      return this.registeredAssets.get(assetId)!
     }
     const asset: TokenAsset = await this.fetchAsset(provider, assetId)
     this.addRegisteredAsset(asset)

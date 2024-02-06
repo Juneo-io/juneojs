@@ -1,5 +1,5 @@
 import { AccountError, sortSpendings } from '../../utils'
-import { type MCNWallet } from '../wallet'
+import { type VMWallet, type MCNWallet } from '../wallet'
 import {
   NetworkOperationType,
   NetworkOperationStatus,
@@ -23,7 +23,6 @@ import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
-import { type Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -51,19 +50,16 @@ export class MCNAccount {
     if (!this.chainAccounts.has(chainId)) {
       throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
     }
-    return this.chainAccounts.get(chainId) as ChainAccount
+    return this.chainAccounts.get(chainId)!
   }
 
-  /**
-   * @deprecated
-   * Fetch the balances of all the registered assets of the chains of the accounts.
-   */
-  async fetchChainsBalances (): Promise<void> {
-    const promises: Array<Promise<void>> = []
-    for (const account of this.chainAccounts.values()) {
-      promises.push(account.fetchAllBalances(account.chain.getRegisteredAssets()))
+  addSignerAccount (account: MCNAccount): void {
+    for (const chainAccount of this.chainAccounts.values()) {
+      if (chainAccount.type === AccountType.Utxo) {
+        const signer: VMWallet = account.getAccount(chainAccount.chain.id).chainWallet
+        chainAccount.signers.push(signer)
+      }
     }
-    await Promise.all(promises)
   }
 
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {
@@ -178,11 +174,11 @@ export class MCNAccount {
     // complex such as those with a range higher than Chain we fetch it everywhere
     if (summary.operation.range !== NetworkOperationRange.Chain) {
       for (const chain of summary.getChains()) {
-        await this.getAccount(chain.id).fetchAllBalances(chain.getRegisteredAssets())
+        await this.getAccount(chain.id).fetchAllChainBalances()
       }
     } else {
       const operation: ChainNetworkOperation = summary.operation as ChainNetworkOperation
-      await this.getAccount(operation.chain.id).fetchAllBalances(summary.getAssets().values())
+      await this.getAccount(operation.chain.id).fetchBalances(summary.getAssets().values())
     }
     this.executingChains = []
     throw error
@@ -194,7 +190,7 @@ export class MCNAccount {
     for (const spending of spendings.values()) {
       const assetId: string = spending.assetId
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (account.getValue(assetId) < spending.amount || (account.balances.get(assetId) as Balance).shouldUpdate()) {
+      if (account.getValue(assetId) < spending.amount || account.balances.get(assetId)!.shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }

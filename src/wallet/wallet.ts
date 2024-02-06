@@ -56,7 +56,7 @@ export class MCNWallet {
     if (!this.chainsWallets.has(chain.id)) {
       this.setChainWallet(chain)
     }
-    return this.chainsWallets.get(chain.id) as VMWallet
+    return this.chainsWallets.get(chain.id)!
   }
 
   getJEVMWallet (chain: JEVMBlockchain): JEVMWallet {
@@ -148,6 +148,8 @@ export interface VMWallet {
 
   getJuneoAddress: () => string
 
+  getKeyPair: () => ECKeyPair
+
   sign: (buffer: JuneoBuffer) => JuneoBuffer
 }
 
@@ -180,6 +182,10 @@ export abstract class AbstractVMWallet implements VMWallet {
       return `${this.chain.aliases[0]}-${this.juneoAddress}`
     }
     return `${this.chain.id}-${this.juneoAddress}`
+  }
+
+  getKeyPair (): ECKeyPair {
+    return this.keyPair
   }
 
   sign (buffer: JuneoBuffer): JuneoBuffer {

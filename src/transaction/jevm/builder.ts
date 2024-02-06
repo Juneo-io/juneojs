@@ -1,10 +1,9 @@
 import { InputError, OutputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { type TransferableInput, UserInput } from '../input'
-import { type UserOutput } from '../output'
+import { type UserOutput, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId } from '../types'
-import { type Utxo } from '../utxo'
 import { EVMInput, EVMOutput, JEVMExportTransaction, JEVMImportTransaction } from './transaction'
 
 export function buildTransactionEVMInputs (
@@ -20,7 +19,7 @@ export function buildTransactionEVMInputs (
     const assetId: string = userInput.assetId
     let value: bigint = userInput.amount
     if (values.has(assetId)) {
-      value += values.get(assetId) as bigint
+      value += values.get(assetId)!
     }
     values.set(assetId, value)
   })
@@ -30,7 +29,7 @@ export function buildTransactionEVMInputs (
       const assetId: string = fee.assetId
       let value: bigint = fee.amount
       if (values.has(assetId)) {
-        value += values.get(assetId) as bigint
+        value += values.get(assetId)!
       }
       values.set(assetId, value)
     }
@@ -60,7 +59,7 @@ export function buildTransactionEVMOutputs (
     outputs.push(new EVMOutput(new Address(input.addresses[0]), input.amount, new AssetId(assetId)))
     let spentAmount: bigint = input.amount
     if (spentAmounts.has(assetId)) {
-      spentAmount += spentAmounts.get(assetId) as bigint
+      spentAmount += spentAmounts.get(assetId)!
     }
     spentAmounts.set(assetId, spentAmount)
   })
@@ -78,7 +77,7 @@ export function buildTransactionEVMOutputs (
   // verifying that inputs have the funds to pay for the spent amounts
   for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
-    const spent: bigint = spentAmounts.has(assetId) ? (spentAmounts.get(assetId) as bigint) : BigInt(0)
+    const spent: bigint = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     const available: bigint = availableAmounts[assetId]
     if (spent > available) {
       throw new OutputError('output would produce more than provided inputs')

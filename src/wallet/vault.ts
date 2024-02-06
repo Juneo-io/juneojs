@@ -1,4 +1,4 @@
-import { type MCNProvider } from '../juneo'
+import { NotImplementedError, type MCNProvider } from '../juneo'
 import { type MCNAccount } from './account'
 
 export class MCNVault {
@@ -27,12 +27,17 @@ export class MCNVault {
   }
 
   // Temporarily avoid it before fixing issue with signers to update too
-  // setMainAccount (account: MCNAccount): void {
-  //   if (!this.hasAccount(account)) {
-  //     this.addAccount(account)
-  //   }
-  //   this.mainAccount = account
-  // }
+  setMainAccount (account: MCNAccount): void {
+    throw new NotImplementedError('not implemented yet')
+    //   if (!this.hasAccount(account)) {
+    //     this.addAccount(account)
+    //   }
+    //   this.mainAccount = account
+  }
+
+  removeAccount (account: MCNAccount): void {
+    throw new NotImplementedError('not implemented yet')
+  }
 
   hasAccount (account: MCNAccount): boolean {
     return this.accounts.has(MCNVault.getAccountId(this.provider, account))

@@ -17,6 +17,7 @@ export class MCNVault {
 
   addAccount (account: MCNAccount): void {
     this.accounts.set(MCNVault.getAccountId(this.provider, account), account)
+    this.mainAccount.addSignerAccount(account)
   }
 
   addAccounts (accounts: MCNAccount[]): void {
@@ -25,12 +26,13 @@ export class MCNVault {
     }
   }
 
-  setMainAccount (account: MCNAccount): void {
-    this.mainAccount = account
-    if (!this.hasAccount(account)) {
-      this.addAccount(account)
-    }
-  }
+  // Temporarily avoid it before fixing issue with signers to update too
+  // setMainAccount (account: MCNAccount): void {
+  //   if (!this.hasAccount(account)) {
+  //     this.addAccount(account)
+  //   }
+  //   this.mainAccount = account
+  // }
 
   hasAccount (account: MCNAccount): boolean {
     return this.accounts.has(MCNVault.getAccountId(this.provider, account))
@@ -49,14 +51,6 @@ export class MCNVault {
 
   getMainAccount (): MCNAccount {
     return this.mainAccount
-  }
-
-  getAddresses (chainId: string): string[] {
-    const addresses: string[] = []
-    for (const account of this.accounts.values()) {
-      addresses.push(account.getAccount(chainId).address)
-    }
-    return addresses
   }
 
   private static getAccountId (provider: MCNProvider, account: MCNAccount): string {

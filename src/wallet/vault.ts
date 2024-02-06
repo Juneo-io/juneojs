@@ -1,33 +1,35 @@
 import { NotImplementedError, type MCNProvider } from '../juneo'
-import { type MCNAccount } from './account'
+import { MCNAccount } from './account'
+import { type MCNWallet } from './wallet'
 
 export class MCNVault {
   private readonly provider: MCNProvider
-  private readonly mainAccount: MCNAccount
-  private readonly accounts = new Map<string, MCNAccount>()
+  private readonly account: MCNAccount
+  private readonly wallets = new Map<string, MCNWallet>()
 
-  constructor (provider: MCNProvider, mainAccount: MCNAccount, accounts: MCNAccount[]) {
+  constructor (provider: MCNProvider, mainWallet: MCNWallet, wallets: MCNWallet[]) {
     this.provider = provider
-    this.mainAccount = mainAccount
-    if (!this.hasAccount(mainAccount)) {
-      this.addAccount(mainAccount)
+    this.account = new MCNAccount(provider, mainWallet)
+    this.addWallet(mainWallet)
+    this.addWallets(wallets)
+  }
+
+  addWallet (wallet: MCNWallet): void {
+    if (this.hasWallet(wallet)) {
+      return
     }
-    this.addAccounts(accounts)
+    this.wallets.set(MCNVault.getAccountId(this.provider, wallet), wallet)
+    this.account.addSigner(wallet)
   }
 
-  addAccount (account: MCNAccount): void {
-    this.accounts.set(MCNVault.getAccountId(this.provider, account), account)
-    this.mainAccount.addSignerAccount(account)
-  }
-
-  addAccounts (accounts: MCNAccount[]): void {
-    for (const account of accounts) {
-      this.addAccount(account)
+  addWallets (wallets: MCNWallet[]): void {
+    for (const wallet of wallets) {
+      this.addWallet(wallet)
     }
   }
 
   // Temporarily avoid it before fixing issue with signers to update too
-  setMainAccount (account: MCNAccount): void {
+  setMainWallet (wallet: MCNWallet): void {
     throw new NotImplementedError('not implemented yet')
     //   if (!this.hasAccount(account)) {
     //     this.addAccount(account)
@@ -35,32 +37,32 @@ export class MCNVault {
     //   this.mainAccount = account
   }
 
-  removeAccount (account: MCNAccount): void {
+  removeWallet (wallet: MCNWallet): void {
     throw new NotImplementedError('not implemented yet')
   }
 
-  hasAccount (account: MCNAccount): boolean {
-    return this.accounts.has(MCNVault.getAccountId(this.provider, account))
+  hasWallet (wallet: MCNWallet): boolean {
+    return this.wallets.has(MCNVault.getAccountId(this.provider, wallet))
   }
 
-  getAccountWithAddress (address: string): MCNAccount | undefined {
-    for (const account of this.accounts.values()) {
-      for (const chainAccount of account.chainAccounts.values()) {
-        if (chainAccount.address === address) {
-          return account
+  getWalletWithAddress (address: string): MCNWallet | undefined {
+    for (const wallet of this.wallets.values()) {
+      for (const chainWallet of wallet.chainsWallets.values()) {
+        if (chainWallet.getAddress() === address) {
+          return wallet
         }
       }
     }
     return undefined
   }
 
-  getMainAccount (): MCNAccount {
-    return this.mainAccount
+  getAccount (): MCNAccount {
+    return this.account
   }
 
-  private static getAccountId (provider: MCNProvider, account: MCNAccount): string {
-    const jvmId: string = account.getAccount(provider.jvm.chain.id).chainWallet.getKeyPair().publicKey
-    const evmId: string = account.getAccount(provider.june.chain.id).chainWallet.getKeyPair().publicKey
+  private static getAccountId (provider: MCNProvider, wallet: MCNWallet): string {
+    const jvmId: string = wallet.getWallet(provider.jvm.chain).getKeyPair().publicKey
+    const evmId: string = wallet.getWallet(provider.june.chain).getKeyPair().publicKey
     return `${jvmId}_${evmId}`
   }
 }

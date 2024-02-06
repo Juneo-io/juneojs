@@ -211,7 +211,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
         this.utxoSetTimelocked.push(utxo)
-      } else if (this.hasThreshold(utxo)) {
+      } else if (!this.hasThreshold(utxo)) {
         this.utxoSetMultiSig.push(utxo)
       } else {
         spendableUtxoSet.push(utxo)
@@ -221,7 +221,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   }
 
   private hasThreshold (utxo: Utxo): boolean {
-    let value: number = 1
+    let value: number = 0
     // There could be duplicate addresses in signers list. User could input a mnemonic and then a private key in the vault.
     // Make sure every address is only used once when verifying the threshold.
     const usedAddresses = new Set<string>()

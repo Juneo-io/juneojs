@@ -2,12 +2,40 @@ import { NotImplementedError, type MCNProvider } from '../juneo'
 import { MCNAccount } from './account'
 import { type MCNWallet } from './wallet'
 
+function getAccountId (provider: MCNProvider, wallet: MCNWallet): string {
+  const jvmId: string = wallet.getWallet(provider.jvm.chain).getKeyPair().publicKey
+  const evmId: string = wallet.getWallet(provider.june.chain).getKeyPair().publicKey
+  return `${jvmId}_${evmId}`
+}
+
+export class VaultWallet {
+  private readonly provider: MCNProvider
+  readonly wallet: MCNWallet
+
+  constructor (provider: MCNProvider, wallet: MCNWallet) {
+    this.provider = provider
+    this.wallet = wallet
+  }
+
+  getJVMAddress (): string {
+    return this.wallet.getAddress(this.provider.jvm.chain)
+  }
+
+  getEVMAddress (): string {
+    return this.wallet.getAddress(this.provider.june.chain)
+  }
+
+  getIdentifier (): string {
+    return getAccountId(this.provider, this.wallet)
+  }
+}
+
 export class MCNVault {
   private readonly provider: MCNProvider
-  private readonly account: MCNAccount
-  private readonly wallets = new Map<string, MCNWallet>()
+  readonly account: MCNAccount
+  readonly wallets = new Map<string, VaultWallet>()
 
-  constructor (provider: MCNProvider, mainWallet: MCNWallet, wallets: MCNWallet[]) {
+  constructor (provider: MCNProvider, mainWallet: MCNWallet, wallets: MCNWallet[] = []) {
     this.provider = provider
     this.account = new MCNAccount(provider, mainWallet)
     this.addWallet(mainWallet)
@@ -18,7 +46,7 @@ export class MCNVault {
     if (this.hasWallet(wallet)) {
       return
     }
-    this.wallets.set(MCNVault.getAccountId(this.provider, wallet), wallet)
+    this.wallets.set(getAccountId(this.provider, wallet), new VaultWallet(this.provider, wallet))
     this.account.addSigner(wallet)
   }
 
@@ -42,27 +70,17 @@ export class MCNVault {
   }
 
   hasWallet (wallet: MCNWallet): boolean {
-    return this.wallets.has(MCNVault.getAccountId(this.provider, wallet))
+    return this.wallets.has(getAccountId(this.provider, wallet))
   }
 
-  getWalletWithAddress (address: string): MCNWallet | undefined {
-    for (const wallet of this.wallets.values()) {
-      for (const chainWallet of wallet.chainsWallets.values()) {
+  getWalletWithAddress (address: string): VaultWallet | undefined {
+    for (const vaultWallet of this.wallets.values()) {
+      for (const chainWallet of vaultWallet.wallet.chainsWallets.values()) {
         if (chainWallet.getAddress() === address) {
-          return wallet
+          return vaultWallet
         }
       }
     }
     return undefined
-  }
-
-  getAccount (): MCNAccount {
-    return this.account
-  }
-
-  private static getAccountId (provider: MCNProvider, wallet: MCNWallet): string {
-    const jvmId: string = wallet.getWallet(provider.jvm.chain).getKeyPair().publicKey
-    const evmId: string = wallet.getWallet(provider.june.chain).getKeyPair().publicKey
-    return `${jvmId}_${evmId}`
   }
 }

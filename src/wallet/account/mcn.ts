@@ -53,10 +53,10 @@ export class MCNAccount {
     return this.chainAccounts.get(chainId)!
   }
 
-  addSignerAccount (account: MCNAccount): void {
+  addSigner (wallet: MCNWallet): void {
     for (const chainAccount of this.chainAccounts.values()) {
       if (chainAccount.type === AccountType.Utxo) {
-        const signer: VMWallet = account.getAccount(chainAccount.chain.id).chainWallet
+        const signer: VMWallet = wallet.getWallet(chainAccount.chain)
         chainAccount.signers.push(signer)
       }
     }

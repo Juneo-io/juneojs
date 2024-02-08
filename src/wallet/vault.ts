@@ -1,4 +1,4 @@
-import { NotImplementedError, type MCNProvider } from '../juneo'
+import { NotImplementedError, VaultError, type MCNProvider } from '../juneo'
 import { MCNAccount } from './account'
 import { type MCNWallet } from './wallet'
 
@@ -44,7 +44,7 @@ export class MCNVault {
 
   addWallet (wallet: MCNWallet): void {
     if (this.hasWallet(wallet)) {
-      return
+      throw new VaultError('vault already contains this wallet')
     }
     this.wallets.set(getAccountId(this.provider, wallet), new VaultWallet(this.provider, wallet))
     this.account.addSigner(wallet)

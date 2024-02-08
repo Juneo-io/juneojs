@@ -6,16 +6,12 @@ export interface Signable {
   sign: (bytes: JuneoBuffer, wallets: VMWallet[]) => Signature[]
 }
 
-export interface TransactionCredentials extends Serializable {
+export abstract class TransactionCredentials implements Serializable {
   typeId: number
   signatures: Signature[]
-}
 
-export class Secp256k1Credentials implements TransactionCredentials {
-  typeId: number = 0x00000009
-  signatures: Signature[]
-
-  constructor (signatures: Signature[]) {
+  constructor (typeId: number, signatures: Signature[]) {
+    this.typeId = typeId
     this.signatures = signatures
   }
 
@@ -26,27 +22,39 @@ export class Secp256k1Credentials implements TransactionCredentials {
     )
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.signatures.length)
-    this.signatures.forEach((signature) => {
+    for (const signature of this.signatures) {
       buffer.write(signature.serialize())
-    })
+    }
     return buffer
+  }
+
+  static comparator = (a: TransactionCredentials, b: TransactionCredentials): number => {
+    return JuneoBuffer.comparator(a.serialize(), b.serialize())
+  }
+}
+
+export class Secp256k1Credentials extends TransactionCredentials {
+  constructor (signatures: Signature[]) {
+    super(0x00000009, signatures)
   }
 }
 
 export function sign (bytes: JuneoBuffer, unsignedInputs: Signable[], wallets: VMWallet[]): JuneoBuffer {
   const credentials: JuneoBuffer[] = []
   let credentialsSize: number = 0
-  unsignedInputs.forEach((input) => {
+  for (const input of unsignedInputs) {
     const signatures: Signature[] = input.sign(bytes, wallets)
-    const credential: JuneoBuffer = new Secp256k1Credentials(signatures).serialize()
-    credentialsSize += credential.length
-    credentials.push(credential)
-  })
+    const credential: TransactionCredentials = new Secp256k1Credentials(signatures)
+    const credentialBytes: JuneoBuffer = credential.serialize()
+    credentialsSize += credentialBytes.length
+    credentials.push(credentialBytes)
+  }
   const buffer: JuneoBuffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
   buffer.write(bytes)
   buffer.writeUInt32(credentials.length)
-  credentials.forEach((credential) => {
+  credentials.sort(JuneoBuffer.comparator)
+  for (const credential of credentials) {
     buffer.write(credential)
-  })
+  }
   return buffer
 }

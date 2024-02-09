@@ -37,7 +37,7 @@ export interface ChainAccount {
    */
   getBalance: (provider: MCNProvider, assetId: string) => Promise<AssetValue>
 
-  getValue: (assetId: string) => bigint
+  getAmount: (assetId: string) => bigint
 
   getSignersAddresses: () => string[]
 
@@ -73,7 +73,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   }
 
   getAssetBalance (asset: TokenAsset): AssetValue {
-    return asset.getAssetValue(this.getValue(asset.assetId))
+    return asset.getAssetValue(this.getAmount(asset.assetId))
   }
 
   async getBalance (provider: MCNProvider, assetId: string): Promise<AssetValue> {
@@ -81,7 +81,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
     return this.getAssetBalance(asset)
   }
 
-  getValue (assetId: string): bigint {
+  getAmount (assetId: string): bigint {
     if (!this.balances.has(assetId)) {
       this.balances.set(assetId, new Balance())
       return BigInt(0)

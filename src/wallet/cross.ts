@@ -301,8 +301,8 @@ export class CrossManager {
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
     const destinationAssetId: string = cross.destination.assetId
-    const destinationBalance: bigint = destinationAccount.getValue(destinationAssetId)
-    let sourceBalance: bigint = sourceAccount.getValue(destinationAssetId)
+    const destinationBalance: bigint = destinationAccount.getAmount(destinationAssetId)
+    let sourceBalance: bigint = sourceAccount.getAmount(destinationAssetId)
     if (cross.assetId === destinationAssetId) {
       sourceBalance -= cross.amount
     }
@@ -536,7 +536,7 @@ export class CrossManager {
     let payImportFee: boolean = false
     const summaryUtxos: Utxo[] = [...utxos]
     if (!hasFeeValue) {
-      const balance: bigint = account.getAccount(operation.destination.id).getValue(fee.assetId)
+      const balance: bigint = account.getAccount(operation.destination.id).getAmount(fee.assetId)
       if (this.canPayImportFee(operation.destination, fee.amount, balance)) {
         spendings.push(fee.spending)
         summaryUtxos.push(

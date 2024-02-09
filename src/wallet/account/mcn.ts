@@ -190,7 +190,7 @@ export class MCNAccount {
     for (const spending of spendings.values()) {
       const assetId: string = spending.assetId
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (account.getValue(assetId) < spending.amount || account.balances.get(assetId)!.shouldUpdate()) {
+      if (account.getAmount(assetId) < spending.amount || account.balances.get(assetId)!.shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }
@@ -198,7 +198,7 @@ export class MCNAccount {
     const faulty: Spending[] = []
     for (const spending of spendings.values()) {
       const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (spending.amount > account.getValue(spending.assetId)) {
+      if (spending.amount > account.getAmount(spending.assetId)) {
         faulty.push(spending)
       }
     }

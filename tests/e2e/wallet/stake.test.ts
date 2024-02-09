@@ -19,7 +19,7 @@ import {
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-const DEFAULT_TIMEOUT: number = 60_000
+const DEFAULT_TIMEOUT: number = 120_000
 const ONE_DAY: bigint = BigInt(86_400)
 
 const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse('http://172.232.42.69:9650'))

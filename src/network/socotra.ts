@@ -108,8 +108,9 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   BigInt('48000000000'),
   SocotraAddress,
   ['JUNE'],
-  [SocotraWJUNEAsset, ...jrc20Assets],
-  jrc20Assets
+  jrc20Assets,
+  jrc20Assets,
+  SocotraWJUNEAsset
 )
 export const SocotraETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ETH1-Chain',

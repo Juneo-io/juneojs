@@ -13,7 +13,7 @@ const SocotraStakeConfig: StakeConfig = new StakeConfig(
   BigInt(24 * 3600),
   BigInt(365 * 24 * 3600)
 )
-const SocotraAddress: string = 'https://api.socotra-test.network:9650'
+const SocotraAddress: string = 'https://api.genesis-testnet.network/ext/bc/JUNE/rpc'
 
 export const SocotraJUNEAssetId: string = '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8DNp1R8ob8kHkbR'
 export const SocotraETH1AssetId: string = 'JeUvxJPXoL3EtVGSPwtyYXVymxGbpcBcaa2Kq7TCB43HsKMAS'

@@ -111,6 +111,8 @@ export abstract class Staking extends ChainNetworkOperation {
   amount: bigint
   startTime: bigint
   endTime: bigint
+  rewardAddresses: string[]
+  threshold: number
 
   constructor (
     type: NetworkOperationType,
@@ -118,25 +120,45 @@ export abstract class Staking extends ChainNetworkOperation {
     nodeId: string,
     amount: bigint,
     startTime: bigint,
-    endTime: bigint
+    endTime: bigint,
+    rewardAddresses: string[],
+    threshold: number
   ) {
     super(type, mcn.primary.platform)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
     this.endTime = endTime
+    this.rewardAddresses = rewardAddresses
+    this.threshold = threshold
   }
 }
 
 export class ValidateOperation extends Staking {
-  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime)
+  constructor (
+    mcn: MCN,
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    rewardAddresses: string[],
+    threshold: number
+  ) {
+    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime, rewardAddresses, threshold)
   }
 }
 
 export class DelegateOperation extends Staking {
-  constructor (mcn: MCN, nodeId: string, amount: bigint, startTime: bigint, endTime: bigint) {
-    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime)
+  constructor (
+    mcn: MCN,
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint,
+    rewardAddresses: string[],
+    threshold: number
+  ) {
+    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime, rewardAddresses, threshold)
   }
 }
 

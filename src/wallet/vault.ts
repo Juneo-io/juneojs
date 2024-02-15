@@ -44,9 +44,6 @@ export class MCNVault {
   }
 
   addWallet (wallet: MCNWallet): void {
-    if (this.hasWallet(wallet)) {
-      throw new VaultError('vault already contains this wallet')
-    }
     this.addVaultWallet(new VaultWallet(this.provider, wallet))
   }
 

@@ -89,18 +89,4 @@ export class MCNVault {
       return wallet
     }
   }
-
-  /**
-   * @deprecated
-   */
-  getWalletWithAddress (address: string): VaultWallet | undefined {
-    for (const vaultWallet of this.wallets.values()) {
-      for (const chainWallet of vaultWallet.wallet.chainsWallets.values()) {
-        if (chainWallet.getAddress() === address) {
-          return vaultWallet
-        }
-      }
-    }
-    return undefined
-  }
 }

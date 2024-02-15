@@ -160,12 +160,13 @@ export function buildAddValidatorTransaction (
   stakeAmount: bigint,
   stakedAssetId: string,
   shares: number,
-  rewardAddress: string,
+  rewardAddresses: string[],
+  threshold: number,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddresses, threshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -187,16 +188,20 @@ export function buildAddValidatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), 1, [new Address(rewardAddress)])
+      new Secp256k1Output(stakeAmount, BigInt(0), threshold, Address.toAddresses(rewardAddresses))
     )
   ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(BigInt(0), 1, [new Address(rewardAddress)])
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
+    BigInt(0),
+    threshold,
+    Address.toAddresses(rewardAddresses)
+  )
   const changeOutputs: TransferableOutput[] = []
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     if (output.isChange) {
       changeOutputs.push(output)
     }
-  })
+  }
   return new AddValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
@@ -220,12 +225,13 @@ export function buildAddDelegatorTransaction (
   endTime: bigint,
   stakeAmount: bigint,
   stakedAssetId: string,
-  rewardAddress: string,
+  rewardAddresses: string[],
+  threshold: number,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddresses, threshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -247,16 +253,20 @@ export function buildAddDelegatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), 1, [new Address(rewardAddress)])
+      new Secp256k1Output(stakeAmount, BigInt(0), threshold, Address.toAddresses(rewardAddresses))
     )
   ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(BigInt(0), 1, [new Address(rewardAddress)])
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
+    BigInt(0),
+    threshold,
+    Address.toAddresses(rewardAddresses)
+  )
   const changeOutputs: TransferableOutput[] = []
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     if (output.isChange) {
       changeOutputs.push(output)
     }
-  })
+  }
   return new AddDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),

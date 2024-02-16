@@ -62,14 +62,14 @@ export abstract class AbstractChainAccount implements ChainAccount {
   balances = new Map<string, Balance>()
   chainWallet: VMWallet
   address: string
-  signers: VMWallet[] = []
+  signers: VMWallet[]
 
   constructor (type: AccountType, chain: Blockchain, wallet: MCNWallet) {
     this.type = type
     this.chain = chain
     this.chainWallet = wallet.getWallet(chain)
     this.address = this.chainWallet.getAddress()
-    this.signers.push(this.chainWallet)
+    this.signers = [this.chainWallet]
   }
 
   getAssetBalance (asset: TokenAsset): AssetValue {

@@ -3,7 +3,7 @@ import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
 import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
-import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType } from '../asset'
+import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType, type WrappedAsset } from '../asset'
 import { AbstractBlockchain, VMAccountType } from './chain'
 import { type MCNProvider } from '../juneo'
 
@@ -21,6 +21,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
   baseFee: bigint
   ethProvider: ethers.JsonRpcProvider
   jrc20Assets: JRC20Asset[]
+  wrappedAsset: WrappedAsset | undefined
   private readonly erc20Handler: ERC20ContractHandler
   private readonly contractManager: ContractManager = new ContractManager()
 
@@ -33,7 +34,8 @@ export class JEVMBlockchain extends AbstractBlockchain {
     nodeAddress: string,
     aliases?: string[],
     registeredAssets: TokenAsset[] = [],
-    jrc20Assets: JRC20Asset[] = []
+    jrc20Assets: JRC20Asset[] = [],
+    wrappedAsset?: WrappedAsset | undefined
   ) {
     super(name, id, JEVM_ID, VMAccountType.Nonce, asset, aliases, registeredAssets)
     this.asset = asset
@@ -41,6 +43,10 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.baseFee = baseFee
     this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${id}/rpc`)
     this.jrc20Assets = jrc20Assets
+    this.wrappedAsset = wrappedAsset
+    if (typeof wrappedAsset !== 'undefined') {
+      this.addRegisteredAsset(wrappedAsset)
+    }
     this.erc20Handler = new ERC20ContractHandler(this.ethProvider)
     this.contractManager.registerHandler(this.erc20Handler)
   }

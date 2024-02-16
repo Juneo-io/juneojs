@@ -32,19 +32,9 @@ export class PlatformAccount extends UtxoAccount {
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Validate) {
-      return await estimatePlatformValidateOperation(
-        this.provider,
-        this.chainWallet,
-        operation as ValidateOperation,
-        this
-      )
+      return await estimatePlatformValidateOperation(this.provider, operation as ValidateOperation, this)
     } else if (operation.type === NetworkOperationType.Delegate) {
-      return await estimatePlatformDelegateOperation(
-        this.provider,
-        this.chainWallet,
-        operation as DelegateOperation,
-        this
-      )
+      return await estimatePlatformDelegateOperation(this.provider, operation as DelegateOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -56,10 +46,13 @@ export class PlatformAccount extends UtxoAccount {
     if (operation.type === NetworkOperationType.Validate) {
       const staking: ValidateOperation = operation as ValidateOperation
       const transactionId: string = await this.stakeManager.validate(
+        this,
         staking.nodeId,
         staking.amount,
         staking.startTime,
         staking.endTime,
+        staking.rewardAddresses,
+        staking.threshold,
         summary.fee as UtxoFeeData,
         this.utxoSet
       )
@@ -71,10 +64,13 @@ export class PlatformAccount extends UtxoAccount {
     } else if (operation.type === NetworkOperationType.Delegate) {
       const staking: DelegateOperation = operation as DelegateOperation
       const transactionId: string = await this.stakeManager.delegate(
+        this,
         staking.nodeId,
         staking.amount,
         staking.startTime,
         staking.endTime,
+        staking.rewardAddresses,
+        staking.threshold,
         summary.fee as UtxoFeeData,
         this.utxoSet
       )

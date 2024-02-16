@@ -1,5 +1,5 @@
 import { AccountError, sortSpendings } from '../../utils'
-import { type VMWallet, type MCNWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType,
   NetworkOperationStatus,
@@ -26,12 +26,14 @@ import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
+  readonly wallet: MCNWallet
   readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly jvmAccount: JVMAccount
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
+    this.wallet = wallet
     const jvmAccount: JVMAccount = new JVMAccount(provider, wallet)
     this.addAccount(jvmAccount)
     this.jvmAccount = jvmAccount
@@ -51,15 +53,6 @@ export class MCNAccount {
       throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
     }
     return this.chainAccounts.get(chainId)!
-  }
-
-  addSigner (wallet: MCNWallet): void {
-    for (const chainAccount of this.chainAccounts.values()) {
-      if (chainAccount.type === AccountType.Utxo) {
-        const signer: VMWallet = wallet.getWallet(chainAccount.chain)
-        chainAccount.signers.push(signer)
-      }
-    }
   }
 
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {

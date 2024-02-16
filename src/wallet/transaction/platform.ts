@@ -21,7 +21,7 @@ import {
   type ValidateOperation
 } from '../operation'
 import { StakeManager, ValidationShare } from '../stake'
-import { type VMWallet, type MCNWallet } from '../wallet'
+import { type MCNWallet } from '../wallet'
 import { BaseFeeData, type FeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
@@ -41,19 +41,21 @@ async function getPlatformAddDelegatorFee (provider: MCNProvider): Promise<BaseF
 
 export async function estimatePlatformAddValidatorTransaction (
   provider: MCNProvider,
-  wallet: VMWallet,
+  account: PlatformAccount,
   validator: Validator,
   share: number,
+  rewardAddresses: string[],
+  threshold: number,
   utxoSet?: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [wallet.getAddress()])
+    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
   }
   const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddValidatorTransaction(
     utxoSet,
-    [wallet.getAddress()],
+    account.getSignersAddresses(),
     fee.amount,
     api.chain,
     validator.nodeId,
@@ -62,8 +64,9 @@ export async function estimatePlatformAddValidatorTransaction (
     validator.weight,
     api.chain.assetId,
     share,
-    wallet.getAddress(),
-    wallet.getAddress(),
+    rewardAddresses,
+    threshold,
+    account.address,
     provider.mcn.id
   )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
@@ -71,7 +74,6 @@ export async function estimatePlatformAddValidatorTransaction (
 
 export async function estimatePlatformValidateOperation (
   provider: MCNProvider,
-  wallet: VMWallet,
   validate: ValidateOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
@@ -89,9 +91,11 @@ export async function estimatePlatformValidateOperation (
   const values = new Map<string, bigint>()
   return await estimatePlatformAddValidatorTransaction(
     provider,
-    wallet,
+    account,
     validator,
     ValidationShare,
+    validate.rewardAddresses,
+    validate.threshold,
     account.utxoSet
   ).then(
     (fee) => {
@@ -113,18 +117,20 @@ export async function estimatePlatformValidateOperation (
 
 export async function estimatePlatformAddDelegatorTransaction (
   provider: MCNProvider,
-  wallet: VMWallet,
+  account: PlatformAccount,
   validator: Validator,
+  rewardAddresses: string[],
+  threshold: number,
   utxoSet?: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [wallet.getAddress()])
+    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
   }
   const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
     utxoSet,
-    [wallet.getAddress()],
+    account.getSignersAddresses(),
     fee.amount,
     api.chain,
     validator.nodeId,
@@ -132,8 +138,9 @@ export async function estimatePlatformAddDelegatorTransaction (
     validator.endTime,
     validator.weight,
     api.chain.assetId,
-    wallet.getAddress(),
-    wallet.getAddress(),
+    rewardAddresses,
+    threshold,
+    account.address,
     provider.mcn.id
   )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
@@ -141,7 +148,6 @@ export async function estimatePlatformAddDelegatorTransaction (
 
 export async function estimatePlatformDelegateOperation (
   provider: MCNProvider,
-  wallet: VMWallet,
   delegate: DelegateOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
@@ -157,7 +163,14 @@ export async function estimatePlatformDelegateOperation (
     delegate.amount
   )
   const values = new Map<string, bigint>()
-  return await estimatePlatformAddDelegatorTransaction(provider, wallet, validator, account.utxoSet).then(
+  return await estimatePlatformAddDelegatorTransaction(
+    provider,
+    account,
+    validator,
+    delegate.rewardAddresses,
+    delegate.threshold,
+    account.utxoSet
+  ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
       return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)

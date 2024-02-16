@@ -16,7 +16,7 @@ import {
   type DepositResumeOperation,
   type DepositResumeOperationSummary
 } from '../operation'
-import { AccountType, type UtxoAccount, type ChainAccount } from './account'
+import { AccountType, type UtxoAccount, type ChainAccount, type AbstractChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
@@ -86,7 +86,7 @@ export class MCNAccount {
     if (account.type === AccountType.Utxo) {
       await (account as UtxoAccount).refreshBalances()
     }
-    return await account.estimate(chainOperation)
+    return await (account as AbstractChainAccount).estimate(chainOperation)
   }
 
   async execute (summary: OperationSummary, skipVerifications: boolean = false): Promise<void> {
@@ -119,7 +119,7 @@ export class MCNAccount {
     } else if (range === NetworkOperationRange.Chain) {
       const chainSummary: ChainOperationSummary = summary as ChainOperationSummary
       const account: ChainAccount = this.getAccount(chainSummary.chain.id)
-      await this.executeOperation(summary, account.execute(chainSummary))
+      await this.executeOperation(summary, (account as AbstractChainAccount).execute(chainSummary))
     } else if (range === NetworkOperationRange.Supernet) {
       await this.executeOperation(summary, this.executeSupernetOperation(summary))
     } else {

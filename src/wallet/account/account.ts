@@ -48,10 +48,6 @@ export interface ChainAccount {
   fetchBalances: (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
   ) => Promise<void>
-
-  estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
-
-  execute: (summary: ChainOperationSummary) => Promise<void>
 }
 
 export abstract class AbstractChainAccount implements ChainAccount {

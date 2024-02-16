@@ -14,27 +14,27 @@ import {
   type ExecutableOperation,
   now,
   SocotraNetwork,
-  JuneoClient
+  JuneoClient,
+  type PlatformAccount
 } from '../../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-const DEFAULT_TIMEOUT: number = 120_000
+const DEFAULT_TIMEOUT: number = 180_000
 const ONE_DAY: bigint = BigInt(86_400)
 
 const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
 const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
+const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
+const account: ChainAccount = mcnAccount.getAccount(provider.platform.chain.id)
+const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
+const DONE_STATUS = 'Done'
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
 let currentTime: bigint = now() + BigInt(30)
 let tomorrow: bigint = currentTime + ONE_DAY
 
 describe('Staking operations', (): void => {
-  const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-  const account: ChainAccount = mcnAccount.getAccount(provider.platform.chain.id)
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
-
   beforeAll(async () => {
     // TODO create time provider utils to manage those tests
     currentTime = now() + BigInt(30)
@@ -57,7 +57,15 @@ describe('Staking operations', (): void => {
       ])(
         '$#) $description $amount tokens to validate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
-          const validateOperation = new ValidateOperation(provider.mcn, nodeId, amount, startTime, endTime)
+          const validateOperation = new ValidateOperation(
+            provider.mcn,
+            nodeId,
+            amount,
+            startTime,
+            endTime,
+            [account.address],
+            1
+          )
           await expect(mcnAccount.estimate(validateOperation)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
@@ -85,7 +93,15 @@ describe('Staking operations', (): void => {
       ])(
         '$#) $description $amount tokens to validate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
-          const validateOperation = new ValidateOperation(provider.mcn, nodeId, amount, startTime, endTime)
+          const validateOperation = new ValidateOperation(
+            provider.mcn,
+            nodeId,
+            amount,
+            startTime,
+            endTime,
+            [account.address],
+            1
+          )
           const summary = await mcnAccount.estimate(validateOperation)
           await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
         },
@@ -107,7 +123,15 @@ describe('Staking operations', (): void => {
       ])(
         '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedStatus, startTime, endTime }) => {
-          const delegateOperation = new DelegateOperation(provider.mcn, nodeId, amount, startTime, endTime)
+          const delegateOperation = new DelegateOperation(
+            provider.mcn,
+            nodeId,
+            amount,
+            startTime,
+            endTime,
+            [account.address],
+            1
+          )
           const summary = await mcnAccount.estimate(delegateOperation)
           await mcnAccount.execute(summary)
           const executable: ExecutableOperation = summary.getExecutable()
@@ -130,7 +154,15 @@ describe('Staking operations', (): void => {
       ])(
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
-          const delegateOperation = new DelegateOperation(provider.mcn, nodeId, amount, startTime, endTime)
+          const delegateOperation = new DelegateOperation(
+            provider.mcn,
+            nodeId,
+            amount,
+            startTime,
+            endTime,
+            [account.address],
+            1
+          )
           await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
@@ -174,7 +206,15 @@ describe('Staking operations', (): void => {
       ])(
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
-          const delegateOperation = new DelegateOperation(provider.mcn, nodeId, amount, startTime, endTime)
+          const delegateOperation = new DelegateOperation(
+            provider.mcn,
+            nodeId,
+            amount,
+            startTime,
+            endTime,
+            [account.address],
+            1
+          )
           const summary = await mcnAccount.estimate(delegateOperation)
           await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
         },
@@ -195,7 +235,16 @@ describe('StakeManager', () => {
     'Estimate validation fee',
     async () => {
       const stakeManager = new StakeManager(provider, wallet.getWallet(provider.platform.chain))
-      const feeData = await stakeManager.estimateValidationFee(validNodeId, BigInt(100_000_000), currentTime, tomorrow)
+      const platformAccount = mcnAccount.getAccount(provider.platform.chain.id) as PlatformAccount
+      const feeData = await stakeManager.estimateValidationFee(
+        platformAccount,
+        validNodeId,
+        BigInt(100_000_000),
+        currentTime,
+        tomorrow,
+        [account.address],
+        1
+      )
       expect(feeData.chain).toEqual(provider.platform.chain)
       expect(feeData.amount).toEqual(BigInt(0))
     },

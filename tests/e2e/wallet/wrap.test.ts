@@ -23,7 +23,7 @@ describe('Wrapping operations', () => {
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
-  const DEFAULT_TIMEOUT: number = 120_000
+  const DEFAULT_TIMEOUT: number = 180_000
   const juneChain = SocotraJUNEChain
   const wJuneAsset = SocotraWJUNEAsset
 

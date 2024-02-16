@@ -23,19 +23,19 @@ export interface ChainAccount {
   signers: VMWallet[]
 
   /**
-   * Gets the balance from this account of an asset.
+   * Gets the AssetValue from this account of an asset.
    * @param asset An asset from which to get the balance.
    * @returns An AssetValue containing the value of the balance of the provided asset.
    */
-  getAssetBalance: (asset: TokenAsset) => AssetValue
+  getAssetValue: (asset: TokenAsset) => AssetValue
 
   /**
-   * Gets the balance from this account of an asset id.
+   * Gets the AssetValue from this account of an asset id.
    * @param provider A provider to retrieve the asset data from.
    * @param assetId An asset id from which to get the balance.
    * @returns An AssetValue containing the value of the balance of the provided asset.
    */
-  getBalance: (provider: MCNProvider, assetId: string) => Promise<AssetValue>
+  getValue: (provider: MCNProvider, assetId: string) => Promise<AssetValue>
 
   getAmount: (assetId: string) => bigint
 
@@ -48,8 +48,6 @@ export interface ChainAccount {
   fetchBalances: (
     assets: TokenAsset[] | string[] | IterableIterator<TokenAsset> | IterableIterator<string>,
   ) => Promise<void>
-
-  fetchAllChainBalances: () => Promise<void>
 
   estimate: (operation: ChainNetworkOperation) => Promise<ChainOperationSummary>
 
@@ -72,13 +70,13 @@ export abstract class AbstractChainAccount implements ChainAccount {
     this.signers = [this.chainWallet]
   }
 
-  getAssetBalance (asset: TokenAsset): AssetValue {
+  getAssetValue (asset: TokenAsset): AssetValue {
     return asset.getAssetValue(this.getAmount(asset.assetId))
   }
 
-  async getBalance (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+  async getValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
     const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
-    return this.getAssetBalance(asset)
+    return this.getAssetValue(asset)
   }
 
   getAmount (assetId: string): bigint {
@@ -170,7 +168,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = false
   }
 
-  protected async refreshBalances (): Promise<void> {
+  async refreshBalances (): Promise<void> {
     await this.fetchBalances([])
   }
 

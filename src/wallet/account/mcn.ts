@@ -16,7 +16,7 @@ import {
   type DepositResumeOperation,
   type DepositResumeOperationSummary
 } from '../operation'
-import { AccountType, type ChainAccount } from './account'
+import { AccountType, type UtxoAccount, type ChainAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
@@ -67,7 +67,7 @@ export class MCNAccount {
     if (operation.type === NetworkOperationType.Cross) {
       const crossOperation: CrossOperation = operation as CrossOperation
       // JVM balance might be needed for proxy and is mandatory if so before estimation
-      await this.jvmAccount.fetchAllChainBalances()
+      await this.jvmAccount.refreshBalances()
       return await this.crossManager.estimateCrossOperation(crossOperation, this)
     }
     if (operation.type === NetworkOperationType.CrossResume) {
@@ -84,7 +84,7 @@ export class MCNAccount {
     // current utxo txs builders/helpers require utxos ids to mount transactions
     // until this is changed we need to fetch utxos prior to operation estimation
     if (account.type === AccountType.Utxo) {
-      await account.fetchAllChainBalances()
+      await (account as UtxoAccount).refreshBalances()
     }
     return await account.estimate(chainOperation)
   }
@@ -167,7 +167,8 @@ export class MCNAccount {
     // complex such as those with a range higher than Chain we fetch it everywhere
     if (summary.operation.range !== NetworkOperationRange.Chain) {
       for (const chain of summary.getChains()) {
-        await this.getAccount(chain.id).fetchAllChainBalances()
+        const chainAccount: ChainAccount = this.getAccount(chain.id)
+        await chainAccount.fetchBalances(chain.getRegisteredAssets())
       }
     } else {
       const operation: ChainNetworkOperation = summary.operation as ChainNetworkOperation

@@ -1,5 +1,5 @@
 import { type MCNProvider } from '../juneo'
-import { NotImplementedError, VaultError } from '../utils'
+import { VaultError } from '../utils'
 import { AccountType, MCNAccount } from './account'
 import { type VMWallet, type MCNWallet } from './wallet'
 

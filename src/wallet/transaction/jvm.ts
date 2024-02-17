@@ -32,7 +32,7 @@ export async function estimateJVMBaseTransaction (
 ): Promise<UtxoFeeData> {
   const api: JVMAPI = provider.jvm
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
+    utxoSet = await fetchUtxos(api, [account.address])
   }
   const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
   const transaction: UnsignedTransaction = buildJVMBaseTransaction(

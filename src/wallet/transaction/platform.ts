@@ -50,7 +50,7 @@ export async function estimatePlatformAddValidatorTransaction (
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
+    utxoSet = await fetchUtxos(api, [account.address])
   }
   const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddValidatorTransaction(
@@ -125,7 +125,7 @@ export async function estimatePlatformAddDelegatorTransaction (
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, account.getSignersAddresses())
+    utxoSet = await fetchUtxos(api, [account.address])
   }
   const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddDelegatorTransaction(

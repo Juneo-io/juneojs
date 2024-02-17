@@ -39,9 +39,9 @@ export interface ChainAccount {
 
   getAmount: (assetId: string) => bigint
 
-  getSignersAddresses: () => string[]
+  getBalance: (assetId: string) => Balance
 
-  addBalanceListener: (assetId: string, listener: BalanceListener) => void
+  getSignersAddresses: () => string[]
 
   fetchBalance: (assetId: string) => Promise<void>
 
@@ -83,19 +83,19 @@ export abstract class AbstractChainAccount implements ChainAccount {
     return this.balances.get(assetId)!.getValue()
   }
 
+  getBalance (assetId: string): Balance {
+    if (!this.balances.has(assetId)) {
+      this.balances.set(assetId, new Balance())
+    }
+    return this.balances.get(assetId)!
+  }
+
   getSignersAddresses (): string[] {
     const addresses: string[] = []
     for (const signer of this.signers) {
       addresses.push(signer.getAddress())
     }
     return addresses
-  }
-
-  addBalanceListener (assetId: string, listener: BalanceListener): void {
-    if (!this.balances.has(assetId)) {
-      this.balances.set(assetId, new Balance())
-    }
-    this.balances.get(assetId)!.registerEvents(listener)
   }
 
   abstract fetchBalance (assetId: string): Promise<void>
@@ -109,10 +109,6 @@ export abstract class AbstractChainAccount implements ChainAccount {
       fetchers.push(this.fetchBalance(assetId))
     }
     await Promise.all(fetchers)
-  }
-
-  async fetchAllChainBalances (): Promise<void> {
-    await this.fetchBalances(this.chain.getRegisteredAssets())
   }
 
   abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
@@ -167,10 +163,6 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   async refreshBalances (): Promise<void> {
     await this.fetchBalances([])
   }
-
-  abstract estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary>
-
-  abstract execute (summary: ChainOperationSummary): Promise<void>
 
   protected override spend (spendings: UtxoSpending[]): void {
     super.spend(spendings)

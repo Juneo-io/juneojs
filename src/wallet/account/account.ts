@@ -7,7 +7,7 @@ import { getUtxosAmountValues, type AssetValue, fetchUtxos, now } from '../../ut
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
-import { Balance, type BalanceListener } from './balance'
+import { Balance } from './balance'
 
 export enum AccountType {
   Nonce,

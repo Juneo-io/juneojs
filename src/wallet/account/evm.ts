@@ -6,7 +6,8 @@ import {
   TransactionType,
   type EVMFeeData,
   estimateEVMWrapOperation,
-  estimateEVMUnwrapOperation
+  estimateEVMUnwrapOperation,
+  estimateEVMTransfer
 } from '../transaction'
 import {
   type ExecutableOperation,
@@ -28,6 +29,7 @@ export class EVMAccount extends AbstractChainAccount {
   override chain: JEVMBlockchain
   api: JEVMAPI
   override chainWallet: JEVMWallet
+  private readonly provider: MCNProvider
   private readonly wrapManager: WrapManager
   private readonly sendManager: SendManager
 
@@ -38,12 +40,14 @@ export class EVMAccount extends AbstractChainAccount {
     this.chainWallet = wallet.getJEVMWallet(this.chain)
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
     this.sendManager = new SendManager(provider)
+    this.provider = provider
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: EVMFeeData = await this.sendManager.estimateSendEVM(
+      const fee: EVMFeeData = await estimateEVMTransfer(
+        this.provider,
         this.chainWallet,
         this.chain.id,
         send.assetId,

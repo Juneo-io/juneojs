@@ -13,7 +13,8 @@ import {
   estimateAtomicImportGas,
   TransactionError,
   sleep,
-  fetchUtxos
+  fetchUtxos,
+  isContractAddress
 } from '../../utils'
 import {
   type JEVMExportTransaction,
@@ -86,46 +87,16 @@ export async function estimateEVMGasPrice (api: JEVMAPI): Promise<bigint> {
   })
 }
 
-export async function estimateEVMTransfer (
-  api: JEVMAPI,
-  assetId: string,
-  from: string,
-  to: string,
-  value: bigint,
-  data: string,
-  type: FeeType
-): Promise<EVMFeeData> {
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
-  if (assetId === api.chain.assetId) {
-    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    const gasLimit: bigint = SendEtherGasLimit
-    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
-  }
-  const gasLimit: bigint = await api.chain.ethProvider
-    .estimateGas({
-      from,
-      to,
-      value,
-      chainId: api.chain.chainId,
-      gasPrice,
-      data
-    })
-    .catch(() => {
-      return DefaultTransferEstimate
-    })
-  const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-  return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
-}
-
 export async function estimateEVMCall (
   api: JEVMAPI,
   from: string,
   to: string,
   value: bigint,
   data: string,
-  type: FeeType
+  type: FeeType,
+  gasPriceAmount?: bigint
 ): Promise<EVMFeeData> {
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
+  const gasPrice: bigint = typeof gasPriceAmount === 'undefined' ? await estimateEVMGasPrice(api) : gasPriceAmount
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
     blockTag: 'pending',
     from,
@@ -140,6 +111,36 @@ export async function estimateEVMCall (
   })
   const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
   return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+}
+
+export async function estimateEVMTransfer (
+  provider: MCNProvider,
+  wallet: JEVMWallet,
+  chainId: string,
+  assetId: string,
+  amount: bigint,
+  address: string
+): Promise<EVMFeeData> {
+  const api: JEVMAPI = provider.jevm[chainId]
+  const isContract: boolean = isContractAddress(assetId)
+  const from: string = wallet.getAddress()
+  const to: string = isContract ? assetId : address
+  const value: bigint = isContract ? BigInt(0) : amount
+  const data: string = isContract
+    ? await api.chain.getContractTransactionData(provider, assetId, address, amount)
+    : '0x'
+  const type: FeeType = FeeType.BaseFee
+  const gasPrice: bigint = await estimateEVMGasPrice(api)
+  if (assetId === api.chain.assetId) {
+    const gasLimit: bigint = SendEtherGasLimit
+    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
+    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+  }
+  return await estimateEVMCall(api, from, to, value, data, type, gasPrice).catch(() => {
+    const gasLimit: bigint = DefaultTransferEstimate
+    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
+    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+  })
 }
 
 export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {

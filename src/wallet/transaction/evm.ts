@@ -35,6 +35,7 @@ const DefaultWithdrawEstimate: bigint = BigInt(100_000)
 const DefaultDepositEstimate: bigint = BigInt(100_000)
 
 const MaxInvalidNonceAttempts: number = 5
+const InvalidNonceRetryDelay: number = 1000
 
 export class EVMTransactionData {
   from: string
@@ -167,7 +168,7 @@ export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeD
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(1000)
+    await sleep(InvalidNonceRetryDelay)
     unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
   }
   throw new TransactionError('could not provide a valid nonce')
@@ -341,7 +342,7 @@ export async function sendEVMExportTransaction (
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(1000)
+    await sleep(InvalidNonceRetryDelay)
     nonce = await getWalletNonce(evmWallet, api, true)
   }
   throw new TransactionError('could not provide a valid nonce')

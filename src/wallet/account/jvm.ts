@@ -15,19 +15,16 @@ import {
   type ChainNetworkOperation,
   type SendUtxoOperation
 } from '../operation'
-import { SendManager } from '../send'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
 
 export class JVMAccount extends UtxoAccount {
   provider: MCNProvider
-  private readonly sendManager: SendManager
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
     super(provider.jvm.chain, provider.jvm, wallet)
     this.chain = provider.jvm.chain
     this.provider = provider
-    this.sendManager = new SendManager(provider)
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
@@ -44,30 +41,15 @@ export class JVMAccount extends UtxoAccount {
     const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
-      const send: SendOperation = operation as SendOperation
-      const transactionHash: string = await this.sendManager.sendJVM(
-        this,
-        send.assetId,
-        send.amount,
-        [send.address],
-        1,
-        summary.fee as UtxoFeeData
-      )
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
+      const transactionHash: string = (await this.provider.jvm.issueTx(transaction)).txID
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
-      const send: SendUtxoOperation = operation as SendUtxoOperation
-      const transactionHash: string = await this.sendManager.sendJVM(
-        this,
-        send.assetId,
-        send.amount,
-        send.addresses,
-        send.threshold,
-        summary.fee as UtxoFeeData,
-        send.locktime
-      )
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
+      const transactionHash: string = (await this.provider.jvm.issueTx(transaction)).txID
       await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
     }
-    // balances fetching is needed to get new utxos creating from this operation
+    // balances fetching is needed to get new utxos created from this operation
     await super.refreshBalances()
   }
 }

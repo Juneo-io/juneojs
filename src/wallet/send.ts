@@ -1,12 +1,5 @@
-import { type JEVMAPI, type JVMAPI } from '../api'
-import { type JEVMWallet } from './wallet'
-import {
-  type EVMFeeData,
-  estimateEVMTransfer,
-  sendEVMTransaction,
-  type UtxoFeeData,
-  estimateJVMBaseTransaction
-} from './transaction'
+import { type JVMAPI } from '../api'
+import { type UtxoFeeData, estimateJVMBaseTransaction } from './transaction'
 import { type JVMAccount, type MCNProvider } from '../juneo'
 
 export class SendManager {
@@ -14,21 +7,6 @@ export class SendManager {
 
   constructor (provider: MCNProvider) {
     this.provider = provider
-  }
-
-  async sendEVM (
-    wallet: JEVMWallet,
-    chainId: string,
-    assetId: string,
-    amount: bigint,
-    address: string,
-    feeData?: EVMFeeData
-  ): Promise<string> {
-    if (typeof feeData === 'undefined') {
-      feeData = await estimateEVMTransfer(this.provider, wallet, chainId, assetId, amount, address)
-    }
-    const api: JEVMAPI = this.provider.jevm[chainId]
-    return await sendEVMTransaction(api, wallet, feeData)
   }
 
   async estimateSendJVM (

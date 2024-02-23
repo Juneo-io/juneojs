@@ -7,7 +7,8 @@ import {
   type EVMFeeData,
   estimateEVMWrapOperation,
   estimateEVMUnwrapOperation,
-  estimateEVMTransfer
+  estimateEVMTransfer,
+  sendEVMTransaction
 } from '../transaction'
 import {
   type ExecutableOperation,
@@ -18,7 +19,6 @@ import {
   type UnwrapOperation,
   type ChainNetworkOperation
 } from '../operation'
-import { SendManager } from '../send'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { WrapManager } from '../wrap'
 import { AbstractChainAccount, AccountType } from './account'
@@ -31,7 +31,6 @@ export class EVMAccount extends AbstractChainAccount {
   override chainWallet: JEVMWallet
   private readonly provider: MCNProvider
   private readonly wrapManager: WrapManager
-  private readonly sendManager: SendManager
 
   constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
     super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
@@ -39,7 +38,6 @@ export class EVMAccount extends AbstractChainAccount {
     this.api = provider.jevm[chainId]
     this.chainWallet = wallet.getJEVMWallet(this.chain)
     this.wrapManager = new WrapManager(this.api, this.chainWallet)
-    this.sendManager = new SendManager(provider)
     this.provider = provider
   }
 
@@ -70,15 +68,7 @@ export class EVMAccount extends AbstractChainAccount {
     const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
-      const send: SendOperation = operation as SendOperation
-      const transactionHash: string = await this.sendManager.sendEVM(
-        this.chainWallet,
-        this.chain.id,
-        send.assetId,
-        send.amount,
-        send.address,
-        summary.fee as EVMFeeData
-      )
+      const transactionHash: string = await sendEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation

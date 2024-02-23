@@ -119,7 +119,7 @@ export async function estimateJVMExportTransaction (provider: MCNProvider): Prom
   return await getJVMBaseTxFee(provider, FeeType.ExportFee)
 }
 
-export async function sendJVMExportTransaction (
+export async function executeJVMExportTransaction (
   provider: MCNProvider,
   wallet: MCNWallet,
   destination: Blockchain,
@@ -163,7 +163,7 @@ export async function estimateJVMImportTransaction (provider: MCNProvider): Prom
   return await getJVMBaseTxFee(provider, FeeType.ImportFee)
 }
 
-export async function sendJVMImportTransaction (
+export async function executeJVMImportTransaction (
   provider: MCNProvider,
   wallet: MCNWallet,
   source: Blockchain,

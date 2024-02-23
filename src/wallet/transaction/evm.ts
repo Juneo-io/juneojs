@@ -144,7 +144,7 @@ export async function estimateEVMTransfer (
   })
 }
 
-export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {
+export async function executeEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {
   const unsignedTransaction: ethers.TransactionRequest = {
     from: wallet.address,
     to: feeData.data.to,
@@ -291,7 +291,7 @@ export async function estimateEVMExportTransaction (
   return new BaseFeeData(api.chain, fee, FeeType.ExportFee)
 }
 
-export async function sendEVMExportTransaction (
+export async function executeEVMExportTransaction (
   provider: MCNProvider,
   api: JEVMAPI,
   wallet: MCNWallet,
@@ -361,7 +361,7 @@ export async function estimateEVMImportTransaction (
   return fee
 }
 
-export async function sendEVMImportTransaction (
+export async function executeEVMImportTransaction (
   provider: MCNProvider,
   api: JEVMAPI,
   wallet: MCNWallet,

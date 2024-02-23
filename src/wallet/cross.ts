@@ -28,13 +28,13 @@ import {
   estimateJVMImportTransaction,
   estimatePlatformExportTransaction,
   estimatePlatformImportTransaction,
-  sendJVMExportTransaction,
+  executeJVMExportTransaction,
   type FeeData,
-  sendPlatformExportTransaction,
-  sendJVMImportTransaction,
-  sendPlatformImportTransaction,
-  sendEVMImportTransaction,
-  sendEVMExportTransaction,
+  executePlatformExportTransaction,
+  executeJVMImportTransaction,
+  executePlatformImportTransaction,
+  executeEVMImportTransaction,
+  executeEVMExportTransaction,
   BaseFeeData,
   TransactionType,
   type Spending,
@@ -42,7 +42,7 @@ import {
   FeeType,
   type EVMFeeData,
   estimateEVMWithdrawJRC20,
-  sendEVMTransaction,
+  executeEVMTransaction,
   estimateEVMDepositJRC20
 } from './transaction'
 import { type MCNWallet } from './wallet'
@@ -142,7 +142,7 @@ export class CrossManager {
       importFee = await this.estimateImport(destination, assetId)
     }
     if (source.vmId === JVM_ID) {
-      return await sendJVMExportTransaction(
+      return await executeJVMExportTransaction(
         this.provider,
         this.wallet,
         destination,
@@ -156,7 +156,7 @@ export class CrossManager {
         extraFeeAmount
       )
     } else if (source.vmId === PLATFORMVM_ID) {
-      return await sendPlatformExportTransaction(
+      return await executePlatformExportTransaction(
         this.provider,
         this.wallet,
         destination,
@@ -170,7 +170,7 @@ export class CrossManager {
       )
     } else if (source.vmId === JEVM_ID) {
       const api: JEVMAPI = this.provider.jevm[source.id]
-      return await sendEVMExportTransaction(
+      return await executeEVMExportTransaction(
         this.provider,
         api,
         this.wallet,
@@ -197,15 +197,15 @@ export class CrossManager {
       throw new CrossError('source and destination chain cannot be the same')
     }
     if (destination.vmId === JVM_ID) {
-      return await sendJVMImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
+      return await executeJVMImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
-      return await sendPlatformImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
+      return await executePlatformImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
     } else if (destination.vmId === JEVM_ID) {
       if (payImportFee) {
         throw new CrossError(`vm id ${destination.vmId} cannot pay import fee`)
       }
       const api: JEVMAPI = this.provider.jevm[destination.id]
-      return await sendEVMImportTransaction(this.provider, api, this.wallet, source, importFee, utxoSet)
+      return await executeEVMImportTransaction(this.provider, api, this.wallet, source, importFee, utxoSet)
     }
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
@@ -374,7 +374,7 @@ export class CrossManager {
       const api: JEVMAPI = this.provider.jevm[juneChain.id]
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
-      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet, feeData)
+      const transactionHash: string = await executeEVMTransaction(api, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
@@ -466,7 +466,7 @@ export class CrossManager {
       const api: JEVMAPI = this.provider.jevm[juneChain.id]
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = lastFee as EVMFeeData
-      const transactionHash: string = await sendEVMTransaction(api, juneAccount.chainWallet, feeData)
+      const transactionHash: string = await executeEVMTransaction(api, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
@@ -615,7 +615,7 @@ export class CrossManager {
     const operation: DepositResumeOperation = summary.operation
     const fee: EVMFeeData = summary.fee
     const api: JEVMAPI = this.provider.jevm[operation.chain.id]
-    const transactionHash: string = await sendEVMTransaction(api, account.chainWallet, fee)
+    const transactionHash: string = await executeEVMTransaction(api, account.chainWallet, fee)
     const success: boolean = await summary
       .getExecutable()
       .addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)

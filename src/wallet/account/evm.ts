@@ -8,7 +8,7 @@ import {
   estimateEVMWrapOperation,
   estimateEVMUnwrapOperation,
   estimateEVMTransfer,
-  sendEVMTransaction
+  executeEVMTransaction
 } from '../transaction'
 import {
   type ExecutableOperation,
@@ -68,7 +68,7 @@ export class EVMAccount extends AbstractChainAccount {
     const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
-      const transactionHash: string = await sendEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
+      const transactionHash: string = await executeEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.Wrap) {
       const wrapping: WrapOperation = operation as WrapOperation

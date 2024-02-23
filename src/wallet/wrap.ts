@@ -1,7 +1,7 @@
 import { type JEVMAPI } from '../api'
 import { type JEVMWallet, type MCNWallet } from './wallet'
 import { type JEVMBlockchain } from '../chain'
-import { type EVMFeeData, FeeType, estimateEVMCall, sendEVMTransaction } from './transaction'
+import { type EVMFeeData, FeeType, estimateEVMCall, executeEVMTransaction } from './transaction'
 import { type WrappedAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { AmountError } from '../utils'
@@ -49,7 +49,7 @@ export class WrapManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateWrapFee(asset, amount)
     }
-    return await sendEVMTransaction(this.api, this.wallet, feeData)
+    return await executeEVMTransaction(this.api, this.wallet, feeData)
   }
 
   async unwrap (asset: WrappedAsset, amount: bigint, feeData?: EVMFeeData): Promise<string> {
@@ -59,6 +59,6 @@ export class WrapManager {
     if (typeof feeData === 'undefined') {
       feeData = await this.estimateUnwrapFee(asset, amount)
     }
-    return await sendEVMTransaction(this.api, this.wallet, feeData)
+    return await executeEVMTransaction(this.api, this.wallet, feeData)
   }
 }

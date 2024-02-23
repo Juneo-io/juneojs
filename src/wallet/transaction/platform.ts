@@ -192,7 +192,7 @@ export async function estimatePlatformExportTransaction (provider: MCNProvider):
   return await getPlatformBaseTxFee(provider, FeeType.ExportFee)
 }
 
-export async function sendPlatformExportTransaction (
+export async function executePlatformExportTransaction (
   provider: MCNProvider,
   wallet: MCNWallet,
   destination: Blockchain,
@@ -231,7 +231,7 @@ export async function estimatePlatformImportTransaction (provider: MCNProvider):
   return await getPlatformBaseTxFee(provider, FeeType.ImportFee)
 }
 
-export async function sendPlatformImportTransaction (
+export async function executePlatformImportTransaction (
   provider: MCNProvider,
   wallet: MCNWallet,
   source: Blockchain,

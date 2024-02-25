@@ -11,9 +11,9 @@ import { type StakeConfig } from '../network'
 import { type PlatformAccount } from './account'
 import { type MCNProvider } from '../juneo'
 
-export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
-const DelegationShare: number = BaseShare - ValidationShare
+export const ValidationShare: number = 12_0000 // 12%
+export const DelegationShare: number = BaseShare - ValidationShare
 
 export class StakeManager {
   private readonly provider: MCNProvider

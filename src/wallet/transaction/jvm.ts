@@ -9,7 +9,7 @@ import {
   buildJVMExportTransaction,
   buildJVMImportTransaction
 } from '../../transaction'
-import { getUtxosAmountValues, getImportUserInputs, fetchUtxos } from '../../utils'
+import { getUtxosAmountValues, getImportUserInputs } from '../../utils'
 import { type JVMAccount } from '../account'
 import { ChainOperationSummary, type SendUtxoOperation, type SendOperation } from '../operation'
 import { type MCNWallet } from '../wallet'
@@ -27,13 +27,10 @@ export async function estimateJVMBaseTransaction (
   amount: bigint,
   addresses: string[],
   threshold: number,
-  utxoSet?: Utxo[],
+  utxoSet: Utxo[],
   locktime: bigint = BigInt(0)
 ): Promise<UtxoFeeData> {
   const api: JVMAPI = provider.jvm
-  if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [account.address])
-  }
   const fee: BaseFeeData = await getJVMBaseTxFee(provider, FeeType.BaseFee)
   const transaction: UnsignedTransaction = buildJVMBaseTransaction(
     [new UserInput(assetId, api.chain, amount, addresses, threshold, api.chain, locktime)],
@@ -128,18 +125,12 @@ export async function executeJVMExportTransaction (
   address: string,
   sendImportFee: boolean,
   importFee: bigint,
-  fee?: FeeData,
-  utxoSet?: Utxo[],
+  fee: FeeData,
+  utxoSet: Utxo[],
   extraFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
   const api: JVMAPI = provider.jvm
   const sender: string = wallet.getAddress(api.chain)
-  if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [sender])
-  }
-  if (typeof fee === 'undefined') {
-    fee = await estimateJVMExportTransaction(provider)
-  }
   const inputs: UserInput[] = [new UserInput(assetId, api.chain, amount, [address], 1, destination)]
   if (extraFeeAmount > BigInt(0)) {
     inputs.push(new UserInput(destination.assetId, api.chain, extraFeeAmount, [address], 1, destination))
@@ -167,26 +158,12 @@ export async function executeJVMImportTransaction (
   provider: MCNProvider,
   wallet: MCNWallet,
   source: Blockchain,
-  payImportFee: boolean,
-  fee?: FeeData,
-  utxoSet?: Utxo[]
+  fee: FeeData,
+  utxoSet: Utxo[]
 ): Promise<string> {
   const api: JVMAPI = provider.jvm
   const sender: string = wallet.getAddress(api.chain)
-  const fetchUtxoSet: boolean = typeof utxoSet === 'undefined'
-  if (typeof utxoSet === 'undefined') {
-    // put import utxos first to priorize usage of imported inputs
-    utxoSet = await fetchUtxos(api, [sender], source.id)
-  }
   const values: Map<string, bigint> = getUtxosAmountValues(utxoSet, source.id)
-  if (fetchUtxoSet && payImportFee) {
-    // also fetching utxos in chain that could be needed if import fee
-    // was expected to be paid in destination chain during export
-    utxoSet = utxoSet.concat(await fetchUtxos(api, [sender]))
-  }
-  if (typeof fee === 'undefined') {
-    fee = await estimateJVMImportTransaction(provider)
-  }
   const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, sender)
   const transaction: UnsignedTransaction = buildJVMImportTransaction(
     inputs,

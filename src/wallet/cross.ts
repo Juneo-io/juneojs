@@ -130,16 +130,13 @@ export class CrossManager {
     amount: bigint,
     address: string,
     sendImportFee: boolean = true,
-    importFee?: FeeData,
-    exportFee?: FeeData,
-    utxoSet?: Utxo[],
+    importFee: FeeData,
+    exportFee: FeeData,
+    utxoSet: Utxo[],
     extraFeeAmount: bigint = BigInt(0)
   ): Promise<string> {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
-    }
-    if (typeof importFee === 'undefined') {
-      importFee = await this.estimateImport(destination, assetId)
     }
     if (source.vmId === JVM_ID) {
       return await executeJVMExportTransaction(
@@ -190,16 +187,16 @@ export class CrossManager {
     source: Blockchain,
     destination: Blockchain,
     payImportFee: boolean = false,
-    importFee?: FeeData,
-    utxoSet?: Utxo[]
+    importFee: FeeData,
+    utxoSet: Utxo[]
   ): Promise<string> {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
     if (destination.vmId === JVM_ID) {
-      return await executeJVMImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
+      return await executeJVMImportTransaction(this.provider, this.wallet, source, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
-      return await executePlatformImportTransaction(this.provider, this.wallet, source, payImportFee, importFee, utxoSet)
+      return await executePlatformImportTransaction(this.provider, this.wallet, source, importFee, utxoSet)
     } else if (destination.vmId === JEVM_ID) {
       if (payImportFee) {
         throw new CrossError(`vm id ${destination.vmId} cannot pay import fee`)

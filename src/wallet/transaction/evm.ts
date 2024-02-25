@@ -13,7 +13,6 @@ import {
   estimateAtomicImportGas,
   TransactionError,
   sleep,
-  fetchUtxos,
   isContractAddress
 } from '../../utils'
 import {
@@ -301,11 +300,8 @@ export async function executeEVMExportTransaction (
   address: string,
   sendImportFee: boolean,
   importFee: bigint,
-  fee?: FeeData
+  fee: FeeData
 ): Promise<string> {
-  if (typeof fee === 'undefined') {
-    fee = await estimateEVMExportTransaction(api, assetId, destination)
-  }
   // exportations of the gas token must be divided by atomic denomination
   if (assetId === api.chain.assetId) {
     amount /= AtomicDenomination
@@ -366,18 +362,12 @@ export async function executeEVMImportTransaction (
   api: JEVMAPI,
   wallet: MCNWallet,
   source: Blockchain,
-  fee?: FeeData,
-  utxoSet?: Utxo[]
+  fee: FeeData,
+  utxoSet: Utxo[]
 ): Promise<string> {
   const chainWallet: VMWallet = wallet.getWallet(api.chain)
   const sender: string = chainWallet.getJuneoAddress()
-  if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [sender], source.id)
-  }
   const values = getUtxosAmountValues(utxoSet, source.id)
-  if (typeof fee === 'undefined') {
-    fee = await estimateEVMImportTransaction(api, utxoSet.length, values.size)
-  }
   const inputs: UserInput[] = getImportUserInputs(
     values,
     fee.assetId,

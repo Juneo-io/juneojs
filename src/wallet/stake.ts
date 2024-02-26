@@ -11,9 +11,9 @@ import { type StakeConfig } from '../network'
 import { type PlatformAccount } from './account'
 import { type MCNProvider } from '../juneo'
 
-export const ValidationShare: number = 12_0000 // 12%
 const BaseShare: number = 100_0000 // 100%
-const DelegationShare: number = BaseShare - ValidationShare
+export const ValidationShare: number = 12_0000 // 12%
+export const DelegationShare: number = BaseShare - ValidationShare
 
 export class StakeManager {
   private readonly provider: MCNProvider
@@ -79,7 +79,7 @@ export class StakeManager {
     endTime: bigint,
     rewardAddresses: string[],
     threshold: number,
-    utxoSet?: Utxo[]
+    utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
     return await estimatePlatformAddValidatorTransaction(
@@ -101,7 +101,7 @@ export class StakeManager {
     endTime: bigint,
     rewardAddresses: string[],
     threshold: number,
-    utxoSet?: Utxo[]
+    utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
     return await estimatePlatformAddDelegatorTransaction(
@@ -114,58 +114,14 @@ export class StakeManager {
     )
   }
 
-  async validate (
-    account: PlatformAccount,
-    nodeId: string,
-    amount: bigint,
-    startTime: bigint,
-    endTime: bigint,
-    rewardAddresses: string[],
-    threshold: number,
-    feeData?: UtxoFeeData,
-    utxoSet?: Utxo[]
-  ): Promise<string> {
+  async validate (amount: bigint, startTime: bigint, endTime: bigint, feeData: UtxoFeeData): Promise<string> {
     StakeManager.verifyValidationValues(amount, startTime, endTime, this.provider.mcn.stakeConfig)
-    if (typeof feeData === 'undefined') {
-      feeData = await this.estimateValidationFee(
-        account,
-        nodeId,
-        amount,
-        startTime,
-        endTime,
-        rewardAddresses,
-        threshold,
-        utxoSet
-      )
-    }
     const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(transaction)).txID
   }
 
-  async delegate (
-    account: PlatformAccount,
-    nodeId: string,
-    amount: bigint,
-    startTime: bigint,
-    endTime: bigint,
-    rewardAddresses: string[],
-    threshold: number,
-    feeData?: UtxoFeeData,
-    utxoSet?: Utxo[]
-  ): Promise<string> {
+  async delegate (amount: bigint, startTime: bigint, endTime: bigint, feeData: UtxoFeeData): Promise<string> {
     StakeManager.verifyDelegationValues(amount, startTime, endTime, this.provider.mcn.stakeConfig)
-    if (typeof feeData === 'undefined') {
-      feeData = await this.estimateValidationFee(
-        account,
-        nodeId,
-        amount,
-        startTime,
-        endTime,
-        rewardAddresses,
-        threshold,
-        utxoSet
-      )
-    }
     const transaction: string = feeData.transaction.signTransaction([this.wallet]).toCHex()
     return (await this.api.issueTx(transaction)).txID
   }

@@ -13,7 +13,7 @@ import {
   estimateAtomicImportGas,
   TransactionError,
   sleep,
-  fetchUtxos
+  isContractAddress
 } from '../../utils'
 import {
   type JEVMExportTransaction,
@@ -34,6 +34,7 @@ const DefaultWithdrawEstimate: bigint = BigInt(100_000)
 const DefaultDepositEstimate: bigint = BigInt(100_000)
 
 const MaxInvalidNonceAttempts: number = 5
+const InvalidNonceRetryDelay: number = 1000
 
 export class EVMTransactionData {
   from: string
@@ -86,46 +87,16 @@ export async function estimateEVMGasPrice (api: JEVMAPI): Promise<bigint> {
   })
 }
 
-export async function estimateEVMTransfer (
-  api: JEVMAPI,
-  assetId: string,
-  from: string,
-  to: string,
-  value: bigint,
-  data: string,
-  type: FeeType
-): Promise<EVMFeeData> {
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
-  if (assetId === api.chain.assetId) {
-    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    const gasLimit: bigint = SendEtherGasLimit
-    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
-  }
-  const gasLimit: bigint = await api.chain.ethProvider
-    .estimateGas({
-      from,
-      to,
-      value,
-      chainId: api.chain.chainId,
-      gasPrice,
-      data
-    })
-    .catch(() => {
-      return DefaultTransferEstimate
-    })
-  const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-  return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
-}
-
 export async function estimateEVMCall (
   api: JEVMAPI,
   from: string,
   to: string,
   value: bigint,
   data: string,
-  type: FeeType
+  type: FeeType,
+  gasPriceAmount?: bigint
 ): Promise<EVMFeeData> {
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
+  const gasPrice: bigint = typeof gasPriceAmount === 'undefined' ? await estimateEVMGasPrice(api) : gasPriceAmount
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
     blockTag: 'pending',
     from,
@@ -142,7 +113,37 @@ export async function estimateEVMCall (
   return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
 }
 
-export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {
+export async function estimateEVMTransfer (
+  provider: MCNProvider,
+  wallet: JEVMWallet,
+  chainId: string,
+  assetId: string,
+  amount: bigint,
+  address: string
+): Promise<EVMFeeData> {
+  const api: JEVMAPI = provider.jevm[chainId]
+  const isContract: boolean = isContractAddress(assetId)
+  const from: string = wallet.getAddress()
+  const to: string = isContract ? assetId : address
+  const value: bigint = isContract ? BigInt(0) : amount
+  const data: string = isContract
+    ? await api.chain.getContractTransactionData(provider, assetId, address, amount)
+    : '0x'
+  const type: FeeType = FeeType.BaseFee
+  const gasPrice: bigint = await estimateEVMGasPrice(api)
+  if (assetId === api.chain.assetId) {
+    const gasLimit: bigint = SendEtherGasLimit
+    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
+    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+  }
+  return await estimateEVMCall(api, from, to, value, data, type, gasPrice).catch(() => {
+    const gasLimit: bigint = DefaultTransferEstimate
+    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
+    return new EVMFeeData(api.chain, gasPrice * gasLimit, type, gasPrice, gasLimit, transactionData)
+  })
+}
+
+export async function executeEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeData: EVMFeeData): Promise<string> {
   const unsignedTransaction: ethers.TransactionRequest = {
     from: wallet.address,
     to: feeData.data.to,
@@ -166,7 +167,7 @@ export async function sendEVMTransaction (api: JEVMAPI, wallet: JEVMWallet, feeD
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(1000)
+    await sleep(InvalidNonceRetryDelay)
     unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
   }
   throw new TransactionError('could not provide a valid nonce')
@@ -289,7 +290,7 @@ export async function estimateEVMExportTransaction (
   return new BaseFeeData(api.chain, fee, FeeType.ExportFee)
 }
 
-export async function sendEVMExportTransaction (
+export async function executeEVMExportTransaction (
   provider: MCNProvider,
   api: JEVMAPI,
   wallet: MCNWallet,
@@ -299,11 +300,8 @@ export async function sendEVMExportTransaction (
   address: string,
   sendImportFee: boolean,
   importFee: bigint,
-  fee?: FeeData
+  fee: FeeData
 ): Promise<string> {
-  if (typeof fee === 'undefined') {
-    fee = await estimateEVMExportTransaction(api, assetId, destination)
-  }
   // exportations of the gas token must be divided by atomic denomination
   if (assetId === api.chain.assetId) {
     amount /= AtomicDenomination
@@ -340,7 +338,7 @@ export async function sendEVMExportTransaction (
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(1000)
+    await sleep(InvalidNonceRetryDelay)
     nonce = await getWalletNonce(evmWallet, api, true)
   }
   throw new TransactionError('could not provide a valid nonce')
@@ -359,23 +357,17 @@ export async function estimateEVMImportTransaction (
   return fee
 }
 
-export async function sendEVMImportTransaction (
+export async function executeEVMImportTransaction (
   provider: MCNProvider,
   api: JEVMAPI,
   wallet: MCNWallet,
   source: Blockchain,
-  fee?: FeeData,
-  utxoSet?: Utxo[]
+  fee: FeeData,
+  utxoSet: Utxo[]
 ): Promise<string> {
   const chainWallet: VMWallet = wallet.getWallet(api.chain)
   const sender: string = chainWallet.getJuneoAddress()
-  if (typeof utxoSet === 'undefined') {
-    utxoSet = await fetchUtxos(api, [sender], source.id)
-  }
   const values = getUtxosAmountValues(utxoSet, source.id)
-  if (typeof fee === 'undefined') {
-    fee = await estimateEVMImportTransaction(api, utxoSet.length, values.size)
-  }
   const inputs: UserInput[] = getImportUserInputs(
     values,
     fee.assetId,

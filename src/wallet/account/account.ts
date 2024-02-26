@@ -131,13 +131,11 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSetMultiSig: Utxo[] = []
   utxoSetTimelocked: Utxo[] = []
   protected fetching: boolean = false
-  private readonly sourceChain?: string
   private readonly utxoApi: AbstractUtxoAPI
 
-  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet, sourceChain?: string) {
+  protected constructor (chain: Blockchain, utxoApi: AbstractUtxoAPI, wallet: MCNWallet) {
     super(AccountType.Utxo, chain, wallet)
     this.utxoApi = utxoApi
-    this.sourceChain = sourceChain
   }
 
   async fetchBalance (assetId: string): Promise<void> {
@@ -154,7 +152,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       return
     }
     this.fetching = true
-    this.utxoSet = await fetchUtxos(this.utxoApi, [this.address], this.sourceChain)
+    this.utxoSet = await fetchUtxos(this.utxoApi, [this.address])
     this.sortUtxoSet()
     this.calculateBalances()
     this.fetching = false

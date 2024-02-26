@@ -243,7 +243,8 @@ describe('StakeManager', () => {
         currentTime,
         tomorrow,
         [account.address],
-        1
+        1,
+        platformAccount.utxoSet
       )
       expect(feeData.chain).toEqual(provider.platform.chain)
       expect(feeData.amount).toEqual(BigInt(0))

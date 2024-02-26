@@ -4,9 +4,9 @@
 
 ## Overview
 
-JuneoJS is a JavaScript Library to help building on the JuneoMCN. Interfaces are provided to interact with nodes that have enabled their APIs endpoints to retrieve informations about the current state of the network and create, sign and send messages to it.
+JuneoJS is a JavaScript Library to help building on the JuneoMCN. Interfaces are provided to interact with nodes that have enabled their APIs endpoints to retrieve informations about the current state of the network. Types, helpers and builders are also provided to create, verify, sign and send messages to it.
 
-It allows developers to build, sign and send transactions to transfer funds, stake funds, create assets, create supernets and create blockchains. The goal of this library is to become an easy to use boilerplate whether it is to learn more about the JuneoMCN, create a simple project or even build a complete DApp. To accomplish that, the library will provide both lower and higher level functions to have the choice between speed and customization when building a project.
+That allows developers to use transactions to easily transfer funds, stake funds, create assets, create supernets, create blockchains and even more. You can use this library to learn about the JuneoMCN, create a simple project or even build a complete DApp. To support you in such task, the library provides both low and high level functions to have the choice between speed and customization when building a project.
 
 ## Installation
 

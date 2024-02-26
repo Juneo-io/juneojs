@@ -11,7 +11,6 @@ import {
   NetworkOperationRange,
   NetworkOperationType,
   SocotraNetwork,
-  AmountError,
   JuneoClient
 } from '../../../src'
 import * as dotenv from 'dotenv'
@@ -64,13 +63,6 @@ describe('Wrapping operations', () => {
           asset: wJuneAsset,
           amount: EXCESSIVE_AMOUNT,
           expectedStatus: AccountError
-        },
-        {
-          description: 'Zero amount',
-          blockchain: juneChain,
-          asset: wJuneAsset,
-          amount: BigInt(0),
-          expectedStatus: AmountError
         }
       ])(
         '$#) $description $amount $asset.name in $blockchain.name',

@@ -20,7 +20,6 @@ import {
   type ChainNetworkOperation
 } from '../operation'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
-import { WrapManager } from '../wrap'
 import { AbstractChainAccount, AccountType } from './account'
 import { Balance } from './balance'
 import { type MCNProvider } from '../../juneo'
@@ -30,14 +29,12 @@ export class EVMAccount extends AbstractChainAccount {
   api: JEVMAPI
   override chainWallet: JEVMWallet
   private readonly provider: MCNProvider
-  private readonly wrapManager: WrapManager
 
   constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
     super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
     this.chain = provider.jevm[chainId].chain
     this.api = provider.jevm[chainId]
     this.chainWallet = wallet.getJEVMWallet(this.chain)
-    this.wrapManager = new WrapManager(this.api, this.chainWallet)
     this.provider = provider
   }
 
@@ -71,20 +68,10 @@ export class EVMAccount extends AbstractChainAccount {
       const transactionHash: string = await executeEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.Wrap) {
-      const wrapping: WrapOperation = operation as WrapOperation
-      const transactionHash: string = await this.wrapManager.wrap(
-        wrapping.asset,
-        wrapping.amount,
-        summary.fee as EVMFeeData
-      )
+      const transactionHash: string = await executeEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Wrap, transactionHash)
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      const wrapping: UnwrapOperation = operation as UnwrapOperation
-      const transactionHash: string = await this.wrapManager.unwrap(
-        wrapping.asset,
-        wrapping.amount,
-        summary.fee as EVMFeeData
-      )
+      const transactionHash: string = await executeEVMTransaction(this.api, this.chainWallet, summary.fee as EVMFeeData)
       await executable.addTrackedEVMTransaction(this.api, TransactionType.Unwrap, transactionHash)
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity

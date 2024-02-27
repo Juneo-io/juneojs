@@ -75,7 +75,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
     const signatures: Signature[] = []
     const threshold: number = this.input.utxo.output.threshold
     for (let i = 0; i < threshold && i < indices.length; i++) {
-      const address: Address = this.input.utxo.output.addresses[i]
+      const address: Address = this.input.utxo.output.addresses[indices[i]]
       for (const wallet of wallets) {
         if (address.matches(wallet.getJuneoAddress())) {
           signatures.push(new Signature(wallet.sign(sha256(bytes))))

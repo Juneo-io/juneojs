@@ -20,7 +20,8 @@ import {
   getImportUserInputs
 } from '../../../utils'
 import { type MCNWallet, type JEVMWallet, type VMWallet } from '../../wallet'
-import { InvalidNonceRetryDelay, MaxInvalidNonceAttempts, estimateEVMGasPrice, getWalletNonce } from '../evm'
+import { MaxInvalidNonceAttempts, InvalidNonceRetryDelay } from '../constants'
+import { estimateEVMGasPrice, getWalletNonce } from '../evm'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
 export async function estimateEVMExportTransaction (

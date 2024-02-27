@@ -8,15 +8,15 @@ import { TransactionError, sleep, isContractAddress } from '../../utils'
 import { type JEVMWallet } from '../wallet'
 import { type JRC20Asset } from '../../asset'
 import { type MCNProvider } from '../../juneo'
-
-const DefaultWrapEstimate: bigint = BigInt(55_000)
-const DefaultUnwrapEstimate: bigint = BigInt(45_000)
-const DefaultTransferEstimate: bigint = BigInt(200_000)
-const DefaultWithdrawEstimate: bigint = BigInt(100_000)
-const DefaultDepositEstimate: bigint = BigInt(100_000)
-
-export const MaxInvalidNonceAttempts: number = 5
-export const InvalidNonceRetryDelay: number = 1000
+import {
+  DefaultTransferEstimate,
+  MaxInvalidNonceAttempts,
+  InvalidNonceRetryDelay,
+  DefaultWrapEstimate,
+  DefaultUnwrapEstimate,
+  DefaultWithdrawEstimate,
+  DefaultDepositEstimate
+} from './constants'
 
 export class EVMTransactionData {
   from: string

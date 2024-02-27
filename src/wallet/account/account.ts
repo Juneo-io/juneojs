@@ -76,11 +76,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
   }
 
   getAmount (assetId: string): bigint {
-    if (!this.balances.has(assetId)) {
-      this.balances.set(assetId, new Balance())
-      return BigInt(0)
-    }
-    return this.balances.get(assetId)!.getValue()
+    return this.getBalance(assetId).getValue()
   }
 
   getBalance (assetId: string): Balance {
@@ -117,11 +113,7 @@ export abstract class AbstractChainAccount implements ChainAccount {
 
   protected spend (spendings: Spending[]): void {
     for (const spending of spendings) {
-      const exists: boolean = this.balances.has(spending.assetId)
-      const balance: Balance = exists ? this.balances.get(spending.assetId)! : new Balance()
-      if (exists) {
-        balance.spend(spending.amount)
-      }
+      this.getBalance(spending.assetId).spend(spending.amount)
     }
   }
 }
@@ -227,15 +219,12 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   private calculateBalances (): void {
     const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
     for (const [key, value] of values) {
-      if (!this.balances.has(key)) {
-        this.balances.set(key, new Balance())
-      }
-      const balance: Balance = this.balances.get(key)!
-      balance.update(value)
+      this.getBalance(key).update(value)
     }
     for (const [key, balance] of this.balances) {
       // force all balances that no longer have a value from calculation to 0 in order to prevent desync
       if (!values.has(key) && balance.getValue() !== BigInt(0)) {
+        // make sure to actually update so as to cast the event to potential listeners
         balance.update(BigInt(0))
       }
     }

@@ -29,6 +29,7 @@ export class MCNAccount {
   readonly wallet: MCNWallet
   readonly chainAccounts = new Map<string, ChainAccount>()
   private readonly jvmAccount: JVMAccount
+  private readonly platformAccount: PlatformAccount
   private readonly crossManager: CrossManager
   private executingChains: string[] = []
 
@@ -37,7 +38,9 @@ export class MCNAccount {
     const jvmAccount: JVMAccount = new JVMAccount(provider, wallet)
     this.addAccount(jvmAccount)
     this.jvmAccount = jvmAccount
-    this.addAccount(new PlatformAccount(provider, wallet))
+    const platformAccount: PlatformAccount = new PlatformAccount(provider, wallet)
+    this.addAccount(platformAccount)
+    this.platformAccount = platformAccount
     for (const chainId in provider.jevm) {
       this.addAccount(new EVMAccount(provider, chainId, wallet))
     }
@@ -68,6 +71,8 @@ export class MCNAccount {
       const crossOperation: CrossOperation = operation as CrossOperation
       // JVM balance might be needed for proxy and is mandatory if so before estimation
       await this.jvmAccount.refreshBalances()
+      // TODO remove in case it does not work or replace in case it works to do it for all utxo accounts
+      await this.platformAccount.refreshBalances()
       return await this.crossManager.estimateCrossOperation(crossOperation, this)
     }
     if (operation.type === NetworkOperationType.CrossResume) {

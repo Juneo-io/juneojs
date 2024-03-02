@@ -88,8 +88,10 @@ export async function estimatePlatformValidateOperation (
     account,
     validator,
     ValidationShare,
+    validate.stakeAddresses,
+    validate.stakeThreshold,
     validate.rewardAddresses,
-    validate.threshold,
+    validate.rewardThreshold,
     account.utxoSet
   ).then(
     (fee) => {
@@ -164,8 +166,10 @@ export async function estimatePlatformDelegateOperation (
     provider,
     account,
     validator,
+    delegate.stakeAddresses,
+    delegate.stakeThreshold,
     delegate.rewardAddresses,
-    delegate.threshold,
+    delegate.rewardThreshold,
     account.utxoSet
   ).then(
     (fee) => {

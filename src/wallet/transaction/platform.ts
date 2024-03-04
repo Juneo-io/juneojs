@@ -35,8 +35,10 @@ export async function estimatePlatformAddValidatorTransaction (
   account: PlatformAccount,
   validator: Validator,
   share: number,
+  stakeAddresses: string[],
+  stakeThreshold: number,
   rewardAddresses: string[],
-  threshold: number,
+  rewardThreshold: number,
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
@@ -52,8 +54,12 @@ export async function estimatePlatformAddValidatorTransaction (
     validator.weight,
     api.chain.assetId,
     share,
+    stakeAddresses,
+    stakeThreshold,
+    BigInt(0),
     rewardAddresses,
-    threshold,
+    rewardThreshold,
+    BigInt(0),
     account.address,
     provider.mcn.id
   )
@@ -82,8 +88,10 @@ export async function estimatePlatformValidateOperation (
     account,
     validator,
     ValidationShare,
+    validate.stakeAddresses,
+    validate.stakeThreshold,
     validate.rewardAddresses,
-    validate.threshold,
+    validate.rewardThreshold,
     account.utxoSet
   ).then(
     (fee) => {
@@ -107,8 +115,10 @@ export async function estimatePlatformAddDelegatorTransaction (
   provider: MCNProvider,
   account: PlatformAccount,
   validator: Validator,
+  stakeAddresses: string[],
+  stakeThreshold: number,
   rewardAddresses: string[],
-  threshold: number,
+  rewardThreshold: number,
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
@@ -123,8 +133,12 @@ export async function estimatePlatformAddDelegatorTransaction (
     validator.endTime,
     validator.weight,
     api.chain.assetId,
+    stakeAddresses,
+    stakeThreshold,
+    BigInt(0),
     rewardAddresses,
-    threshold,
+    rewardThreshold,
+    BigInt(0),
     account.address,
     provider.mcn.id
   )
@@ -152,8 +166,10 @@ export async function estimatePlatformDelegateOperation (
     provider,
     account,
     validator,
+    delegate.stakeAddresses,
+    delegate.stakeThreshold,
     delegate.rewardAddresses,
-    delegate.threshold,
+    delegate.rewardThreshold,
     account.utxoSet
   ).then(
     (fee) => {

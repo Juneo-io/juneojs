@@ -64,6 +64,8 @@ describe('Staking operations', (): void => {
             startTime,
             endTime,
             [account.address],
+            1,
+            [account.address],
             1
           )
           await expect(mcnAccount.estimate(validateOperation)).rejects.toThrow(expectedError)
@@ -100,6 +102,8 @@ describe('Staking operations', (): void => {
             startTime,
             endTime,
             [account.address],
+            1,
+            [account.address],
             1
           )
           const summary = await mcnAccount.estimate(validateOperation)
@@ -129,6 +133,8 @@ describe('Staking operations', (): void => {
             amount,
             startTime,
             endTime,
+            [account.address],
+            1,
             [account.address],
             1
           )
@@ -160,6 +166,8 @@ describe('Staking operations', (): void => {
             amount,
             startTime,
             endTime,
+            [account.address],
+            1,
             [account.address],
             1
           )
@@ -213,6 +221,8 @@ describe('Staking operations', (): void => {
             startTime,
             endTime,
             [account.address],
+            1,
+            [account.address],
             1
           )
           const summary = await mcnAccount.estimate(delegateOperation)
@@ -242,6 +252,8 @@ describe('StakeManager', () => {
         BigInt(100_000_000),
         currentTime,
         tomorrow,
+        [account.address],
+        1,
         [account.address],
         1,
         platformAccount.utxoSet

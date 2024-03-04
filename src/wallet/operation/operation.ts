@@ -111,8 +111,10 @@ export abstract class Staking extends ChainNetworkOperation {
   amount: bigint
   startTime: bigint
   endTime: bigint
+  stakeAddresses: string[]
+  stakeThreshold: number
   rewardAddresses: string[]
-  threshold: number
+  rewardThreshold: number
 
   constructor (
     type: NetworkOperationType,
@@ -121,16 +123,20 @@ export abstract class Staking extends ChainNetworkOperation {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    stakeAddresses: string[],
+    stakeThreshold: number,
     rewardAddresses: string[],
-    threshold: number
+    rewardThreshold: number
   ) {
     super(type, mcn.primary.platform)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
     this.endTime = endTime
+    this.stakeAddresses = stakeAddresses
+    this.stakeThreshold = stakeThreshold
     this.rewardAddresses = rewardAddresses
-    this.threshold = threshold
+    this.rewardThreshold = rewardThreshold
   }
 }
 
@@ -141,10 +147,23 @@ export class ValidateOperation extends Staking {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    stakeAddresses: string[],
+    stakeThreshold: number,
     rewardAddresses: string[],
-    threshold: number
+    rewardThreshold: number
   ) {
-    super(NetworkOperationType.Validate, mcn, nodeId, amount, startTime, endTime, rewardAddresses, threshold)
+    super(
+      NetworkOperationType.Validate,
+      mcn,
+      nodeId,
+      amount,
+      startTime,
+      endTime,
+      stakeAddresses,
+      stakeThreshold,
+      rewardAddresses,
+      rewardThreshold
+    )
   }
 }
 
@@ -155,10 +174,23 @@ export class DelegateOperation extends Staking {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    stakeAddresses: string[],
+    stakeThreshold: number,
     rewardAddresses: string[],
-    threshold: number
+    rewardThreshold: number
   ) {
-    super(NetworkOperationType.Delegate, mcn, nodeId, amount, startTime, endTime, rewardAddresses, threshold)
+    super(
+      NetworkOperationType.Delegate,
+      mcn,
+      nodeId,
+      amount,
+      startTime,
+      endTime,
+      stakeAddresses,
+      stakeThreshold,
+      rewardAddresses,
+      rewardThreshold
+    )
   }
 }
 

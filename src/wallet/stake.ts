@@ -77,8 +77,10 @@ export class StakeManager {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    stakeAddresses: string[],
+    stakeThreshold: number,
     rewardAddresses: string[],
-    threshold: number,
+    rewardThreshold: number,
     utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
@@ -87,8 +89,10 @@ export class StakeManager {
       account,
       validator,
       ValidationShare,
+      stakeAddresses,
+      stakeThreshold,
       rewardAddresses,
-      threshold,
+      rewardThreshold,
       utxoSet
     )
   }
@@ -99,8 +103,10 @@ export class StakeManager {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    stakeAddresses: string[],
+    stakeThreshold: number,
     rewardAddresses: string[],
-    threshold: number,
+    rewardThreshold: number,
     utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
@@ -108,8 +114,10 @@ export class StakeManager {
       this.provider,
       account,
       validator,
+      stakeAddresses,
+      stakeThreshold,
       rewardAddresses,
-      threshold,
+      rewardThreshold,
       utxoSet
     )
   }

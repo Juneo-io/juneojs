@@ -160,13 +160,17 @@ export function buildAddValidatorTransaction (
   stakeAmount: bigint,
   stakedAssetId: string,
   shares: number,
+  stakeAddresses: string[],
+  stakeThreshold: number,
+  stakeTimelock: bigint,
   rewardAddresses: string[],
-  threshold: number,
+  rewardThreshold: number,
+  rewardTimelock: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddresses, threshold, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -188,12 +192,12 @@ export function buildAddValidatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), threshold, Address.toAddresses(rewardAddresses))
+      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    BigInt(0),
-    threshold,
+    rewardTimelock,
+    rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )
   const changeOutputs: TransferableOutput[] = []
@@ -225,13 +229,17 @@ export function buildAddDelegatorTransaction (
   endTime: bigint,
   stakeAmount: bigint,
   stakedAssetId: string,
+  stakeAddresses: string[],
+  stakeThreshold: number,
+  stakeTimelock: bigint,
   rewardAddresses: string[],
-  threshold: number,
+  rewardThreshold: number,
+  rewardTimelock: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, rewardAddresses, threshold, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -253,12 +261,12 @@ export function buildAddDelegatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), threshold, Address.toAddresses(rewardAddresses))
+      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    BigInt(0),
-    threshold,
+    rewardTimelock,
+    rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )
   const changeOutputs: TransferableOutput[] = []

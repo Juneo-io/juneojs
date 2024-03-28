@@ -14,6 +14,7 @@ import {
   AddValidatorTransaction,
   CreateChainTransaction,
   CreateSupernetTransaction,
+  PlatformBaseTransaction,
   PlatformExportTransaction,
   PlatformImportTransaction,
   RemoveSupernetValidatorTransaction,
@@ -21,6 +22,35 @@ import {
   TransformSupernetTransaction
 } from './transaction'
 import { Secp256k1OutputOwners, Validator } from './validation'
+
+export function buildPlatformBaseTransaction (
+  userInputs: UserInput[],
+  utxoSet: Utxo[],
+  sendersAddresses: string[],
+  fee: bigint,
+  changeAddress: string,
+  networkId: number,
+  memo: string = ''
+): PlatformBaseTransaction {
+  if (userInputs.length < 1) {
+    throw new InputError('user inputs cannot be empty')
+  }
+  const sourceId: string = userInputs[0].sourceChain.id
+  userInputs.forEach((input) => {
+    if (input.sourceChain.id !== sourceId || input.destinationChain.id !== sourceId) {
+      throw new InputError('jvm base transaction cannot have different source/destination chain user inputs')
+    }
+  })
+  const feeData = new TransactionFee(userInputs[0].sourceChain, fee)
+  const inputs: TransferableInput[] = buildTransactionInputs(
+    userInputs,
+    utxoSet,
+    Address.toAddresses(sendersAddresses),
+    [feeData]
+  )
+  const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
+  return new PlatformBaseTransaction(networkId, new BlockchainId(sourceId), outputs, inputs, memo)
+}
 
 export function buildPlatformExportTransaction (
   userInputs: UserInput[],

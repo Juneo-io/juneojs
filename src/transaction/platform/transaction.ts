@@ -31,6 +31,23 @@ const TransferSupernetOwnershipTransactionTypeId: number = 0x00000021
 const TransformSupernetTransactionTypeId: number = 0x00000018
 const AddPermissionlessValidatorTransactionTypeId: number = 0x00000019
 const AddPermissionlessDelegatorTransactionTypeId: number = 0x0000001a
+const BaseTransactionTypeId: number = 0x00000000
+
+export class PlatformBaseTransaction extends AbstractBaseTransaction {
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string
+  ) {
+    super(BaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+  }
+
+  getSignables (): Signable[] {
+    return this.inputs
+  }
+}
 
 export class PlatformExportTransaction extends AbstractExportTransaction {
   constructor (

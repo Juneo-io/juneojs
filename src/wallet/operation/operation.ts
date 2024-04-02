@@ -1,7 +1,7 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type JEVMBlockchain, type Blockchain } from '../../chain'
 import { type MCN } from '../../network'
-import { type Utxo } from '../../transaction'
+import { type BLSPublicKey, type BLSSignature, type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
   Send = 'Send',
@@ -10,8 +10,8 @@ export enum NetworkOperationType {
   CrossResume = 'Cross resume',
   DepositResume = 'Deposit resume',
   Bridge = 'Bridge',
-  Validate = 'Validate',
-  Delegate = 'Delegate',
+  ValidatePrimary = 'Validate primary',
+  DelegatePrimary = 'Delegate primary',
   Wrap = 'Wrap',
   Unwrap = 'Unwrap',
 }
@@ -140,10 +140,15 @@ export abstract class Staking extends ChainNetworkOperation {
   }
 }
 
-export class ValidateOperation extends Staking {
+export class ValidatePrimaryOperation extends Staking {
+  publicKey: BLSPublicKey
+  signature: BLSSignature
+
   constructor (
     mcn: MCN,
     nodeId: string,
+    publicKey: BLSPublicKey,
+    signature: BLSSignature,
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
@@ -153,7 +158,7 @@ export class ValidateOperation extends Staking {
     rewardThreshold: number
   ) {
     super(
-      NetworkOperationType.Validate,
+      NetworkOperationType.ValidatePrimary,
       mcn,
       nodeId,
       amount,
@@ -164,10 +169,12 @@ export class ValidateOperation extends Staking {
       rewardAddresses,
       rewardThreshold
     )
+    this.publicKey = publicKey
+    this.signature = signature
   }
 }
 
-export class DelegateOperation extends Staking {
+export class DelegatePrimaryOperation extends Staking {
   constructor (
     mcn: MCN,
     nodeId: string,
@@ -180,7 +187,7 @@ export class DelegateOperation extends Staking {
     rewardThreshold: number
   ) {
     super(
-      NetworkOperationType.Delegate,
+      NetworkOperationType.DelegatePrimary,
       mcn,
       nodeId,
       amount,

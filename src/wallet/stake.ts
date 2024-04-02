@@ -1,8 +1,8 @@
-import { NodeId, type Utxo, Validator } from '../transaction'
+import { NodeId, type ProofOfPossession, type Utxo, Validator } from '../transaction'
 import {
   type UtxoFeeData,
-  estimatePlatformAddValidatorTransaction,
-  estimatePlatformAddDelegatorTransaction
+  estimatePlatformAddPrimaryValidatorTransaction,
+  estimatePlatformAddPrimaryDelegatorTransaction
 } from './transaction'
 import { type MCNWallet, type VMWallet } from './wallet'
 import { StakeError, calculatePrimary, now, verifyTimeRange } from '../utils'
@@ -77,6 +77,7 @@ export class StakeManager {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    pop: ProofOfPossession,
     stakeAddresses: string[],
     stakeThreshold: number,
     rewardAddresses: string[],
@@ -84,11 +85,12 @@ export class StakeManager {
     utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    return await estimatePlatformAddValidatorTransaction(
+    return await estimatePlatformAddPrimaryValidatorTransaction(
       this.provider,
       account,
       validator,
       ValidationShare,
+      pop,
       stakeAddresses,
       stakeThreshold,
       rewardAddresses,
@@ -110,7 +112,7 @@ export class StakeManager {
     utxoSet: Utxo[]
   ): Promise<UtxoFeeData> {
     const validator: Validator = new Validator(new NodeId(nodeId), startTime, endTime, amount)
-    return await estimatePlatformAddDelegatorTransaction(
+    return await estimatePlatformAddPrimaryDelegatorTransaction(
       this.provider,
       account,
       validator,

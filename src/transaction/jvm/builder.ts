@@ -1,6 +1,6 @@
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
-import { BaseTransaction, CreateAssetTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
+import { JVMBaseTransaction, CreateAssetTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 import { Address, BlockchainId } from '../types'
 import { type UserOutput, type TransferableOutput, type Utxo } from '../output'
 import { InputError } from '../../utils'
@@ -16,7 +16,7 @@ export function buildJVMBaseTransaction (
   changeAddress: string,
   networkId: number,
   memo: string = ''
-): BaseTransaction {
+): JVMBaseTransaction {
   if (userInputs.length < 1) {
     throw new InputError('user inputs cannot be empty')
   }
@@ -34,7 +34,7 @@ export function buildJVMBaseTransaction (
     [feeData]
   )
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
-  return new BaseTransaction(networkId, new BlockchainId(sourceId), outputs, inputs, memo)
+  return new JVMBaseTransaction(networkId, new BlockchainId(sourceId), outputs, inputs, memo)
 }
 
 export function buildJVMExportTransaction (

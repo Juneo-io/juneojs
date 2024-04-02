@@ -5,36 +5,39 @@ import {
   Validator,
   type Utxo,
   type UnsignedTransaction,
-  buildAddValidatorTransaction,
-  buildAddDelegatorTransaction,
-  NodeId
+  NodeId,
+  buildAddPermissionlessValidatorTransaction,
+  ProofOfPossession,
+  PrimarySigner,
+  buildAddPermissionlessDelegatorTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
 import {
   ChainOperationSummary,
-  type DelegateOperation,
+  type DelegatePrimaryOperation,
   StakingOperationSummary,
-  type ValidateOperation
+  type ValidatePrimaryOperation
 } from '../operation'
 import { StakeManager, ValidationShare } from '../stake'
 import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
-async function getPlatformAddValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
+async function getPlatformAddPrimaryValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkValidatorFee)
   return new BaseFeeData(provider.platform.chain, fee, FeeType.ValidateFee)
 }
 
-async function getPlatformAddDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
+async function getPlatformAddPrimaryDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkDelegatorFee)
   return new BaseFeeData(provider.platform.chain, fee, FeeType.DelegateFee)
 }
 
-export async function estimatePlatformAddValidatorTransaction (
+export async function estimatePlatformAddPrimaryValidatorTransaction (
   provider: MCNProvider,
   account: PlatformAccount,
   validator: Validator,
   share: number,
+  pop: ProofOfPossession,
   stakeAddresses: string[],
   stakeThreshold: number,
   rewardAddresses: string[],
@@ -42,8 +45,8 @@ export async function estimatePlatformAddValidatorTransaction (
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
-  const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
-  const transaction: UnsignedTransaction = buildAddValidatorTransaction(
+  const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
+  const transaction: UnsignedTransaction = buildAddPermissionlessValidatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
@@ -51,9 +54,11 @@ export async function estimatePlatformAddValidatorTransaction (
     validator.nodeId,
     validator.startTime,
     validator.endTime,
+    provider.mcn.primary.id,
     validator.weight,
     api.chain.assetId,
     share,
+    new PrimarySigner(pop),
     stakeAddresses,
     stakeThreshold,
     BigInt(0),
@@ -66,9 +71,9 @@ export async function estimatePlatformAddValidatorTransaction (
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformValidateOperation (
+export async function estimatePlatformValidatePrimaryOperation (
   provider: MCNProvider,
-  validate: ValidateOperation,
+  validate: ValidatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
@@ -83,11 +88,12 @@ export async function estimatePlatformValidateOperation (
     validate.amount
   )
   const values = new Map<string, bigint>()
-  return await estimatePlatformAddValidatorTransaction(
+  return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
     account,
     validator,
     ValidationShare,
+    new ProofOfPossession(validate.publicKey, validate.signature),
     validate.stakeAddresses,
     validate.stakeThreshold,
     validate.rewardAddresses,
@@ -99,7 +105,7 @@ export async function estimatePlatformValidateOperation (
       return new StakingOperationSummary(validate, chain, fee, [spending, fee.spending], values, potentialReward)
     },
     async () => {
-      const fee: BaseFeeData = await getPlatformAddValidatorFee(provider)
+      const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
       return new ChainOperationSummary(
         validate,
         chain,
@@ -111,7 +117,7 @@ export async function estimatePlatformValidateOperation (
   )
 }
 
-export async function estimatePlatformAddDelegatorTransaction (
+export async function estimatePlatformAddPrimaryDelegatorTransaction (
   provider: MCNProvider,
   account: PlatformAccount,
   validator: Validator,
@@ -122,8 +128,8 @@ export async function estimatePlatformAddDelegatorTransaction (
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
-  const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
-  const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
+  const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
+  const transaction: UnsignedTransaction = buildAddPermissionlessDelegatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
@@ -131,6 +137,7 @@ export async function estimatePlatformAddDelegatorTransaction (
     validator.nodeId,
     validator.startTime,
     validator.endTime,
+    provider.mcn.primary.id,
     validator.weight,
     api.chain.assetId,
     stakeAddresses,
@@ -145,9 +152,9 @@ export async function estimatePlatformAddDelegatorTransaction (
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 
-export async function estimatePlatformDelegateOperation (
+export async function estimatePlatformDelegatePrimaryOperation (
   provider: MCNProvider,
-  delegate: DelegateOperation,
+  delegate: DelegatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platform.chain
@@ -162,7 +169,7 @@ export async function estimatePlatformDelegateOperation (
     delegate.amount
   )
   const values = new Map<string, bigint>()
-  return await estimatePlatformAddDelegatorTransaction(
+  return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
     account,
     validator,
@@ -177,7 +184,7 @@ export async function estimatePlatformDelegateOperation (
       return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)
     },
     async () => {
-      const fee: BaseFeeData = await getPlatformAddDelegatorFee(provider)
+      const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
       return new ChainOperationSummary(
         delegate,
         chain,

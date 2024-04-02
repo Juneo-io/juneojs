@@ -3,16 +3,16 @@ import {
   TransactionType,
   type UtxoFeeData,
   type UtxoSpending,
-  estimatePlatformValidateOperation,
-  estimatePlatformDelegateOperation
+  estimatePlatformValidatePrimaryOperation,
+  estimatePlatformDelegatePrimaryOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
   type ExecutableOperation,
   NetworkOperationType,
   type ChainOperationSummary,
-  type DelegateOperation,
-  type ValidateOperation,
+  type DelegatePrimaryOperation,
+  type ValidatePrimaryOperation,
   type ChainNetworkOperation
 } from '../operation'
 import { StakeManager } from '../stake'
@@ -31,10 +31,10 @@ export class PlatformAccount extends UtxoAccount {
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
-    if (operation.type === NetworkOperationType.Validate) {
-      return await estimatePlatformValidateOperation(this.provider, operation as ValidateOperation, this)
-    } else if (operation.type === NetworkOperationType.Delegate) {
-      return await estimatePlatformDelegateOperation(this.provider, operation as DelegateOperation, this)
+    if (operation.type === NetworkOperationType.ValidatePrimary) {
+      return await estimatePlatformValidatePrimaryOperation(this.provider, operation as ValidatePrimaryOperation, this)
+    } else if (operation.type === NetworkOperationType.DelegatePrimary) {
+      return await estimatePlatformDelegatePrimaryOperation(this.provider, operation as DelegatePrimaryOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -43,8 +43,8 @@ export class PlatformAccount extends UtxoAccount {
     super.spend(summary.spendings as UtxoSpending[])
     const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
-    if (operation.type === NetworkOperationType.Validate) {
-      const staking: ValidateOperation = operation as ValidateOperation
+    if (operation.type === NetworkOperationType.ValidatePrimary) {
+      const staking: ValidatePrimaryOperation = operation as ValidatePrimaryOperation
       const transactionId: string = await this.stakeManager.validate(
         staking.amount,
         staking.startTime,
@@ -56,8 +56,8 @@ export class PlatformAccount extends UtxoAccount {
         TransactionType.PrimaryValidation,
         transactionId
       )
-    } else if (operation.type === NetworkOperationType.Delegate) {
-      const staking: DelegateOperation = operation as DelegateOperation
+    } else if (operation.type === NetworkOperationType.DelegatePrimary) {
+      const staking: DelegatePrimaryOperation = operation as DelegatePrimaryOperation
       const transactionId: string = await this.stakeManager.delegate(
         staking.amount,
         staking.startTime,

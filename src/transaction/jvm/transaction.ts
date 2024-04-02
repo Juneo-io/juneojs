@@ -11,7 +11,7 @@ const CreateAssetTransactionTypeId: number = 0x00000001
 const ImportTransactionTypeId: number = 0x00000003
 const ExportTransactionTypeId: number = 0x00000004
 
-export class BaseTransaction extends AbstractBaseTransaction {
+export class JVMBaseTransaction extends AbstractBaseTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,

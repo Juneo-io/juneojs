@@ -570,14 +570,19 @@ export function buildAddPermissionlessValidatorTransaction (
   supernetId: string | SupernetId,
   stakeAmount: bigint,
   stakedAssetId: string,
-  signer: BLSSigner,
-  rewardAddress: string,
   shares: number,
+  signer: BLSSigner,
+  stakeAddresses: string[],
+  stakeThreshold: number,
+  stakeTimelock: bigint,
+  rewardAddresses: string[],
+  rewardThreshold: number,
+  rewardTimelock: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddPermissionlessValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -599,16 +604,20 @@ export function buildAddPermissionlessValidatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), 1, [new Address(rewardAddress)])
+      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(BigInt(0), 1, [new Address(rewardAddress)])
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
+    rewardTimelock,
+    rewardThreshold,
+    Address.toAddresses(rewardAddresses)
+  )
   const changeOutputs: TransferableOutput[] = []
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     if (output.isChange) {
       changeOutputs.push(output)
     }
-  })
+  }
   return new AddPermissionlessValidatorTransaction(
     networkId,
     new BlockchainId(chain.id),
@@ -636,12 +645,17 @@ export function buildAddPermissionlessDelegatorTransaction (
   supernetId: string | SupernetId,
   stakeAmount: bigint,
   stakedAssetId: string,
-  rewardAddress: string,
+  stakeAddresses: string[],
+  stakeThreshold: number,
+  stakeTimelock: bigint,
+  rewardAddresses: string[],
+  rewardThreshold: number,
+  rewardTimelock: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
 ): AddPermissionlessDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, [rewardAddress], 1, chain)
+  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,
@@ -663,16 +677,20 @@ export function buildAddPermissionlessDelegatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, BigInt(0), 1, [new Address(rewardAddress)])
+      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(BigInt(0), 1, [new Address(rewardAddress)])
+  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
+    rewardTimelock,
+    rewardThreshold,
+    Address.toAddresses(rewardAddresses)
+  )
   const changeOutputs: TransferableOutput[] = []
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     if (output.isChange) {
       changeOutputs.push(output)
     }
-  })
+  }
   return new AddPermissionlessDelegatorTransaction(
     networkId,
     new BlockchainId(chain.id),

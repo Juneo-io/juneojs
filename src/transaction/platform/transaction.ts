@@ -77,6 +77,10 @@ export class PlatformImportTransaction extends AbstractImportTransaction {
   }
 }
 
+/**
+ * @deprecated
+ * Use AddPermissionlessValidatorTransaction
+ */
 export class AddValidatorTransaction extends AbstractBaseTransaction {
   validator: Validator
   stake: TransferableOutput[]
@@ -186,6 +190,10 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
   }
 }
 
+/**
+ * @deprecated
+ * Use AddPermissionlessDelegatorTransaction
+ */
 export class AddDelegatorTransaction extends AbstractBaseTransaction {
   validator: Validator
   stake: TransferableOutput[]

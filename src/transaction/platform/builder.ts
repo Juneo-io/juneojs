@@ -179,6 +179,10 @@ export function buildPlatformImportTransaction (
   )
 }
 
+/**
+ * @deprecated
+ * Use AddPermissionlessValidatorTransaction
+ */
 export function buildAddValidatorTransaction (
   utxoSet: Utxo[],
   sendersAddresses: string[],
@@ -249,6 +253,10 @@ export function buildAddValidatorTransaction (
   )
 }
 
+/**
+ * @deprecated
+ * Use AddPermissionlessDelegatorTransaction
+ */
 export function buildAddDelegatorTransaction (
   utxoSet: Utxo[],
   sendersAddresses: string[],

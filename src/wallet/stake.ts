@@ -1,4 +1,4 @@
-import { NodeId, type Utxo, Validator } from '../transaction'
+import { NodeId, type ProofOfPossession, type Utxo, Validator } from '../transaction'
 import {
   type UtxoFeeData,
   estimatePlatformAddPrimaryValidatorTransaction,
@@ -77,6 +77,7 @@ export class StakeManager {
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
+    pop: ProofOfPossession,
     stakeAddresses: string[],
     stakeThreshold: number,
     rewardAddresses: string[],
@@ -89,6 +90,7 @@ export class StakeManager {
       account,
       validator,
       ValidationShare,
+      pop,
       stakeAddresses,
       stakeThreshold,
       rewardAddresses,

@@ -5,9 +5,11 @@ import {
   Validator,
   type Utxo,
   type UnsignedTransaction,
-  buildAddValidatorTransaction,
-  buildAddDelegatorTransaction,
-  NodeId
+  NodeId,
+  buildAddPermissionlessValidatorTransaction,
+  ProofOfPossession,
+  PrimarySigner,
+  buildAddPermissionlessDelegatorTransaction
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
 import {
@@ -35,6 +37,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
   account: PlatformAccount,
   validator: Validator,
   share: number,
+  pop: ProofOfPossession,
   stakeAddresses: string[],
   stakeThreshold: number,
   rewardAddresses: string[],
@@ -43,7 +46,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
-  const transaction: UnsignedTransaction = buildAddValidatorTransaction(
+  const transaction: UnsignedTransaction = buildAddPermissionlessValidatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
@@ -51,9 +54,11 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
     validator.nodeId,
     validator.startTime,
     validator.endTime,
+    provider.mcn.primary.id,
     validator.weight,
     api.chain.assetId,
     share,
+    new PrimarySigner(pop),
     stakeAddresses,
     stakeThreshold,
     BigInt(0),
@@ -88,6 +93,7 @@ export async function estimatePlatformValidatePrimaryOperation (
     account,
     validator,
     ValidationShare,
+    new ProofOfPossession(validate.publicKey, validate.signature),
     validate.stakeAddresses,
     validate.stakeThreshold,
     validate.rewardAddresses,
@@ -123,7 +129,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
 ): Promise<UtxoFeeData> {
   const api: PlatformAPI = provider.platform
   const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
-  const transaction: UnsignedTransaction = buildAddDelegatorTransaction(
+  const transaction: UnsignedTransaction = buildAddPermissionlessDelegatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
@@ -131,6 +137,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
     validator.nodeId,
     validator.startTime,
     validator.endTime,
+    provider.mcn.primary.id,
     validator.weight,
     api.chain.assetId,
     stakeAddresses,

@@ -10,8 +10,8 @@ export enum NetworkOperationType {
   CrossResume = 'Cross resume',
   DepositResume = 'Deposit resume',
   Bridge = 'Bridge',
-  Validate = 'Validate',
-  Delegate = 'Delegate',
+  ValidatePrimary = 'Validate primary',
+  DelegatePrimary = 'Delegate primary',
   Wrap = 'Wrap',
   Unwrap = 'Unwrap',
 }
@@ -140,7 +140,7 @@ export abstract class Staking extends ChainNetworkOperation {
   }
 }
 
-export class ValidateOperation extends Staking {
+export class ValidatePrimaryOperation extends Staking {
   publicKey: BLSPublicKey
   signature: BLSSignature
 
@@ -158,7 +158,7 @@ export class ValidateOperation extends Staking {
     rewardThreshold: number
   ) {
     super(
-      NetworkOperationType.Validate,
+      NetworkOperationType.ValidatePrimary,
       mcn,
       nodeId,
       amount,
@@ -174,7 +174,7 @@ export class ValidateOperation extends Staking {
   }
 }
 
-export class DelegateOperation extends Staking {
+export class DelegatePrimaryOperation extends Staking {
   constructor (
     mcn: MCN,
     nodeId: string,
@@ -187,7 +187,7 @@ export class DelegateOperation extends Staking {
     rewardThreshold: number
   ) {
     super(
-      NetworkOperationType.Delegate,
+      NetworkOperationType.DelegatePrimary,
       mcn,
       nodeId,
       amount,

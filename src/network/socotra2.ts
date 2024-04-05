@@ -25,6 +25,8 @@ export const Socotra2GLD1AssetId: string = 'HNihfvex33EDsuHuQddQpBpwUtkotLwnt54a
 export const Socotra2MBTC1AssetId: string = '2oWo7iw26bbY2bAt9pFfbFpTCnFVVY2CePDHM4tjTeV7e4FPoQ'
 export const Socotra2DOGE1AssetId: string = '47Y4SGbEzTCQ1DCzBaSnE34qTuQH7MBV99FsFHptodbQEn32u'
 export const Socotra2LTC1AssetId: string = '27LfLHoSPYdspLG8QwMjvRby2XfLKS8eCZt2mTnJXM65fAduVv'
+export const Socotra2BCH1AssetId: string = '2RBX4TiRmUxU1FsmNmEgdEGcFtgPr9NTGqnm5f33mK8adciKsA'
+export const Socotra2LINK1AssetId: string = '2No8EzWaiCH7TQUh3bUqaKhAY6TLxe8doo15ftvtnkgvGLX9K9'
 
 export const Socotra2JUNEAsset: JNTAsset = new JNTAsset(Socotra2JUNEAssetId, 'JUNE', 'JUNE', 9, false)
 export const Socotra2USDT1Asset: JNTAsset = new JNTAsset(Socotra2USDT1AssetId, 'USDT1', 'USDT1', 9, false)
@@ -36,6 +38,8 @@ export const Socotra2GLD1Asset: JNTAsset = new JNTAsset(Socotra2GLD1AssetId, 'GL
 export const Socotra2MBTC1Asset: JNTAsset = new JNTAsset(Socotra2MBTC1AssetId, 'mBTC1', 'mBTC1', 9, false)
 export const Socotra2DOGE1Asset: JNTAsset = new JNTAsset(Socotra2DOGE1AssetId, 'DOGE1', 'DOGE1', 9, false)
 export const Socotra2LTC1Asset: JNTAsset = new JNTAsset(Socotra2LTC1AssetId, 'LTC1', 'LTC1', 9, false)
+export const Socotra2BCH1Asset: JNTAsset = new JNTAsset(Socotra2BCH1AssetId, 'BCH1', 'BCH1', 9, false)
+export const Socotra2LINK1Asset: JNTAsset = new JNTAsset(Socotra2LINK1AssetId, 'LINK1', 'LINK1', 9, false)
 // JUNE is omitted here because it should be registered by default as the chain asset
 const jntAssets: JNTAsset[] = [
   Socotra2USDT1Asset,
@@ -72,7 +76,9 @@ const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x3200000000000000000000000000000000000000', 'GLD1.e', 'GLD1.e', 9, Socotra2GLD1AssetId),
   new JRC20Asset('0x3300000000000000000000000000000000000000', 'mBTC.a', 'mBTC.a', 9, Socotra2MBTC1AssetId),
   new JRC20Asset('0x3400000000000000000000000000000000000000', 'DOGE.b', 'DOGE.b', 9, Socotra2DOGE1AssetId),
-  new JRC20Asset('0x3500000000000000000000000000000000000000', 'LTC.b', 'LTC.b', 9, Socotra2LTC1AssetId)
+  new JRC20Asset('0x3500000000000000000000000000000000000000', 'LTC.b', 'LTC.b', 9, Socotra2LTC1AssetId),
+  new JRC20Asset('0x3600000000000000000000000000000000000000', 'BCH.b', 'BCH.b', 9, Socotra2BCH1AssetId),
+  new JRC20Asset('0x3700000000000000000000000000000000000000', 'LINK.e', 'LINK.e', 9, Socotra2LINK1AssetId)
 ]
 export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
   '0xDce22197228e8Ae74bC9D07539A29Ea9F6DE372a',

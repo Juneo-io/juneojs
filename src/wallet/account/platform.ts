@@ -4,7 +4,9 @@ import {
   type UtxoFeeData,
   type UtxoSpending,
   estimatePlatformValidatePrimaryOperation,
-  estimatePlatformDelegatePrimaryOperation
+  estimatePlatformDelegatePrimaryOperation,
+  estimateSendOperation,
+  estimateSendUtxoOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
@@ -13,7 +15,9 @@ import {
   type ChainOperationSummary,
   type DelegatePrimaryOperation,
   type ValidatePrimaryOperation,
-  type ChainNetworkOperation
+  type ChainNetworkOperation,
+  type SendOperation,
+  type SendUtxoOperation
 } from '../operation'
 import { StakeManager } from '../stake'
 import { type MCNWallet } from '../wallet'
@@ -35,6 +39,10 @@ export class PlatformAccount extends UtxoAccount {
       return await estimatePlatformValidatePrimaryOperation(this.provider, operation as ValidatePrimaryOperation, this)
     } else if (operation.type === NetworkOperationType.DelegatePrimary) {
       return await estimatePlatformDelegatePrimaryOperation(this.provider, operation as DelegatePrimaryOperation, this)
+    } else if (operation.type === NetworkOperationType.Send) {
+      return await estimateSendOperation(this.provider, this.chain, this, operation as SendOperation)
+    } else if (operation.type === NetworkOperationType.SendUtxo) {
+      return await estimateSendUtxoOperation(this.provider, this.chain, this, operation as SendUtxoOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -69,6 +77,14 @@ export class PlatformAccount extends UtxoAccount {
         TransactionType.PrimaryDelegation,
         transactionId
       )
+    } else if (operation.type === NetworkOperationType.Send) {
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
+      const transactionHash: string = (await this.provider.platform.issueTx(transaction)).txID
+      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Send, transactionHash)
+    } else if (operation.type === NetworkOperationType.SendUtxo) {
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
+      const transactionHash: string = (await this.provider.platform.issueTx(transaction)).txID
+      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

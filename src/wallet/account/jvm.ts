@@ -3,8 +3,8 @@ import {
   TransactionType,
   type UtxoFeeData,
   type UtxoSpending,
-  estimateJVMSendOperation,
-  estimateJVMSendUtxoOperation
+  estimateSendOperation,
+  estimateSendUtxoOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
@@ -23,15 +23,14 @@ export class JVMAccount extends UtxoAccount {
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
     super(provider.jvm.chain, provider.jvm, wallet)
-    this.chain = provider.jvm.chain
     this.provider = provider
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
     if (operation.type === NetworkOperationType.Send) {
-      return await estimateJVMSendOperation(this.provider, this, operation as SendOperation)
+      return await estimateSendOperation(this.provider, this.chain, this, operation as SendOperation)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
-      return await estimateJVMSendUtxoOperation(this.provider, this, operation as SendUtxoOperation)
+      return await estimateSendUtxoOperation(this.provider, this.chain, this, operation as SendUtxoOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }

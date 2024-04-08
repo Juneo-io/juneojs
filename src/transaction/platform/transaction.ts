@@ -27,11 +27,11 @@ const CreateSupernetTransactionTypeId: number = 0x00000010
 const ImportTransactionTypeId: number = 0x00000011
 const ExportTransactionTypeId: number = 0x00000012
 const RemoveSupernetTransactionTypeId: number = 0x00000017
-const TransferSupernetOwnershipTransactionTypeId: number = 0x00000021
 const TransformSupernetTransactionTypeId: number = 0x00000018
 const AddPermissionlessValidatorTransactionTypeId: number = 0x00000019
 const AddPermissionlessDelegatorTransactionTypeId: number = 0x0000001a
-const BaseTransactionTypeId: number = 0x00000000
+const TransferSupernetOwnershipTransactionTypeId: number = 0x00000021
+const BaseTransactionTypeId: number = 0x00000022
 
 export class PlatformBaseTransaction extends AbstractBaseTransaction {
   constructor (

@@ -1,6 +1,12 @@
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { buildJVMBaseTransaction, type UnsignedTransaction, UserInput, type Utxo } from '../../transaction'
+import {
+  buildJVMBaseTransaction,
+  buildPlatformBaseTransaction,
+  type UnsignedTransaction,
+  UserInput,
+  type Utxo
+} from '../../transaction'
 import { type UtxoAccount } from '../account'
 import { ChainOperationSummary, type SendOperation, type SendUtxoOperation } from '../operation'
 import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
@@ -22,15 +28,24 @@ export async function estimateBaseTransaction (
   locktime: bigint = BigInt(0)
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
-  const transaction: UnsignedTransaction = buildJVMBaseTransaction(
-    [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
-    utxoSet,
-    account.getSignersAddresses(),
-    fee.amount,
-    account.address,
-    provider.mcn.id,
-    chain.id
-  )
+  const transaction: UnsignedTransaction =
+    chain.id === provider.platform.chain.id
+      ? buildPlatformBaseTransaction(
+        [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
+        utxoSet,
+        account.getSignersAddresses(),
+        fee.amount,
+        account.address,
+        provider.mcn.id
+      )
+      : buildJVMBaseTransaction(
+        [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
+        utxoSet,
+        account.getSignersAddresses(),
+        fee.amount,
+        account.address,
+        provider.mcn.id
+      )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
 }
 

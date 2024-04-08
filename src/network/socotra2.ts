@@ -62,7 +62,7 @@ export const Socotra2PlatformChain: PlatformBlockchain = new PlatformBlockchain(
 )
 export const Socotra2JVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM-Chain',
-  '2G9wwv8Zmh5CVHLDMbp74rFN6eokSaBHpdn9ysSaCANP1oJ1TY',
+  '267FL4rbQnXp6AmsSmQfyWwxi36VUKmE2tvAmfMLebB1kkVKyn',
   Socotra2JUNEAsset,
   ['JVM'],
   jntAssets
@@ -88,7 +88,7 @@ export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
 )
 export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  'ieJEHSN4hCt74dafPvZSwoe9Fa12fmF4Ze496V63VM2DgKtRJ',
+  'TxyJ4LgsbaSEM7Gibv4yxrBhsBkBMJiQi2wuRpXXEpjGLmHfN',
   new JEVMGasToken(Socotra2JUNEAsset),
   BigInt(101003),
   BigInt('48000000000'),
@@ -100,7 +100,7 @@ export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2USDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',
-  'Hy9EYN9z6LdGncHuexyxkD8PxAvtCsPpmtJCiE7eTSgWR9FTV',
+  'uoXS31K6UZgtRYqh7LcPfWKkDWuW4vADicbBXwY2xQ75dsT7S',
   new JEVMGasToken(Socotra2USDT1Asset),
   BigInt(101005),
   BigInt('1000000000'),
@@ -110,7 +110,7 @@ export const Socotra2USDT1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2USD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USD1-Chain',
-  '2pXUvyWNG4WDB4jrVEBSDDrdLdHdEbN1inANqtu7nRMEVWqee1',
+  '23MrDejkb8my3B9K4z6XpMLkeMEu5W8iqTRdxcMD7qs1BeR1wz',
   new JEVMGasToken(Socotra2USD1Asset),
   BigInt(101006),
   BigInt('1000000000'),
@@ -120,7 +120,7 @@ export const Socotra2USD1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2DAI1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DAI1-Chain',
-  'VWWs6GnMuePFQY2jLg5Pan2e4cuFN5p8JxfsnFTMBSrXjiHBt',
+  '7NuScQsQ1wEvd4SqQGbSpYRQVjj4bwdQzfmBLoiVZ6kQPASMt',
   new JEVMGasToken(Socotra2DAI1Asset),
   BigInt(101004),
   BigInt('1000000000'),
@@ -130,7 +130,7 @@ export const Socotra2DAI1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2EUR1Chain: JEVMBlockchain = new JEVMBlockchain(
   'EUR1-Chain',
-  '2aro5zMSQcJCV8hkvCqonZzjdFrauUaUMsxF9qAFt434yVYkbo',
+  '2viQr7U6xRmpFhaTfyaKJAvpEaZ1nPkbN44Kyu1aUvLcfMfvEJ',
   new JEVMGasToken(Socotra2EUR1Asset),
   BigInt(101011),
   BigInt('1000000000'),
@@ -140,7 +140,7 @@ export const Socotra2EUR1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2SGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'SGD1-Chain',
-  '2aju471wKZPBAfXioCcmf9Ly7R7iY4WTbD6TF23o9WrYLDZiD6',
+  'bu12NVm5wBHbuW1iUiNQyT9aJsh64a7gtWA9izQtdgFg7E94Z',
   new JEVMGasToken(Socotra2SGD1Asset),
   BigInt(101012),
   BigInt('1000000000'),
@@ -150,7 +150,7 @@ export const Socotra2SGD1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2GLD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'GLD1-Chain',
-  'BKSXRT1HnDeDuCasgkPgHoF8AreCYtodVWMJgTPFEvrF15juZ',
+  '2EcRN6kr8ZumWeLBCd2J8ctGGTGXwCGG3ZwVdce4QF2Rggr6Fr',
   new JEVMGasToken(Socotra2GLD1Asset),
   BigInt(101008),
   BigInt('1000000000'),
@@ -160,7 +160,7 @@ export const Socotra2GLD1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2MBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'mBTC1-Chain',
-  'RK6Ea5u9CrS2nBiaJ52NjgpWU3syCky2HvcBh4omYiZ1iVHcE',
+  'bn2VmJMbyUpNXx1gp98gPVUyxngTxbqdLXYH57YL22b6FccZT',
   new JEVMGasToken(Socotra2MBTC1Asset),
   BigInt(101007),
   BigInt('1000000000'),
@@ -170,7 +170,7 @@ export const Socotra2MBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2DOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DOGE1-Chain',
-  'N6uGmQbSBQrheqY1JHjvVi7MZLG2UEV92xGx1fEXv6DutzchB',
+  'a5Yo3RrBL6eDBfAGzgDQie6mY9gEDHcjxs9PGBSVwyCsuZQbZ',
   new JEVMGasToken(Socotra2DOGE1Asset),
   BigInt(101010),
   BigInt('1000000000'),
@@ -180,7 +180,7 @@ export const Socotra2DOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2LTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'LTC1-Chain',
-  '28guorC5RQ46JmsTuzdWa2FXaST9CAvHfyVtZZvyN2DkZpBUZP',
+  '2gKNcz3cnJfNzoqcbXXkinF4ZXoTzopLmQY6g9TuMXEjBQ4gvZ',
   new JEVMGasToken(Socotra2LTC1Asset),
   BigInt(101009),
   BigInt('1000000000'),

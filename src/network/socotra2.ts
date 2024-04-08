@@ -88,7 +88,7 @@ export const Socotra2WJUNEAsset: WrappedAsset = new WrappedAsset(
 )
 export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  'TxyJ4LgsbaSEM7Gibv4yxrBhsBkBMJiQi2wuRpXXEpjGLmHfN',
+  'BUDQJ63154EiJZwwvukRB1tX3yQCDQdoEYYuCNKEruQ9MjRs4',
   new JEVMGasToken(Socotra2JUNEAsset),
   BigInt(101003),
   BigInt('48000000000'),
@@ -100,97 +100,97 @@ export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2USDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',
-  'uoXS31K6UZgtRYqh7LcPfWKkDWuW4vADicbBXwY2xQ75dsT7S',
+  'vFZ8cj9v4SMPn4nvcmSw7KuxCvK9kLQq4u2wnTUFMzhUehwUN',
   new JEVMGasToken(Socotra2USDT1Asset),
   BigInt(101005),
-  BigInt('1000000000'),
+  BigInt('476000000000'),
   Socotra2Address,
   ['USDT1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2USD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USD1-Chain',
-  '23MrDejkb8my3B9K4z6XpMLkeMEu5W8iqTRdxcMD7qs1BeR1wz',
+  'ZQPGzRK45hrGtYquC6G6W6LGUJzFtjd9dkfN5e1csqwKFUpdF',
   new JEVMGasToken(Socotra2USD1Asset),
   BigInt(101006),
-  BigInt('1000000000'),
+  BigInt('476000000000'),
   Socotra2Address,
   ['USD1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2DAI1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DAI1-Chain',
-  '7NuScQsQ1wEvd4SqQGbSpYRQVjj4bwdQzfmBLoiVZ6kQPASMt',
+  'FH3XBUJ4d8bAWNo7vt7cHp4MJhPiSQR3Ez6GpXfDo3moGjfBi',
   new JEVMGasToken(Socotra2DAI1Asset),
   BigInt(101004),
-  BigInt('1000000000'),
+  BigInt('476000000000'),
   Socotra2Address,
   ['DAI1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2EUR1Chain: JEVMBlockchain = new JEVMBlockchain(
   'EUR1-Chain',
-  '2viQr7U6xRmpFhaTfyaKJAvpEaZ1nPkbN44Kyu1aUvLcfMfvEJ',
+  '2izgay6FwgxGZ2TyEgTQoeECCbCzhepRnDY6NQqu7ZFmmNL7FF',
   new JEVMGasToken(Socotra2EUR1Asset),
   BigInt(101011),
-  BigInt('1000000000'),
+  BigInt('433000000000'),
   Socotra2Address,
   ['EUR1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2SGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'SGD1-Chain',
-  'bu12NVm5wBHbuW1iUiNQyT9aJsh64a7gtWA9izQtdgFg7E94Z',
+  '2j95jGv62HT5r9ZVCszvCBqMaNhRg8c2fLiSBQePf779Z8utAS',
   new JEVMGasToken(Socotra2SGD1Asset),
   BigInt(101012),
-  BigInt('1000000000'),
+  BigInt('635000000000'),
   Socotra2Address,
   ['SGD1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2GLD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'GLD1-Chain',
-  '2EcRN6kr8ZumWeLBCd2J8ctGGTGXwCGG3ZwVdce4QF2Rggr6Fr',
+  'LNgHMND752eLwbdS9UL95zijQ2imBfFVi8QRzPvSzRWGrh59S',
   new JEVMGasToken(Socotra2GLD1Asset),
   BigInt(101008),
-  BigInt('1000000000'),
+  BigInt('3000000000'),
   Socotra2Address,
   ['GLD1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2MBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'mBTC1-Chain',
-  'bn2VmJMbyUpNXx1gp98gPVUyxngTxbqdLXYH57YL22b6FccZT',
+  '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGv',
   new JEVMGasToken(Socotra2MBTC1Asset),
   BigInt(101007),
-  BigInt('1000000000'),
+  BigInt('13000000000'),
   Socotra2Address,
   ['mBTC1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2DOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'DOGE1-Chain',
-  'a5Yo3RrBL6eDBfAGzgDQie6mY9gEDHcjxs9PGBSVwyCsuZQbZ',
+  'ubeHKfPPjBnNvf1chqnpfXCnusJAQxJeHNCZLgwR435ifTm9X',
   new JEVMGasToken(Socotra2DOGE1Asset),
   BigInt(101010),
-  BigInt('1000000000'),
+  BigInt('6477000000000'),
   Socotra2Address,
   ['DOGE1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2LTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'LTC1-Chain',
-  '2gKNcz3cnJfNzoqcbXXkinF4ZXoTzopLmQY6g9TuMXEjBQ4gvZ',
+  'HJE8cauhNuocwx5t1U26ducmTTEBcs25AWUCUS2Uwe3wXdKUx',
   new JEVMGasToken(Socotra2LTC1Asset),
   BigInt(101009),
-  BigInt('1000000000'),
+  BigInt('54000000000'),
   Socotra2Address,
   ['LTC1'],
   [Socotra2JUNEAsset]
 )
 export const Socotra2BCH1Chain: JEVMBlockchain = new JEVMBlockchain(
   'BCH1-Chain',
-  '2QuDRvCboTbCKHjF1fo18Pt2RNLDTGzRY3KEnb7Xca7f524WKy',
+  '2pCX1xgspH6thhuJ7zCbuKTKEETkJ4tkZi723ybkgQRwfsuW7u',
   new JEVMGasToken(Socotra2BCH1Asset),
   BigInt(101013),
   BigInt('1000000000'),
@@ -200,10 +200,10 @@ export const Socotra2BCH1Chain: JEVMBlockchain = new JEVMBlockchain(
 )
 export const Socotra2LINK1Chain: JEVMBlockchain = new JEVMBlockchain(
   'LINK1-Chain',
-  '2FxqvLtmnD5fHfu7zfumZLhNJf2CbW3FYyKg9huLLeznE3uC5c',
+  'U3o8mtBbGvjrw6vo9FhKAsRJvj2x8EjWzRdDfQXkAm7EqY3by',
   new JEVMGasToken(Socotra2LINK1Asset),
   BigInt(101014),
-  BigInt('1000000000'),
+  BigInt('26000000000'),
   Socotra2Address,
   ['LINK1'],
   [Socotra2JUNEAsset]
@@ -223,7 +223,9 @@ export const Socotra2PrimarySupernet: PrimarySupernet = new PrimarySupernet(
     Socotra2GLD1Chain,
     Socotra2MBTC1Chain,
     Socotra2DOGE1Chain,
-    Socotra2LTC1Chain
+    Socotra2LTC1Chain,
+    Socotra2BCH1Chain,
+    Socotra2LINK1Chain
   ],
   Socotra2PlatformChain,
   Socotra2JVMChain,

@@ -4,21 +4,21 @@ import {
   type GetBlockResponse,
   type GetHeightResponse,
   type GetTxResponse,
-  SocotraNetwork,
-  SocotraJUNEAsset,
-  SocotraETH1Asset,
-  SocotraBCH1Asset
+  GenesisNetwork,
+  GenesisJUNEAsset,
+  GenesisETH1Asset,
+  GenesisBCH1Asset
 } from '../../../src'
 
 describe('JVMAPI', () => {
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('buildGenesis', () => {
     // TODO later
   })
 
   describe('getAssetDescription', () => {
-    test.each([{ asset: SocotraJUNEAsset }, { asset: SocotraETH1Asset }, { asset: SocotraBCH1Asset }])(
+    test.each([{ asset: GenesisJUNEAsset }, { asset: GenesisETH1Asset }, { asset: GenesisBCH1Asset }])(
       'Valid: $asset.assetId ($asset.symbol)',
       async ({ asset }) => {
         const result: GetAssetDescriptionResponse = await provider.jvm.getAssetDescription(asset.assetId)

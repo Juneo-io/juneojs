@@ -1,7 +1,7 @@
-import { MCNProvider, SocotraBCH1Chain, SocotraJUNEChain, type GetBlockResponse, SocotraNetwork } from '../../../src'
+import { MCNProvider, GenesisBCH1Chain, GenesisJUNEChain, type GetBlockResponse, GenesisNetwork } from '../../../src'
 
 describe('PlatformAPI', () => {
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('getBlock', () => {
     test.each([
@@ -32,8 +32,8 @@ describe('PlatformAPI', () => {
 
   describe('getBlockchainStatus', () => {
     test.each([
-      { blockchainID: SocotraJUNEChain.id },
-      { blockchainID: SocotraBCH1Chain.id },
+      { blockchainID: GenesisJUNEChain.id },
+      { blockchainID: GenesisBCH1Chain.id },
       { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
       const result = await provider.platform.getBlockchainStatus(blockchainID)
@@ -250,7 +250,7 @@ describe('PlatformAPI', () => {
 
   describe('validatedBy', () => {
     test.each([
-      { blockchainID: SocotraJUNEChain.id },
+      { blockchainID: GenesisJUNEChain.id },
       { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
       const result = await provider.platform.validatedBy(blockchainID)

@@ -4,8 +4,8 @@ import { AccountType, MCNAccount } from './account'
 import { type VMWallet, type MCNWallet } from './wallet'
 
 function getAccountId (provider: MCNProvider, wallet: MCNWallet): string {
-  const jvmId: string = wallet.getWallet(provider.jvm.chain).getKeyPair().publicKey
-  const evmId: string = wallet.getWallet(provider.june.chain).getKeyPair().publicKey
+  const jvmId: string = wallet.getWallet(provider.jvmChain).getKeyPair().publicKey
+  const evmId: string = wallet.getWallet(provider.juneChain).getKeyPair().publicKey
   return `${jvmId}_${evmId}`
 }
 
@@ -19,11 +19,11 @@ export class VaultWallet {
   }
 
   getJVMAddress (): string {
-    return this.wallet.getAddress(this.provider.jvm.chain)
+    return this.wallet.getAddress(this.provider.jvmChain)
   }
 
   getEVMAddress (): string {
-    return this.wallet.getAddress(this.provider.june.chain)
+    return this.wallet.getAddress(this.provider.juneChain)
   }
 
   getIdentifier (): string {

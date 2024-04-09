@@ -22,7 +22,7 @@ export class JVMAccount extends UtxoAccount {
   provider: MCNProvider
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
-    super(provider.jvm.chain, provider.jvm, wallet)
+    super(provider.jvmChain, provider.jvmApi, wallet)
     this.provider = provider
   }
 
@@ -41,12 +41,12 @@ export class JVMAccount extends UtxoAccount {
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.jvm.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await this.provider.jvmApi.issueTx(transaction)).txID
+      await executable.addTrackedJVMTransaction(this.provider.jvmApi, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.jvm.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(this.provider.jvm, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await this.provider.jvmApi.issueTx(transaction)).txID
+      await executable.addTrackedJVMTransaction(this.provider.jvmApi, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos created from this operation
     await super.refreshBalances()

@@ -46,7 +46,7 @@ export async function fetchJNT (provider: MCNProvider, assetId: string): Promise
   if (AssetId.validate(assetId)) {
     throw new ChainError(`cannot fetch invalid asset id ${assetId}`)
   }
-  const jvm: JVMAPI = provider.jvm
+  const jvm: JVMAPI = provider.jvmApi
   if (jvm.chain.registeredAssets.has(assetId)) {
     return jvm.chain.registeredAssets.get(assetId)!
   }

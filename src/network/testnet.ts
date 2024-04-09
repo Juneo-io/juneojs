@@ -95,8 +95,8 @@ export const Socotra2JUNEChain: JEVMBlockchain = new JEVMBlockchain(
   Socotra2Address,
   ['JUNE'],
   jrc20Assets,
-  jrc20Assets,
-  Socotra2WJUNEAsset
+  jrc20Assets
+  // Socotra2WJUNEAsset
 )
 export const Socotra2USDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',

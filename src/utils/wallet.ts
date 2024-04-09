@@ -50,11 +50,11 @@ export async function trackJuneoTransaction (
   let success: boolean = false
   const vmId: string = chain.vmId
   if (vmId === JVM_ID) {
-    success = await executable.addTrackedJVMTransaction(provider.jvm, transactionType, transactionId)
+    success = await executable.addTrackedJVMTransaction(provider.jvmApi, transactionType, transactionId)
   } else if (vmId === PLATFORMVM_ID) {
-    success = await executable.addTrackedPlatformTransaction(provider.platform, transactionType, transactionId)
+    success = await executable.addTrackedPlatformTransaction(provider.platformApi, transactionType, transactionId)
   } else if (vmId === JEVM_ID) {
-    const api: JEVMAPI = provider.jevm[chain.id]
+    const api: JEVMAPI = provider.jevmApi[chain.id]
     success = await executable.addTrackedJEVMTransaction(api, transactionType, transactionId)
   }
   return success

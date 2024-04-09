@@ -22,12 +22,12 @@ export class StakeManager {
 
   constructor (provider: MCNProvider, wallet: VMWallet) {
     this.provider = provider
-    this.api = provider.platform
+    this.api = provider.platformApi
     this.wallet = wallet
   }
 
   static from (provider: MCNProvider, wallet: MCNWallet): StakeManager {
-    return new StakeManager(provider, wallet.getWallet(provider.platform.chain))
+    return new StakeManager(provider, wallet.getWallet(provider.platformChain))
   }
 
   static estimateValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {

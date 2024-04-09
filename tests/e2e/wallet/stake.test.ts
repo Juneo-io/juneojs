@@ -23,7 +23,7 @@ const ONE_DAY: bigint = BigInt(86_400)
 const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
 const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
 const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-const account: ChainAccount = mcnAccount.getAccount(provider.platform.chain.id)
+const account: ChainAccount = mcnAccount.getAccount(provider.platformChain.id)
 const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
 const DONE_STATUS = 'Done'
 // for now we take this nodeID. maybe in the future we can select the node Id with a function

@@ -79,11 +79,11 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
 export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {
   const vmId: string = chain.vmId
   if (vmId === JVM_ID) {
-    return provider.jvm
+    return provider.jvmApi
   } else if (vmId === PLATFORMVM_ID) {
-    return provider.platform
+    return provider.platformApi
   } else if (vmId === JEVM_ID) {
-    return provider.jevm[chain.id]
+    return provider.jevmApi[chain.id]
   }
   throw new WalletError(`unsupported vm id does not provide utxo api: ${vmId}`)
 }

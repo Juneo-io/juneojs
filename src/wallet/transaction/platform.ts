@@ -1,4 +1,3 @@
-import { type PlatformAPI } from '../../api'
 import { type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
@@ -24,12 +23,12 @@ import { BaseSpending, UtxoSpending } from './transaction'
 
 async function getPlatformAddPrimaryValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkValidatorFee)
-  return new BaseFeeData(provider.platform.chain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platformChain, fee, FeeType.ValidateFee)
 }
 
 async function getPlatformAddPrimaryDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkDelegatorFee)
-  return new BaseFeeData(provider.platform.chain, fee, FeeType.DelegateFee)
+  return new BaseFeeData(provider.platformChain, fee, FeeType.DelegateFee)
 }
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (
@@ -44,19 +43,18 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
   rewardThreshold: number,
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
-  const api: PlatformAPI = provider.platform
   const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessValidatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
-    api.chain,
+    provider.platformChain,
     validator.nodeId,
     validator.startTime,
     validator.endTime,
     provider.mcn.primary.id,
     validator.weight,
-    api.chain.assetId,
+    provider.platformChain.assetId,
     share,
     new PrimarySigner(pop),
     stakeAddresses,
@@ -76,7 +74,7 @@ export async function estimatePlatformValidatePrimaryOperation (
   validate: ValidatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
-  const chain: PlatformBlockchain = provider.platform.chain
+  const chain: PlatformBlockchain = provider.platformChain
   const potentialReward: bigint = StakeManager.estimateValidationReward(
     validate.endTime - validate.startTime,
     validate.amount
@@ -127,19 +125,18 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
   rewardThreshold: number,
   utxoSet: Utxo[]
 ): Promise<UtxoFeeData> {
-  const api: PlatformAPI = provider.platform
   const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessDelegatorTransaction(
     utxoSet,
     account.getSignersAddresses(),
     fee.amount,
-    api.chain,
+    provider.platformChain,
     validator.nodeId,
     validator.startTime,
     validator.endTime,
     provider.mcn.primary.id,
     validator.weight,
-    api.chain.assetId,
+    provider.platformChain.assetId,
     stakeAddresses,
     stakeThreshold,
     BigInt(0),
@@ -157,7 +154,7 @@ export async function estimatePlatformDelegatePrimaryOperation (
   delegate: DelegatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
-  const chain: PlatformBlockchain = provider.platform.chain
+  const chain: PlatformBlockchain = provider.platformChain
   const potentialReward: bigint = StakeManager.estimateDelegationReward(
     delegate.endTime - delegate.startTime,
     delegate.amount

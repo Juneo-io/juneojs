@@ -13,7 +13,7 @@ import { type MCNWallet } from '../../wallet'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
 export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.platform.chain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ExportFee)
+  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ExportFee)
 }
 
 export async function executePlatformExportTransaction (
@@ -28,7 +28,7 @@ export async function executePlatformExportTransaction (
   fee: FeeData,
   utxoSet: Utxo[]
 ): Promise<string> {
-  const api: PlatformAPI = provider.platform
+  const api: PlatformAPI = provider.platformApi
   const sender: string = wallet.getAddress(api.chain)
   const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const transaction: UnsignedTransaction = buildPlatformExportTransaction(
@@ -46,7 +46,7 @@ export async function executePlatformExportTransaction (
 }
 
 export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.platform.chain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ImportFee)
+  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ImportFee)
 }
 
 export async function executePlatformImportTransaction (
@@ -56,7 +56,7 @@ export async function executePlatformImportTransaction (
   fee: FeeData,
   utxoSet: Utxo[]
 ): Promise<string> {
-  const api: PlatformAPI = provider.platform
+  const api: PlatformAPI = provider.platformApi
   const sender: string = wallet.getAddress(api.chain)
   const values: Map<string, bigint> = getUtxosAmountValues(utxoSet, source.id)
   const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, sender)

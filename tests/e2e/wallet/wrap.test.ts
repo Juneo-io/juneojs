@@ -3,14 +3,14 @@ import {
   MCNAccount,
   MCNProvider,
   MCNWallet,
-  SocotraJUNEChain,
-  SocotraWJUNEAsset,
+  GenesisJUNEChain,
+  GenesisWJUNEAsset,
   UnwrapOperation,
   WrapOperation,
   type ExecutableOperation,
   NetworkOperationRange,
   NetworkOperationType,
-  SocotraNetwork,
+  GenesisNetwork,
   JuneoClient
 } from '../../../src'
 import * as dotenv from 'dotenv'
@@ -18,13 +18,13 @@ dotenv.config()
 
 describe('Wrapping operations', () => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DONE_STATUS = 'Done'
   const DEFAULT_TIMEOUT: number = 180_000
-  const juneChain = SocotraJUNEChain
-  const wJuneAsset = SocotraWJUNEAsset
+  const juneChain = GenesisJUNEChain
+  const wJuneAsset = GenesisWJUNEAsset
 
   describe('WrapOperation', () => {
     describe('Instantiation', () => {

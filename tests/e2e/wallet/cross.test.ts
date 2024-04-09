@@ -5,12 +5,12 @@ import {
   MCNAccount,
   MCNProvider,
   MCNWallet,
-  SocotraEUROC1Chain,
-  SocotraJUNEChain,
-  SocotraJVMChain,
-  SocotraPlatformChain,
+  GenesisEUROC1Chain,
+  GenesisJUNEChain,
+  GenesisJVMChain,
+  GenesisPlatformChain,
   type ExecutableOperation,
-  SocotraNetwork,
+  GenesisNetwork,
   NetworkOperationRange,
   NetworkOperationType,
   JuneoClient
@@ -20,15 +20,15 @@ dotenv.config()
 
 describe('Cross operations', () => {
   const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
   const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
   const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
   const DEFAULT_TIMEOUT: number = 180_000
   const DONE_STATUS = 'Done'
-  const juneChain = SocotraJUNEChain
-  const euroChain = SocotraEUROC1Chain
-  const platformChain = SocotraPlatformChain
-  const jvmChain = SocotraJVMChain
+  const juneChain = GenesisJUNEChain
+  const euroChain = GenesisEUROC1Chain
+  const platformChain = GenesisPlatformChain
+  const jvmChain = GenesisJVMChain
 
   describe('Instantiation', () => {
     test.each([

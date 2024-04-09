@@ -9,7 +9,7 @@ import {
   WalletError
 } from '../utils'
 import * as encoding from '../utils/encoding'
-import { MainNetwork } from '../network'
+import { TestNetwork } from '../network'
 
 const EVMHdPath = "m/44'/60'/0'/0"
 const JVMHdPath = "m/44'/9000'/0'/0"
@@ -41,7 +41,7 @@ export class MCNWallet {
   privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
-  private constructor (hrp: string = MainNetwork.hrp) {
+  private constructor (hrp: string = TestNetwork.hrp) {
     this.hrp = hrp
   }
 

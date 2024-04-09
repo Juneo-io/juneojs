@@ -1,10 +1,10 @@
-import { MCNProvider, SocotraJUNEChain, SocotraNetwork } from '../../../src'
+import { MCNProvider, GenesisJUNEChain, GenesisNetwork } from '../../../src'
 
 describe('InfoAPI', () => {
-  const provider: MCNProvider = new MCNProvider(SocotraNetwork)
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('isBootstrapped', () => {
-    test.each([{ chainID: SocotraJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {
+    test.each([{ chainID: GenesisJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {
       const result = await provider.info.isBootstrapped(chainID)
       expect(result.isBootstrapped).toEqual(true)
     })
@@ -16,7 +16,7 @@ describe('InfoAPI', () => {
   describe('getBlockchainID', () => {
     test.each([{ alias: 'JUNE' }])('Valid: $alias', async ({ alias }) => {
       const result = await provider.info.getBlockchainID(alias)
-      expect(result.blockchainID).toEqual(SocotraJUNEChain.id)
+      expect(result.blockchainID).toEqual(GenesisJUNEChain.id)
     })
     test.failing.each([{ alias: 'WRONG_ALIAS' }])('Invalid: $alias', async ({ alias }) => {
       await provider.info.getBlockchainID('alias')

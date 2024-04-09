@@ -1,9 +1,9 @@
 import * as dotenv from 'dotenv'
 import {
   MCNWallet,
-  SocotraJUNEChain,
-  SocotraJVMChain,
-  SocotraPlatformChain,
+  GenesisJUNEChain,
+  GenesisJVMChain,
+  GenesisPlatformChain,
   WalletError,
   validatePrivateKey
 } from '../../../src'
@@ -71,12 +71,12 @@ describe('MCNWallet', (): void => {
     test.each([
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: SocotraJVMChain,
+        chain: GenesisJVMChain,
         address: 'JVM-socotra17p4punu4589yqfzgv044tl546dnwvf2pd2k6j4'
       },
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: SocotraJUNEChain,
+        chain: GenesisJUNEChain,
         address: '0xf44b80bf950058b087F47d88fDB71686c4beFef8'
       }
     ])('$chain.name address: $address', ({ mnemonic, chain, address }): void => {
@@ -89,11 +89,11 @@ describe('MCNWallet', (): void => {
     test.each([
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: SocotraJVMChain
+        chain: GenesisJVMChain
       },
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: SocotraJUNEChain
+        chain: GenesisJUNEChain
       }
     ])('$chain.name wallet from: $mnemonic', ({ mnemonic, chain }): void => {
       const wallet: MCNWallet = MCNWallet.recover(mnemonic)
@@ -103,8 +103,8 @@ describe('MCNWallet', (): void => {
 
   test('getWallets', () => {
     const wallet = MCNWallet.generate(12)
-    wallet.getAddress(SocotraJUNEChain)
-    wallet.getAddress(SocotraPlatformChain)
+    wallet.getAddress(GenesisJUNEChain)
+    wallet.getAddress(GenesisPlatformChain)
     const wallets = wallet.getWallets()
     expect(wallets.length).toBe(2)
   })

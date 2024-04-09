@@ -1,6 +1,6 @@
 import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
 import { JEVM_ID, type JEVMBlockchain } from './chain'
-import { type MCN, SocotraNetwork } from './network'
+import { type MCN, GenesisNetwork } from './network'
 
 export class MCNProvider {
   mcn: MCN
@@ -11,7 +11,7 @@ export class MCNProvider {
   june: JEVMAPI
   jevm: Record<string, JEVMAPI> = {}
 
-  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+  constructor (mcn: MCN = GenesisNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
     this.mcn = mcn
     this.client = client
     this.info = new InfoAPI(client)

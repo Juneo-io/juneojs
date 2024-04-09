@@ -239,3 +239,5 @@ export const Socotra2Network: MCN = new MCN(
   Socotra2StakeConfig,
   Socotra2PrimarySupernet
 )
+
+export const TestNetwork: MCN = Socotra2Network

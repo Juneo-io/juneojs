@@ -1,5 +1,4 @@
-export * from './constants'
+export * from './genesis'
 export * from './local'
 export * from './network'
-export * from './socotra'
-export * from './socotra2'
+export * from './testnet'

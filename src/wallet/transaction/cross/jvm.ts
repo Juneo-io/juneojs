@@ -13,7 +13,7 @@ import { type MCNWallet } from '../../wallet'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
 export async function estimateJVMExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.jvm.chain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ExportFee)
+  return new BaseFeeData(provider.jvmChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ExportFee)
 }
 
 export async function executeJVMExportTransaction (
@@ -29,7 +29,7 @@ export async function executeJVMExportTransaction (
   utxoSet: Utxo[],
   extraFeeAmount: bigint = BigInt(0)
 ): Promise<string> {
-  const api: JVMAPI = provider.jvm
+  const api: JVMAPI = provider.jvmApi
   const sender: string = wallet.getAddress(api.chain)
   const inputs: UserInput[] = [new UserInput(assetId, api.chain, amount, [address], 1, destination)]
   if (extraFeeAmount > BigInt(0)) {
@@ -51,7 +51,7 @@ export async function executeJVMExportTransaction (
 }
 
 export async function estimateJVMImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.jvm.chain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ImportFee)
+  return new BaseFeeData(provider.jvmChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ImportFee)
 }
 
 export async function executeJVMImportTransaction (
@@ -61,7 +61,7 @@ export async function executeJVMImportTransaction (
   fee: FeeData,
   utxoSet: Utxo[]
 ): Promise<string> {
-  const api: JVMAPI = provider.jvm
+  const api: JVMAPI = provider.jvmApi
   const sender: string = wallet.getAddress(api.chain)
   const values: Map<string, bigint> = getUtxosAmountValues(utxoSet, source.id)
   const inputs: UserInput[] = getImportUserInputs(values, fee.assetId, fee.amount, source, api.chain, sender)

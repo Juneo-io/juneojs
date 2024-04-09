@@ -103,7 +103,7 @@ export async function estimateEVMTransfer (
   amount: bigint,
   address: string
 ): Promise<EVMFeeData> {
-  const api: JEVMAPI = provider.jevm[chainId]
+  const api: JEVMAPI = provider.jevmApi[chainId]
   const isContract: boolean = isContractAddress(assetId)
   const from: string = wallet.getAddress()
   const to: string = isContract ? assetId : address

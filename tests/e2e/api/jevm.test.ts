@@ -5,7 +5,7 @@ describe('JEVMAPI', () => {
 
   describe('getTx', () => {
     test.each([{ txID: '241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm' }])('Valid: $txID', async ({ txID }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].getTx(txID)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].getTx(txID)
       expect(result.blockHeight).toBeDefined()
       expect(result.encoding).toBeDefined()
       expect(result.tx).toBeDefined()
@@ -16,14 +16,14 @@ describe('JEVMAPI', () => {
       { txID: '0x3c529e9941b6ca0ec34948c7f797e94ff810643ef64896c409ea0df36be9e554' },
       { txID: 'INVALID_TX_ID' }
     ])('Invalid: $txID', async ({ txID }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].getTx(txID)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].getTx(txID)
       expect(result.tx).toBeDefined()
     })
   })
 
   describe('getTxStatus', () => {
     test.each([{ txID: '241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm' }])('Valid: $txID', async ({ txID }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].getTxStatus(txID)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].getTxStatus(txID)
       expect(result.status).toEqual('Accepted')
       expect(result.blockHeight).toEqual('4976404')
     })
@@ -42,7 +42,7 @@ describe('JEVMAPI', () => {
         expectedBalance: BigInt('204427130')
       }
     ])('$asset.symbol balance of $address at block $block', async ({ address, block, asset, expectedBalance }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_getAssetBalance(address, block, asset.assetId)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_getAssetBalance(address, block, asset.assetId)
       expect(result).toEqual(expectedBalance)
     })
 
@@ -66,27 +66,27 @@ describe('JEVMAPI', () => {
         assetID: '0x0'
       }
     ])('$description: $address, $block, $assetID', async ({ address, block, assetID }) => {
-      await provider.jevm[GenesisJUNEChain.id].eth_getAssetBalance(address, block, assetID)
+      await provider.jevmApi[GenesisJUNEChain.id].eth_getAssetBalance(address, block, assetID)
     })
   })
 
   describe('eth_baseFee', () => {
     test('Returns base fee', async () => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_baseFee()
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_baseFee()
       expect(result).toBeDefined()
     })
   })
 
   describe('eth_maxPriorityFeePerGas', () => {
     test('Returns max priority fee per gas', async () => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_maxPriorityFeePerGas()
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_maxPriorityFeePerGas()
       expect(result).toBeDefined()
     })
   })
 
   describe('eth_getChainConfig', () => {
     test('Returns chain config', async () => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_getChainConfig()
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_getChainConfig()
       expect(result).toBeDefined()
     })
   })
@@ -99,7 +99,7 @@ describe('JEVMAPI', () => {
         expectedBalance: BigInt('38623609074512286678')
       }
     ])('Valid from $address at block $block', async ({ address, block, expectedBalance }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_getBalance(address, block)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_getBalance(address, block)
       expect(result).toEqual(expectedBalance)
     })
   })
@@ -108,7 +108,7 @@ describe('JEVMAPI', () => {
     test.each([
       { address: '0x9b31d8C5Dd49fCdE96218895f96a6eC1ea894529', block: '0x4BF7C5', expectedCount: BigInt(511) }
     ])('Valid from $address at block $block', async ({ address, block, expectedCount }) => {
-      const result = await provider.jevm[GenesisJUNEChain.id].eth_getTransactionCount(address, block)
+      const result = await provider.jevmApi[GenesisJUNEChain.id].eth_getTransactionCount(address, block)
       expect(result).toEqual(expectedCount)
     })
   })

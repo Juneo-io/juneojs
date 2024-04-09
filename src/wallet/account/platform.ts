@@ -28,8 +28,8 @@ export class PlatformAccount extends UtxoAccount {
   private readonly stakeManager: StakeManager
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
-    super(provider.platform.chain, provider.platform, wallet)
-    this.chain = provider.platform.chain
+    super(provider.platformChain, provider.platformApi, wallet)
+    this.chain = provider.platformChain
     this.provider = provider
     this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
@@ -60,7 +60,7 @@ export class PlatformAccount extends UtxoAccount {
         summary.fee as UtxoFeeData
       )
       await executable.addTrackedPlatformTransaction(
-        this.provider.platform,
+        this.provider.platformApi,
         TransactionType.PrimaryValidation,
         transactionId
       )
@@ -73,18 +73,18 @@ export class PlatformAccount extends UtxoAccount {
         summary.fee as UtxoFeeData
       )
       await executable.addTrackedPlatformTransaction(
-        this.provider.platform,
+        this.provider.platformApi,
         TransactionType.PrimaryDelegation,
         transactionId
       )
     } else if (operation.type === NetworkOperationType.Send) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.platform.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await this.provider.platformApi.issueTx(transaction)).txID
+      await executable.addTrackedPlatformTransaction(this.provider.platformApi, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.platform.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(this.provider.platform, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await this.provider.platformApi.issueTx(transaction)).txID
+      await executable.addTrackedPlatformTransaction(this.provider.platformApi, TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

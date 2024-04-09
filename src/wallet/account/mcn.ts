@@ -38,7 +38,7 @@ export class MCNAccount {
     this.addAccount(jvmAccount)
     this.jvmAccount = jvmAccount
     this.addAccount(new PlatformAccount(provider, wallet))
-    for (const chainId in provider.jevm) {
+    for (const chainId in provider.jevmApi) {
       this.addAccount(new EVMAccount(provider, chainId, wallet))
     }
     this.crossManager = new CrossManager(provider, wallet)

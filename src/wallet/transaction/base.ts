@@ -29,7 +29,7 @@ export async function estimateBaseTransaction (
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
   const transaction: UnsignedTransaction =
-    chain.id === provider.platform.chain.id
+    chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
         utxoSet,

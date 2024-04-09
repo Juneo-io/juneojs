@@ -31,9 +31,9 @@ export class EVMAccount extends AbstractChainAccount {
   private readonly provider: MCNProvider
 
   constructor (provider: MCNProvider, chainId: string, wallet: MCNWallet) {
-    super(AccountType.Nonce, provider.jevm[chainId].chain, wallet)
-    this.chain = provider.jevm[chainId].chain
-    this.api = provider.jevm[chainId]
+    super(AccountType.Nonce, provider.jevmApi[chainId].chain, wallet)
+    this.chain = provider.jevmApi[chainId].chain
+    this.api = provider.jevmApi[chainId]
     this.chainWallet = wallet.getJEVMWallet(this.chain)
     this.provider = provider
   }

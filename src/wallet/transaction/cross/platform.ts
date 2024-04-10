@@ -39,8 +39,7 @@ export async function executePlatformExportTransaction (
     fee.amount,
     sendImportFee ? importFee : BigInt(0),
     sender,
-    provider.mcn.id,
-    api.chain.id
+    provider.mcn.id
   )
   return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
 }

@@ -81,7 +81,7 @@ const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x3700000000000000000000000000000000000000', 'LINK.e', 'LINK.e', 9, SocotraLINK1AssetId)
 ]
 export const SocotraWJUNEAsset: WrappedAsset = new WrappedAsset(
-  '0xDce22197228e8Ae74bC9D07539A29Ea9F6DE372a',
+  '0xC984ae20d0Fed3B974959BCbd1721167214CDeD9',
   'Wrapped JUNE',
   'wJUNE',
   18
@@ -95,8 +95,8 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   SocotraAddress,
   ['JUNE'],
   jrc20Assets,
-  jrc20Assets
-  // SocotraWJUNEAsset
+  jrc20Assets,
+  SocotraWJUNEAsset
 )
 export const SocotraUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',

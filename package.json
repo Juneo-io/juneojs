@@ -1,6 +1,6 @@
 {
   "name": "juneojs",
-  "version": "0.0.81",
+  "version": "0.0.82",
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -13,8 +13,9 @@ export class MCNProvider {
   juneChain: JEVMBlockchain
   juneApi: JEVMAPI
   jevmApi: Record<string, JEVMAPI> = {}
+  juneAssetId: string
 
-  constructor (mcn: MCN = GenesisNetwork, client: JuneoClient = JuneoClient.parse(mcn.address)) {
+  constructor (mcn: MCN = GenesisNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
     this.mcn = mcn
     this.client = client
     this.info = new InfoAPI(client)
@@ -31,6 +32,7 @@ export class MCNProvider {
         }
       }
     }
+    this.juneAssetId = this.platformChain.assetId
   }
 }
 

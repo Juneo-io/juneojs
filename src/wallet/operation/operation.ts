@@ -1,7 +1,7 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type JEVMBlockchain, type Blockchain } from '../../chain'
 import { type MCN } from '../../network'
-import { type BLSPublicKey, type BLSSignature, type Utxo } from '../../transaction'
+import { BLSPublicKey, BLSSignature, type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
   Send = 'Send',
@@ -147,8 +147,8 @@ export class ValidatePrimaryOperation extends Staking {
   constructor (
     mcn: MCN,
     nodeId: string,
-    publicKey: BLSPublicKey,
-    signature: BLSSignature,
+    publicKey: string,
+    signature: string,
     amount: bigint,
     startTime: bigint,
     endTime: bigint,
@@ -169,8 +169,8 @@ export class ValidatePrimaryOperation extends Staking {
       rewardAddresses,
       rewardThreshold
     )
-    this.publicKey = publicKey
-    this.signature = signature
+    this.publicKey = new BLSPublicKey(publicKey)
+    this.signature = new BLSSignature(signature)
   }
 }
 

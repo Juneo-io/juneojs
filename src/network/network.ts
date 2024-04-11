@@ -1,7 +1,7 @@
 import { type Blockchain, type PlatformBlockchain, type JVMBlockchain, type JEVMBlockchain } from '../chain'
 
 export class MCN {
-  address: string
+  url: string
   id: number
   hrp: string
   stakeConfig: StakeConfig
@@ -9,14 +9,14 @@ export class MCN {
   supernets: Supernet[]
 
   constructor (
-    address: string,
+    url: string,
     id: number,
     hrp: string,
     stakeConfig: StakeConfig,
     primary: PrimarySupernet,
     supernets: Supernet[] = [primary]
   ) {
-    this.address = address
+    this.url = url
     this.id = id
     this.hrp = hrp
     this.stakeConfig = stakeConfig

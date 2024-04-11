@@ -113,8 +113,10 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction {
     inputsBytes.forEach((input) => {
       buffer.write(input)
     })
-    buffer.writeUInt32(this.memo.length)
-    buffer.writeString(this.memo)
+    // since Durango upgrade memo cannot be used anymore
+    // force it here to be empty to avoid issues with builders already used with memos
+    buffer.writeUInt32(0) // 0 instead of this.memo.length
+    buffer.writeString('') // '' instead of this.memo
     return buffer
   }
 }

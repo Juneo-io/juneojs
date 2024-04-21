@@ -14,7 +14,6 @@ import {
   type GetCurrentSupplyResponse,
   type GetCurrentValidatorsResponse,
   type GetMinStakeResponse,
-  type GetPendingValidatorsResponse,
   type GetStakingAssetIDResponse,
   type GetSupernetsResponse,
   type GetTimestampResponse,
@@ -78,11 +77,6 @@ export class PlatformAPI extends AbstractUtxoAPI {
     return response.result
   }
 
-  async getPendingValidators (supernetID?: string, nodeIDs?: string[]): Promise<GetPendingValidatorsResponse> {
-    const response: JsonRpcResponse = await this.call('getPendingValidators', [{ supernetID, nodeIDs }])
-    return response.result
-  }
-
   async getStakingAssetID (supernetID?: string): Promise<GetStakingAssetIDResponse> {
     const response: JsonRpcResponse = await this.call('getStakingAssetID', [{ supernetID }])
     return response.result
@@ -90,6 +84,7 @@ export class PlatformAPI extends AbstractUtxoAPI {
 
   /**
    * @deprecated
+   * // TODO must be replace with getSupernet
    */
   async getSupernets (ids: string[]): Promise<GetSupernetsResponse> {
     const response: JsonRpcResponse = await this.call('getSupernets', [{ ids }])

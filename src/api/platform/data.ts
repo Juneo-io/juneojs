@@ -73,31 +73,6 @@ export interface GetMinStakeResponse {
   minDelegatorStake: number
 }
 
-export interface GetPendingValidatorsResponse {
-  validators: PendingValidator[]
-  delegators: PendingDelegator[]
-}
-
-export interface PendingValidator {
-  txID: string
-  startTime: string
-  endTime: string
-  stakeAmount: string
-  nodeID: string
-  delegationFee: string
-  connected: boolean
-  signer: Signer
-  weight: string
-}
-
-export interface PendingDelegator {
-  txID: string
-  startTime: string
-  endTime: string
-  stakeAmount: string
-  nodeID: string
-}
-
 export interface GetStakingAssetIDResponse {
   assetID: string
 }

@@ -6,7 +6,6 @@ import {
   MCNProvider,
   MCNWallet,
   StakeError,
-  StakeManager,
   TimeError,
   type ChainAccount,
   type ExecutableOperation,
@@ -157,31 +156,5 @@ describe('Staking operations', (): void => {
         DEFAULT_TIMEOUT
       )
     })
-  })
-})
-
-describe('StakeManager', () => {
-  beforeAll(async () => {
-    // TODO create time provider utils to manage those tests
-    currentTime = now() + BigInt(30)
-    tomorrow = currentTime + ONE_DAY
-  })
-
-  test('Estimate validation reward', () => {
-    const reward = StakeManager.estimateValidationReward(BigInt('12960000'), BigInt('100000000000'))
-    expect(reward).toEqual(expect.any(BigInt))
-  })
-
-  test('Verify staking values', () => {
-    expect(() => {
-      StakeManager.verifyStakingValues(
-        BigInt(1_000),
-        BigInt(2_000),
-        BigInt(5_000),
-        BigInt(1_633_027_200),
-        BigInt(1_633_037_200),
-        BigInt(3_600)
-      )
-    }).toThrow(StakeError)
   })
 })

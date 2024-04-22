@@ -5,6 +5,7 @@ export class MCN {
   id: number
   hrp: string
   stakeConfig: StakeConfig
+  rewardConfig: RewardConfig
   primary: PrimarySupernet
   supernets: Supernet[]
 
@@ -13,6 +14,7 @@ export class MCN {
     id: number,
     hrp: string,
     stakeConfig: StakeConfig,
+    rewardConfig: RewardConfig,
     primary: PrimarySupernet,
     supernets: Supernet[] = [primary]
   ) {
@@ -20,6 +22,7 @@ export class MCN {
     this.id = id
     this.hrp = hrp
     this.stakeConfig = stakeConfig
+    this.rewardConfig = rewardConfig
     this.primary = primary
     this.supernets = supernets
   }
@@ -57,6 +60,40 @@ export class StakeConfig {
     this.minDelegatorStake = minDelegatorStake
     this.minStakeDuration = minStakeDuration
     this.maxStakeDuration = maxStakeDuration
+  }
+}
+
+export class RewardConfig {
+  minStakePeriod: bigint
+  maxStakePeriod: bigint
+  stakePeriodRewardShare: bigint
+  startRewardTime: bigint
+  startReward: bigint
+  diminishingRewardTime: bigint
+  diminishingReward: bigint
+  targetRewardTime: bigint
+  targetReward: bigint
+
+  constructor (
+    minStakePeriod: bigint,
+    maxStakePeriod: bigint,
+    stakePeriodRewardShare: bigint,
+    startRewardTime: bigint,
+    startReward: bigint,
+    diminishingRewardTime: bigint,
+    diminishingReward: bigint,
+    targetRewardTime: bigint,
+    targetReward: bigint
+  ) {
+    this.minStakePeriod = minStakePeriod
+    this.maxStakePeriod = maxStakePeriod
+    this.stakePeriodRewardShare = stakePeriodRewardShare
+    this.startRewardTime = startRewardTime
+    this.startReward = startReward
+    this.diminishingRewardTime = diminishingRewardTime
+    this.diminishingReward = diminishingReward
+    this.targetRewardTime = targetRewardTime
+    this.targetReward = targetReward
   }
 }
 

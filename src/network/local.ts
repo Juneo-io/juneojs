@@ -1,6 +1,6 @@
 import { JNTAsset, JEVMGasToken } from '../asset'
-import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
-import { PrimarySupernet, StakeConfig, MCN, RewardConfig } from './network'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain, RewardConfig, StakeConfig } from '../chain'
+import { PrimarySupernet, MCN } from './network'
 
 const LocalNetworkId: number = 12345
 const LocalHrp: string = 'local'
@@ -9,6 +9,8 @@ const LocalStakeConfig: StakeConfig = new StakeConfig(
   BigInt(1_000000000), // 1 JUNE
   BigInt(1_000_000_000000000), // 100_000 JUNE
   BigInt(1_0000000), // 0.01 JUNE
+  12_0000, // 12%
+  12_0000, // 12%
   BigInt(86_400), // 1 day
   BigInt(365 * 86_400) // 365 days
 )
@@ -78,6 +80,8 @@ export const LocalPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
   LocalJUNEAsset,
+  LocalStakeConfig,
+  LocalRewardConfig,
   ['P'],
   jntAssets
 )
@@ -265,11 +269,4 @@ export const LocalPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   LocalJUNEChain
 )
 
-export const LocalNetwork: MCN = new MCN(
-  LocalAddress,
-  LocalNetworkId,
-  LocalHrp,
-  LocalStakeConfig,
-  LocalRewardConfig,
-  LocalPrimarySupernet
-)
+export const LocalNetwork: MCN = new MCN(LocalAddress, LocalNetworkId, LocalHrp, LocalPrimarySupernet)

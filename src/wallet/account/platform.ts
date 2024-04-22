@@ -19,19 +19,16 @@ import {
   type SendOperation,
   type SendUtxoOperation
 } from '../operation'
-import { StakeManager } from '../stake'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
 
 export class PlatformAccount extends UtxoAccount {
   provider: MCNProvider
-  private readonly stakeManager: StakeManager
 
   constructor (provider: MCNProvider, wallet: MCNWallet) {
     super(provider.platformChain, provider.platformApi, wallet)
     this.chain = provider.platformChain
     this.provider = provider
-    this.stakeManager = new StakeManager(provider, this.chainWallet)
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
@@ -52,26 +49,16 @@ export class PlatformAccount extends UtxoAccount {
     const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.ValidatePrimary) {
-      const staking: ValidatePrimaryOperation = operation as ValidatePrimaryOperation
-      const transactionId: string = await this.stakeManager.validate(
-        staking.amount,
-        staking.startTime,
-        staking.endTime,
-        summary.fee as UtxoFeeData
-      )
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction([this.chainWallet]).toCHex()
+      const transactionId: string = (await this.provider.platformApi.issueTx(transaction)).txID
       await executable.addTrackedPlatformTransaction(
         this.provider.platformApi,
         TransactionType.PrimaryValidation,
         transactionId
       )
     } else if (operation.type === NetworkOperationType.DelegatePrimary) {
-      const staking: DelegatePrimaryOperation = operation as DelegatePrimaryOperation
-      const transactionId: string = await this.stakeManager.delegate(
-        staking.amount,
-        staking.startTime,
-        staking.endTime,
-        summary.fee as UtxoFeeData
-      )
+      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction([this.chainWallet]).toCHex()
+      const transactionId: string = (await this.provider.platformApi.issueTx(transaction)).txID
       await executable.addTrackedPlatformTransaction(
         this.provider.platformApi,
         TransactionType.PrimaryDelegation,

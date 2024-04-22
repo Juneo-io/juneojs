@@ -1,6 +1,6 @@
 import { JNTAsset, JRC20Asset, JEVMGasToken, WrappedAsset } from '../asset'
-import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
-import { PrimarySupernet, StakeConfig, MCN, RewardConfig } from './network'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain, RewardConfig, StakeConfig } from '../chain'
+import { PrimarySupernet, MCN } from './network'
 
 const SocotraNetworkId: number = 46
 const SocotraHrp: string = 'socotra'
@@ -9,6 +9,8 @@ const SocotraStakeConfig: StakeConfig = new StakeConfig(
   BigInt(1_000000000), // 1 JUNE
   BigInt(1_000_000_000000000), // 1_000_000 JUNE
   BigInt(1_00000000), // 0.1 JUNE
+  12_0000, // 12%
+  12_0000, // 12%
   BigInt(14 * 86_400), // 14 days
   BigInt(365 * 86_400) // 365 days
 )
@@ -67,6 +69,8 @@ export const SocotraPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
   SocotraJUNEAsset,
+  SocotraStakeConfig,
+  SocotraRewardConfig,
   ['P'],
   jntAssets
 )
@@ -242,13 +246,6 @@ export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   SocotraJUNEChain
 )
 
-export const SocotraNetwork: MCN = new MCN(
-  SocotraAddress,
-  SocotraNetworkId,
-  SocotraHrp,
-  SocotraStakeConfig,
-  SocotraRewardConfig,
-  SocotraPrimarySupernet
-)
+export const SocotraNetwork: MCN = new MCN(SocotraAddress, SocotraNetworkId, SocotraHrp, SocotraPrimarySupernet)
 
 export const TestNetwork: MCN = SocotraNetwork

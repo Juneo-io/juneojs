@@ -57,17 +57,18 @@ export class CrossManager {
   }
 
   async estimateImport (
+    provider: MCNProvider,
     destination: Blockchain,
     assetId: string,
     utxosCount?: number,
     assetsCount?: number
   ): Promise<BaseFeeData> {
     if (destination.vmId === JVM_ID) {
-      return await estimateJVMImportTransaction(this.provider)
+      return await estimateJVMImportTransaction(provider)
     } else if (destination.vmId === PLATFORMVM_ID) {
-      return await estimatePlatformImportTransaction(this.provider)
+      return await estimatePlatformImportTransaction(provider)
     } else if (destination.vmId === JEVM_ID) {
-      const api: JEVMAPI = this.provider.jevmApi[destination.id]
+      const api: JEVMAPI = provider.jevmApi[destination.id]
       const exportedAssetsCount: number = assetId === api.chain.assetId ? 1 : 2
       const inputsCount: number = typeof utxosCount === 'number' ? utxosCount : exportedAssetsCount
       // default outputsCount should use 1 instead of exportedAssetsCount but currently needed for importing june for jrc20 deposits
@@ -77,13 +78,18 @@ export class CrossManager {
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
 
-  async estimateExport (source: Blockchain, destination: Blockchain, assetId: string): Promise<BaseFeeData> {
+  async estimateExport (
+    provider: MCNProvider,
+    source: Blockchain,
+    destination: Blockchain,
+    assetId: string
+  ): Promise<BaseFeeData> {
     if (source.vmId === JVM_ID) {
-      return await estimateJVMExportTransaction(this.provider)
+      return await estimateJVMExportTransaction(provider)
     } else if (source.vmId === PLATFORMVM_ID) {
-      return await estimatePlatformExportTransaction(this.provider)
+      return await estimatePlatformExportTransaction(provider)
     } else if (source.vmId === JEVM_ID) {
-      const api: JEVMAPI = this.provider.jevmApi[source.id]
+      const api: JEVMAPI = provider.jevmApi[source.id]
       return await estimateEVMExportTransaction(api, assetId, destination)
     }
     throw new CrossError(`source vm id does not support cross: ${source.vmId}`)
@@ -124,6 +130,7 @@ export class CrossManager {
   }
 
   async export (
+    provider: MCNProvider,
     source: Blockchain,
     destination: Blockchain,
     assetId: string,
@@ -140,7 +147,7 @@ export class CrossManager {
     }
     if (source.vmId === JVM_ID) {
       return await executeJVMExportTransaction(
-        this.provider,
+        provider,
         this.wallet,
         destination,
         assetId,
@@ -154,7 +161,7 @@ export class CrossManager {
       )
     } else if (source.vmId === PLATFORMVM_ID) {
       return await executePlatformExportTransaction(
-        this.provider,
+        provider,
         this.wallet,
         destination,
         assetId,
@@ -166,9 +173,9 @@ export class CrossManager {
         utxoSet
       )
     } else if (source.vmId === JEVM_ID) {
-      const api: JEVMAPI = this.provider.jevmApi[source.id]
+      const api: JEVMAPI = provider.jevmApi[source.id]
       return await executeEVMExportTransaction(
-        this.provider,
+        provider,
         api,
         this.wallet,
         destination,
@@ -184,6 +191,7 @@ export class CrossManager {
   }
 
   async import (
+    provider: MCNProvider,
     source: Blockchain,
     destination: Blockchain,
     payImportFee: boolean = false,
@@ -194,36 +202,37 @@ export class CrossManager {
       throw new CrossError('source and destination chain cannot be the same')
     }
     if (destination.vmId === JVM_ID) {
-      return await executeJVMImportTransaction(this.provider, this.wallet, source, importFee, utxoSet)
+      return await executeJVMImportTransaction(provider, this.wallet, source, importFee, utxoSet)
     } else if (destination.vmId === PLATFORMVM_ID) {
-      return await executePlatformImportTransaction(this.provider, this.wallet, source, importFee, utxoSet)
+      return await executePlatformImportTransaction(provider, this.wallet, source, importFee, utxoSet)
     } else if (destination.vmId === JEVM_ID) {
       if (payImportFee) {
         throw new CrossError(`vm id ${destination.vmId} cannot pay import fee`)
       }
-      const api: JEVMAPI = this.provider.jevmApi[destination.id]
-      return await executeEVMImportTransaction(this.provider, api, this.wallet, source, importFee, utxoSet)
+      const api: JEVMAPI = provider.jevmApi[destination.id]
+      return await executeEVMImportTransaction(provider, api, this.wallet, source, importFee, utxoSet)
     }
     throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
   }
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<CrossOperationSummary> {
-    const juneChain: JEVMBlockchain = this.provider.juneChain
+    const provider: MCNProvider = await this.provider.getStaticProvider()
+    const juneChain: JEVMBlockchain = provider.juneChain
     const values = new Map<string, bigint>([[cross.assetId, cross.amount]])
     if (this.shouldProxy(cross)) {
-      const chains: Blockchain[] = [cross.source, this.provider.jvmChain, cross.destination]
+      const chains: Blockchain[] = [cross.source, provider.jvmChain, cross.destination]
       const proxyExport: CrossOperation = new CrossOperation(
         cross.source,
-        this.provider.jvmChain,
+        provider.jvmChain,
         cross.assetId,
         cross.amount
       )
       const exportSummary: CrossOperationSummary = await this.estimateCrossOperation(proxyExport, account)
       const spendings: Spending[] = [...exportSummary.spendings]
       // in proxy will only use the jvm chain to spend fees so do not care about june chain balance eventhough it will require fees
-      const jvm: JVMBlockchain = this.provider.jvmChain
+      const jvm: JVMBlockchain = provider.jvmChain
       const proxyImport: CrossOperation = new CrossOperation(
-        this.provider.jvmChain,
+        provider.jvmChain,
         cross.destination,
         cross.assetId,
         cross.amount
@@ -240,7 +249,7 @@ export class CrossManager {
       })
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       cross.sendImportFee = proxyExport.sendImportFee
-      return new CrossOperationSummary(cross, chains, fees, spendings, values)
+      return new CrossOperationSummary(provider, cross, chains, fees, spendings, values)
     }
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
@@ -268,14 +277,14 @@ export class CrossManager {
         }
       }
     }
-    const exportFee: BaseFeeData = await this.estimateExport(cross.source, cross.destination, cross.assetId)
-    const importFee: BaseFeeData = await this.estimateImport(cross.destination, cross.assetId)
+    const exportFee: BaseFeeData = await this.estimateExport(provider, cross.source, cross.destination, cross.assetId)
+    const importFee: BaseFeeData = await this.estimateImport(provider, cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
     if (fees[0].type === FeeType.Withdraw) {
       const sender: string = account.getAccount(juneChain.id).address
       const amount: bigint = cross.amount + importFee.amount
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
-        this.provider.jevmApi[juneChain.id],
+        provider.jevmApi[juneChain.id],
         sender,
         exportedJRC20!,
         amount
@@ -288,7 +297,7 @@ export class CrossManager {
       // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
       cross.amount /= AtomicDenomination
       const fee: EVMFeeData = await estimateEVMDepositJRC20(
-        this.provider.jevmApi[juneChain.id],
+        provider.jevmApi[juneChain.id],
         sender,
         importedJRC20,
         cross.amount
@@ -325,7 +334,7 @@ export class CrossManager {
     } else {
       spendings.push(importFee.spending)
     }
-    return new CrossOperationSummary(cross, chains, fees, spendings, values)
+    return new CrossOperationSummary(provider, cross, chains, fees, spendings, values)
   }
 
   async executeCrossOperation (summary: CrossOperationSummary, account: MCNAccount): Promise<void> {
@@ -365,14 +374,18 @@ export class CrossManager {
     extraFeeAmount: bigint = BigInt(0)
   ): Promise<void> {
     const executable: ExecutableOperation = summary.getExecutable()
+    const provider: MCNProvider = executable.provider
     // exporting jrc20
     if (summary.fees[0].type === FeeType.Withdraw) {
-      const juneChain: JEVMBlockchain = this.provider.juneChain
-      const api: JEVMAPI = this.provider.jevmApi[juneChain.id]
+      const juneChain: JEVMBlockchain = provider.juneChain
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
-      const transactionHash: string = await executeEVMTransaction(api, juneAccount.chainWallet, feeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Withdraw, transactionHash)
+      const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
+      const success: boolean = await executable.addTrackedEVMTransaction(
+        juneChain.id,
+        TransactionType.Withdraw,
+        transactionHash
+      )
       if (!success) {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
       }
@@ -388,6 +401,7 @@ export class CrossManager {
     }
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
     const exportTransactionId: string = await this.export(
+      provider,
       cross.source,
       cross.destination,
       cross.assetId,
@@ -400,7 +414,6 @@ export class CrossManager {
       extraFeeAmount
     )
     const exportSuccess: boolean = await trackJuneoTransaction(
-      this.provider,
       cross.source,
       executable,
       exportTransactionId,
@@ -417,7 +430,7 @@ export class CrossManager {
       exportTransactionAssets.push(importFee.assetId)
     }
     balancesSync.push(sourceAccount.fetchBalances(exportTransactionAssets))
-    const utxoApi: AbstractUtxoAPI = getUtxoAPI(this.provider, cross.destination)
+    const utxoApi: AbstractUtxoAPI = getUtxoAPI(provider, cross.destination)
     // fetch imported utxos
     const destinationUtxos: Utxo[] = await fetchUtxos(
       utxoApi,
@@ -430,6 +443,7 @@ export class CrossManager {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }
     const importTransactionId: string = await this.import(
+      provider,
       cross.source,
       cross.destination,
       !cross.sendImportFee,
@@ -437,7 +451,6 @@ export class CrossManager {
       destinationUtxos
     )
     const importSuccess: boolean = await trackJuneoTransaction(
-      this.provider,
       cross.destination,
       executable,
       importTransactionId,
@@ -459,12 +472,15 @@ export class CrossManager {
       balancesSync.push(destinationAccount.fetchBalances(importTransactionAssets))
     }
     if (deposit) {
-      const juneChain: JEVMBlockchain = this.provider.juneChain
-      const api: JEVMAPI = this.provider.jevmApi[juneChain.id]
+      const juneChain: JEVMBlockchain = provider.juneChain
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = lastFee as EVMFeeData
-      const transactionHash: string = await executeEVMTransaction(api, juneAccount.chainWallet, feeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
+      const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
+      const success: boolean = await executable.addTrackedEVMTransaction(
+        juneChain.id,
+        TransactionType.Deposit,
+        transactionHash
+      )
       if (!success) {
         throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
       }
@@ -488,10 +504,16 @@ export class CrossManager {
   }
 
   async estimateDepositResumeOperation (operation: DepositResumeOperation): Promise<DepositResumeOperationSummary> {
-    const api: JEVMAPI = this.provider.jevmApi[operation.chain.id]
+    const provider: MCNProvider = await this.provider.getStaticProvider()
     const sender: string = this.wallet.getAddress(operation.chain)
-    const fee: EVMFeeData = await estimateEVMDepositJRC20(api, sender, operation.asset, operation.amount)
+    const fee: EVMFeeData = await estimateEVMDepositJRC20(
+      provider.jevmApi[operation.chain.id],
+      sender,
+      operation.asset,
+      operation.amount
+    )
     return new DepositResumeOperationSummary(
+      provider,
       operation,
       fee,
       [fee.spending],
@@ -503,13 +525,15 @@ export class CrossManager {
     operation: CrossResumeOperation,
     account: MCNAccount
   ): Promise<CrossResumeOperationSummary> {
-    const utxoApi: AbstractUtxoAPI = getUtxoAPI(this.provider, operation.destination)
+    const provider: MCNProvider = await this.provider.getStaticProvider()
+    const utxoApi: AbstractUtxoAPI = getUtxoAPI(provider, operation.destination)
     const utxos: Utxo[] = operation.utxoSet
     const values: Map<string, bigint> = getUtxosAmountValues(utxos, operation.source.id)
     // if we have more than one value it is possible that the fee to pay for import is in the utxos
     // for calculation we will consider it is here to be fully consumed and can remove it from outputs
     const outputsCount: number = values.size > 1 ? values.size - 1 : 1
     let fee: FeeData = await this.estimateImport(
+      provider,
       operation.destination,
       operation.destination.assetId,
       utxos.length,
@@ -521,7 +545,13 @@ export class CrossManager {
       hasFeeValue = value >= fee.amount
       // if importing more than one asset and one of those is the fee asset recalculate import with correct outputs count
       if (outputsCount > 1 && value > fee.amount) {
-        fee = await this.estimateImport(operation.destination, operation.destination.assetId, utxos.length, values.size)
+        fee = await this.estimateImport(
+          provider,
+          operation.destination,
+          operation.destination.assetId,
+          utxos.length,
+          values.size
+        )
         // if with the extra output we now do not have enough funds to import set fee amount to value
         // that way it will be fully consumed and it avoids extra costs for one extra output
         if (value < fee.amount) {
@@ -546,7 +576,7 @@ export class CrossManager {
       const value: bigint = values.get(fee.assetId)!
       values.set(fee.assetId, value - fee.amount)
     }
-    return new CrossResumeOperationSummary(operation, fee, spendings, values, payImportFee, summaryUtxos)
+    return new CrossResumeOperationSummary(provider, operation, fee, spendings, values, payImportFee, summaryUtxos)
   }
 
   async fetchUnfinishedDepositOperations (): Promise<DepositResumeOperation[]> {
@@ -594,7 +624,7 @@ export class CrossManager {
       const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
       // in case we are importing the fee asset make sure it will be worth it to import it
       if (utxoSet.length === 1 && utxoSet[0].assetId.assetId === chain.assetId) {
-        const fee: FeeData = await this.estimateImport(chain, chain.assetId, 1, 1)
+        const fee: FeeData = await this.estimateImport(this.provider, chain, chain.assetId, 1, 1)
         // if is fee asset cannot be another output type than this
         const amount: bigint = (utxoSet[0].output as Secp256k1Output).amount
         // in that case we would only lose value so skip this utxoSet
@@ -611,11 +641,13 @@ export class CrossManager {
   async executeDepositResumeOperation (summary: DepositResumeOperationSummary, account: EVMAccount): Promise<void> {
     const operation: DepositResumeOperation = summary.operation
     const fee: EVMFeeData = summary.fee
-    const api: JEVMAPI = this.provider.jevmApi[operation.chain.id]
-    const transactionHash: string = await executeEVMTransaction(api, account.chainWallet, fee)
-    const success: boolean = await summary
-      .getExecutable()
-      .addTrackedEVMTransaction(api, TransactionType.Deposit, transactionHash)
+    const executable: ExecutableOperation = summary.getExecutable()
+    const transactionHash: string = await executeEVMTransaction(executable.provider, account.chainWallet, fee)
+    const success: boolean = await executable.addTrackedEVMTransaction(
+      operation.chain.id,
+      TransactionType.Deposit,
+      transactionHash
+    )
     if (!success) {
       throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching`)
     }
@@ -625,7 +657,9 @@ export class CrossManager {
 
   async executeCrossResumeOperation (summary: CrossResumeOperationSummary, account: ChainAccount): Promise<void> {
     const resumeOperation: CrossResumeOperation = summary.operation
+    const executable: ExecutableOperation = summary.getExecutable()
     const importTransactionId: string = await this.import(
+      executable.provider,
       resumeOperation.source,
       resumeOperation.destination,
       summary.payImportFee,
@@ -633,9 +667,8 @@ export class CrossManager {
       summary.utxoSet
     )
     const importSuccess: boolean = await trackJuneoTransaction(
-      this.provider,
       resumeOperation.destination,
-      summary.getExecutable(),
+      executable,
       importTransactionId,
       TransactionType.Import
     )

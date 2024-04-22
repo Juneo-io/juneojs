@@ -99,11 +99,20 @@ export async function estimatePlatformValidatePrimaryOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(validate, chain, fee, [spending, fee.spending], values, potentialReward)
+      return new StakingOperationSummary(
+        provider,
+        validate,
+        chain,
+        fee,
+        [spending, fee.spending],
+        values,
+        potentialReward
+      )
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
       return new ChainOperationSummary(
+        provider,
         validate,
         chain,
         fee,
@@ -177,11 +186,20 @@ export async function estimatePlatformDelegatePrimaryOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)
+      return new StakingOperationSummary(
+        provider,
+        delegate,
+        chain,
+        fee,
+        [spending, fee.spending],
+        values,
+        potentialReward
+      )
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
       return new ChainOperationSummary(
+        provider,
         delegate,
         chain,
         fee,

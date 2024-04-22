@@ -84,24 +84,26 @@ export class SendUtxoOperation extends ChainNetworkOperation {
 }
 
 abstract class Wrapping extends ChainNetworkOperation {
+  override chain: JEVMBlockchain
   asset: WrappedAsset
   amount: bigint
 
-  constructor (type: NetworkOperationType, chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+  constructor (type: NetworkOperationType, chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(type, chain)
+    this.chain = chain
     this.asset = asset
     this.amount = amount
   }
 }
 
 export class WrapOperation extends Wrapping {
-  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+  constructor (chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(NetworkOperationType.Wrap, chain, asset, amount)
   }
 }
 
 export class UnwrapOperation extends Wrapping {
-  constructor (chain: Blockchain, asset: WrappedAsset, amount: bigint) {
+  constructor (chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(NetworkOperationType.Unwrap, chain, asset, amount)
   }
 }

@@ -9,7 +9,8 @@ import {
   getUtxoAPI,
   getUtxosAmountValues,
   trackJuneoTransaction,
-  fetchUtxos
+  fetchUtxos,
+  sleep
 } from '../utils'
 import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
 import {
@@ -387,8 +388,10 @@ export class CrossManager {
         transactionHash
       )
       if (!success) {
-        throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching`)
+        throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching: ${executable.status}`)
       }
+      // wait is needed to properly generate utxos
+      await sleep(500)
       // feeData.data.to is the jrc20 address for withdraw transactions
       // cross.assetId should be jrc20.nativeAssetId here
       await juneAccount.fetchBalances([cross.assetId, feeData.data.to, feeData.assetId])
@@ -420,7 +423,7 @@ export class CrossManager {
       TransactionType.Export
     )
     if (!exportSuccess) {
-      throw new CrossError(`error during export transaction ${exportTransactionId} status fetching`)
+      throw new CrossError(`error during export transaction ${exportTransactionId} status fetching: ${executable.status}`)
     }
     const exportTransactionAssets: string[] = [cross.assetId]
     if (cross.assetId !== exportFee.assetId) {
@@ -457,7 +460,7 @@ export class CrossManager {
       TransactionType.Import
     )
     if (!importSuccess) {
-      throw new CrossError(`error during import transaction ${importTransactionId} status fetching`)
+      throw new CrossError(`error during import transaction ${importTransactionId} status fetching: ${executable.status}`)
     }
     // importing jrc20
     const lastFee: FeeData = summary.fees[summary.fees.length - 1]
@@ -482,7 +485,7 @@ export class CrossManager {
         transactionHash
       )
       if (!success) {
-        throw new CrossError(`error during deposit transaction ${transactionHash} status fetching`)
+        throw new CrossError(`error during deposit transaction ${transactionHash} status fetching: ${executable.status}`)
       }
       // JUNE cannot be jrc20 on the JUNE-Chain so always use fee assetId
       const depositAssets: string[] = [cross.assetId, feeData.assetId]
@@ -649,7 +652,7 @@ export class CrossManager {
       transactionHash
     )
     if (!success) {
-      throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching`)
+      throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching: ${executable.status}`)
     }
     const jrc20: JRC20Asset = operation.asset
     await account.fetchBalances([fee.assetId, jrc20.nativeAssetId, jrc20.address])
@@ -673,7 +676,7 @@ export class CrossManager {
       TransactionType.Import
     )
     if (!importSuccess) {
-      throw new CrossError(`error during cross resume transaction ${importTransactionId} status fetching`)
+      throw new CrossError(`error during cross resume transaction ${importTransactionId} status fetching: ${executable.status}`)
     }
     const promises: Array<Promise<void>> = [account.fetchBalances(summary.values.keys())]
     if (!summary.values.has(summary.importFee.assetId)) {

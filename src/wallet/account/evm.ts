@@ -68,21 +68,21 @@ export class EVMAccount extends AbstractChainAccount {
         this.chainWallet,
         summary.fee as EVMFeeData
       )
-      await executable.addTrackedEVMTransaction(this.chain.id, TransactionType.Send, transactionHash)
+      await executable.trackEVMTransaction(this.chain.id, TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.Wrap) {
       const transactionHash: string = await executeEVMTransaction(
         executable.provider,
         this.chainWallet,
         summary.fee as EVMFeeData
       )
-      await executable.addTrackedEVMTransaction(this.chain.id, TransactionType.Wrap, transactionHash)
+      await executable.trackEVMTransaction(this.chain.id, TransactionType.Wrap, transactionHash)
     } else if (operation.type === NetworkOperationType.Unwrap) {
       const transactionHash: string = await executeEVMTransaction(
         executable.provider,
         this.chainWallet,
         summary.fee as EVMFeeData
       )
-      await executable.addTrackedEVMTransaction(this.chain.id, TransactionType.Unwrap, transactionHash)
+      await executable.trackEVMTransaction(this.chain.id, TransactionType.Unwrap, transactionHash)
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self

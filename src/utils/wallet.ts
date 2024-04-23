@@ -47,11 +47,11 @@ export async function trackJuneoTransaction (
   let success: boolean = false
   const vmId: string = chain.vmId
   if (vmId === JVM_ID) {
-    success = await executable.addTrackedJVMTransaction(transactionType, transactionId)
+    success = await executable.trackJVMTransaction(transactionType, transactionId)
   } else if (vmId === PLATFORMVM_ID) {
-    success = await executable.addTrackedPlatformTransaction(transactionType, transactionId)
+    success = await executable.trackPlatformTransaction(transactionType, transactionId)
   } else if (vmId === JEVM_ID) {
-    success = await executable.addTrackedJEVMTransaction(chain.id, transactionType, transactionId)
+    success = await executable.trackJEVMTransaction(chain.id, transactionType, transactionId)
   }
   return success
 }

@@ -52,19 +52,19 @@ export class PlatformAccount extends UtxoAccount {
     if (operation.type === NetworkOperationType.ValidatePrimary) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction([this.chainWallet]).toCHex()
       const transactionId: string = (await executable.provider.platformApi.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(TransactionType.PrimaryValidation, transactionId)
+      await executable.trackPlatformTransaction(TransactionType.PrimaryValidation, transactionId)
     } else if (operation.type === NetworkOperationType.DelegatePrimary) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction([this.chainWallet]).toCHex()
       const transactionId: string = (await executable.provider.platformApi.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(TransactionType.PrimaryDelegation, transactionId)
+      await executable.trackPlatformTransaction(TransactionType.PrimaryDelegation, transactionId)
     } else if (operation.type === NetworkOperationType.Send) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
       const transactionHash: string = (await executable.provider.platformApi.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(TransactionType.Send, transactionHash)
+      await executable.trackPlatformTransaction(TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
       const transactionHash: string = (await executable.provider.platformApi.issueTx(transaction)).txID
-      await executable.addTrackedPlatformTransaction(TransactionType.Send, transactionHash)
+      await executable.trackPlatformTransaction(TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

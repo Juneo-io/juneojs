@@ -382,7 +382,7 @@ export class CrossManager {
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
       const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(
+      const success: boolean = await executable.trackEVMTransaction(
         juneChain.id,
         TransactionType.Withdraw,
         transactionHash
@@ -485,7 +485,7 @@ export class CrossManager {
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = lastFee as EVMFeeData
       const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
-      const success: boolean = await executable.addTrackedEVMTransaction(
+      const success: boolean = await executable.trackEVMTransaction(
         juneChain.id,
         TransactionType.Deposit,
         transactionHash
@@ -654,7 +654,7 @@ export class CrossManager {
     const fee: EVMFeeData = summary.fee
     const executable: ExecutableOperation = summary.getExecutable()
     const transactionHash: string = await executeEVMTransaction(executable.provider, account.chainWallet, fee)
-    const success: boolean = await executable.addTrackedEVMTransaction(
+    const success: boolean = await executable.trackEVMTransaction(
       operation.chain.id,
       TransactionType.Deposit,
       transactionHash

@@ -27,7 +27,7 @@ export class ExecutableOperation {
     this.provider = provider
   }
 
-  async addTrackedEVMTransaction (chainId: string, type: TransactionType, transactionHash: string): Promise<boolean> {
+  async trackEVMTransaction (chainId: string, type: TransactionType, transactionHash: string): Promise<boolean> {
     const api: JEVMAPI = this.provider.jevmApi[chainId]
     const receipt: TransactionReceipt = new TransactionReceipt(
       api.chain.id,
@@ -49,7 +49,7 @@ export class ExecutableOperation {
     return transactionStatus === EVMTransactionStatus.Success
   }
 
-  async addTrackedJEVMTransaction (chainId: string, type: TransactionType, transactionId: string): Promise<boolean> {
+  async trackJEVMTransaction (chainId: string, type: TransactionType, transactionId: string): Promise<boolean> {
     const api: JEVMAPI = this.provider.jevmApi[chainId]
     const receipt: TransactionReceipt = new TransactionReceipt(
       api.chain.id,
@@ -71,7 +71,7 @@ export class ExecutableOperation {
     return transactionStatus === JEVMTransactionStatus.Accepted
   }
 
-  async addTrackedPlatformTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
+  async trackPlatformTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
     const receipt: TransactionReceipt = new TransactionReceipt(
       this.provider.platformChain.id,
       type,
@@ -95,7 +95,7 @@ export class ExecutableOperation {
     return transactionStatus === PlatformTransactionStatus.Committed
   }
 
-  async addTrackedJVMTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
+  async trackJVMTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
     const receipt: TransactionReceipt = new TransactionReceipt(
       this.provider.jvmChain.id,
       type,

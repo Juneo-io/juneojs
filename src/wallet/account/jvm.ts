@@ -43,11 +43,11 @@ export class JVMAccount extends UtxoAccount {
     if (operation.type === NetworkOperationType.Send) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
       const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(TransactionType.Send, transactionHash)
+      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
       const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(TransactionType.Send, transactionHash)
+      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos created from this operation
     await super.refreshBalances()

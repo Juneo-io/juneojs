@@ -17,7 +17,6 @@ import {
   StakingOperationSummary,
   type ValidatePrimaryOperation
 } from '../operation'
-import { StakeManager, ValidationShare } from '../stake'
 import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
 import { BaseSpending, UtxoSpending } from './transaction'
 
@@ -75,7 +74,7 @@ export async function estimatePlatformValidatePrimaryOperation (
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platformChain
-  const potentialReward: bigint = StakeManager.estimateValidationReward(
+  const potentialReward: bigint = chain.estimatePrimaryValidationReward(
     validate.endTime - validate.startTime,
     validate.amount
   )
@@ -90,7 +89,7 @@ export async function estimatePlatformValidatePrimaryOperation (
     provider,
     account,
     validator,
-    ValidationShare,
+    chain.stakeConfig.minDelegationFee, // this is the only value possible for primary network as min = max value
     new ProofOfPossession(validate.publicKey, validate.signature),
     validate.stakeAddresses,
     validate.stakeThreshold,
@@ -100,11 +99,20 @@ export async function estimatePlatformValidatePrimaryOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(validate, chain, fee, [spending, fee.spending], values, potentialReward)
+      return new StakingOperationSummary(
+        provider,
+        validate,
+        chain,
+        fee,
+        [spending, fee.spending],
+        values,
+        potentialReward
+      )
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
       return new ChainOperationSummary(
+        provider,
         validate,
         chain,
         fee,
@@ -155,7 +163,7 @@ export async function estimatePlatformDelegatePrimaryOperation (
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain: PlatformBlockchain = provider.platformChain
-  const potentialReward: bigint = StakeManager.estimateDelegationReward(
+  const potentialReward: bigint = chain.estimatePrimaryDelegationReward(
     delegate.endTime - delegate.startTime,
     delegate.amount
   )
@@ -178,11 +186,20 @@ export async function estimatePlatformDelegatePrimaryOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(delegate, chain, fee, [spending, fee.spending], values, potentialReward)
+      return new StakingOperationSummary(
+        provider,
+        delegate,
+        chain,
+        fee,
+        [spending, fee.spending],
+        values,
+        potentialReward
+      )
     },
     async () => {
       const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
       return new ChainOperationSummary(
+        provider,
         delegate,
         chain,
         fee,

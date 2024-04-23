@@ -116,35 +116,6 @@ describe('PlatformAPI', () => {
     })
   })
 
-  describe('getPendingValidators', () => {
-    test.each([
-      { description: 'Without supernetID and nodeIDs', supernetID: undefined, nodeIDs: undefined },
-      { description: 'With supernetID', supernetID: provider.mcn.primary.id, nodeIDs: undefined },
-      { description: 'With nodeIDs', supernetID: undefined, nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr'] },
-      {
-        description: 'With supernetID and nodeIDs',
-        supernetID: provider.mcn.primary.id,
-        nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr']
-      }
-    ])('$description: $supernetID, $nodeIDs', async ({ supernetID, nodeIDs }) => {
-      const result = await provider.platformApi.getPendingValidators(supernetID, nodeIDs)
-      expect(result.delegators).toBeDefined()
-      expect(result.validators).toBeDefined()
-    })
-
-    test.failing.each([
-      { description: 'Invalid supernetID', supernetID: 'INVALID_SUPERNET_ID', nodeIDs: undefined },
-      { description: 'Invalid nodeIDs', supernetID: undefined, nodeIDs: ['INVALID_NODE_ID'] },
-      {
-        description: 'Invalid supernetID and nodeIDs',
-        supernetID: 'INVALID_SUPERNET_ID',
-        nodeIDs: ['INVALID_NODE_ID']
-      }
-    ])('$description: $supernetID, $nodeIDs', async ({ supernetID, nodeIDs }) => {
-      await provider.platformApi.getPendingValidators(supernetID as any, nodeIDs as any)
-    })
-  })
-
   describe('getStakingAssetID', () => {
     test.each([
       { description: 'Without supernetID', supernetID: undefined },

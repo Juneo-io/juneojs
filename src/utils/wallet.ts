@@ -1,6 +1,4 @@
-import { type JEVMAPI } from '../api'
 import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
-import { type MCNProvider } from '../juneo'
 import { UserInput } from '../transaction'
 import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType, type MCNAccount } from '../wallet'
 import { sha256, rmd160 } from './crypto'
@@ -41,7 +39,6 @@ export function getImportUserInputs (
 }
 
 export async function trackJuneoTransaction (
-  provider: MCNProvider,
   chain: Blockchain,
   executable: ExecutableOperation,
   transactionId: string,
@@ -50,12 +47,11 @@ export async function trackJuneoTransaction (
   let success: boolean = false
   const vmId: string = chain.vmId
   if (vmId === JVM_ID) {
-    success = await executable.addTrackedJVMTransaction(provider.jvmApi, transactionType, transactionId)
+    success = await executable.trackJVMTransaction(transactionType, transactionId)
   } else if (vmId === PLATFORMVM_ID) {
-    success = await executable.addTrackedPlatformTransaction(provider.platformApi, transactionType, transactionId)
+    success = await executable.trackPlatformTransaction(transactionType, transactionId)
   } else if (vmId === JEVM_ID) {
-    const api: JEVMAPI = provider.jevmApi[chain.id]
-    success = await executable.addTrackedJEVMTransaction(api, transactionType, transactionId)
+    success = await executable.trackJEVMTransaction(chain.id, transactionType, transactionId)
   }
   return success
 }

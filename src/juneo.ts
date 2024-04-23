@@ -1,4 +1,4 @@
-import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient } from './api'
+import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient, HttpsProtocol, HttpProtocol } from './api'
 import { JEVM_ID, type JVMBlockchain, type PlatformBlockchain, type JEVMBlockchain } from './chain'
 import { type MCN, GenesisNetwork } from './network'
 
@@ -33,6 +33,19 @@ export class MCNProvider {
       }
     }
     this.juneAssetId = this.platformChain.assetId
+  }
+
+  /**
+   * Get a provider that uses one same node only. The load balancer could send requests
+   * to different nodes and it can cause issues in some cases.
+   * @param port The port that the node should be using. Defaults to 9650.
+   * @returns MCNProvider connecting with the ip address of one node.
+   */
+  async getStaticProvider (port: number = 9650): Promise<MCNProvider> {
+    const ip: string = (await this.info.getNodeIP()).ip.split(':')[0]
+    const protocol: string = this.client.getProtocol() === HttpsProtocol ? HttpsProtocol : HttpProtocol
+    const client: JuneoClient = JuneoClient.parse(`${protocol}://${ip}:${port}`)
+    return new MCNProvider(this.mcn, client)
   }
 }
 

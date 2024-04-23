@@ -27,10 +27,11 @@ export class JVMAccount extends UtxoAccount {
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
+    const provider: MCNProvider = await this.provider.getStaticProvider()
     if (operation.type === NetworkOperationType.Send) {
-      return await estimateSendOperation(this.provider, this.chain, this, operation as SendOperation)
+      return await estimateSendOperation(provider, this.chain, this, operation as SendOperation)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
-      return await estimateSendUtxoOperation(this.provider, this.chain, this, operation as SendUtxoOperation)
+      return await estimateSendUtxoOperation(provider, this.chain, this, operation as SendUtxoOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -41,12 +42,12 @@ export class JVMAccount extends UtxoAccount {
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.jvmApi.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(this.provider.jvmApi, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
+      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await this.provider.jvmApi.issueTx(transaction)).txID
-      await executable.addTrackedJVMTransaction(this.provider.jvmApi, TransactionType.Send, transactionHash)
+      const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
+      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
     }
     // balances fetching is needed to get new utxos created from this operation
     await super.refreshBalances()

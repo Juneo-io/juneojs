@@ -69,11 +69,12 @@ export async function estimateSendOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
-      return new ChainOperationSummary(send, chain, fee, [spending, fee.spending], values)
+      return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
     },
     async () => {
       const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
       return new ChainOperationSummary(
+        provider,
         send,
         chain,
         fee,
@@ -104,11 +105,12 @@ export async function estimateSendUtxoOperation (
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
-      return new ChainOperationSummary(send, chain, fee, [spending, fee.spending], values)
+      return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
     },
     async () => {
       const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
       return new ChainOperationSummary(
+        provider,
         send,
         chain,
         fee,

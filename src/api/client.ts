@@ -6,8 +6,10 @@ const JsonRpcVersion: string = '2.0'
 const HttpHeaders = {
   'Content-Type': 'application/json;charset=UTF-8'
 }
-const DefaultProtocol: string = 'https'
-const Protocols: string[] = ['http', 'https']
+export const HttpProtocol: string = 'http'
+export const HttpsProtocol: string = 'https'
+const DefaultProtocol: string = HttpsProtocol
+const Protocols: string[] = [HttpProtocol, HttpsProtocol]
 
 export class JuneoClient {
   private nextRequestId: number = 1

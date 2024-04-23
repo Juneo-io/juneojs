@@ -1,4 +1,5 @@
-import { type JEVMAPI, type PlatformAPI, type JVMAPI } from '../../api'
+import { type JEVMAPI } from '../../api'
+import { type MCNProvider } from '../../juneo'
 import {
   EVMTransactionStatus,
   EVMTransactionStatusFetcher,
@@ -18,10 +19,16 @@ import {
 import { NetworkOperationStatus } from './operation'
 
 export class ExecutableOperation {
+  provider: MCNProvider
   status: NetworkOperationStatus = NetworkOperationStatus.Initializing
   receipts: TransactionReceipt[] = []
 
-  async addTrackedEVMTransaction (api: JEVMAPI, type: TransactionType, transactionHash: string): Promise<boolean> {
+  constructor (provider: MCNProvider) {
+    this.provider = provider
+  }
+
+  async trackEVMTransaction (chainId: string, type: TransactionType, transactionHash: string): Promise<boolean> {
+    const api: JEVMAPI = this.provider.jevmApi[chainId]
     const receipt: TransactionReceipt = new TransactionReceipt(
       api.chain.id,
       type,
@@ -42,7 +49,8 @@ export class ExecutableOperation {
     return transactionStatus === EVMTransactionStatus.Success
   }
 
-  async addTrackedJEVMTransaction (api: JEVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
+  async trackJEVMTransaction (chainId: string, type: TransactionType, transactionId: string): Promise<boolean> {
+    const api: JEVMAPI = this.provider.jevmApi[chainId]
     const receipt: TransactionReceipt = new TransactionReceipt(
       api.chain.id,
       type,
@@ -63,22 +71,18 @@ export class ExecutableOperation {
     return transactionStatus === JEVMTransactionStatus.Accepted
   }
 
-  async addTrackedPlatformTransaction (
-    api: PlatformAPI,
-    type: TransactionType,
-    transactionId: string
-  ): Promise<boolean> {
+  async trackPlatformTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
     const receipt: TransactionReceipt = new TransactionReceipt(
-      api.chain.id,
+      this.provider.platformChain.id,
       type,
       PlatformTransactionStatus.Processing,
       transactionId
     )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(api, transactionId).fetch(
-      WalletStatusFetcherTimeout,
-      WalletStatusFetcherDelay
-    )
+    const transactionStatus: string = await new PlatformTransactionStatusFetcher(
+      this.provider.platformApi,
+      transactionId
+    ).fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
     receipt.transactionStatus = transactionStatus
     if (
       transactionStatus === PlatformTransactionStatus.Dropped ||
@@ -91,15 +95,15 @@ export class ExecutableOperation {
     return transactionStatus === PlatformTransactionStatus.Committed
   }
 
-  async addTrackedJVMTransaction (api: JVMAPI, type: TransactionType, transactionId: string): Promise<boolean> {
+  async trackJVMTransaction (type: TransactionType, transactionId: string): Promise<boolean> {
     const receipt: TransactionReceipt = new TransactionReceipt(
-      api.chain.id,
+      this.provider.jvmChain.id,
       type,
       JVMTransactionStatus.Processing,
       transactionId
     )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new JVMTransactionStatusFetcher(api, transactionId).fetch(
+    const transactionStatus: string = await new JVMTransactionStatusFetcher(this.provider.jvmApi, transactionId).fetch(
       WalletStatusFetcherTimeout,
       WalletStatusFetcherDelay
     )

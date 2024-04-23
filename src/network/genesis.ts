@@ -1,17 +1,29 @@
 import { JNTAsset, JRC20Asset, WrappedAsset, JEVMGasToken } from '../asset'
-import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
-import { PrimarySupernet, StakeConfig, MCN } from './network'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain, RewardConfig, StakeConfig } from '../chain'
+import { PrimarySupernet, MCN } from './network'
 
 const GenesisNetworkId: number = 2
 const GenesisHrp: string = 'socotra'
 const GenesisStakeConfig: StakeConfig = new StakeConfig(
-  // 80%, 1, 1_000_000, 0.01, 1 day, 365 days
-  0.8,
-  BigInt(1_000000000),
-  BigInt(1_000_000_000000000),
-  BigInt(1_0000000),
-  BigInt(24 * 3600),
-  BigInt(365 * 24 * 3600)
+  0.8, // 80%
+  BigInt(1_000000000), // 1 JUNE
+  BigInt(1_000_000_000000000), // 1_000_000 JUNE
+  BigInt(1_0000000), // 0.01 JUNE
+  12_0000, // 12%
+  12_0000, // 12%
+  BigInt(86_400), // 1 day
+  BigInt(365 * 86_400) // 365 days
+)
+const GenesisRewardConfig: RewardConfig = new RewardConfig(
+  BigInt(86_400), // 1 day
+  BigInt(31_536_000), // 365 days
+  BigInt(2_0000), // 2%
+  BigInt(1685570400), // 1st June 2023
+  BigInt(21_5000), // 21.5%
+  BigInt(1811800800), // 2027
+  BigInt(19_5000), // 19.5%
+  BigInt(1843423200), // 2028
+  BigInt(6_7000) // 6.7%
 )
 const GenesisAddress: string = 'https://api.socotra-test.network:9650'
 
@@ -68,6 +80,8 @@ export const GenesisPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
   GenesisJUNEAsset,
+  GenesisStakeConfig,
+  GenesisRewardConfig,
   ['P'],
   jntAssets
 )
@@ -279,10 +293,4 @@ export const GenesisPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   GenesisJUNEChain
 )
 
-export const GenesisNetwork: MCN = new MCN(
-  GenesisAddress,
-  GenesisNetworkId,
-  GenesisHrp,
-  GenesisStakeConfig,
-  GenesisPrimarySupernet
-)
+export const GenesisNetwork: MCN = new MCN(GenesisAddress, GenesisNetworkId, GenesisHrp, GenesisPrimarySupernet)

@@ -1,17 +1,29 @@
 import { JNTAsset, JRC20Asset, JEVMGasToken, WrappedAsset } from '../asset'
-import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain } from '../chain'
-import { PrimarySupernet, StakeConfig, MCN } from './network'
+import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain, RewardConfig, StakeConfig } from '../chain'
+import { PrimarySupernet, MCN } from './network'
 
 const SocotraNetworkId: number = 46
 const SocotraHrp: string = 'socotra'
 const SocotraStakeConfig: StakeConfig = new StakeConfig(
-  // 80%, 1, 1_000_000, 0.1, 14 day, 365 days
-  0.8,
-  BigInt(1_000000000),
-  BigInt(1_000_000_000000000),
-  BigInt(1_00000000),
-  BigInt(14 * 24 * 3600),
-  BigInt(365 * 24 * 3600)
+  0.8, // 80%
+  BigInt(1_000000000), // 1 JUNE
+  BigInt(1_000_000_000000000), // 1_000_000 JUNE
+  BigInt(1_00000000), // 0.1 JUNE
+  12_0000, // 12%
+  12_0000, // 12%
+  BigInt(14 * 86_400), // 14 days
+  BigInt(365 * 86_400) // 365 days
+)
+const SocotraRewardConfig: RewardConfig = new RewardConfig(
+  BigInt(1_209_600), // 14 day
+  BigInt(31_536_000), // 365 days
+  BigInt(2_0000), // 2%
+  BigInt(1711922400), // 1st April 2024
+  BigInt(21_5000), // 21.5%
+  BigInt(1838160000), // 2028
+  BigInt(19_5000), // 19.5%
+  BigInt(1869696000), // 2029
+  BigInt(6_7000) // 6.7%
 )
 const SocotraAddress: string = 'https://api.socotra-testnet.network'
 
@@ -57,6 +69,8 @@ export const SocotraPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
   SocotraJUNEAsset,
+  SocotraStakeConfig,
+  SocotraRewardConfig,
   ['P'],
   jntAssets
 )
@@ -232,12 +246,6 @@ export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   SocotraJUNEChain
 )
 
-export const SocotraNetwork: MCN = new MCN(
-  SocotraAddress,
-  SocotraNetworkId,
-  SocotraHrp,
-  SocotraStakeConfig,
-  SocotraPrimarySupernet
-)
+export const SocotraNetwork: MCN = new MCN(SocotraAddress, SocotraNetworkId, SocotraHrp, SocotraPrimarySupernet)
 
 export const TestNetwork: MCN = SocotraNetwork

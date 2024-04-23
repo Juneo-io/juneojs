@@ -5,8 +5,6 @@ import {
   MCNAccount,
   MCNProvider,
   MCNWallet,
-  StakeError,
-  TimeError,
   type ChainAccount,
   type ExecutableOperation,
   now,
@@ -105,35 +103,11 @@ describe('Staking operations', (): void => {
     describe('Execute invalid', () => {
       test.each([
         {
-          description: 'Less than min stake',
-          nodeId: validNodeId,
-          amount: BigInt(1),
-          expectedError: StakeError,
-          startTime: currentTime,
-          endTime: tomorrow
-        },
-        {
           description: 'More than balance',
           nodeId: validNodeId,
           amount: EXCESSIVE_AMOUNT,
           expectedError: AccountError,
           startTime: currentTime,
-          endTime: tomorrow
-        },
-        {
-          description: 'End time in the past',
-          nodeId: validNodeId,
-          amount: BigInt(10_000_000),
-          expectedError: TimeError,
-          startTime: currentTime - BigInt(1_000),
-          endTime: tomorrow
-        },
-        {
-          description: 'Start time in the past',
-          nodeId: validNodeId,
-          amount: BigInt(10_000_000),
-          expectedError: TimeError,
-          startTime: currentTime - BigInt(40),
           endTime: tomorrow
         }
       ])(

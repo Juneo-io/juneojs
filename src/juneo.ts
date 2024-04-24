@@ -42,9 +42,10 @@ export class MCNProvider {
    * @returns MCNProvider connecting with the ip address of one node.
    */
   async getStaticProvider (protocol: string = HttpProtocol, port: number = 9650): Promise<MCNProvider> {
-    const ip: string = (await this.info.getNodeIP()).ip.split(':')[0]
-    const client: JuneoClient = JuneoClient.parse(`${protocol}://${ip}:${port}`)
-    return new MCNProvider(this.mcn, client)
+    return this
+    // const ip: string = (await this.info.getNodeIP()).ip.split(':')[0]
+    // const client: JuneoClient = JuneoClient.parse(`${protocol}://${ip}:${port}`)
+    // return new MCNProvider(this.mcn, client)
   }
 }
 

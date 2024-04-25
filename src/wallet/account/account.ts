@@ -3,7 +3,7 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type Utxo } from '../../transaction'
-import { getUtxosAmountValues, type AssetValue, fetchUtxos, now, calculateBalances } from '../../utils'
+import { type AssetValue, fetchUtxos, now, calculateBalances } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -131,6 +131,26 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.utxoApi = utxoApi
   }
 
+  getTimelockedAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getTimelockedAmount(asset.assetId))
+  }
+
+  async getTimelockedValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+    const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
+    return this.getTimelockedAssetValue(asset)
+  }
+
+  getTimelockedAmount (assetId: string): bigint {
+    return this.getTimelockedBalance(assetId).getValue()
+  }
+
+  getTimelockedBalance (assetId: string): Balance {
+    if (!this.timelockedBalances.has(assetId)) {
+      this.timelockedBalances.set(assetId, new Balance())
+    }
+    return this.timelockedBalances.get(assetId)!
+  }
+
   async fetchBalance (assetId: string): Promise<void> {
     // there is currently no other way to do it only with utxos
     // a seperated indexing of each asset is needed to be able to do it
@@ -147,8 +167,8 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = true
     this.utxoSet = await fetchUtxos(this.utxoApi, [this.address])
     this.sortUtxoSet()
-    calculateBalances(getUtxosAmountValues(this.utxoSet), this.balances)
-    calculateBalances(getUtxosAmountValues(this.utxoSetTimelocked), this.timelockedBalances)
+    calculateBalances(this.utxoSet, this.balances)
+    calculateBalances(this.utxoSetTimelocked, this.timelockedBalances)
     this.fetching = false
   }
 

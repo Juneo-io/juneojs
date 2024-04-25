@@ -77,7 +77,8 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
   return values
 }
 
-export function calculateBalances (values: Map<string, bigint>, balances: Map<string, Balance>): void {
+export function calculateBalances (utxoSet: Utxo[], balances: Map<string, Balance>): void {
+  const values: Map<string, bigint> = getUtxosAmountValues(utxoSet)
   for (const [key, value] of values) {
     if (!balances.has(key)) {
       balances.set(key, new Balance())

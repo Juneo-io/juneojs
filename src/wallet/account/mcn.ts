@@ -1,4 +1,4 @@
-import { AccountError, sortSpendings } from '../../utils'
+import { AccountError, type AssetValue, sortSpendings } from '../../utils'
 import { type MCNWallet } from '../wallet'
 import {
   NetworkOperationType,
@@ -23,6 +23,7 @@ import { PlatformAccount } from './platform'
 import { type Spending } from '../transaction'
 import { CrossManager } from '../cross'
 import { type Blockchain } from '../../chain'
+import { type TokenAsset } from '../../asset'
 import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
@@ -53,6 +54,32 @@ export class MCNAccount {
       throw new AccountError(`there is no account available for the chain with id: ${chainId}`)
     }
     return this.chainAccounts.get(chainId)!
+  }
+
+  getTotalAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getTotalAmount(asset.assetId))
+  }
+
+  getTotalAmount (assetId: string): bigint {
+    let totalAmount: bigint = BigInt(0)
+    for (const [_, account] of this.chainAccounts) {
+      totalAmount += account.getBalance(assetId).getValue()
+    }
+    return totalAmount
+  }
+
+  getTotalTimelockedAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getTotalTimelockedAmount(asset.assetId))
+  }
+
+  getTotalTimelockedAmount (assetId: string): bigint {
+    let totalAmount: bigint = BigInt(0)
+    for (const [_, account] of this.chainAccounts) {
+      if (account.type === AccountType.Utxo) {
+        totalAmount += (account as UtxoAccount).getTimelockedBalance(assetId).getValue()
+      }
+    }
+    return totalAmount
   }
 
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {

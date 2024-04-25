@@ -3,7 +3,7 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type Utxo } from '../../transaction'
-import { getUtxosAmountValues, type AssetValue, fetchUtxos, now } from '../../utils'
+import { getUtxosAmountValues, type AssetValue, fetchUtxos, now, calculateBalances } from '../../utils'
 import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
 import { type UtxoSpending, type Spending } from '../transaction'
 import { type VMWallet, type MCNWallet } from '../wallet'
@@ -122,6 +122,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoSetMultiSig: Utxo[] = []
   utxoSetTimelocked: Utxo[] = []
+  readonly timelockedBalances: Map<string, Balance> = new Map<string, Balance>()
   protected fetching: boolean = false
   private readonly utxoApi: AbstractUtxoAPI
 
@@ -146,7 +147,8 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.fetching = true
     this.utxoSet = await fetchUtxos(this.utxoApi, [this.address])
     this.sortUtxoSet()
-    this.calculateBalances()
+    calculateBalances(getUtxosAmountValues(this.utxoSet), this.balances)
+    calculateBalances(getUtxosAmountValues(this.utxoSetTimelocked), this.timelockedBalances)
     this.fetching = false
   }
 
@@ -214,19 +216,5 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       }
     }
     return false
-  }
-
-  private calculateBalances (): void {
-    const values: Map<string, bigint> = getUtxosAmountValues(this.utxoSet)
-    for (const [key, value] of values) {
-      this.getBalance(key).update(value)
-    }
-    for (const [key, balance] of this.balances) {
-      // force all balances that no longer have a value from calculation to 0 in order to prevent desync
-      if (!values.has(key) && balance.getValue() !== BigInt(0)) {
-        // make sure to actually update so as to cast the event to potential listeners
-        balance.update(BigInt(0))
-      }
-    }
   }
 }

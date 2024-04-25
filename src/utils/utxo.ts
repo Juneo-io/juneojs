@@ -2,6 +2,7 @@ import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { type Secp256k1Output, Secp256k1OutputTypeId, Utxo } from '../transaction'
+import { Balance } from '../wallet'
 import { WalletError } from './errors'
 
 const UtxoRequestLimit: number = 1024
@@ -74,6 +75,22 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
     values.set(assetId, value)
   }
   return values
+}
+
+export function calculateBalances (values: Map<string, bigint>, balances: Map<string, Balance>): void {
+  for (const [key, value] of values) {
+    if (!balances.has(key)) {
+      balances.set(key, new Balance())
+    }
+    balances.get(key)!.update(value)
+  }
+  for (const [key, balance] of balances) {
+    // force all balances that no longer have a value from calculation to 0 in order to prevent desync
+    if (!values.has(key) && balance.getValue() !== BigInt(0)) {
+      // make sure to actually update so as to cast the event to potential listeners
+      balance.update(BigInt(0))
+    }
+  }
 }
 
 export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {

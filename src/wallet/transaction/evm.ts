@@ -150,7 +150,8 @@ export async function executeEVMTransaction (
   for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
     const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
     const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
-      if ((error.message as string).includes('nonce')) {
+      const errorMessage: string = error.message as string
+      if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
         return undefined
       }
       // Non nonce related error decrement nonce to avoid resyncing later.

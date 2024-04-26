@@ -75,17 +75,28 @@ export class ERC20TokenHandler implements SolidityTokenHandler {
   }
 }
 
-export class JRC20ContractAdapter {
+export class EVMCallAdapter {
   private readonly contract: ethers.Contract
+
+  constructor (contractAddress: string, abi: string[]) {
+    this.contract = new ethers.Contract(contractAddress, abi)
+  }
+
+  getFunctionData (name: string, parameters: any[] = []): string {
+    return this.contract.interface.encodeFunctionData(name, parameters)
+  }
+}
+
+export class JRC20ContractAdapter extends EVMCallAdapter {
   private readonly contractAddress: string
 
   constructor (contractAddress: string) {
-    this.contract = new ethers.Contract(contractAddress, abi.WrappedABI)
+    super(contractAddress, abi.JRC20ABI)
     this.contractAddress = contractAddress
   }
 
   getWithdrawData (value: bigint): string {
-    return this.contract.interface.encodeFunctionData('withdraw', [value])
+    return this.getFunctionData('withdraw', [value])
   }
 
   getDepositData (assetId: string, amount: bigint): string {
@@ -95,35 +106,31 @@ export class JRC20ContractAdapter {
       [this.contractAddress, `0x${new AssetId(assetId).serialize().toHex()}`, amount]
     )
     // add deposit function removed hex prefix
-    data += this.contract.interface.encodeFunctionData('deposit').substring(2)
+    data += this.getFunctionData('deposit').substring(2)
     return data
   }
 }
 
-export class WrappedContractAdapter {
-  private readonly contract: ethers.Contract
-
+export class WrappedContractAdapter extends EVMCallAdapter {
   constructor (contractAddress: string) {
-    this.contract = new ethers.Contract(contractAddress, abi.WrappedABI)
+    super(contractAddress, abi.WrappedABI)
   }
 
   getWithdrawData (value: bigint): string {
-    return this.contract.interface.encodeFunctionData('withdraw', [value])
+    return this.getFunctionData('withdraw', [value])
   }
 
   getDepositData (): string {
-    return this.contract.interface.encodeFunctionData('deposit')
+    return this.getFunctionData('deposit')
   }
 }
 
-export class AuctionContractAdapter {
-  private readonly contract: ethers.Contract
-
+export class AuctionContractAdapter extends EVMCallAdapter {
   constructor (contractAddress: string) {
-    this.contract = new ethers.Contract(contractAddress, abi.AuctionABI)
+    super(contractAddress, abi.AuctionABI)
   }
 
   getRedeemAuctionData (auctionId: bigint): string {
-    return this.contract.interface.encodeFunctionData('redeemAuction', [auctionId])
+    return this.getFunctionData('redeemAuction', [auctionId])
   }
 }

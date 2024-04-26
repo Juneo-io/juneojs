@@ -384,15 +384,16 @@ export class CrossManager {
       const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.trackEVMTransaction(
         juneChain.id,
-        TransactionType.Withdraw,
-        transactionHash
+        transactionHash,
+        TransactionType.Withdraw
       )
       if (!success) {
+        const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
         throw new CrossError(
-          `error during withdraw transaction ${transactionHash} status fetching: ${executable.status}`
+          `error during withdraw transaction ${transactionHash} status fetching: ${status}`
         )
       }
-      // wait is needed to properly generate utxos
+      // generate withdraw utxos
       await sleep(500)
       // feeData.data.to is the jrc20 address for withdraw transactions
       // cross.assetId should be jrc20.nativeAssetId here
@@ -425,8 +426,9 @@ export class CrossManager {
       TransactionType.Export
     )
     if (!exportSuccess) {
+      const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
       throw new CrossError(
-        `error during export transaction ${exportTransactionId} status fetching: ${executable.status}`
+        `error during export transaction ${exportTransactionId} status fetching: ${status}`
       )
     }
     const exportTransactionAssets: string[] = [cross.assetId]
@@ -464,8 +466,9 @@ export class CrossManager {
       TransactionType.Import
     )
     if (!importSuccess) {
+      const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
       throw new CrossError(
-        `error during import transaction ${importTransactionId} status fetching: ${executable.status}`
+        `error during import transaction ${importTransactionId} status fetching: ${status}`
       )
     }
     // importing jrc20
@@ -477,22 +480,19 @@ export class CrossManager {
     }
     if (deposit) {
       await destinationAccount.fetchBalances(importTransactionAssets)
-    } else {
-      balancesSync.push(destinationAccount.fetchBalances(importTransactionAssets))
-    }
-    if (deposit) {
       const juneChain: JEVMBlockchain = provider.juneChain
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = lastFee as EVMFeeData
       const transactionHash: string = await executeEVMTransaction(provider, juneAccount.chainWallet, feeData)
       const success: boolean = await executable.trackEVMTransaction(
         juneChain.id,
-        TransactionType.Deposit,
-        transactionHash
+        transactionHash,
+        TransactionType.Deposit
       )
       if (!success) {
+        const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
         throw new CrossError(
-          `error during deposit transaction ${transactionHash} status fetching: ${executable.status}`
+          `error during deposit transaction ${transactionHash} status fetching: ${status}`
         )
       }
       // JUNE cannot be jrc20 on the JUNE-Chain so always use fee assetId
@@ -509,6 +509,8 @@ export class CrossManager {
         depositAssets.push(jrc20.address)
       }
       balancesSync.push(juneAccount.fetchBalances(depositAssets))
+    } else {
+      balancesSync.push(destinationAccount.fetchBalances(importTransactionAssets))
     }
     // wait for all balances to be synced before returning
     await Promise.all(balancesSync)
@@ -656,12 +658,13 @@ export class CrossManager {
     const transactionHash: string = await executeEVMTransaction(executable.provider, account.chainWallet, fee)
     const success: boolean = await executable.trackEVMTransaction(
       operation.chain.id,
-      TransactionType.Deposit,
-      transactionHash
+      transactionHash,
+      TransactionType.Deposit
     )
     if (!success) {
+      const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
       throw new CrossError(
-        `error during deposit resume transaction ${transactionHash} status fetching: ${executable.status}`
+        `error during deposit resume transaction ${transactionHash} status fetching: ${status}`
       )
     }
     const jrc20: JRC20Asset = operation.asset
@@ -686,8 +689,9 @@ export class CrossManager {
       TransactionType.Import
     )
     if (!importSuccess) {
+      const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
       throw new CrossError(
-        `error during cross resume transaction ${importTransactionId} status fetching: ${executable.status}`
+        `error during cross resume transaction ${importTransactionId} status fetching: ${status}`
       )
     }
     const promises: Array<Promise<void>> = [account.fetchBalances(summary.values.keys())]

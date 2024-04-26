@@ -87,7 +87,7 @@ export async function executeEVMExportTransaction (
     await sleep(InvalidNonceRetryDelay)
     nonce = await getWalletNonce(evmWallet, api, true)
   }
-  throw new TransactionError('could not provide a valid nonce')
+  throw new TransactionError(`could not provide a valid nonce ${evmWallet.nonce}`)
 }
 
 export async function estimateEVMImportTransaction (

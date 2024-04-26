@@ -62,7 +62,7 @@ export class MCNAccount {
 
   getTotalAmount (assetId: string): bigint {
     let totalAmount: bigint = BigInt(0)
-    for (const [_, account] of this.chainAccounts) {
+    for (const [, account] of this.chainAccounts) {
       totalAmount += account.getBalance(assetId).getValue()
     }
     return totalAmount
@@ -74,7 +74,7 @@ export class MCNAccount {
 
   getTotalTimelockedAmount (assetId: string): bigint {
     let totalAmount: bigint = BigInt(0)
-    for (const [_, account] of this.chainAccounts) {
+    for (const [, account] of this.chainAccounts) {
       if (account.type === AccountType.Utxo) {
         totalAmount += (account as UtxoAccount).getTimelockedBalance(assetId).getValue()
       }

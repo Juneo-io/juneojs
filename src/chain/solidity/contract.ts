@@ -115,3 +115,15 @@ export class WrappedContractAdapter {
     return this.contract.interface.encodeFunctionData('deposit')
   }
 }
+
+export class AuctionContractAdapter {
+  private readonly contract: ethers.Contract
+
+  constructor (contractAddress: string) {
+    this.contract = new ethers.Contract(contractAddress, abi.AuctionABI)
+  }
+
+  getRedeemAuctionData (auctionId: bigint): string {
+    return this.contract.interface.encodeFunctionData('redeemAuction', [auctionId])
+  }
+}

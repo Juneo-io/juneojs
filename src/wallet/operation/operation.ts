@@ -14,6 +14,7 @@ export enum NetworkOperationType {
   DelegatePrimary = 'Delegate primary',
   Wrap = 'Wrap',
   Unwrap = 'Unwrap',
+  RedeemAuction = 'Redeem auction',
 }
 
 export enum NetworkOperationRange {
@@ -105,6 +106,19 @@ export class WrapOperation extends Wrapping {
 export class UnwrapOperation extends Wrapping {
   constructor (chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(NetworkOperationType.Unwrap, chain, asset, amount)
+  }
+}
+
+export class RedeemAuctionOperation extends ChainNetworkOperation {
+  override chain: JEVMBlockchain
+  auctionAddress: string
+  auctionId: bigint
+
+  constructor (chain: JEVMBlockchain, auctionAddress: string, auctionId: bigint) {
+    super(NetworkOperationType.RedeemAuction, chain)
+    this.chain = chain
+    this.auctionAddress = auctionAddress
+    this.auctionId = auctionId
   }
 }
 

@@ -7,7 +7,8 @@ import {
   estimateEVMWrapOperation,
   estimateEVMUnwrapOperation,
   estimateEVMTransfer,
-  executeEVMTransaction
+  executeEVMTransaction,
+  estimateEVMRedeemAuctionOperation
 } from '../transaction'
 import {
   type ExecutableOperation,
@@ -16,7 +17,8 @@ import {
   type SendOperation,
   type WrapOperation,
   type UnwrapOperation,
-  type ChainNetworkOperation
+  type ChainNetworkOperation,
+  type RedeemAuctionOperation
 } from '../operation'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { AbstractChainAccount, AccountType } from './account'
@@ -54,39 +56,41 @@ export class EVMAccount extends AbstractChainAccount {
       return await estimateEVMWrapOperation(provider, this.chainWallet.getAddress(), operation as WrapOperation)
     } else if (operation.type === NetworkOperationType.Unwrap) {
       return await estimateEVMUnwrapOperation(provider, this.chainWallet.getAddress(), operation as UnwrapOperation)
+    } else if (operation.type === NetworkOperationType.RedeemAuction) {
+      return await estimateEVMRedeemAuctionOperation(
+        provider,
+        this.chainWallet.getAddress(),
+        operation as RedeemAuctionOperation
+      )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
 
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings)
-    const executable: ExecutableOperation = summary.getExecutable()
     const operation: ChainNetworkOperation = summary.operation
     if (operation.type === NetworkOperationType.Send) {
-      const transactionHash: string = await executeEVMTransaction(
-        executable.provider,
-        this.chainWallet,
-        summary.fee as EVMFeeData
-      )
-      await executable.trackEVMTransaction(this.chain.id, TransactionType.Send, transactionHash)
+      await this.executeAndTrackTransaction(summary, TransactionType.Send)
     } else if (operation.type === NetworkOperationType.Wrap) {
-      const transactionHash: string = await executeEVMTransaction(
-        executable.provider,
-        this.chainWallet,
-        summary.fee as EVMFeeData
-      )
-      await executable.trackEVMTransaction(this.chain.id, TransactionType.Wrap, transactionHash)
+      await this.executeAndTrackTransaction(summary, TransactionType.Wrap)
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      const transactionHash: string = await executeEVMTransaction(
-        executable.provider,
-        this.chainWallet,
-        summary.fee as EVMFeeData
-      )
-      await executable.trackEVMTransaction(this.chain.id, TransactionType.Unwrap, transactionHash)
+      await this.executeAndTrackTransaction(summary, TransactionType.Unwrap)
+    } else if (operation.type === NetworkOperationType.RedeemAuction) {
+      await this.executeAndTrackTransaction(summary, TransactionType.RedeemAuction)
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self
     await this.fetchBalances(summary.getAssets().values())
+  }
+
+  private async executeAndTrackTransaction (summary: ChainOperationSummary, type: TransactionType): Promise<void> {
+    const executable: ExecutableOperation = summary.getExecutable()
+    const transactionHash: string = await executeEVMTransaction(
+      executable.provider,
+      this.chainWallet,
+      summary.fee as EVMFeeData
+    )
+    await executable.trackEVMTransaction(this.chain.id, type, transactionHash)
   }
 
   async fetchBalance (assetId: string): Promise<void> {

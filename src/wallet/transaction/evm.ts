@@ -1,8 +1,13 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
-import { ChainOperationSummary, type UnwrapOperation, type WrapOperation } from '../operation'
+import { AuctionContractAdapter, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
+import {
+  ChainOperationSummary,
+  type RedeemAuctionOperation,
+  type UnwrapOperation,
+  type WrapOperation
+} from '../operation'
 import { BaseSpending } from './transaction'
 import { TransactionError, sleep, isContractAddress } from '../../utils'
 import { type JEVMWallet } from '../wallet'
@@ -15,7 +20,8 @@ import {
   DefaultWrapEstimate,
   DefaultUnwrapEstimate,
   DefaultWithdrawEstimate,
-  DefaultDepositEstimate
+  DefaultDepositEstimate,
+  DefaultRedeemAuctionEstimate
 } from './constants'
 
 export class EVMTransactionData {
@@ -204,6 +210,28 @@ export async function estimateEVMUnwrapOperation (
       const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
       const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
       return new ChainOperationSummary(provider, unwrap, chain, fee, [spending, fee.spending], values)
+    }
+  )
+}
+
+export async function estimateEVMRedeemAuctionOperation (
+  provider: MCNProvider,
+  from: string,
+  redeem: RedeemAuctionOperation
+): Promise<ChainOperationSummary> {
+  const chain: JEVMBlockchain = redeem.chain
+  const api: JEVMAPI = provider.jevmApi[chain.id]
+  const adapter: AuctionContractAdapter = new AuctionContractAdapter(redeem.auctionAddress)
+  const data: string = adapter.getRedeemAuctionData(redeem.auctionId)
+  const type: FeeType = FeeType.RedeemAuction
+  return await estimateEVMCall(api, from, redeem.auctionAddress, BigInt(0), data, type).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, redeem, chain, fee, [fee.spending], new Map<string, bigint>())
+    },
+    async () => {
+      const gasPrice: bigint = await estimateEVMGasPrice(api)
+      const fee: BaseFeeData = new BaseFeeData(chain, DefaultRedeemAuctionEstimate * gasPrice, type)
+      return new ChainOperationSummary(provider, redeem, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )
 }

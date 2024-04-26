@@ -25,3 +25,5 @@ export const WrappedABI: string[] = ERC20ABI.concat([
   'event Deposit(address indexed dst, uint wad)',
   'event Withdrawal(address indexed src, uint wad)'
 ])
+
+export const AuctionABI: string[] = ['function redeemAuction(uint256 auctionId)']

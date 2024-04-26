@@ -12,6 +12,7 @@ export enum TransactionType {
   Unwrap = 'Unwrap transaction',
   PrimaryValidation = 'Primary validation',
   PrimaryDelegation = 'Primary delegation',
+  RedeemAuction = 'Redeem auction',
 }
 
 export class TransactionReceipt {

@@ -10,9 +10,9 @@ export enum TransactionType {
   Deposit = 'Deposit transaction',
   Wrap = 'Wrap transaction',
   Unwrap = 'Unwrap transaction',
-  PrimaryValidation = 'Primary validation',
-  PrimaryDelegation = 'Primary delegation',
-  RedeemAuction = 'Redeem auction',
+  PrimaryValidation = 'Primary validation transaction',
+  PrimaryDelegation = 'Primary delegation transaction',
+  RedeemAuction = 'Redeem auction transaction',
 }
 
 export class TransactionReceipt {

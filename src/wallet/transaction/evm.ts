@@ -244,23 +244,18 @@ export async function estimateEVMWithdrawJRC20 (
 ): Promise<EVMFeeData> {
   const type: FeeType = FeeType.Withdraw
   const data: string = jrc20.adapter.getWithdrawData(amount)
-  return await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, type).then(
-    (fee) => {
-      return fee
-    },
-    async () => {
-      const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
-      return new EVMFeeData(
-        api.chain,
-        gasPrice * DefaultWithdrawEstimate,
-        type,
-        gasPrice,
-        DefaultWithdrawEstimate,
-        transactionData
-      )
-    }
-  )
+  return await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, type).catch(async () => {
+    const gasPrice: bigint = await estimateEVMGasPrice(api)
+    const transactionData: EVMTransactionData = new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
+    return new EVMFeeData(
+      api.chain,
+      gasPrice * DefaultWithdrawEstimate,
+      type,
+      gasPrice,
+      DefaultWithdrawEstimate,
+      transactionData
+    )
+  })
 }
 
 export async function estimateEVMDepositJRC20 (
@@ -271,26 +266,16 @@ export async function estimateEVMDepositJRC20 (
 ): Promise<EVMFeeData> {
   const type: FeeType = FeeType.Deposit
   const data: string = jrc20.adapter.getDepositData(jrc20.nativeAssetId, amount)
-  return await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, type).then(
-    (fee) => {
-      return fee
-    },
-    async () => {
-      const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(
-        sender,
-        NativeAssetCallContract,
-        BigInt(0),
-        data
-      )
-      return new EVMFeeData(
-        api.chain,
-        gasPrice * DefaultDepositEstimate,
-        type,
-        gasPrice,
-        DefaultDepositEstimate,
-        transactionData
-      )
-    }
-  )
+  return await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, type).catch(async () => {
+    const gasPrice: bigint = await estimateEVMGasPrice(api)
+    const transactionData: EVMTransactionData = new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)
+    return new EVMFeeData(
+      api.chain,
+      gasPrice * DefaultDepositEstimate,
+      type,
+      gasPrice,
+      DefaultDepositEstimate,
+      transactionData
+    )
+  })
 }

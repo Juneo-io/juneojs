@@ -38,18 +38,20 @@ export class JVMAccount extends UtxoAccount {
 
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings as UtxoSpending[])
-    const executable: ExecutableOperation = summary.getExecutable()
-    const operation: ChainNetworkOperation = summary.operation
-    if (operation.type === NetworkOperationType.Send) {
-      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
-      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
-    } else if (operation.type === NetworkOperationType.SendUtxo) {
-      const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
-      const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
-      await executable.trackJVMTransaction(TransactionType.Send, transactionHash)
+    const operation: NetworkOperationType = summary.operation.type
+    if (operation === NetworkOperationType.Send) {
+      await this.executeAndTrackTransaction(summary, TransactionType.Send)
+    } else if (operation === NetworkOperationType.SendUtxo) {
+      await this.executeAndTrackTransaction(summary, TransactionType.Send)
     }
     // balances fetching is needed to get new utxos created from this operation
     await super.refreshBalances()
+  }
+
+  private async executeAndTrackTransaction (summary: ChainOperationSummary, type: TransactionType): Promise<void> {
+    const executable: ExecutableOperation = summary.getExecutable()
+    const transaction: string = (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers).toCHex()
+    const transactionHash: string = (await executable.provider.jvmApi.issueTx(transaction)).txID
+    await executable.trackJVMTransaction(transactionHash, type)
   }
 }

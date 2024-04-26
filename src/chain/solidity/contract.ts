@@ -4,9 +4,9 @@ import { AssetId } from '../../transaction'
 import { ERC20Asset, type TokenAsset } from '../../asset'
 
 export class ContractManager {
-  private readonly handlers: ContractHandler[] = []
+  private readonly handlers: SolidityTokenHandler[] = []
 
-  async getHandler (contractAddress: string): Promise<ContractHandler | null> {
+  async getHandler (contractAddress: string): Promise<SolidityTokenHandler | null> {
     for (const handler of this.handlers) {
       if (await handler.instanceOf(contractAddress)) {
         return handler
@@ -15,7 +15,7 @@ export class ContractManager {
     return null
   }
 
-  registerHandler (handler: ContractHandler): void {
+  registerHandler (handler: SolidityTokenHandler): void {
     // register at first position because of getHandler iteration implementation
     // since specific handler may have common functions with default ones
     // it is preferable to check if it is part of those first.
@@ -24,7 +24,7 @@ export class ContractManager {
   }
 }
 
-export interface ContractHandler {
+export interface SolidityTokenHandler {
   instanceOf: (contractAddress: string) => Promise<boolean>
 
   queryBalance: (contractAddress: string, address: string) => Promise<bigint>
@@ -34,7 +34,7 @@ export interface ContractHandler {
   getTransferData: (contractAddress: string, to: string, amount: bigint) => string
 }
 
-export class ERC20ContractHandler implements ContractHandler {
+export class ERC20TokenHandler implements SolidityTokenHandler {
   protected readonly provider: ethers.JsonRpcProvider
 
   constructor (provider: ethers.JsonRpcProvider) {

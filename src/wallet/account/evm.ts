@@ -68,14 +68,14 @@ export class EVMAccount extends AbstractChainAccount {
 
   async execute (summary: ChainOperationSummary): Promise<void> {
     super.spend(summary.spendings)
-    const operation: ChainNetworkOperation = summary.operation
-    if (operation.type === NetworkOperationType.Send) {
+    const operation: NetworkOperationType = summary.operation.type
+    if (operation === NetworkOperationType.Send) {
       await this.executeAndTrackTransaction(summary, TransactionType.Send)
-    } else if (operation.type === NetworkOperationType.Wrap) {
+    } else if (operation === NetworkOperationType.Wrap) {
       await this.executeAndTrackTransaction(summary, TransactionType.Wrap)
-    } else if (operation.type === NetworkOperationType.Unwrap) {
+    } else if (operation === NetworkOperationType.Unwrap) {
       await this.executeAndTrackTransaction(summary, TransactionType.Unwrap)
-    } else if (operation.type === NetworkOperationType.RedeemAuction) {
+    } else if (operation === NetworkOperationType.RedeemAuction) {
       await this.executeAndTrackTransaction(summary, TransactionType.RedeemAuction)
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
@@ -90,7 +90,7 @@ export class EVMAccount extends AbstractChainAccount {
       this.chainWallet,
       summary.fee as EVMFeeData
     )
-    await executable.trackEVMTransaction(this.chain.id, type, transactionHash)
+    await executable.trackEVMTransaction(this.chain.id, transactionHash, type)
   }
 
   async fetchBalance (assetId: string): Promise<void> {

@@ -389,9 +389,7 @@ export class CrossManager {
       )
       if (!success) {
         const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-        throw new CrossError(
-          `error during withdraw transaction ${transactionHash} status fetching: ${status}`
-        )
+        throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching: ${status}`)
       }
       // generate withdraw utxos
       await sleep(500)
@@ -427,9 +425,7 @@ export class CrossManager {
     )
     if (!exportSuccess) {
       const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-      throw new CrossError(
-        `error during export transaction ${exportTransactionId} status fetching: ${status}`
-      )
+      throw new CrossError(`error during export transaction ${exportTransactionId} status fetching: ${status}`)
     }
     const exportTransactionAssets: string[] = [cross.assetId]
     if (cross.assetId !== exportFee.assetId) {
@@ -467,9 +463,7 @@ export class CrossManager {
     )
     if (!importSuccess) {
       const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-      throw new CrossError(
-        `error during import transaction ${importTransactionId} status fetching: ${status}`
-      )
+      throw new CrossError(`error during import transaction ${importTransactionId} status fetching: ${status}`)
     }
     // importing jrc20
     const lastFee: FeeData = summary.fees[summary.fees.length - 1]
@@ -491,9 +485,7 @@ export class CrossManager {
       )
       if (!success) {
         const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-        throw new CrossError(
-          `error during deposit transaction ${transactionHash} status fetching: ${status}`
-        )
+        throw new CrossError(`error during deposit transaction ${transactionHash} status fetching: ${status}`)
       }
       // JUNE cannot be jrc20 on the JUNE-Chain so always use fee assetId
       const depositAssets: string[] = [cross.assetId, feeData.assetId]
@@ -663,9 +655,7 @@ export class CrossManager {
     )
     if (!success) {
       const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-      throw new CrossError(
-        `error during deposit resume transaction ${transactionHash} status fetching: ${status}`
-      )
+      throw new CrossError(`error during deposit resume transaction ${transactionHash} status fetching: ${status}`)
     }
     const jrc20: JRC20Asset = operation.asset
     await account.fetchBalances([fee.assetId, jrc20.nativeAssetId, jrc20.address])
@@ -690,9 +680,7 @@ export class CrossManager {
     )
     if (!importSuccess) {
       const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
-      throw new CrossError(
-        `error during cross resume transaction ${importTransactionId} status fetching: ${status}`
-      )
+      throw new CrossError(`error during cross resume transaction ${importTransactionId} status fetching: ${status}`)
     }
     const promises: Array<Promise<void>> = [account.fetchBalances(summary.values.keys())]
     if (!summary.values.has(summary.importFee.assetId)) {

@@ -74,7 +74,8 @@ export async function executeEVMExportTransaction (
         return response.txID
       })
       .catch((error) => {
-        if ((error.message as string).includes('nonce')) {
+        const errorMessage: string = error.message as string
+        if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
           return undefined
         }
         // Non nonce related error decrement nonce to avoid resyncing later.
@@ -87,7 +88,7 @@ export async function executeEVMExportTransaction (
     await sleep(InvalidNonceRetryDelay)
     nonce = await getWalletNonce(evmWallet, api, true)
   }
-  throw new TransactionError('could not provide a valid nonce')
+  throw new TransactionError(`could not provide a valid nonce ${evmWallet.nonce}`)
 }
 
 export async function estimateEVMImportTransaction (

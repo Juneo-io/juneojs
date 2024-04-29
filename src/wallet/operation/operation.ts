@@ -15,6 +15,8 @@ export enum NetworkOperationType {
   Wrap = 'Wrap',
   Unwrap = 'Unwrap',
   RedeemAuction = 'Redeem auction',
+  WithdrawStream = 'Withdraw stream',
+  CancelStream = 'Cancel stream',
 }
 
 export enum NetworkOperationRange {
@@ -119,6 +121,34 @@ export class RedeemAuctionOperation extends ChainNetworkOperation {
     this.chain = chain
     this.auctionAddress = auctionAddress
     this.auctionId = auctionId
+  }
+}
+
+abstract class StreamOperation extends ChainNetworkOperation {
+  override chain: JEVMBlockchain
+  streamAddress: string
+  streamId: bigint
+
+  constructor (type: NetworkOperationType, chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
+    super(type, chain)
+    this.chain = chain
+    this.streamAddress = streamAddress
+    this.streamId = streamId
+  }
+}
+
+export class WithdrawStreamOperation extends StreamOperation {
+  amount: bigint
+
+  constructor (chain: JEVMBlockchain, streamAddress: string, streamId: bigint, amount: bigint) {
+    super(NetworkOperationType.WithdrawStream, chain, streamAddress, streamId)
+    this.amount = amount
+  }
+}
+
+export class CancelStreamOperation extends StreamOperation {
+  constructor (chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
+    super(NetworkOperationType.CancelStream, chain, streamAddress, streamId)
   }
 }
 

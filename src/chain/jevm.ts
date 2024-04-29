@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { ERC20ContractHandler, ContractManager, type ContractHandler } from './solidity'
+import { ERC20TokenHandler, ContractManager, type SolidityTokenHandler } from './solidity'
 import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType, type WrappedAsset } from '../asset'
 import { AbstractBlockchain, VMAccountType } from './chain'
 import { type MCNProvider } from '../juneo'
@@ -22,7 +22,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
   ethProvider: ethers.JsonRpcProvider
   jrc20Assets: JRC20Asset[]
   wrappedAsset: WrappedAsset | undefined
-  private readonly erc20Handler: ERC20ContractHandler
+  private readonly erc20Handler: ERC20TokenHandler
   private readonly contractManager: ContractManager = new ContractManager()
 
   constructor (
@@ -47,7 +47,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (typeof wrappedAsset !== 'undefined') {
       this.addRegisteredAsset(wrappedAsset)
     }
-    this.erc20Handler = new ERC20ContractHandler(this.ethProvider)
+    this.erc20Handler = new ERC20TokenHandler(this.ethProvider)
     this.contractManager.registerHandler(this.erc20Handler)
   }
 
@@ -69,7 +69,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
     if (isContractAddress(assetId)) {
-      const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+      const handler: SolidityTokenHandler | null = await this.contractManager.getHandler(assetId)
       if (handler === null) {
         throw new ChainError(`contract address ${assetId} does not implement a compatible interface`)
       }
@@ -95,7 +95,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (!isContractAddress(assetId)) {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-    const handler: ContractHandler | null = await this.contractManager.getHandler(assetId)
+    const handler: SolidityTokenHandler | null = await this.contractManager.getHandler(assetId)
     if (handler !== null) {
       return await handler.queryBalance(assetId, address)
     }

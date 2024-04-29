@@ -16,6 +16,8 @@ export enum FeeType {
   ValidateFee = 'Validate fee',
   DelegateFee = 'Delegate fee',
   RedeemAuction = 'Redeem fee',
+  WithdrawStream = 'Withdraw stream fee',
+  CancelStream = 'Cancel stream fee',
 }
 
 export interface FeeData {

@@ -27,3 +27,8 @@ export const WrappedABI: string[] = ERC20ABI.concat([
 ])
 
 export const AuctionABI: string[] = ['function redeemAuction(uint256 auctionId)']
+
+export const StreamABI: string[] = [
+  'function withdrawFromStream(uint256 streamId, uint256 amount) returns (bool)',
+  'function cancelStream(uint256 streamId) returns (bool)'
+]

@@ -134,3 +134,17 @@ export class AuctionContractAdapter extends EVMCallAdapter {
     return this.getFunctionData('redeemAuction', [auctionId])
   }
 }
+
+export class StreamContractAdapter extends EVMCallAdapter {
+  constructor (contractAddress: string) {
+    super(contractAddress, abi.StreamABI)
+  }
+
+  getWithdrawFromStreamData (streamId: bigint, amount: bigint): string {
+    return this.getFunctionData('withdrawFromStream', [streamId, amount])
+  }
+
+  getCancelStreamData (streamId: bigint): string {
+    return this.getFunctionData('cancelStream', [streamId])
+  }
+}

@@ -1,9 +1,17 @@
 import { type ethers } from 'ethers'
 import { BaseFeeData, FeeType } from './fee'
 import { type JEVMAPI } from '../../api'
-import { AuctionContractAdapter, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
 import {
+  AuctionContractAdapter,
+  type JEVMBlockchain,
+  NativeAssetCallContract,
+  SendEtherGasLimit,
+  StreamContractAdapter
+} from '../../chain'
+import {
+  type CancelStreamOperation,
   ChainOperationSummary,
+  type WithdrawStreamOperation,
   type RedeemAuctionOperation,
   type UnwrapOperation,
   type WrapOperation
@@ -21,7 +29,9 @@ import {
   DefaultUnwrapEstimate,
   DefaultWithdrawEstimate,
   DefaultDepositEstimate,
-  DefaultRedeemAuctionEstimate
+  DefaultRedeemAuctionEstimate,
+  DefaultWithdrawStreamEstimate,
+  DefaultCancelStreamEstimate
 } from './constants'
 
 export class EVMTransactionData {
@@ -233,6 +243,50 @@ export async function estimateEVMRedeemAuctionOperation (
       const gasPrice: bigint = await estimateEVMGasPrice(api)
       const fee: BaseFeeData = new BaseFeeData(chain, DefaultRedeemAuctionEstimate * gasPrice, type)
       return new ChainOperationSummary(provider, redeem, chain, fee, [fee.spending], new Map<string, bigint>())
+    }
+  )
+}
+
+export async function estimateEVMWithdrawStreamOperation (
+  provider: MCNProvider,
+  from: string,
+  withdraw: WithdrawStreamOperation
+): Promise<ChainOperationSummary> {
+  const chain: JEVMBlockchain = withdraw.chain
+  const api: JEVMAPI = provider.jevmApi[chain.id]
+  const adapter: StreamContractAdapter = new StreamContractAdapter(withdraw.streamAddress)
+  const data: string = adapter.getWithdrawFromStreamData(withdraw.streamId, withdraw.amount)
+  const type: FeeType = FeeType.WithdrawStream
+  return await estimateEVMCall(api, from, withdraw.streamAddress, BigInt(0), data, type).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, withdraw, chain, fee, [fee.spending], new Map<string, bigint>())
+    },
+    async () => {
+      const gasPrice: bigint = await estimateEVMGasPrice(api)
+      const fee: BaseFeeData = new BaseFeeData(chain, DefaultWithdrawStreamEstimate * gasPrice, type)
+      return new ChainOperationSummary(provider, withdraw, chain, fee, [fee.spending], new Map<string, bigint>())
+    }
+  )
+}
+
+export async function estimateEVMCancelStreamOperation (
+  provider: MCNProvider,
+  from: string,
+  cancel: CancelStreamOperation
+): Promise<ChainOperationSummary> {
+  const chain: JEVMBlockchain = cancel.chain
+  const api: JEVMAPI = provider.jevmApi[chain.id]
+  const adapter: StreamContractAdapter = new StreamContractAdapter(cancel.streamAddress)
+  const data: string = adapter.getCancelStreamData(cancel.streamId)
+  const type: FeeType = FeeType.CancelStream
+  return await estimateEVMCall(api, from, cancel.streamAddress, BigInt(0), data, type).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, cancel, chain, fee, [fee.spending], new Map<string, bigint>())
+    },
+    async () => {
+      const gasPrice: bigint = await estimateEVMGasPrice(api)
+      const fee: BaseFeeData = new BaseFeeData(chain, DefaultCancelStreamEstimate * gasPrice, type)
+      return new ChainOperationSummary(provider, cancel, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )
 }

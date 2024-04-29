@@ -13,6 +13,8 @@ export enum TransactionType {
   PrimaryValidation = 'Primary validation transaction',
   PrimaryDelegation = 'Primary delegation transaction',
   RedeemAuction = 'Redeem auction transaction',
+  WithdrawStream = 'Withdraw stream transaction',
+  CancelStream = 'Cancel stream transaction',
 }
 
 export class TransactionReceipt {

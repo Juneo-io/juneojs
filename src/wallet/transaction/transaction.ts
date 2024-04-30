@@ -15,6 +15,7 @@ export enum TransactionType {
   RedeemAuction = 'Redeem auction transaction',
   WithdrawStream = 'Withdraw stream transaction',
   CancelStream = 'Cancel stream transaction',
+  CreateSupernet = 'Create supernet transaction',
 }
 
 export class TransactionReceipt {

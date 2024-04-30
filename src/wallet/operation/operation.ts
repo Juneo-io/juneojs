@@ -1,5 +1,5 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
-import { type JEVMBlockchain, type Blockchain } from '../../chain'
+import { type JEVMBlockchain, type Blockchain, type PlatformBlockchain } from '../../chain'
 import { type MCN } from '../../network'
 import { BLSPublicKey, BLSSignature, type Utxo } from '../../transaction'
 
@@ -17,6 +17,7 @@ export enum NetworkOperationType {
   RedeemAuction = 'Redeem auction',
   WithdrawStream = 'Withdraw stream',
   CancelStream = 'Cancel stream',
+  CreateSupernet = 'Create supernet',
 }
 
 export enum NetworkOperationRange {
@@ -244,6 +245,17 @@ export class DelegatePrimaryOperation extends Staking {
       rewardAddresses,
       rewardThreshold
     )
+  }
+}
+
+export class CreateSupernetOperation extends ChainNetworkOperation {
+  supernetAuthAddresses: string[]
+  supernetAuthThreshold: number
+
+  constructor (chain: PlatformBlockchain, supernetAuthAddresses: string[], supernetAuthThreshold: number) {
+    super(NetworkOperationType.CreateSupernet, chain)
+    this.supernetAuthAddresses = supernetAuthAddresses
+    this.supernetAuthThreshold = supernetAuthThreshold
   }
 }
 

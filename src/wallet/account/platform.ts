@@ -6,7 +6,8 @@ import {
   estimatePlatformValidatePrimaryOperation,
   estimatePlatformDelegatePrimaryOperation,
   estimateSendOperation,
-  estimateSendUtxoOperation
+  estimateSendUtxoOperation,
+  estimatePlatformCreateSupernetOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
@@ -17,7 +18,8 @@ import {
   type ValidatePrimaryOperation,
   type ChainNetworkOperation,
   type SendOperation,
-  type SendUtxoOperation
+  type SendUtxoOperation,
+  type CreateSupernetOperation
 } from '../operation'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -41,6 +43,8 @@ export class PlatformAccount extends UtxoAccount {
       return await estimateSendOperation(provider, this.chain, this, operation as SendOperation)
     } else if (operation.type === NetworkOperationType.SendUtxo) {
       return await estimateSendUtxoOperation(provider, this.chain, this, operation as SendUtxoOperation)
+    } else if (operation.type === NetworkOperationType.CreateSupernet) {
+      return await estimatePlatformCreateSupernetOperation(provider, operation as CreateSupernetOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -56,6 +60,8 @@ export class PlatformAccount extends UtxoAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.Send)
     } else if (operation === NetworkOperationType.SendUtxo) {
       await this.executeAndTrackTransaction(summary, TransactionType.Send)
+    } else if (operation === NetworkOperationType.CreateSupernet) {
+      await this.executeAndTrackTransaction(summary, TransactionType.CreateSupernet)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

@@ -14,6 +14,7 @@ export const NativeAssetBalanceContract: string = '0x010000000000000000000000000
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
 export const SendEtherGasLimit: bigint = BigInt(21_000)
+const Transferables: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
 
 export class JEVMBlockchain extends AbstractBlockchain {
   override asset: JEVMGasToken
@@ -60,8 +61,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     // could rather use contract manager but it would require one extra network call
     // we avoid it if the asset is already registered
     const asset: TokenAsset = await this.getAsset(provider, assetId)
-    const erc20Types: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
-    if (erc20Types.includes(asset.type)) {
+    if (Transferables.includes(asset.type)) {
       return this.erc20Handler.getTransferData(assetId, to, amount)
     }
     return '0x'
@@ -82,7 +82,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     return ethers.isAddress(address)
   }
 
-  async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
+  async queryBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
     // native asset
     if (assetId === this.assetId) {
       return await api.eth_getBalance(address, 'pending')

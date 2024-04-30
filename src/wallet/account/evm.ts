@@ -119,6 +119,6 @@ export class EVMAccount extends AbstractChainAccount {
     }
     const balance: Balance = this.balances.get(assetId)!
     const address: string = this.chainWallet.getAddress()
-    await balance.updateAsync(this.chain.queryEVMBalance(this.provider.jevmApi[this.chain.id], address, assetId))
+    await balance.updateAsync(this.chain.queryBalance(this.provider.jevmApi[this.chain.id], address, assetId))
   }
 }

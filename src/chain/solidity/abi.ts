@@ -1,3 +1,7 @@
+export const TransferABI: string[] = ['function transfer(address to, uint amount) returns (bool)']
+
+export const BalanceOfABI: string[] = ['function balanceOf(address owner) view returns (uint256)']
+
 export const ERC20ABI: string[] = [
   'function name() view returns (string)',
   'function decimals() view returns (uint8)',

@@ -22,16 +22,22 @@ export class ContractManager {
     // Should do a better getHandler function in the future
     this.handlers.unshift(handler)
   }
+
+  async balanceOf (contractAddress: string, address: string): Promise<bigint> {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.BalanceOfABI)
+    return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
+  }
+
+  getTransferData (contractAddress: string, to: string, amount: bigint): string {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.TransferABI)
+    return contract.interface.encodeFunctionData('transfer', [to, amount])
+  }
 }
 
 export interface SolidityTokenHandler {
   instanceOf: (contractAddress: string) => Promise<boolean>
 
-  queryBalance: (contractAddress: string, address: string) => Promise<bigint>
-
   queryTokenData: (contractAddress: string) => Promise<TokenAsset>
-
-  getTransferData: (contractAddress: string, to: string, amount: bigint) => string
 }
 
 export class ERC20TokenHandler implements SolidityTokenHandler {
@@ -52,22 +58,12 @@ export class ERC20TokenHandler implements SolidityTokenHandler {
     return true
   }
 
-  async queryBalance (contractAddress: string, address: string): Promise<bigint> {
-    const contract: ethers.Contract = this.getContract(contractAddress)
-    return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
-  }
-
   async queryTokenData (contractAddress: string): Promise<TokenAsset> {
     const contract: ethers.Contract = this.getContract(contractAddress)
     const name: string = await contract.name()
     const symbol: string = await contract.symbol()
     const decimals: number = await contract.decimals()
     return new ERC20Asset(contractAddress, name, symbol, decimals)
-  }
-
-  getTransferData (contractAddress: string, to: string, amount: bigint): string {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.ERC20ABI)
-    return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 
   protected getContract (contractAddress: string): ethers.Contract {

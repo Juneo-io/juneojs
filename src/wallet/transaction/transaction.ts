@@ -17,6 +17,7 @@ export enum TransactionType {
   CancelStream = 'Cancel stream transaction',
   CreateSupernet = 'Create supernet transaction',
   ValidateSupernet = 'Supernet validation transaction',
+  RemoveSupernetValidator = 'Remove supernet validator transaction',
 }
 
 export class TransactionReceipt {

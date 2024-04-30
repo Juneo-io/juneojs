@@ -18,6 +18,7 @@ export enum NetworkOperationType {
   CancelStream = 'Cancel stream',
   CreateSupernet = 'Create supernet',
   ValidateSupernet = 'Validate supernet',
+  RemoveSupernetValidator = 'Remove supernet validator',
 }
 
 export enum NetworkOperationRange {
@@ -280,6 +281,17 @@ export class AddSupernetValidatorOperation extends ChainNetworkOperation {
     this.amount = amount
     this.startTime = startTime
     this.endTime = endTime
+  }
+}
+
+export class RemoveSupernetValidatorOperation extends ChainNetworkOperation {
+  supernetId: string
+  nodeId: string
+
+  constructor (chain: PlatformBlockchain, supernetId: string, nodeId: string) {
+    super(NetworkOperationType.RemoveSupernetValidator, chain)
+    this.supernetId = supernetId
+    this.nodeId = nodeId
   }
 }
 

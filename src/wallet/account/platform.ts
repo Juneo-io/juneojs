@@ -8,7 +8,8 @@ import {
   estimateSendOperation,
   estimateSendUtxoOperation,
   estimatePlatformCreateSupernetOperation,
-  estimatePlatformAddSupernetValidatorOperation
+  estimatePlatformAddSupernetValidatorOperation,
+  estimatePlatformRemoveSupernetValidatorOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
@@ -21,7 +22,8 @@ import {
   type SendOperation,
   type SendUtxoOperation,
   type CreateSupernetOperation,
-  AddSupernetValidatorOperation
+  type AddSupernetValidatorOperation,
+  type RemoveSupernetValidatorOperation
 } from '../operation'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -48,7 +50,17 @@ export class PlatformAccount extends UtxoAccount {
     } else if (operation.type === NetworkOperationType.CreateSupernet) {
       return await estimatePlatformCreateSupernetOperation(provider, operation as CreateSupernetOperation, this)
     } else if (operation.type === NetworkOperationType.ValidateSupernet) {
-      return await estimatePlatformAddSupernetValidatorOperation(provider, operation as AddSupernetValidatorOperation, this)
+      return await estimatePlatformAddSupernetValidatorOperation(
+        provider,
+        operation as AddSupernetValidatorOperation,
+        this
+      )
+    } else if (operation.type === NetworkOperationType.RemoveSupernetValidator) {
+      return await estimatePlatformRemoveSupernetValidatorOperation(
+        provider,
+        operation as RemoveSupernetValidatorOperation,
+        this
+      )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -68,6 +80,8 @@ export class PlatformAccount extends UtxoAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.CreateSupernet)
     } else if (operation === NetworkOperationType.ValidateSupernet) {
       await this.executeAndTrackTransaction(summary, TransactionType.ValidateSupernet)
+    } else if (operation === NetworkOperationType.RemoveSupernetValidator) {
+      await this.executeAndTrackTransaction(summary, TransactionType.RemoveSupernetValidator)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

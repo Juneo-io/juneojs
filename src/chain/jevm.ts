@@ -14,6 +14,7 @@ export const NativeAssetBalanceContract: string = '0x010000000000000000000000000
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
 export const SendEtherGasLimit: bigint = BigInt(21_000)
+const Transferables: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
 
 export class JEVMBlockchain extends AbstractBlockchain {
   override asset: JEVMGasToken
@@ -22,7 +23,6 @@ export class JEVMBlockchain extends AbstractBlockchain {
   ethProvider: ethers.JsonRpcProvider
   jrc20Assets: JRC20Asset[]
   wrappedAsset: WrappedAsset | undefined
-  private readonly erc20Handler: ERC20TokenHandler
   private readonly contractManager: ContractManager = new ContractManager()
 
   constructor (
@@ -47,8 +47,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (typeof wrappedAsset !== 'undefined') {
       this.addRegisteredAsset(wrappedAsset)
     }
-    this.erc20Handler = new ERC20TokenHandler(this.ethProvider)
-    this.contractManager.registerHandler(this.erc20Handler)
+    this.contractManager.registerHandler(new ERC20TokenHandler(this.ethProvider))
   }
 
   async getContractTransactionData (
@@ -60,9 +59,8 @@ export class JEVMBlockchain extends AbstractBlockchain {
     // could rather use contract manager but it would require one extra network call
     // we avoid it if the asset is already registered
     const asset: TokenAsset = await this.getAsset(provider, assetId)
-    const erc20Types: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
-    if (erc20Types.includes(asset.type)) {
-      return this.erc20Handler.getTransferData(assetId, to, amount)
+    if (Transferables.includes(asset.type)) {
+      return this.contractManager.getTransferData(this.ethProvider, assetId, to, amount)
     }
     return '0x'
   }
@@ -82,7 +80,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     return ethers.isAddress(address)
   }
 
-  async queryEVMBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
+  async queryBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
     // native asset
     if (assetId === this.assetId) {
       return await api.eth_getBalance(address, 'pending')
@@ -95,10 +93,6 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (!isContractAddress(assetId)) {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-    const handler: SolidityTokenHandler | null = await this.contractManager.getHandler(assetId)
-    if (handler !== null) {
-      return await handler.queryBalance(assetId, address)
-    }
-    return BigInt(0)
+    return await this.contractManager.balanceOf(this.ethProvider, assetId, address)
   }
 }

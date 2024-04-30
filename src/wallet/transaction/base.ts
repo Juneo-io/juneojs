@@ -4,8 +4,7 @@ import {
   buildJVMBaseTransaction,
   buildPlatformBaseTransaction,
   type UnsignedTransaction,
-  UserInput,
-  type Utxo
+  UserInput
 } from '../../transaction'
 import { type UtxoAccount } from '../account'
 import { ChainOperationSummary, type SendOperation, type SendUtxoOperation } from '../operation'
@@ -24,7 +23,6 @@ export async function estimateBaseTransaction (
   amount: bigint,
   addresses: string[],
   threshold: number,
-  utxoSet: Utxo[],
   locktime: bigint = BigInt(0)
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
@@ -32,7 +30,7 @@ export async function estimateBaseTransaction (
     chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
-        utxoSet,
+        account.utxoSet,
         account.getSignersAddresses(),
         fee.amount,
         account.address,
@@ -40,7 +38,7 @@ export async function estimateBaseTransaction (
       )
       : buildJVMBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
-        utxoSet,
+        account.utxoSet,
         account.getSignersAddresses(),
         fee.amount,
         account.address,
@@ -64,7 +62,6 @@ export async function estimateSendOperation (
     send.amount,
     [send.address],
     1,
-    account.utxoSet,
     BigInt(0)
   ).then(
     (fee) => {
@@ -100,7 +97,6 @@ export async function estimateSendUtxoOperation (
     send.amount,
     send.addresses,
     send.threshold,
-    account.utxoSet,
     send.locktime
   ).then(
     (fee) => {

@@ -1,6 +1,5 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type JEVMBlockchain, type Blockchain, type PlatformBlockchain } from '../../chain'
-import { type MCN } from '../../network'
 import { BLSPublicKey, BLSSignature, type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
@@ -18,6 +17,7 @@ export enum NetworkOperationType {
   WithdrawStream = 'Withdraw stream',
   CancelStream = 'Cancel stream',
   CreateSupernet = 'Create supernet',
+  ValidateSupernet = 'Validate supernet',
 }
 
 export enum NetworkOperationRange {
@@ -165,7 +165,7 @@ export abstract class Staking extends ChainNetworkOperation {
 
   constructor (
     type: NetworkOperationType,
-    mcn: MCN,
+    chain: PlatformBlockchain,
     nodeId: string,
     amount: bigint,
     startTime: bigint,
@@ -175,7 +175,7 @@ export abstract class Staking extends ChainNetworkOperation {
     rewardAddresses: string[],
     rewardThreshold: number
   ) {
-    super(type, mcn.primary.platform)
+    super(type, chain)
     this.nodeId = nodeId
     this.amount = amount
     this.startTime = startTime
@@ -192,7 +192,7 @@ export class ValidatePrimaryOperation extends Staking {
   signature: BLSSignature
 
   constructor (
-    mcn: MCN,
+    chain: PlatformBlockchain,
     nodeId: string,
     publicKey: string,
     signature: string,
@@ -206,7 +206,7 @@ export class ValidatePrimaryOperation extends Staking {
   ) {
     super(
       NetworkOperationType.ValidatePrimary,
-      mcn,
+      chain,
       nodeId,
       amount,
       startTime,
@@ -223,7 +223,7 @@ export class ValidatePrimaryOperation extends Staking {
 
 export class DelegatePrimaryOperation extends Staking {
   constructor (
-    mcn: MCN,
+    chain: PlatformBlockchain,
     nodeId: string,
     amount: bigint,
     startTime: bigint,
@@ -235,7 +235,7 @@ export class DelegatePrimaryOperation extends Staking {
   ) {
     super(
       NetworkOperationType.DelegatePrimary,
-      mcn,
+      chain,
       nodeId,
       amount,
       startTime,
@@ -256,6 +256,30 @@ export class CreateSupernetOperation extends ChainNetworkOperation {
     super(NetworkOperationType.CreateSupernet, chain)
     this.supernetAuthAddresses = supernetAuthAddresses
     this.supernetAuthThreshold = supernetAuthThreshold
+  }
+}
+
+export class AddSupernetValidatorOperation extends ChainNetworkOperation {
+  supernetId: string
+  nodeId: string
+  amount: bigint
+  startTime: bigint
+  endTime: bigint
+
+  constructor (
+    chain: PlatformBlockchain,
+    supernetId: string,
+    nodeId: string,
+    amount: bigint,
+    startTime: bigint,
+    endTime: bigint
+  ) {
+    super(NetworkOperationType.ValidateSupernet, chain)
+    this.supernetId = supernetId
+    this.nodeId = nodeId
+    this.amount = amount
+    this.startTime = startTime
+    this.endTime = endTime
   }
 }
 

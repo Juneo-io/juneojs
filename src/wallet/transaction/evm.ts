@@ -194,7 +194,15 @@ export async function estimateEVMWrapOperation (
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const fee: BaseFeeData = new BaseFeeData(chain, DefaultWrapEstimate * gasPrice, type)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, wrap.asset.address, BigInt(0), data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        gasPrice * DefaultWrapEstimate,
+        type,
+        gasPrice,
+        DefaultWrapEstimate,
+        transactionData
+      )
       const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
       return new ChainOperationSummary(provider, wrap, chain, fee, [spending, fee.spending], values)
     }
@@ -218,7 +226,15 @@ export async function estimateEVMUnwrapOperation (
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const fee: BaseFeeData = new BaseFeeData(chain, DefaultUnwrapEstimate * gasPrice, type)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, unwrap.asset.address, BigInt(0), data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        gasPrice * DefaultUnwrapEstimate,
+        type,
+        gasPrice,
+        DefaultUnwrapEstimate,
+        transactionData
+      )
       const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
       return new ChainOperationSummary(provider, unwrap, chain, fee, [spending, fee.spending], values)
     }
@@ -241,7 +257,15 @@ export async function estimateEVMRedeemAuctionOperation (
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const fee: BaseFeeData = new BaseFeeData(chain, DefaultRedeemAuctionEstimate * gasPrice, type)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, redeem.auctionAddress, BigInt(0), data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        gasPrice * DefaultRedeemAuctionEstimate,
+        type,
+        gasPrice,
+        DefaultRedeemAuctionEstimate,
+        transactionData
+      )
       return new ChainOperationSummary(provider, redeem, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )
@@ -263,7 +287,15 @@ export async function estimateEVMWithdrawStreamOperation (
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const fee: BaseFeeData = new BaseFeeData(chain, DefaultWithdrawStreamEstimate * gasPrice, type)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, withdraw.streamAddress, BigInt(0), data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        gasPrice * DefaultWithdrawStreamEstimate,
+        type,
+        gasPrice,
+        DefaultWithdrawStreamEstimate,
+        transactionData
+      )
       return new ChainOperationSummary(provider, withdraw, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )
@@ -285,7 +317,15 @@ export async function estimateEVMCancelStreamOperation (
     },
     async () => {
       const gasPrice: bigint = await estimateEVMGasPrice(api)
-      const fee: BaseFeeData = new BaseFeeData(chain, DefaultCancelStreamEstimate * gasPrice, type)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, cancel.streamAddress, BigInt(0), data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        gasPrice * DefaultCancelStreamEstimate,
+        type,
+        gasPrice,
+        DefaultCancelStreamEstimate,
+        transactionData
+      )
       return new ChainOperationSummary(provider, cancel, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )

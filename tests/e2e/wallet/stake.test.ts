@@ -51,7 +51,7 @@ describe('Staking operations', (): void => {
         '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedStatus, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.mcn,
+            provider.platformChain,
             nodeId,
             amount,
             startTime,
@@ -84,7 +84,7 @@ describe('Staking operations', (): void => {
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.mcn,
+            provider.platformChain,
             nodeId,
             amount,
             startTime,
@@ -114,7 +114,7 @@ describe('Staking operations', (): void => {
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.mcn,
+            provider.platformChain,
             nodeId,
             amount,
             startTime,

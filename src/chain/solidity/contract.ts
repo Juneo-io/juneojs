@@ -23,13 +23,13 @@ export class ContractManager {
     this.handlers.unshift(handler)
   }
 
-  async balanceOf (contractAddress: string, address: string): Promise<bigint> {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.BalanceOfABI)
+  async balanceOf (provider: ethers.JsonRpcProvider, contractAddress: string, address: string): Promise<bigint> {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.BalanceOfABI, provider)
     return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
   }
 
-  getTransferData (contractAddress: string, to: string, amount: bigint): string {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.TransferABI)
+  getTransferData (provider: ethers.JsonRpcProvider, contractAddress: string, to: string, amount: bigint): string {
+    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.TransferABI, provider)
     return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 }

@@ -60,7 +60,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     // we avoid it if the asset is already registered
     const asset: TokenAsset = await this.getAsset(provider, assetId)
     if (Transferables.includes(asset.type)) {
-      return this.contractManager.getTransferData(assetId, to, amount)
+      return this.contractManager.getTransferData(this.ethProvider, assetId, to, amount)
     }
     return '0x'
   }
@@ -93,6 +93,6 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (!isContractAddress(assetId)) {
       throw new ChainError(`cannot query balance of invalid asset id ${assetId}`)
     }
-    return await this.contractManager.balanceOf(assetId, address)
+    return await this.contractManager.balanceOf(this.ethProvider, assetId, address)
   }
 }

@@ -12,12 +12,15 @@ import {
   buildAddSupernetValidatorTransaction,
   CreateSupernetTransaction,
   Address,
-  buildRemoveSupernetValidatorTransaction
+  buildRemoveSupernetValidatorTransaction,
+  buildCreateChainTransaction,
+  type DynamicId
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
 import {
   type AddSupernetValidatorOperation,
   ChainOperationSummary,
+  type CreateChainOperation,
   type CreateSupernetOperation,
   type DelegatePrimaryOperation,
   type RemoveSupernetValidatorOperation,
@@ -50,6 +53,11 @@ async function getPlatformAddSupernetValidatorFee (provider: MCNProvider): Promi
 async function getPlatformRemoveSupernetValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).txFee)
   return new BaseFeeData(provider.platformChain, fee, FeeType.RemoveSupernetValidator)
+}
+
+async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFeeData> {
+  const fee: bigint = BigInt((await provider.info.getTxFee()).createBlockchainTxFee)
+  return new BaseFeeData(provider.platformChain, fee, FeeType.CreateChain)
 }
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (
@@ -370,6 +378,65 @@ export async function estimatePlatformRemoveSupernetValidatorOperation (
     async () => {
       const fee: BaseFeeData = await getPlatformRemoveSupernetValidatorFee(provider)
       return new ChainOperationSummary(provider, removeValidator, chain, fee, [fee.spending], values)
+    }
+  )
+}
+
+export async function estimatePlatformCreateChainTransaction (
+  provider: MCNProvider,
+  account: PlatformAccount,
+  supernetId: string,
+  chainName: string,
+  vmId: DynamicId,
+  genesisData: string,
+  chainAssetId: string,
+  fxIds: DynamicId[]
+): Promise<UtxoFeeData> {
+  const fee: BaseFeeData = await getPlatformCreateChainFee(provider)
+  const createSupernetTx: CreateSupernetTransaction = CreateSupernetTransaction.parse(
+    (await provider.platformApi.getTx(supernetId)).tx
+  )
+  const transaction: UnsignedTransaction = buildCreateChainTransaction(
+    account.utxoSet,
+    account.getSignersAddresses(),
+    fee.amount,
+    provider.platformChain,
+    supernetId,
+    chainName,
+    chainAssetId,
+    vmId,
+    fxIds,
+    genesisData,
+    createSupernetTx.getSupernetAuth(Address.toAddresses(account.getSignersAddresses())),
+    account.address,
+    provider.mcn.id
+  )
+  return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
+}
+
+export async function estimatePlatformCreateChainOperation (
+  provider: MCNProvider,
+  createChain: CreateChainOperation,
+  account: PlatformAccount
+): Promise<ChainOperationSummary> {
+  const chain: PlatformBlockchain = provider.platformChain
+  const values = new Map<string, bigint>()
+  return await estimatePlatformCreateChainTransaction(
+    provider,
+    account,
+    createChain.supernetId,
+    createChain.chainName,
+    createChain.vmId,
+    createChain.genesisData,
+    createChain.chainAssetId,
+    createChain.fxIds
+  ).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, createChain, chain, fee, [fee.spending], values)
+    },
+    async () => {
+      const fee: BaseFeeData = await getPlatformCreateChainFee(provider)
+      return new ChainOperationSummary(provider, createChain, chain, fee, [fee.spending], values)
     }
   )
 }

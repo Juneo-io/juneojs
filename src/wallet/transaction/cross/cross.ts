@@ -1,8 +1,8 @@
-import { type AbstractUtxoAPI, type JEVMAPI } from '../api'
-import { type JRC20Asset } from '../asset'
-import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, type JEVMBlockchain, type JVMBlockchain } from '../chain'
-import { type MCNProvider } from '../juneo'
-import { type Secp256k1Output, type Utxo } from '../transaction'
+import { type AbstractUtxoAPI, type JEVMAPI } from '../../../api'
+import { type JRC20Asset } from '../../../asset'
+import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, type JEVMBlockchain, type JVMBlockchain } from '../../../chain'
+import { type MCNProvider } from '../../../juneo'
+import { type Secp256k1Output, type Utxo } from '../../../transaction'
 import {
   AtomicDenomination,
   CrossError,
@@ -11,8 +11,8 @@ import {
   trackJuneoTransaction,
   fetchUtxos,
   sleep
-} from '../utils'
-import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from './account'
+} from '../../../utils'
+import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from '../../account'
 import {
   type ExecutableOperation,
   CrossOperationSummary,
@@ -21,7 +21,7 @@ import {
   CrossOperation,
   DepositResumeOperation,
   DepositResumeOperationSummary
-} from './operation'
+} from '../../operation'
 import {
   estimateEVMExportTransaction,
   estimateEVMImportTransaction,
@@ -45,8 +45,8 @@ import {
   estimateEVMWithdrawJRC20,
   executeEVMTransaction,
   estimateEVMDepositJRC20
-} from './transaction'
-import { type MCNWallet } from './wallet'
+} from '..'
+import { type MCNWallet } from '../../wallet'
 
 export class CrossManager {
   private readonly provider: MCNProvider

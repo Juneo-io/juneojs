@@ -1,6 +1,6 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type JEVMBlockchain, type Blockchain, type PlatformBlockchain } from '../../chain'
-import { BLSPublicKey, BLSSignature, type Utxo } from '../../transaction'
+import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
   Send = 'Send',
@@ -19,6 +19,7 @@ export enum NetworkOperationType {
   CreateSupernet = 'Create supernet',
   ValidateSupernet = 'Validate supernet',
   RemoveSupernetValidator = 'Remove supernet validator',
+  CreateChain = 'Create chain',
 }
 
 export enum NetworkOperationRange {
@@ -292,6 +293,33 @@ export class RemoveSupernetValidatorOperation extends ChainNetworkOperation {
     super(NetworkOperationType.RemoveSupernetValidator, chain)
     this.supernetId = supernetId
     this.nodeId = nodeId
+  }
+}
+
+export class CreateChainOperation extends ChainNetworkOperation {
+  supernetId: string
+  chainName: string
+  vmId: DynamicId
+  genesisData: string
+  chainAssetId: string
+  fxIds: DynamicId[]
+
+  constructor (
+    chain: PlatformBlockchain,
+    supernetId: string,
+    chainName: string,
+    vmId: string,
+    genesisData: string,
+    chainAssetId: string = chain.assetId,
+    fxIds = []
+  ) {
+    super(NetworkOperationType.CreateChain, chain)
+    this.supernetId = supernetId
+    this.chainName = chainName
+    this.vmId = new DynamicId(vmId)
+    this.genesisData = genesisData
+    this.chainAssetId = chainAssetId
+    this.fxIds = fxIds
   }
 }
 

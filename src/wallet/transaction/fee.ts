@@ -20,6 +20,7 @@ export enum FeeType {
   CancelStream = 'Cancel stream fee',
   CreateSupernet = 'Create supernet fee',
   RemoveSupernetValidator = 'Remove supernet validator fee',
+  CreateChain = 'Create chain fee',
 }
 
 export interface FeeData {

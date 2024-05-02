@@ -9,7 +9,8 @@ import {
   estimateSendUtxoOperation,
   estimatePlatformCreateSupernetOperation,
   estimatePlatformAddSupernetValidatorOperation,
-  estimatePlatformRemoveSupernetValidatorOperation
+  estimatePlatformRemoveSupernetValidatorOperation,
+  estimatePlatformCreateChainOperation
 } from '../transaction'
 import { AccountError } from '../../utils'
 import {
@@ -23,7 +24,8 @@ import {
   type SendUtxoOperation,
   type CreateSupernetOperation,
   type AddSupernetValidatorOperation,
-  type RemoveSupernetValidatorOperation
+  type RemoveSupernetValidatorOperation,
+  type CreateChainOperation
 } from '../operation'
 import { type MCNWallet } from '../wallet'
 import { UtxoAccount } from './account'
@@ -61,6 +63,8 @@ export class PlatformAccount extends UtxoAccount {
         operation as RemoveSupernetValidatorOperation,
         this
       )
+    } else if (operation.type === NetworkOperationType.CreateChain) {
+      return await estimatePlatformCreateChainOperation(provider, operation as CreateChainOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -82,6 +86,8 @@ export class PlatformAccount extends UtxoAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.ValidateSupernet)
     } else if (operation === NetworkOperationType.RemoveSupernetValidator) {
       await this.executeAndTrackTransaction(summary, TransactionType.RemoveSupernetValidator)
+    } else if (operation === NetworkOperationType.CreateChain) {
+      await this.executeAndTrackTransaction(summary, TransactionType.CreateChain)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

@@ -25,7 +25,7 @@ const SocotraRewardConfig: RewardConfig = new RewardConfig(
   BigInt(1869696000), // 2029
   BigInt(6_7000) // 6.7%
 )
-const SocotraAddress: string = 'https://api.socotra-testnet.network'
+const SocotraAddress: string = 'https://rpc.socotra-testnet.network'
 
 export const SocotraJUNEAssetId: string = 'HviVNFzh2nCqyi7bQxw6pt5fUPjZC8r3DCDrt7mRmScZS2zp5'
 export const SocotraUSDT1AssetId: string = 'Ld5aCozSMQ1hC5jdXS3mhGNgoYVjVDe8zPTtPSbs4xS5JQSfJ'

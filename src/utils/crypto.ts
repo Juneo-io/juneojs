@@ -1,6 +1,6 @@
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
-import { Signature, recoverPublicKey, getPublicKey, signSync } from '@noble/secp256k1'
+import { Signature, recoverPublicKey, getPublicKey, signSync, verify } from '@noble/secp256k1'
 import { JuneoBuffer } from './bytes'
 
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
@@ -13,10 +13,14 @@ export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
   return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
-function recoverPubKey (hash: Buffer, signature: Signature, recovery: number): string {
+export function recoverPubKey (hash: Buffer, signature: Signature, recovery: number): string {
   return JuneoBuffer.fromBytes(Buffer.from(recoverPublicKey(hash, signature, recovery, true)))
     .toHex()
     .padStart(66, '0')
+}
+
+export function verifySignature (signature: JuneoBuffer, hash: JuneoBuffer, publicKey: string): boolean {
+  return verify(Signature.fromHex(signature.toHex()), hash.toHex(), publicKey)
 }
 
 export class ECKeyPair {

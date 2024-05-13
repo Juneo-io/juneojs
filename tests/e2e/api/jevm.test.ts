@@ -1,7 +1,7 @@
-import { MCNProvider, GenesisEUROC1Asset, GenesisJUNEChain, GenesisNetwork } from '../../../src'
+import { MCNProvider, GenesisEUROC1Asset, GenesisJUNEChain, GenesisNetwork, JuneoClient } from '../../../src'
 
 describe('JEVMAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
 
   describe('getTx', () => {
     test.each([{ txID: '241mEKvJetzAbVxvSsooEaAYgXkaipSDuxEoXBxBDP8mKHb8Cm' }])('Valid: $txID', async ({ txID }) => {

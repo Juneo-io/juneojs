@@ -1,7 +1,7 @@
-import { MCNProvider, GenesisJUNEChain, GenesisNetwork } from '../../../src'
+import { MCNProvider, GenesisJUNEChain, GenesisNetwork, JuneoClient } from '../../../src'
 
 describe('InfoAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
 
   describe('isBootstrapped', () => {
     test.each([{ chainID: GenesisJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {

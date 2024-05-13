@@ -1,6 +1,13 @@
 import { type AbstractUtxoAPI, type JEVMAPI } from '../../../api'
 import { type JRC20Asset } from '../../../asset'
-import { JVM_ID, PLATFORMVM_ID, JEVM_ID, type Blockchain, type JEVMBlockchain, type JVMBlockchain } from '../../../chain'
+import {
+  JVM_ID,
+  PLATFORMVM_ID,
+  JEVM_ID,
+  type Blockchain,
+  type JEVMBlockchain,
+  type JVMBlockchain
+} from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import { type Secp256k1Output, type Utxo } from '../../../transaction'
 import {

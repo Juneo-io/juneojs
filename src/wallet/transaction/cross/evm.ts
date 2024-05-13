@@ -21,7 +21,7 @@ import {
 } from '../../../utils'
 import { type MCNWallet, type JEVMWallet, type VMWallet } from '../../wallet'
 import { MaxInvalidNonceAttempts, InvalidNonceRetryDelay } from '../constants'
-import { estimateEVMGasPrice, getWalletNonce } from '../evm'
+import { estimateEVMBaseFee, getWalletNonce } from '../evm'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
 export async function estimateEVMExportTransaction (
@@ -30,9 +30,9 @@ export async function estimateEVMExportTransaction (
   destination: Blockchain
 ): Promise<BaseFeeData> {
   const gasLimit: bigint = estimateAtomicExportGas(api.chain.assetId, [assetId], destination.assetId)
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
+  const baseFee: bigint = await estimateEVMBaseFee(api)
   // the evm export fee is paid in gas so it must be multiplied by the atomic denominator
-  const fee: bigint = calculateAtomicCost(gasLimit, gasPrice) * AtomicDenomination
+  const fee: bigint = calculateAtomicCost(gasLimit, baseFee) * AtomicDenomination
   return new BaseFeeData(api.chain, fee, FeeType.ExportFee)
 }
 
@@ -97,8 +97,8 @@ export async function estimateEVMImportTransaction (
   outputsCount: number
 ): Promise<BaseFeeData> {
   const gasLimit: bigint = estimateAtomicImportGas(inputsCount, outputsCount)
-  const gasPrice: bigint = await estimateEVMGasPrice(api)
-  const fee: BaseFeeData = new BaseFeeData(api.chain, calculateAtomicCost(gasLimit, gasPrice), FeeType.ImportFee)
+  const baseFee: bigint = await estimateEVMBaseFee(api)
+  const fee: BaseFeeData = new BaseFeeData(api.chain, calculateAtomicCost(gasLimit, baseFee), FeeType.ImportFee)
   // import fee is paid with utxos from shared memory so using JNT asset
   fee.asset = api.chain.asset.nativeAsset
   return fee

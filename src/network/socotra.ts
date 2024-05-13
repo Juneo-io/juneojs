@@ -25,7 +25,7 @@ const SocotraRewardConfig: RewardConfig = new RewardConfig(
   BigInt(1869696000), // 2029
   BigInt(6_7000) // 6.7%
 )
-const SocotraAddress: string = 'https://api.socotra-testnet.network'
+const SocotraAddress: string = 'https://rpc.socotra-testnet.network'
 
 export const SocotraJUNEAssetId: string = 'HviVNFzh2nCqyi7bQxw6pt5fUPjZC8r3DCDrt7mRmScZS2zp5'
 export const SocotraUSDT1AssetId: string = 'Ld5aCozSMQ1hC5jdXS3mhGNgoYVjVDe8zPTtPSbs4xS5JQSfJ'
@@ -105,7 +105,7 @@ export const SocotraJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'BUDQJ63154EiJZwwvukRB1tX3yQCDQdoEYYuCNKEruQ9MjRs4',
   new JEVMGasToken(SocotraJUNEAsset),
   BigInt(101003),
-  BigInt('48000000000'),
+  BigInt('144000000000'),
   SocotraAddress,
   ['JUNE'],
   jrc20Assets,
@@ -117,7 +117,7 @@ export const SocotraUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'vFZ8cj9v4SMPn4nvcmSw7KuxCvK9kLQq4u2wnTUFMzhUehwUN',
   new JEVMGasToken(SocotraUSDT1Asset),
   BigInt(101005),
-  BigInt('476000000000'),
+  BigInt('1429000000000'),
   SocotraAddress,
   ['USDT1'],
   [SocotraJUNEAsset]
@@ -127,7 +127,7 @@ export const SocotraUSD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ZQPGzRK45hrGtYquC6G6W6LGUJzFtjd9dkfN5e1csqwKFUpdF',
   new JEVMGasToken(SocotraUSD1Asset),
   BigInt(101006),
-  BigInt('476000000000'),
+  BigInt('1429000000000'),
   SocotraAddress,
   ['USD1'],
   [SocotraJUNEAsset]
@@ -137,7 +137,7 @@ export const SocotraDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
   'FH3XBUJ4d8bAWNo7vt7cHp4MJhPiSQR3Ez6GpXfDo3moGjfBi',
   new JEVMGasToken(SocotraDAI1Asset),
   BigInt(101004),
-  BigInt('476000000000'),
+  BigInt('1429000000000'),
   SocotraAddress,
   ['DAI1'],
   [SocotraJUNEAsset]
@@ -147,7 +147,7 @@ export const SocotraEUR1Chain: JEVMBlockchain = new JEVMBlockchain(
   '2izgay6FwgxGZ2TyEgTQoeECCbCzhepRnDY6NQqu7ZFmmNL7FF',
   new JEVMGasToken(SocotraEUR1Asset),
   BigInt(101011),
-  BigInt('433000000000'),
+  BigInt('1299000000000'),
   SocotraAddress,
   ['EUR1'],
   [SocotraJUNEAsset]
@@ -157,7 +157,7 @@ export const SocotraSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   '2j95jGv62HT5r9ZVCszvCBqMaNhRg8c2fLiSBQePf779Z8utAS',
   new JEVMGasToken(SocotraSGD1Asset),
   BigInt(101012),
-  BigInt('635000000000'),
+  BigInt('1905000000000'),
   SocotraAddress,
   ['SGD1'],
   [SocotraJUNEAsset]
@@ -167,7 +167,7 @@ export const SocotraGLD1Chain: JEVMBlockchain = new JEVMBlockchain(
   'LNgHMND752eLwbdS9UL95zijQ2imBfFVi8QRzPvSzRWGrh59S',
   new JEVMGasToken(SocotraGLD1Asset),
   BigInt(101008),
-  BigInt('3000000000'),
+  BigInt('1000000000'),
   SocotraAddress,
   ['GLD1'],
   [SocotraJUNEAsset]
@@ -177,7 +177,7 @@ export const SocotraMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGv',
   new JEVMGasToken(SocotraMBTC1Asset),
   BigInt(101007),
-  BigInt('13000000000'),
+  BigInt('22000000000'),
   SocotraAddress,
   ['mBTC1'],
   [SocotraJUNEAsset]
@@ -187,7 +187,7 @@ export const SocotraDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   'ubeHKfPPjBnNvf1chqnpfXCnusJAQxJeHNCZLgwR435ifTm9X',
   new JEVMGasToken(SocotraDOGE1Asset),
   BigInt(101010),
-  BigInt('6477000000000'),
+  BigInt('9524000000000'),
   SocotraAddress,
   ['DOGE1'],
   [SocotraJUNEAsset]
@@ -197,7 +197,7 @@ export const SocotraLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   'HJE8cauhNuocwx5t1U26ducmTTEBcs25AWUCUS2Uwe3wXdKUx',
   new JEVMGasToken(SocotraLTC1Asset),
   BigInt(101009),
-  BigInt('54000000000'),
+  BigInt('17000000000'),
   SocotraAddress,
   ['LTC1'],
   [SocotraJUNEAsset]
@@ -207,7 +207,7 @@ export const SocotraBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
   '2pCX1xgspH6thhuJ7zCbuKTKEETkJ4tkZi723ybkgQRwfsuW7u',
   new JEVMGasToken(SocotraBCH1Asset),
   BigInt(101013),
-  BigInt('1000000000'),
+  BigInt('3000000000'),
   SocotraAddress,
   ['BCH1'],
   [SocotraJUNEAsset]
@@ -217,7 +217,7 @@ export const SocotraLINK1Chain: JEVMBlockchain = new JEVMBlockchain(
   'U3o8mtBbGvjrw6vo9FhKAsRJvj2x8EjWzRdDfQXkAm7EqY3by',
   new JEVMGasToken(SocotraLINK1Asset),
   BigInt(101014),
-  BigInt('26000000000'),
+  BigInt('102000000000'),
   SocotraAddress,
   ['LINK1'],
   [SocotraJUNEAsset]

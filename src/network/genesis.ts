@@ -25,7 +25,7 @@ const GenesisRewardConfig: RewardConfig = new RewardConfig(
   BigInt(1843423200), // 2028
   BigInt(6_7000) // 6.7%
 )
-const GenesisAddress: string = 'https://api.socotra-test.network:9650'
+const GenesisAddress: string = 'https://rpc.genesis-testnet.network'
 
 export const GenesisJUNEAssetId: string = '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8DNp1R8ob8kHkbR'
 export const GenesisETH1AssetId: string = 'JeUvxJPXoL3EtVGSPwtyYXVymxGbpcBcaa2Kq7TCB43HsKMAS'

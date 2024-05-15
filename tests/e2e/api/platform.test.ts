@@ -1,14 +1,7 @@
-import {
-  MCNProvider,
-  GenesisBCH1Chain,
-  GenesisJUNEChain,
-  type GetBlockResponse,
-  GenesisNetwork,
-  JuneoClient
-} from '../../../src'
+import { MCNProvider, GenesisBCH1Chain, GenesisJUNEChain, type GetBlockResponse, GenesisNetwork } from '../../../src'
 
 describe('PlatformAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('getBlock', () => {
     test.each([

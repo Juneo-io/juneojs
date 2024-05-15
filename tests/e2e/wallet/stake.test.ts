@@ -8,8 +8,7 @@ import {
   type ChainAccount,
   type ExecutableOperation,
   now,
-  GenesisNetwork,
-  JuneoClient
+  GenesisNetwork
 } from '../../../src'
 import * as dotenv from 'dotenv'
 dotenv.config()
@@ -17,7 +16,7 @@ dotenv.config()
 const DEFAULT_TIMEOUT: number = 180_000
 const ONE_DAY: bigint = BigInt(86_400)
 
-const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
 const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
 const account: ChainAccount = mcnAccount.getAccount(provider.platformChain.id)

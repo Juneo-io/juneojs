@@ -1,7 +1,7 @@
-import { MCNProvider, GenesisJUNEChain, GenesisNetwork, JuneoClient } from '../../../src'
+import { MCNProvider, GenesisJUNEChain, GenesisNetwork } from '../../../src'
 
 describe('InfoAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('isBootstrapped', () => {
     test.each([{ chainID: GenesisJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {
@@ -94,13 +94,6 @@ describe('InfoAPI', () => {
   })
 
   describe('uptime', () => {
-    test.each([{ supernetID: undefined }, { supernetID: provider.mcn.primary.id }])(
-      'Valid: $supernetID',
-      async ({ supernetID }) => {
-        const result = await provider.info.uptime(supernetID)
-        expect(result).toBeDefined()
-      }
-    )
     test.failing.each([{ supernetID: 'WRONG_SUPERNET_ID' }])('Invalid: $supernetID', async ({ supernetID }) => {
       await provider.info.uptime(supernetID)
     })

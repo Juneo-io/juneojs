@@ -7,12 +7,11 @@ import {
   GenesisNetwork,
   GenesisJUNEAsset,
   GenesisETH1Asset,
-  GenesisBCH1Asset,
-  JuneoClient
+  GenesisBCH1Asset
 } from '../../../src'
 
 describe('JVMAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork, JuneoClient.parse('http://172.232.42.69:9650'))
+  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
 
   describe('buildGenesis', () => {
     // TODO later

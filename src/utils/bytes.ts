@@ -201,7 +201,9 @@ export class JuneoBuffer {
       }
     }
     if (fromEncoding.toLowerCase() === 'hex') {
-      return encoding.decodeHex(data)
+      return encoding.hasHexPrefix(data)
+        ? JuneoBuffer.fromBytes(Buffer.from(data.substring(2), 'hex'))
+        : JuneoBuffer.fromBytes(Buffer.from(data, 'hex'))
     } else if (fromEncoding.toLowerCase() === 'chex') {
       return encoding.decodeCHex(data)
     } else if (fromEncoding.toLowerCase() === 'cb58') {

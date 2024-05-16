@@ -1,4 +1,4 @@
-import { JuneoBuffer, sha256, type Serializable, SignatureError } from '../../utils'
+import { JuneoBuffer, type Serializable, SignatureError } from '../../utils'
 import { type VMWallet } from '../../wallet'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
@@ -74,7 +74,7 @@ export class EVMInput implements Serializable, Signable, Spendable {
     const address: Address = this.address
     for (const wallet of wallets) {
       if (address.matches(wallet.getAddress())) {
-        signatures.push(new Signature(wallet.sign(sha256(bytes))))
+        signatures.push(new Signature(wallet.sign(bytes)))
         break
       }
     }

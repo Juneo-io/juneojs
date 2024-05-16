@@ -1,5 +1,5 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, ParsingError, sha256, type Serializable, SignatureError, InputError } from '../utils'
+import { JuneoBuffer, ParsingError, type Serializable, SignatureError, InputError } from '../utils'
 import { type VMWallet } from '../wallet'
 import { type Utxo } from './output'
 import { type Signable } from './signature'
@@ -78,7 +78,7 @@ export class TransferableInput implements Serializable, Signable, Spendable {
       const address: Address = this.input.utxo.output.addresses[indices[i]]
       for (const wallet of wallets) {
         if (address.matches(wallet.getJuneoAddress())) {
-          signatures.push(new Signature(wallet.sign(sha256(bytes))))
+          signatures.push(new Signature(wallet.sign(bytes)))
           break
         }
       }

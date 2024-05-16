@@ -13,16 +13,20 @@ export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
   return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
-export function recoverPubKey (signature: JuneoBuffer, hash: JuneoBuffer, recovery: number): string {
-  return JuneoBuffer.fromBytes(
-    Buffer.from(recoverPublicKey(hash.getBytes(), Signature.fromHex(signature.getBytes()), recovery, true))
-  )
-    .toHex()
-    .padStart(66, '0')
+export function recoverPubKey (signature: JuneoBuffer, message: JuneoBuffer, recovery: number): string {
+  const sig: Signature = parseSignature(signature)
+  const bytes: Buffer = Buffer.from(recoverPublicKey(nobleSha256(message.getBytes()), sig, recovery, true))
+  return JuneoBuffer.fromBytes(bytes).toHex().padStart(66, '0')
 }
 
-export function verifySignature (signature: JuneoBuffer, hash: JuneoBuffer, publicKey: string): boolean {
-  return verify(Signature.fromHex(signature.toHex()), hash.toHex(), publicKey)
+export function verifySignature (signature: JuneoBuffer, message: JuneoBuffer, publicKey: string): boolean {
+  return verify(parseSignature(signature), nobleSha256(message.getBytes()), publicKey)
+}
+
+function parseSignature (signature: JuneoBuffer): Signature {
+  return signature.length === 65
+    ? Signature.fromCompact(signature.getBytes().subarray(0, 64))
+    : Signature.fromCompact(signature.getBytes())
 }
 
 export class ECKeyPair {
@@ -36,10 +40,11 @@ export class ECKeyPair {
       .padStart(66, '0')
   }
 
-  sign (buffer: JuneoBuffer): JuneoBuffer {
-    const signature: Signature = Signature.fromHex(signSync(buffer.getBytes(), this.privateKey))
+  sign (message: JuneoBuffer): JuneoBuffer {
+    const signature: Signature = Signature.fromHex(signSync(nobleSha256(message.getBytes()), this.privateKey))
     // noble as of v1.7.1 does not provide recovery param so do it here
-    const v: number = recoverPubKey(JuneoBuffer.fromString(signature.toHex()), buffer, 0) === this.publicKey ? 0 : 1
+    const publicKey: string = recoverPubKey(JuneoBuffer.fromString(signature.toCompactHex()), message, 0)
+    const v: number = publicKey === this.publicKey ? 0 : 1
     return JuneoBuffer.fromString(`${signature.toCompactHex()}${v.toString(16).padStart(2, '0')}`)
   }
 }

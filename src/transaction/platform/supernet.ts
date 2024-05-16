@@ -1,4 +1,4 @@
-import { type Serializable, JuneoBuffer, SignatureError, sha256 } from '../../utils'
+import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
 import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
 import { type Signable } from '../signature'
@@ -29,7 +29,7 @@ export class SupernetAuth implements Serializable, Signable {
       const address: Address = this.rewardsOwner.addresses[i]
       for (const wallet of wallets) {
         if (address.matches(wallet.getJuneoAddress())) {
-          signatures.push(new Signature(wallet.sign(sha256(bytes))))
+          signatures.push(new Signature(wallet.sign(bytes)))
           break
         }
       }

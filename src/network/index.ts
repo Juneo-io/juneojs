@@ -1,4 +1,5 @@
 export * from './genesis'
 export * from './local'
+export * from './mainnet'
 export * from './network'
 export * from './socotra'

@@ -1,6 +1,6 @@
-import { InfoAPI, PlatformAPI, JVMAPI, JEVMAPI, JuneoClient, HttpProtocol } from './api'
-import { JEVM_ID, type JVMBlockchain, type PlatformBlockchain, type JEVMBlockchain } from './chain'
-import { type MCN, GenesisNetwork } from './network'
+import { HttpProtocol, InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
+import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
+import { SocotraNetwork, type MCN } from './network'
 
 export class MCNProvider {
   mcn: MCN
@@ -15,7 +15,7 @@ export class MCNProvider {
   jevmApi: Record<string, JEVMAPI> = {}
   juneAssetId: string
 
-  constructor (mcn: MCN = GenesisNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
+  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
     this.mcn = mcn
     this.client = client
     this.info = new InfoAPI(client)

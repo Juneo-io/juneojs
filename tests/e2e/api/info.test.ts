@@ -86,7 +86,7 @@ describe('InfoAPI', () => {
     })
     test.failing.each([
       { nodeIDs: ['WRONG_NODE_ID', 'NodeID-P1ESFUf8tutmR8hszZUWsXAJEKARZ5SPw'] },
-      { nodeIDs: ['NodeID-P1ESFUf8tutmR8hszZUWsXAJEKARZ5SPa'] },
+      { nodeIDs: ['NodeID-P1ESFUf8tutmR8hszZUWsXAJEKARZ5SPa'] }
     ])('Invalid: $nodeIDs', async ({ nodeIDs }) => {
       await PROVIDER.info.peers(nodeIDs)
     })

@@ -5,7 +5,7 @@ describe('PlatformAPI', () => {
   describe('getBlock', () => {
     test.each([
       { blockID: '2qbN8EiGKprtFLkQxnQMgqbXSWdui5rwVUTsQp5Z5RYFphy1oK' },
-      { blockID: '2K8nAXkMwgnJRCFMAS7KiJSkBbDYKtFP6JH7ww2YiAjg6XnN69' },
+      { blockID: '2K8nAXkMwgnJRCFMAS7KiJSkBbDYKtFP6JH7ww2YiAjg6XnN69' }
     ])('Valid blockID: $blockID', async ({ blockID }) => {
       const result: GetBlockResponse = await PROVIDER.platformApi.getBlock(blockID)
       expect(result.block).toBeDefined()
@@ -15,7 +15,7 @@ describe('PlatformAPI', () => {
     test.failing.each([
       { description: 'Invalid blockID', blockID: 'INVALID_BLOCK_ID' },
       { description: 'Null input', blockID: null },
-      { description: 'Undefined input', blockID: undefined },
+      { description: 'Undefined input', blockID: undefined }
     ])('$description: $blockID', async ({ blockID }) => {
       await PROVIDER.platformApi.getBlock(blockID as any)
     })
@@ -33,7 +33,7 @@ describe('PlatformAPI', () => {
     test.each([
       { blockchainID: GenesisJUNEChain.id },
       { blockchainID: GenesisBCH1Chain.id },
-      { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' },
+      { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
       const result = await PROVIDER.platformApi.getBlockchainStatus(blockchainID)
       expect(result.status).toBeDefined()
@@ -42,7 +42,7 @@ describe('PlatformAPI', () => {
     test.failing.each([
       { description: 'Invalid blockchainID', blockchainID: 'INVALID_BLOCKCHAIN_ID' },
       { description: 'Null input', blockchainID: null },
-      { description: 'Undefined input', blockchainID: undefined },
+      { description: 'Undefined input', blockchainID: undefined }
     ])('$description: $blockchainID', async ({ blockchainID }) => {
       await PROVIDER.platformApi.getBlockchainStatus(blockchainID as any)
     })
@@ -62,13 +62,13 @@ describe('PlatformAPI', () => {
       {
         description: 'With nodeIDs',
         supernetID: undefined,
-        nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr'],
+        nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr']
       },
       {
         description: 'With supernetID and nodeIDs',
         supernetID: PROVIDER.mcn.primary.id,
-        nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr'],
-      },
+        nodeIDs: ['NodeID-B2GHMQ8GF6FyrvmPUX6miaGeuVLH9UwHr']
+      }
     ])('$description: $supernetID, $nodeIDs', async ({ supernetID, nodeIDs }) => {
       const result = await PROVIDER.platformApi.getCurrentValidators(supernetID, nodeIDs)
       expect(result.validators).toBeDefined()
@@ -80,8 +80,8 @@ describe('PlatformAPI', () => {
       {
         description: 'Invalid supernetID and nodeIDs',
         supernetID: 'INVALID_SUPERNET_ID',
-        nodeIDs: ['INVALID_NODE_ID'],
-      },
+        nodeIDs: ['INVALID_NODE_ID']
+      }
     ])('$description: $supernetID, $nodeIDs', async ({ supernetID, nodeIDs }) => {
       await PROVIDER.platformApi.getCurrentValidators(supernetID as any, nodeIDs as any)
     })
@@ -97,7 +97,7 @@ describe('PlatformAPI', () => {
   describe('getMinStake', () => {
     test.each([
       { description: 'Without supernetID', supernetID: undefined },
-      { description: 'With supernetID', supernetID: PROVIDER.mcn.primary.id },
+      { description: 'With supernetID', supernetID: PROVIDER.mcn.primary.id }
     ])('$description: $supernetID', async ({ supernetID }) => {
       const result = await PROVIDER.platformApi.getMinStake(supernetID)
       expect(result.minDelegatorStake).toBeDefined()
@@ -108,8 +108,8 @@ describe('PlatformAPI', () => {
       { description: 'Invalid supernetID', supernetID: 'INVALID_SUPERNET_ID' },
       {
         description: 'Permissionned supernet supernetID',
-        supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW',
-      },
+        supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW'
+      }
     ])('$description: $supernetID', async ({ supernetID }) => {
       await PROVIDER.platformApi.getMinStake(supernetID as any)
     })
@@ -118,7 +118,7 @@ describe('PlatformAPI', () => {
   describe('getStakingAssetID', () => {
     test.each([
       { description: 'Without supernetID', supernetID: undefined },
-      { description: 'With supernetID', supernetID: PROVIDER.mcn.primary.id },
+      { description: 'With supernetID', supernetID: PROVIDER.mcn.primary.id }
     ])('$description: $supernetID', async ({ supernetID }) => {
       const result = await PROVIDER.platformApi.getStakingAssetID(supernetID)
       expect(result.assetID).toBeDefined()
@@ -128,7 +128,7 @@ describe('PlatformAPI', () => {
       '$description: $supernetID',
       async ({ supernetID }) => {
         await PROVIDER.platformApi.getStakingAssetID(supernetID as any)
-      },
+      }
     )
   })
 
@@ -150,15 +150,15 @@ describe('PlatformAPI', () => {
         const result = await PROVIDER.platformApi.getTotalStake(supernetID)
         expect(result.stake).toBeDefined()
         expect(result.weight).toBeDefined()
-      },
+      }
     )
 
     test.failing.each([
       { description: 'Invalid supernetID', supernetID: 'INVALID_SUPERNET_ID' },
       {
         description: 'Permissionned supernet supernetID',
-        supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW',
-      },
+        supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW'
+      }
     ])('$description: $supernetID', async ({ supernetID }) => {
       await PROVIDER.platformApi.getTotalStake(supernetID as any)
     })
@@ -167,7 +167,7 @@ describe('PlatformAPI', () => {
   describe('getTx', () => {
     test.each([
       { txID: '2tCUnxobnWD6PgRMVaBJt6uiUxk9NcjLU6Emczbj64GF7dnkcp' },
-      { txID: '27xs3BGknXSSKg86rczsFCHTvDLQ4dcH9BrgSwKepQcYB5VGc3' },
+      { txID: '27xs3BGknXSSKg86rczsFCHTvDLQ4dcH9BrgSwKepQcYB5VGc3' }
     ])('Valid txID: $txID', async ({ txID }) => {
       const result = await PROVIDER.platformApi.getTx(txID)
       expect(result.encoding).toBeDefined()
@@ -177,7 +177,7 @@ describe('PlatformAPI', () => {
     test.failing.each([
       { description: 'Invalid txID', txID: '27xs3BGknXSSKazd6rczsFCHTvDLQ4dcH9BrgSwKepQcYB5VGc3' },
       { description: 'Null txID', txID: null },
-      { description: 'Undefined txID', txID: undefined },
+      { description: 'Undefined txID', txID: undefined }
     ])('$description: $txID', async ({ txID }) => {
       await PROVIDER.platformApi.getTx(txID as any)
     })
@@ -186,7 +186,7 @@ describe('PlatformAPI', () => {
   describe('getTxStatus', () => {
     test.each([
       { txID: '27xs3BGknXSSKg86rczsFCHTvDLQ4dcH9BrgSwKepQcYB5VGc3' },
-      { txID: '2qbN8EiGKprtFLkQxnQMgqbXSWdui5rwVUTsQp5Z5RYFphy1oK' },
+      { txID: '2qbN8EiGKprtFLkQxnQMgqbXSWdui5rwVUTsQp5Z5RYFphy1oK' }
     ])('Valid txID: $txID', async ({ txID }) => {
       const result = await PROVIDER.platformApi.getTxStatus(txID)
       expect(result.status).toBeDefined()
@@ -196,7 +196,7 @@ describe('PlatformAPI', () => {
       '$description: $txID',
       async ({ txID }) => {
         await PROVIDER.platformApi.getTxStatus(txID as any)
-      },
+      }
     )
   })
 
@@ -221,7 +221,7 @@ describe('PlatformAPI', () => {
   describe('validatedBy', () => {
     test.each([
       { blockchainID: GenesisJUNEChain.id },
-      { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' },
+      { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
       const result = await PROVIDER.platformApi.validatedBy(blockchainID)
       expect(result.supernetID).toBeDefined()
@@ -231,7 +231,7 @@ describe('PlatformAPI', () => {
   describe('validates', () => {
     test.each([
       { supernetID: PROVIDER.mcn.primary.id },
-      { supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW' },
+      { supernetID: 'ZLfejkjx2AwkaNbGC7oQxX3gE6G1YLs4FzMimQEG6Us2b7UpW' }
     ])('Valid supernetID: $supernetID', async ({ supernetID }) => {
       const result = await PROVIDER.platformApi.validates(supernetID)
       expect(result.blockchainIDs).toBeDefined()
@@ -240,7 +240,7 @@ describe('PlatformAPI', () => {
       '$description: $supernetID',
       async ({ supernetID }) => {
         await PROVIDER.platformApi.validates(supernetID as any)
-      },
+      }
     )
   })
 })

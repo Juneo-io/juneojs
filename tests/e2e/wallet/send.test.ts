@@ -4,14 +4,11 @@ import {
   GenesisJUNEChain,
   GenesisJVMChain,
   SendOperation,
-  type ExecutableOperation,
+  type ExecutableOperation
 } from '../../../src'
-import { ACCOUNT } from '../constants'
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Send operations', () => {
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
-  const DEFAULT_TIMEOUT: number = 180_000
   const juneChain = GenesisJUNEChain
   const euroChain = GenesisEUROC1Chain
   const jvmChain = GenesisJVMChain
@@ -24,22 +21,22 @@ describe('Send operations', () => {
           assetId: juneChain.assetId,
           symbol: juneChain.asset.symbol,
           value: BigInt(1_000),
-          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
         },
         {
           chain: juneChain,
           assetId: '0x2d00000000000000000000000000000000000000',
           symbol: 'ETH.e',
           value: BigInt(1),
-          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
         },
         {
           chain: euroChain,
           assetId: euroChain.assetId,
           symbol: euroChain.asset.symbol,
           value: BigInt('10000000000000'),
-          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
-        },
+          recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'
+        }
       ])(
         '$#) $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient }) => {
@@ -49,7 +46,7 @@ describe('Send operations', () => {
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(DONE_STATUS)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
 
@@ -62,7 +59,7 @@ describe('Send operations', () => {
           symbol: juneChain.asset.symbol,
           value: BigInt(-1),
           recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
-          expectedError: RangeError,
+          expectedError: RangeError
         },
         {
           description: 'Excessive amount',
@@ -71,7 +68,7 @@ describe('Send operations', () => {
           symbol: juneChain.asset.symbol,
           value: EXCESSIVE_AMOUNT,
           recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
-          expectedError: AccountError,
+          expectedError: AccountError
         },
         {
           description: 'Excessive amount and different assetId',
@@ -80,8 +77,8 @@ describe('Send operations', () => {
           symbol: euroChain.asset.symbol,
           value: EXCESSIVE_AMOUNT,
           recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26',
-          expectedError: AccountError,
-        },
+          expectedError: AccountError
+        }
       ])(
         '$#) $description $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient, expectedError }) => {
@@ -89,7 +86,7 @@ describe('Send operations', () => {
           const summary = await ACCOUNT.estimate(operation)
           await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
   })
@@ -102,8 +99,8 @@ describe('Send operations', () => {
           assetId: jvmChain.assetId,
           symbol: jvmChain.asset.symbol,
           value: BigInt(10_000_000),
-          recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal',
-        },
+          recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal'
+        }
       ])(
         '$#) $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient }) => {
@@ -113,7 +110,7 @@ describe('Send operations', () => {
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(DONE_STATUS)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
 
@@ -126,7 +123,7 @@ describe('Send operations', () => {
           symbol: jvmChain.asset.symbol,
           value: EXCESSIVE_AMOUNT,
           recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal',
-          expectedError: AccountError,
+          expectedError: AccountError
         },
         {
           description: 'Zero value',
@@ -135,8 +132,8 @@ describe('Send operations', () => {
           symbol: jvmChain.asset.symbol,
           value: BigInt(0),
           recipient: 'JVM-socotra167w40pwvlrf5eg0d9t48zj6kwkaqz2xan50pal',
-          expectedError: TypeError,
-        },
+          expectedError: TypeError
+        }
       ])(
         '$#) $description $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient, expectedError }) => {
@@ -144,7 +141,7 @@ describe('Send operations', () => {
           const summary = await ACCOUNT.estimate(operation)
           await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
   })

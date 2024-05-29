@@ -5,7 +5,7 @@ import {
   type GetAssetDescriptionResponse,
   type GetBlockResponse,
   type GetHeightResponse,
-  type GetTxResponse,
+  type GetTxResponse
 } from '../../../src'
 import { PROVIDER } from '../constants'
 
@@ -24,12 +24,12 @@ describe('JVMAPI', () => {
         expect(result.symbol).toEqual(asset.symbol)
         expect(result.denomination).toEqual(asset.decimals.toString())
         expect(result.assetID).toEqual(asset.assetId)
-      },
+      }
     )
 
     test.failing.each([
       { assetId: '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8DNp1R8ob8kHkbZ' },
-      { assetId: 'INVALID_ASSET_ID' },
+      { assetId: 'INVALID_ASSET_ID' }
     ])('Invalid: $assetId', async ({ assetId }) => {
       const result: GetAssetDescriptionResponse = await PROVIDER.jvmApi.getAssetDescription(assetId)
       expect(result.name).toBeDefined()
@@ -47,14 +47,14 @@ describe('JVMAPI', () => {
         const result: GetBlockResponse = await PROVIDER.jvmApi.getBlockByHeight(height as any)
         expect(result.block).toBeDefined()
         expect(result.encoding).toBeDefined()
-      },
+      }
     )
 
     test.failing.each([
       { description: 'Negative height', height: -1 },
       { description: 'String input', height: 'aString' },
       { description: 'Object input', height: {} },
-      { description: 'Array input', height: [] },
+      { description: 'Array input', height: [] }
     ])('$description: $height', async ({ height }) => {
       await PROVIDER.jvmApi.getBlockByHeight(height as any)
     })
@@ -70,7 +70,7 @@ describe('JVMAPI', () => {
   describe('getTx', () => {
     test.each([
       { txID: 'dGJVWGj3GHQRAvt87xqcVUwKNKcJRaB7iUwGpNP9PYSrk6rie' },
-      { txID: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS' },
+      { txID: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS' }
     ])('Valid: $txID', async ({ txID }) => {
       const result: GetTxResponse = await PROVIDER.jvmApi.getTx(txID)
       expect(result.encoding).toBeDefined()
@@ -83,7 +83,7 @@ describe('JVMAPI', () => {
       { description: 'Null input', txID: null },
       { description: 'Undefined input', txID: undefined },
       { description: 'Object input', txID: {} },
-      { description: 'Array input', txID: [] },
+      { description: 'Array input', txID: [] }
     ])('$description: $txID', async ({ txID }) => {
       await PROVIDER.jvmApi.getTx(txID as any)
     })

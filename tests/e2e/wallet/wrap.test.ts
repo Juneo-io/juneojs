@@ -6,14 +6,11 @@ import {
   NetworkOperationType,
   UnwrapOperation,
   WrapOperation,
-  type ExecutableOperation,
+  type ExecutableOperation
 } from '../../../src'
-import { ACCOUNT } from '../constants'
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Wrapping operations', () => {
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
-  const DEFAULT_TIMEOUT: number = 180_000
   const juneChain = GenesisJUNEChain
   const wJuneAsset = GenesisWJUNEAsset
 
@@ -28,7 +25,7 @@ describe('Wrapping operations', () => {
           expect(operation.amount).toEqual(amount)
           expect(operation.range).toEqual(NetworkOperationRange.Chain)
           expect(operation.type).toEqual(NetworkOperationType.Wrap)
-        },
+        }
       )
     })
 
@@ -42,7 +39,7 @@ describe('Wrapping operations', () => {
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(expectedStatus)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
 
@@ -53,8 +50,8 @@ describe('Wrapping operations', () => {
           blockchain: juneChain,
           asset: wJuneAsset,
           amount: EXCESSIVE_AMOUNT,
-          expectedStatus: AccountError,
-        },
+          expectedStatus: AccountError
+        }
       ])(
         '$#) $description $amount $asset.name in $blockchain.name',
         async ({ blockchain, asset, amount, expectedStatus }) => {
@@ -62,7 +59,7 @@ describe('Wrapping operations', () => {
           const summary = await ACCOUNT.estimate(operation)
           await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedStatus)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
   })
@@ -78,7 +75,7 @@ describe('Wrapping operations', () => {
           expect(operation.amount).toEqual(amount)
           expect(operation.range).toEqual(NetworkOperationRange.Chain)
           expect(operation.type).toEqual(NetworkOperationType.Unwrap)
-        },
+        }
       )
     })
 
@@ -92,7 +89,7 @@ describe('Wrapping operations', () => {
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(expectedStatus)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
 
@@ -103,8 +100,8 @@ describe('Wrapping operations', () => {
           blockchain: juneChain,
           asset: wJuneAsset,
           amount: EXCESSIVE_AMOUNT,
-          expectedError: AccountError,
-        },
+          expectedError: AccountError
+        }
       ])(
         '$#) $description $amount $asset.name in $blockchain.name',
         async ({ blockchain, asset, amount, expectedError }) => {
@@ -112,7 +109,7 @@ describe('Wrapping operations', () => {
           const summary = await ACCOUNT.estimate(operation)
           await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
-        DEFAULT_TIMEOUT,
+        DEFAULT_TIMEOUT
       )
     })
   })

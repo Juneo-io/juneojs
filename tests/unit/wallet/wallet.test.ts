@@ -1,13 +1,11 @@
-import * as dotenv from 'dotenv'
 import {
-  MCNWallet,
   GenesisJUNEChain,
   GenesisJVMChain,
   GenesisPlatformChain,
+  MCNWallet,
   WalletError,
   validatePrivateKey
 } from '../../../src'
-dotenv.config()
 
 describe('MCNWallet', (): void => {
   describe('Generate', (): void => {

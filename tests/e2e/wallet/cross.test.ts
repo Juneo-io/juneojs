@@ -8,14 +8,11 @@ import {
   InputError,
   NetworkOperationRange,
   NetworkOperationType,
-  type ExecutableOperation,
+  type ExecutableOperation
 } from '../../../src'
-import { ACCOUNT } from '../constants'
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Cross operations', () => {
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DEFAULT_TIMEOUT: number = 180_000
-  const DONE_STATUS = 'Done'
   const juneChain = GenesisJUNEChain
   const euroChain = GenesisEUROC1Chain
   const platformChain = GenesisPlatformChain
@@ -28,57 +25,57 @@ describe('Cross operations', () => {
         destination: euroChain,
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
-        value: BigInt(1_000),
+        value: BigInt(1_000)
       },
       {
         source: euroChain,
         destination: juneChain,
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
-        value: BigInt('10000000000000'),
+        value: BigInt('10000000000000')
       },
       {
         source: juneChain,
         destination: jvmChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt('100000000000'),
+        value: BigInt('100000000000')
       },
       {
         source: juneChain,
         destination: euroChain,
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
-        value: BigInt(5_000),
+        value: BigInt(5_000)
       },
       {
         source: juneChain,
         destination: platformChain,
         assetId: '0x4400000000000000000000000000000000000000',
         symbol: 'UNDEFINED',
-        value: BigInt(6_000),
+        value: BigInt(6_000)
       },
       {
         source: juneChain,
         destination: euroChain,
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
-        value: EXCESSIVE_AMOUNT,
+        value: EXCESSIVE_AMOUNT
       },
       {
         source: juneChain,
         destination: euroChain,
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
-        value: BigInt(0),
+        value: BigInt(0)
       },
       {
         source: juneChain,
         destination: euroChain,
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
-        value: BigInt(-1_000),
-      },
+        value: BigInt(-1_000)
+      }
     ])(
       '$#) $value $symbol from $source.name to $destination.name',
       async ({ source, destination, assetId, value }) => {
@@ -90,7 +87,7 @@ describe('Cross operations', () => {
         expect(operation.range).toEqual(NetworkOperationRange.Supernet)
         expect(operation.type).toEqual(NetworkOperationType.Cross)
       },
-      DEFAULT_TIMEOUT,
+      DEFAULT_TIMEOUT
     )
   })
 
@@ -101,57 +98,57 @@ describe('Cross operations', () => {
         destination: euroChain,
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
-        value: BigInt(1_000),
+        value: BigInt(1_000)
       },
       {
         source: euroChain,
         destination: juneChain,
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
-        value: BigInt('10000000000000'),
+        value: BigInt('10000000000000')
       },
       {
         source: juneChain,
         destination: jvmChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt('100000000000'),
+        value: BigInt('100000000000')
       },
       {
         source: juneChain,
         destination: platformChain,
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
-        value: BigInt('1000000000000'),
+        value: BigInt('1000000000000')
       },
       {
         source: platformChain,
         destination: juneChain,
         assetId: platformChain.assetId,
         symbol: platformChain.asset.symbol,
-        value: BigInt(1_000_000),
+        value: BigInt(1_000_000)
       },
       {
         source: platformChain,
         destination: jvmChain,
         assetId: platformChain.assetId,
         symbol: platformChain.asset.symbol,
-        value: BigInt(1_000_000),
+        value: BigInt(1_000_000)
       },
       {
         source: jvmChain,
         destination: platformChain,
         assetId: jvmChain.assetId,
         symbol: jvmChain.asset.symbol,
-        value: BigInt(1_000_000),
+        value: BigInt(1_000_000)
       },
       {
         source: jvmChain,
         destination: juneChain,
         assetId: jvmChain.assetId,
         symbol: jvmChain.asset.symbol,
-        value: BigInt(1_000_000),
-      },
+        value: BigInt(1_000_000)
+      }
     ])(
       '$#) $value $symbol from $source.name to $destination.name',
       async ({ source, destination, assetId, value }) => {
@@ -161,7 +158,7 @@ describe('Cross operations', () => {
         const executable: ExecutableOperation = summary.getExecutable()
         expect(executable.status).toEqual(DONE_STATUS)
       },
-      DEFAULT_TIMEOUT,
+      DEFAULT_TIMEOUT
     )
   })
 
@@ -173,7 +170,7 @@ describe('Cross operations', () => {
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
         value: BigInt(-1),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: juneChain,
@@ -181,7 +178,7 @@ describe('Cross operations', () => {
         assetId: '0x3300000000000000000000000000000000000000',
         symbol: 'EUROC.e',
         value: EXCESSIVE_AMOUNT,
-        expectedError: AccountError,
+        expectedError: AccountError
       },
       {
         source: juneChain,
@@ -189,7 +186,7 @@ describe('Cross operations', () => {
         assetId: euroChain.assetId,
         symbol: euroChain.asset.symbol,
         value: EXCESSIVE_AMOUNT,
-        expectedError: AccountError,
+        expectedError: AccountError
       },
       {
         source: juneChain,
@@ -197,7 +194,7 @@ describe('Cross operations', () => {
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: juneChain,
@@ -205,7 +202,7 @@ describe('Cross operations', () => {
         assetId: juneChain.assetId,
         symbol: juneChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: jvmChain,
@@ -213,7 +210,7 @@ describe('Cross operations', () => {
         assetId: jvmChain.assetId,
         symbol: jvmChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: jvmChain,
@@ -221,7 +218,7 @@ describe('Cross operations', () => {
         assetId: jvmChain.assetId,
         symbol: jvmChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: platformChain,
@@ -229,7 +226,7 @@ describe('Cross operations', () => {
         assetId: platformChain.assetId,
         symbol: platformChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
+        expectedError: InputError
       },
       {
         source: platformChain,
@@ -237,8 +234,8 @@ describe('Cross operations', () => {
         assetId: platformChain.assetId,
         symbol: platformChain.asset.symbol,
         value: BigInt(0),
-        expectedError: InputError,
-      },
+        expectedError: InputError
+      }
     ])(
       '$#) $value $symbol from $source.name to $destination.name',
       async ({ source, destination, assetId, value, expectedError }) => {
@@ -246,7 +243,7 @@ describe('Cross operations', () => {
         const summary = await ACCOUNT.estimate(operation)
         await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
       },
-      DEFAULT_TIMEOUT,
+      DEFAULT_TIMEOUT
     )
   })
 })

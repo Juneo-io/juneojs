@@ -1,18 +1,15 @@
 import {
-  MCNProvider,
+  GenesisBCH1Asset,
+  GenesisETH1Asset,
+  GenesisJUNEAsset,
   type GetAssetDescriptionResponse,
   type GetBlockResponse,
   type GetHeightResponse,
   type GetTxResponse,
-  GenesisNetwork,
-  GenesisJUNEAsset,
-  GenesisETH1Asset,
-  GenesisBCH1Asset
 } from '../../../src'
+import { PROVIDER } from '../constants'
 
 describe('JVMAPI', () => {
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
-
   describe('buildGenesis', () => {
     // TODO later
   })
@@ -21,20 +18,20 @@ describe('JVMAPI', () => {
     test.each([{ asset: GenesisJUNEAsset }, { asset: GenesisETH1Asset }, { asset: GenesisBCH1Asset }])(
       'Valid: $asset.assetId ($asset.symbol)',
       async ({ asset }) => {
-        const result: GetAssetDescriptionResponse = await provider.jvmApi.getAssetDescription(asset.assetId)
+        const result: GetAssetDescriptionResponse = await PROVIDER.jvmApi.getAssetDescription(asset.assetId)
         // TODO in Socotra2 use asset name
         expect(result.name).toBeDefined()
         expect(result.symbol).toEqual(asset.symbol)
         expect(result.denomination).toEqual(asset.decimals.toString())
         expect(result.assetID).toEqual(asset.assetId)
-      }
+      },
     )
 
     test.failing.each([
       { assetId: '2RcLCZTsxSnvzeBvtrjRo8PCzLXuecHBoyr8DNp1R8ob8kHkbZ' },
-      { assetId: 'INVALID_ASSET_ID' }
+      { assetId: 'INVALID_ASSET_ID' },
     ])('Invalid: $assetId', async ({ assetId }) => {
-      const result: GetAssetDescriptionResponse = await provider.jvmApi.getAssetDescription(assetId)
+      const result: GetAssetDescriptionResponse = await PROVIDER.jvmApi.getAssetDescription(assetId)
       expect(result.name).toBeDefined()
     })
   })
@@ -47,25 +44,25 @@ describe('JVMAPI', () => {
     test.each([{ height: 1 }, { height: 10 }, { height: 100 }, { height: null }, { height: undefined }])(
       'Valid: $height',
       async ({ height }) => {
-        const result: GetBlockResponse = await provider.jvmApi.getBlockByHeight(height as any)
+        const result: GetBlockResponse = await PROVIDER.jvmApi.getBlockByHeight(height as any)
         expect(result.block).toBeDefined()
         expect(result.encoding).toBeDefined()
-      }
+      },
     )
 
     test.failing.each([
       { description: 'Negative height', height: -1 },
       { description: 'String input', height: 'aString' },
       { description: 'Object input', height: {} },
-      { description: 'Array input', height: [] }
+      { description: 'Array input', height: [] },
     ])('$description: $height', async ({ height }) => {
-      await provider.jvmApi.getBlockByHeight(height as any)
+      await PROVIDER.jvmApi.getBlockByHeight(height as any)
     })
   })
 
   describe('getHeight', () => {
     test('Returns height', async () => {
-      const result: GetHeightResponse = await provider.jvmApi.getHeight()
+      const result: GetHeightResponse = await PROVIDER.jvmApi.getHeight()
       expect(result.height).toBeDefined()
     })
   })
@@ -73,9 +70,9 @@ describe('JVMAPI', () => {
   describe('getTx', () => {
     test.each([
       { txID: 'dGJVWGj3GHQRAvt87xqcVUwKNKcJRaB7iUwGpNP9PYSrk6rie' },
-      { txID: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS' }
+      { txID: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS' },
     ])('Valid: $txID', async ({ txID }) => {
-      const result: GetTxResponse = await provider.jvmApi.getTx(txID)
+      const result: GetTxResponse = await PROVIDER.jvmApi.getTx(txID)
       expect(result.encoding).toBeDefined()
       expect(result.tx).toBeDefined()
     })
@@ -86,9 +83,9 @@ describe('JVMAPI', () => {
       { description: 'Null input', txID: null },
       { description: 'Undefined input', txID: undefined },
       { description: 'Object input', txID: {} },
-      { description: 'Array input', txID: [] }
+      { description: 'Array input', txID: [] },
     ])('$description: $txID', async ({ txID }) => {
-      await provider.jvmApi.getTx(txID as any)
+      await PROVIDER.jvmApi.getTx(txID as any)
     })
   })
 

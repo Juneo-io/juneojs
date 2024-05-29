@@ -2,24 +2,16 @@ import {
   AccountError,
   DecodingError,
   DelegatePrimaryOperation,
-  MCNAccount,
-  MCNProvider,
-  MCNWallet,
+  now,
   type ChainAccount,
   type ExecutableOperation,
-  now,
-  GenesisNetwork
 } from '../../../src'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { ACCOUNT, PROVIDER } from '../constants'
 
 const DEFAULT_TIMEOUT: number = 180_000
 const ONE_DAY: bigint = BigInt(86_400)
 
-const provider: MCNProvider = new MCNProvider(GenesisNetwork)
-const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-const account: ChainAccount = mcnAccount.getAccount(provider.platformChain.id)
+const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
 const DONE_STATUS = 'Done'
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
@@ -44,28 +36,28 @@ describe('Staking operations', (): void => {
           amount: BigInt(10_000_000),
           expectedStatus: DONE_STATUS,
           startTime: currentTime,
-          endTime: tomorrow
-        }
+          endTime: tomorrow,
+        },
       ])(
         '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedStatus, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
-            1
+            [chainAccount.address],
+            1,
           )
-          const summary = await mcnAccount.estimate(delegateOperation)
-          await mcnAccount.execute(summary)
+          const summary = await ACCOUNT.estimate(delegateOperation)
+          await ACCOUNT.execute(summary)
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(expectedStatus)
         },
-        DEFAULT_TIMEOUT
+        DEFAULT_TIMEOUT,
       )
     })
 
@@ -77,25 +69,25 @@ describe('Staking operations', (): void => {
           amount: BigInt(10_000_000),
           expectedError: DecodingError,
           startTime: currentTime,
-          endTime: tomorrow
-        }
+          endTime: tomorrow,
+        },
       ])(
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
-            1
+            [chainAccount.address],
+            1,
           )
-          await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow(expectedError)
+          await expect(ACCOUNT.estimate(delegateOperation)).rejects.toThrow(expectedError)
         },
-        DEFAULT_TIMEOUT
+        DEFAULT_TIMEOUT,
       )
     })
 
@@ -107,26 +99,26 @@ describe('Staking operations', (): void => {
           amount: EXCESSIVE_AMOUNT,
           expectedError: AccountError,
           startTime: currentTime,
-          endTime: tomorrow
-        }
+          endTime: tomorrow,
+        },
       ])(
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
-            1
+            [chainAccount.address],
+            1,
           )
-          const summary = await mcnAccount.estimate(delegateOperation)
-          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+          const summary = await ACCOUNT.estimate(delegateOperation)
+          await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
-        DEFAULT_TIMEOUT
+        DEFAULT_TIMEOUT,
       )
     })
   })

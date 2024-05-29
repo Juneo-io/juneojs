@@ -1,29 +1,18 @@
 import {
   AccountError,
   CrossOperation,
-  InputError,
-  MCNAccount,
-  MCNProvider,
-  MCNWallet,
   GenesisEUROC1Chain,
   GenesisJUNEChain,
   GenesisJVMChain,
   GenesisPlatformChain,
-  type ExecutableOperation,
-  GenesisNetwork,
+  InputError,
   NetworkOperationRange,
-  NetworkOperationType
+  NetworkOperationType,
+  type ExecutableOperation
 } from '../../../src'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Cross operations', () => {
-  const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
-  const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DEFAULT_TIMEOUT: number = 180_000
-  const DONE_STATUS = 'Done'
   const juneChain = GenesisJUNEChain
   const euroChain = GenesisEUROC1Chain
   const platformChain = GenesisPlatformChain
@@ -164,8 +153,8 @@ describe('Cross operations', () => {
       '$#) $value $symbol from $source.name to $destination.name',
       async ({ source, destination, assetId, value }) => {
         const operation = new CrossOperation(source, destination, assetId, value)
-        const summary = await mcnAccount.estimate(operation)
-        await mcnAccount.execute(summary)
+        const summary = await ACCOUNT.estimate(operation)
+        await ACCOUNT.execute(summary)
         const executable: ExecutableOperation = summary.getExecutable()
         expect(executable.status).toEqual(DONE_STATUS)
       },
@@ -251,8 +240,8 @@ describe('Cross operations', () => {
       '$#) $value $symbol from $source.name to $destination.name',
       async ({ source, destination, assetId, value, expectedError }) => {
         const operation = new CrossOperation(source, destination, assetId, value)
-        const summary = await mcnAccount.estimate(operation)
-        await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+        const summary = await ACCOUNT.estimate(operation)
+        await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
       },
       DEFAULT_TIMEOUT
     )

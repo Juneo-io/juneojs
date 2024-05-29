@@ -1,25 +1,14 @@
 import {
   AccountError,
-  MCNAccount,
-  MCNProvider,
-  MCNWallet,
-  SendOperation,
   GenesisEUROC1Chain,
   GenesisJUNEChain,
   GenesisJVMChain,
-  type ExecutableOperation,
-  GenesisNetwork
+  SendOperation,
+  type ExecutableOperation
 } from '../../../src'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Send operations', () => {
-  const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-  const provider: MCNProvider = new MCNProvider(GenesisNetwork)
-  const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-  const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-  const DONE_STATUS = 'Done'
-  const DEFAULT_TIMEOUT: number = 180_000
   const juneChain = GenesisJUNEChain
   const euroChain = GenesisEUROC1Chain
   const jvmChain = GenesisJVMChain
@@ -52,8 +41,8 @@ describe('Send operations', () => {
         '$#) $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient }) => {
           const operation = new SendOperation(chain, assetId, value, recipient)
-          const summary = await mcnAccount.estimate(operation)
-          await mcnAccount.execute(summary)
+          const summary = await ACCOUNT.estimate(operation)
+          await ACCOUNT.execute(summary)
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(DONE_STATUS)
         },
@@ -94,8 +83,8 @@ describe('Send operations', () => {
         '$#) $description $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient, expectedError }) => {
           const operation = new SendOperation(chain, assetId, value, recipient)
-          const summary = await mcnAccount.estimate(operation)
-          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+          const summary = await ACCOUNT.estimate(operation)
+          await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
       )
@@ -116,8 +105,8 @@ describe('Send operations', () => {
         '$#) $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient }) => {
           const operation = new SendOperation(chain, assetId, value, recipient)
-          const summary = await mcnAccount.estimate(operation)
-          await mcnAccount.execute(summary)
+          const summary = await ACCOUNT.estimate(operation)
+          await ACCOUNT.execute(summary)
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(DONE_STATUS)
         },
@@ -149,8 +138,8 @@ describe('Send operations', () => {
         '$#) $description $value $symbol in $chain.name to $recipient',
         async ({ chain, assetId, value, recipient, expectedError }) => {
           const operation = new SendOperation(chain, assetId, value, recipient)
-          const summary = await mcnAccount.estimate(operation)
-          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+          const summary = await ACCOUNT.estimate(operation)
+          await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
       )

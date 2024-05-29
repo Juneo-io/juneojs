@@ -2,28 +2,16 @@ import {
   AccountError,
   DecodingError,
   DelegatePrimaryOperation,
-  MCNAccount,
-  MCNProvider,
-  MCNWallet,
-  type ChainAccount,
-  type ExecutableOperation,
   now,
-  GenesisNetwork
+  type ChainAccount,
+  type ExecutableOperation
 } from '../../../src'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT, PROVIDER } from '../constants'
 
-const DEFAULT_TIMEOUT: number = 180_000
-const ONE_DAY: bigint = BigInt(86_400)
-
-const provider: MCNProvider = new MCNProvider(GenesisNetwork)
-const wallet = MCNWallet.recover(process.env.MNEMONIC ?? '')
-const mcnAccount: MCNAccount = new MCNAccount(provider, wallet)
-const account: ChainAccount = mcnAccount.getAccount(provider.platformChain.id)
-const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
-const DONE_STATUS = 'Done'
+const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
+const ONE_DAY: bigint = BigInt(86_400)
 let currentTime: bigint = now() + BigInt(30)
 let tomorrow: bigint = currentTime + ONE_DAY
 
@@ -50,18 +38,18 @@ describe('Staking operations', (): void => {
         '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedStatus, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
+            [chainAccount.address],
             1
           )
-          const summary = await mcnAccount.estimate(delegateOperation)
-          await mcnAccount.execute(summary)
+          const summary = await ACCOUNT.estimate(delegateOperation)
+          await ACCOUNT.execute(summary)
           const executable: ExecutableOperation = summary.getExecutable()
           expect(executable.status).toEqual(expectedStatus)
         },
@@ -83,17 +71,17 @@ describe('Staking operations', (): void => {
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
+            [chainAccount.address],
             1
           )
-          await expect(mcnAccount.estimate(delegateOperation)).rejects.toThrow(expectedError)
+          await expect(ACCOUNT.estimate(delegateOperation)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
       )
@@ -113,18 +101,18 @@ describe('Staking operations', (): void => {
         '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
         async ({ nodeId, amount, expectedError, startTime, endTime }) => {
           const delegateOperation = new DelegatePrimaryOperation(
-            provider.platformChain,
+            PROVIDER.platformChain,
             nodeId,
             amount,
             startTime,
             endTime,
-            [account.address],
+            [chainAccount.address],
             1,
-            [account.address],
+            [chainAccount.address],
             1
           )
-          const summary = await mcnAccount.estimate(delegateOperation)
-          await expect(mcnAccount.execute(summary)).rejects.toThrow(expectedError)
+          const summary = await ACCOUNT.estimate(delegateOperation)
+          await expect(ACCOUNT.execute(summary)).rejects.toThrow(expectedError)
         },
         DEFAULT_TIMEOUT
       )

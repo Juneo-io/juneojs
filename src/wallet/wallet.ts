@@ -1,5 +1,6 @@
-import { HDNodeWallet, Mnemonic, Wallet, randomBytes } from 'ethers'
-import { JEVM_ID, type Blockchain, JVM_ID, PLATFORMVM_ID, type JEVMBlockchain } from '../chain'
+import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
+import { JEVM_ID, JVM_ID, PLATFORMVM_ID, type Blockchain, type JEVMBlockchain } from '../chain'
+import { MainNetwork } from '../network'
 import {
   ECKeyPair,
   encodeJuneoAddress,
@@ -9,7 +10,6 @@ import {
   WalletError
 } from '../utils'
 import * as encoding from '../utils/encoding'
-import { TestNetwork } from '../network'
 
 const EVMHdPath = "m/44'/60'/0'/0"
 const JVMHdPath = "m/44'/9000'/0'/0"
@@ -41,7 +41,7 @@ export class MCNWallet {
   privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
-  private constructor (hrp: string = TestNetwork.hrp) {
+  private constructor (hrp: string = MainNetwork.hrp) {
     this.hrp = hrp
   }
 
@@ -69,6 +69,11 @@ export class MCNWallet {
       wallets.push(wallet)
     }
     return wallets
+  }
+
+  setHrp (hrp: string): void {
+    this.hrp = hrp
+    this.chainsWallets.clear()
   }
 
   private setChainWallet (chain: Blockchain): void {

@@ -3,6 +3,7 @@ import {
   GenesisJVMChain,
   GenesisPlatformChain,
   MCNWallet,
+  SocotraNetwork,
   WalletError,
   validatePrivateKey
 } from '../../../src'
@@ -78,7 +79,7 @@ describe('MCNWallet', (): void => {
         address: '0xf44b80bf950058b087F47d88fDB71686c4beFef8'
       }
     ])('$chain.name address: $address', ({ mnemonic, chain, address }): void => {
-      const wallet: MCNWallet = MCNWallet.recover(mnemonic)
+      const wallet: MCNWallet = MCNWallet.recover(mnemonic, SocotraNetwork.hrp)
       expect(wallet.getAddress(chain)).toBe(address)
     })
   })

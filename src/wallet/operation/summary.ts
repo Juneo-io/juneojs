@@ -92,7 +92,7 @@ export class ChainOperationSummary extends AbstractOperationSummary {
     fee: FeeData,
     spendings: Spending[],
     values: Map<string, bigint>,
-    errors: Error[]
+    errors: Error[] = []
   ) {
     super(provider, operation, [fee], spendings, values, errors)
     this.operation = operation
@@ -116,7 +116,7 @@ export class CrossOperationSummary extends AbstractOperationSummary {
     fees: FeeData[],
     spendings: Spending[],
     values: Map<string, bigint>,
-    errors: Error[]
+    errors: Error[] = []
   ) {
     super(provider, operation, fees, spendings, values, errors)
     this.operation = operation
@@ -139,7 +139,7 @@ export class StakingOperationSummary extends ChainOperationSummary {
     spendings: Spending[],
     values: Map<string, bigint>,
     potentialReward: bigint,
-    errors: Error[]
+    errors: Error[] = []
   ) {
     super(provider, operation, chain, fee, spendings, values, errors)
     this.potentialReward = potentialReward
@@ -160,7 +160,7 @@ export class CrossResumeOperationSummary extends ChainOperationSummary {
     values: Map<string, bigint>,
     payImportFee: boolean,
     utxoSet: Utxo[],
-    errors: Error[]
+    errors: Error[] = []
   ) {
     super(provider, operation, operation.destination, importFee, spendings, values, errors)
     this.operation = operation
@@ -180,7 +180,7 @@ export class DepositResumeOperationSummary extends ChainOperationSummary {
     fee: EVMFeeData,
     spendings: Spending[],
     values: Map<string, bigint>,
-    errors: Error[]
+    errors: Error[] = []
   ) {
     super(provider, operation, operation.chain, fee, spendings, values, errors)
     this.operation = operation

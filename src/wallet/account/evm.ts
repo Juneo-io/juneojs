@@ -13,6 +13,7 @@ import {
   type WrapOperation
 } from '../operation'
 import {
+  BaseSpending,
   DefaultEthCallEstimate,
   DefaultTransferEstimate,
   DefaultUnwrapEstimate,
@@ -55,6 +56,7 @@ export class EVMAccount extends AbstractChainAccount {
         this.chain,
         this.chainWallet.getAddress(),
         send,
+        [new BaseSpending(this.chain, send.amount, send.assetId)],
         new Map<string, bigint>([[send.assetId, send.amount]]),
         address,
         amount,
@@ -69,6 +71,7 @@ export class EVMAccount extends AbstractChainAccount {
         this.chain,
         this.chainWallet.getAddress(),
         wrap,
+        [new BaseSpending(this.chain, wrap.amount, this.chain.assetId)],
         new Map<string, bigint>([[this.chain.assetId, wrap.amount]]),
         wrap.asset.address,
         wrap.amount,
@@ -83,6 +86,7 @@ export class EVMAccount extends AbstractChainAccount {
         this.chain,
         this.chainWallet.getAddress(),
         unwrap,
+        [new BaseSpending(this.chain, unwrap.amount, unwrap.asset.assetId)],
         new Map<string, bigint>([[unwrap.asset.assetId, unwrap.amount]]),
         unwrap.asset.address,
         BigInt(0),
@@ -103,6 +107,7 @@ export class EVMAccount extends AbstractChainAccount {
         this.chain,
         this.chainWallet.getAddress(),
         ethCall,
+        [],
         values,
         ethCall.contract,
         ethCall.amount,

@@ -13,7 +13,7 @@ import {
   MaxInvalidNonceAttempts
 } from './constants'
 import { BaseFeeData, FeeType } from './fee'
-import { BaseSpending } from './transaction'
+import { type BaseSpending } from './transaction'
 
 export class EVMTransactionData {
   from: string
@@ -99,6 +99,7 @@ export async function estimateEVMOperation (
   chain: JEVMBlockchain,
   from: string,
   operation: ChainNetworkOperation,
+  spendings: BaseSpending[],
   values: Map<string, bigint>,
   address: string,
   amount: bigint,
@@ -116,14 +117,14 @@ export async function estimateEVMOperation (
     defaultEstimate,
     new EVMTransactionData(from, address, amount, data)
   )
-  const spending: BaseSpending = new BaseSpending(chain, amount, chain.assetId)
+  spendings.push(fee.spending)
   return await estimateEVMCall(api, from, address, amount, data, baseFee).then(
     (gasLimit) => {
       fee.setGasLimit(gasLimit)
-      return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [])
+      return new ChainOperationSummary(provider, operation, chain, fee, spendings, values, [])
     },
     (error) => {
-      return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [error])
+      return new ChainOperationSummary(provider, operation, chain, fee, spendings, values, [error])
     }
   )
 }
@@ -147,8 +148,8 @@ export async function executeEVMTransaction (
   for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
     const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
     const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
-      const errorCode: string = error.code as string
-      if (errorCode === 'NONCE_EXPIRED' || errorCode === 'REPLACEMENT_UNDERPRICED') {
+      const errorMessage: string = error.message as string
+      if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
         return undefined
       }
       // Non nonce related error decrement nonce to avoid resyncing later.
@@ -180,9 +181,12 @@ export async function estimateEVMWithdrawJRC20 (
     DefaultWithdrawEstimate,
     new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
   )
-  await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, baseFee).then((gasLimit) => {
-    fee.setGasLimit(gasLimit)
-  })
+  await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, baseFee).then(
+    (gasLimit) => {
+      fee.setGasLimit(gasLimit)
+    },
+    () => {}
+  )
   return fee
 }
 
@@ -202,8 +206,11 @@ export async function estimateEVMDepositJRC20 (
     DefaultDepositEstimate,
     new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)
   )
-  await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, baseFee).then((gasLimit) => {
-    fee.setGasLimit(gasLimit)
-  })
+  await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, baseFee).then(
+    (gasLimit) => {
+      fee.setGasLimit(gasLimit)
+    },
+    () => {}
+  )
   return fee
 }

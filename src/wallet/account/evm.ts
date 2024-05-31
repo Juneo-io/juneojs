@@ -1,9 +1,10 @@
-import { type JEVMBlockchain } from '../../chain'
+import { ethers } from 'ethers'
+import { type JEVMBlockchain, SendEtherGasLimit } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { AccountError } from '../../utils'
+import { AccountError, isContractAddress } from '../../utils'
 import {
   type ChainNetworkOperation,
-  ChainOperationSummary,
+  type ChainOperationSummary,
   type EthCallOperation,
   type ExecutableOperation,
   NetworkOperationType,
@@ -12,15 +13,14 @@ import {
   type WrapOperation
 } from '../operation'
 import {
-  BaseSpending,
+  DefaultEthCallEstimate,
+  DefaultTransferEstimate,
   DefaultUnwrapEstimate,
   DefaultWrapEstimate,
   type EVMFeeData,
   FeeType,
   TransactionType,
-  estimateEVMOperationCall,
-  estimateEVMTransfer,
-  estimateEthCallOperation,
+  estimateEVMOperation,
   executeEVMTransaction
 } from '../transaction'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
@@ -43,23 +43,33 @@ export class EVMAccount extends AbstractChainAccount {
     const provider: MCNProvider = await this.provider.getStaticProvider()
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: EVMFeeData = await estimateEVMTransfer(
+      const isContract: boolean = isContractAddress(send.assetId)
+      const address: string = isContract ? send.assetId : send.address
+      const amount: bigint = isContract ? BigInt(0) : send.amount
+      const data: string = isContract
+        ? await this.chain.getContractTransactionData(provider, send.assetId, address, amount)
+        : '0x'
+      const defaultEstimate = isContract ? DefaultTransferEstimate : SendEtherGasLimit
+      return await estimateEVMOperation(
         provider,
-        this.chainWallet,
-        this.chain.id,
-        send.assetId,
-        send.amount,
-        send.address
+        this.chain,
+        this.chainWallet.getAddress(),
+        send,
+        new Map<string, bigint>([[send.assetId, send.amount]]),
+        address,
+        amount,
+        data,
+        defaultEstimate,
+        FeeType.BaseFee
       )
-      const spending: BaseSpending = new BaseSpending(this.chain, send.amount, send.assetId)
-      const values = new Map<string, bigint>([[send.assetId, send.amount]])
-      return new ChainOperationSummary(provider, operation, this.chain, fee, [spending, fee.spending], values)
     } else if (operation.type === NetworkOperationType.Wrap) {
       const wrap = operation as WrapOperation
-      return await estimateEVMOperationCall(
+      return await estimateEVMOperation(
         provider,
+        this.chain,
         this.chainWallet.getAddress(),
         wrap,
+        new Map<string, bigint>([[this.chain.assetId, wrap.amount]]),
         wrap.asset.address,
         wrap.amount,
         wrap.asset.adapter.getDepositData(),
@@ -68,10 +78,12 @@ export class EVMAccount extends AbstractChainAccount {
       )
     } else if (operation.type === NetworkOperationType.Unwrap) {
       const unwrap = operation as UnwrapOperation
-      return await estimateEVMOperationCall(
+      return await estimateEVMOperation(
         provider,
+        this.chain,
         this.chainWallet.getAddress(),
         unwrap,
+        new Map<string, bigint>([[unwrap.asset.assetId, unwrap.amount]]),
         unwrap.asset.address,
         BigInt(0),
         unwrap.asset.adapter.getWithdrawData(unwrap.amount),
@@ -79,7 +91,25 @@ export class EVMAccount extends AbstractChainAccount {
         FeeType.Unwrap
       )
     } else if (operation.type === NetworkOperationType.EthCall) {
-      return await estimateEthCallOperation(provider, this.chainWallet.getAddress(), operation as EthCallOperation)
+      const ethCall = operation as EthCallOperation
+      const contract = new ethers.Contract(ethCall.contract, ethCall.abi, this.chain.ethProvider)
+      const data = contract.interface.encodeFunctionData(ethCall.functionName, ethCall.values)
+      const values = new Map<string, bigint>()
+      if (ethCall.amount > 0) {
+        values.set(this.chain.assetId, ethCall.amount)
+      }
+      return await estimateEVMOperation(
+        provider,
+        this.chain,
+        this.chainWallet.getAddress(),
+        ethCall,
+        values,
+        ethCall.contract,
+        ethCall.amount,
+        data,
+        DefaultEthCallEstimate,
+        FeeType.EthCall
+      )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }

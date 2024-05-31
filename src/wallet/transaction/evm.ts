@@ -1,15 +1,13 @@
-import { ethers } from 'ethers'
+import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../../api'
 import { type JRC20Asset } from '../../asset'
-import { type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
+import { type JEVMBlockchain, NativeAssetCallContract } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { TimeUtils, TransactionError, isContractAddress } from '../../utils'
-import { ChainOperationSummary, type EthCallOperation, type JEVMChainOperation } from '../operation'
+import { TimeUtils, TransactionError } from '../../utils'
+import { type ChainNetworkOperation, ChainOperationSummary } from '../operation'
 import { type JEVMWallet } from '../wallet'
 import {
-  DefaultCancelStreamEstimate,
   DefaultDepositEstimate,
-  DefaultTransferEstimate,
   DefaultWithdrawEstimate,
   InvalidNonceRetryDelay,
   MaxInvalidNonceAttempts
@@ -79,9 +77,8 @@ export async function estimateEVMCall (
   to: string,
   value: bigint,
   data: string,
-  baseFeeAmount?: bigint
+  baseFee: bigint
 ): Promise<bigint> {
-  const baseFee: bigint = typeof baseFeeAmount === 'undefined' ? await estimateEVMBaseFee(api) : baseFeeAmount
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
     blockTag: 'pending',
     from,
@@ -97,19 +94,19 @@ export async function estimateEVMCall (
   return gasLimit
 }
 
-export async function estimateEVMOperationCall (
+export async function estimateEVMOperation (
   provider: MCNProvider,
+  chain: JEVMBlockchain,
   from: string,
-  operation: JEVMChainOperation,
+  operation: ChainNetworkOperation,
+  values: Map<string, bigint>,
   address: string,
   amount: bigint,
   data: string,
   defaultEstimate: bigint,
   feeType: FeeType
 ): Promise<ChainOperationSummary> {
-  const chain: JEVMBlockchain = operation.chain
   const api: JEVMAPI = provider.jevmApi[chain.id]
-  const values = new Map<string, bigint>([[chain.assetId, amount]])
   const baseFee: bigint = await estimateEVMBaseFee(api)
   const fee = new EVMFeeData(
     chain,
@@ -120,7 +117,7 @@ export async function estimateEVMOperationCall (
     new EVMTransactionData(from, address, amount, data)
   )
   const spending: BaseSpending = new BaseSpending(chain, amount, chain.assetId)
-  return await estimateEVMCall(api, from, address, amount, data).then(
+  return await estimateEVMCall(api, from, address, amount, data, baseFee).then(
     (gasLimit) => {
       fee.setGasLimit(gasLimit)
       return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [])
@@ -129,36 +126,6 @@ export async function estimateEVMOperationCall (
       return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [error])
     }
   )
-}
-
-export async function estimateEVMTransfer (
-  provider: MCNProvider,
-  wallet: JEVMWallet,
-  chainId: string,
-  assetId: string,
-  amount: bigint,
-  address: string
-): Promise<EVMFeeData> {
-  const api: JEVMAPI = provider.jevmApi[chainId]
-  const isContract: boolean = isContractAddress(assetId)
-  const from: string = wallet.getAddress()
-  const to: string = isContract ? assetId : address
-  const value: bigint = isContract ? BigInt(0) : amount
-  const data: string = isContract
-    ? await api.chain.getContractTransactionData(provider, assetId, address, amount)
-    : '0x'
-  const type: FeeType = FeeType.BaseFee
-  const baseFee: bigint = await estimateEVMBaseFee(api)
-  if (assetId === api.chain.assetId) {
-    const gasLimit: bigint = SendEtherGasLimit
-    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    return new EVMFeeData(api.chain, baseFee * gasLimit, type, baseFee, gasLimit, transactionData)
-  }
-  return await estimateEVMCall(api, from, to, value, data, type, baseFee).catch(() => {
-    const gasLimit: bigint = DefaultTransferEstimate
-    const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-    return new EVMFeeData(api.chain, baseFee * gasLimit, type, baseFee, gasLimit, transactionData)
-  })
 }
 
 export async function executeEVMTransaction (
@@ -180,8 +147,8 @@ export async function executeEVMTransaction (
   for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
     const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
     const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
-      const errorMessage: string = error.message as string
-      if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
+      const errorCode: string = error.code as string
+      if (errorCode === 'NONCE_EXPIRED' || errorCode === 'REPLACEMENT_UNDERPRICED') {
         return undefined
       }
       // Non nonce related error decrement nonce to avoid resyncing later.
@@ -197,56 +164,26 @@ export async function executeEVMTransaction (
   throw new TransactionError(`could not provide a valid nonce: ${wallet.nonce}`)
 }
 
-export async function estimateEthCallOperation (
-  provider: MCNProvider,
-  from: string,
-  ethCall: EthCallOperation
-): Promise<ChainOperationSummary> {
-  const chain: JEVMBlockchain = ethCall.chain
-  const api: JEVMAPI = provider.jevmApi[chain.id]
-  const contract = new ethers.Contract(ethCall.contract, ethCall.abi, chain.ethProvider)
-  const data = contract.interface.encodeFunctionData(ethCall.functionName, ethCall.values)
-  const type: FeeType = FeeType.EthCall
-  return await estimateEVMCall(api, from, ethCall.contract, ethCall.amount, data, type).then(
-    (fee) => {
-      return new ChainOperationSummary(provider, ethCall, chain, fee, [fee.spending], new Map<string, bigint>())
-    },
-    async () => {
-      const baseFee: bigint = await estimateEVMBaseFee(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(from, ethCall.contract, ethCall.amount, data)
-      const fee: EVMFeeData = new EVMFeeData(
-        chain,
-        baseFee * DefaultCancelStreamEstimate,
-        type,
-        baseFee,
-        DefaultCancelStreamEstimate,
-        transactionData
-      )
-      return new ChainOperationSummary(provider, ethCall, chain, fee, [fee.spending], new Map<string, bigint>())
-    }
-  )
-}
-
 export async function estimateEVMWithdrawJRC20 (
   api: JEVMAPI,
   sender: string,
   jrc20: JRC20Asset,
   amount: bigint
 ): Promise<EVMFeeData> {
-  const type: FeeType = FeeType.Withdraw
-  const data: string = jrc20.adapter.getWithdrawData(amount)
-  return await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, type).catch(async () => {
-    const baseFee: bigint = await estimateEVMBaseFee(api)
-    const transactionData: EVMTransactionData = new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
-    return new EVMFeeData(
-      api.chain,
-      baseFee * DefaultWithdrawEstimate,
-      type,
-      baseFee,
-      DefaultWithdrawEstimate,
-      transactionData
-    )
+  const data = jrc20.adapter.getWithdrawData(amount)
+  const baseFee = await estimateEVMBaseFee(api)
+  const fee = new EVMFeeData(
+    api.chain,
+    baseFee * DefaultWithdrawEstimate,
+    FeeType.Withdraw,
+    baseFee,
+    DefaultWithdrawEstimate,
+    new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
+  )
+  await estimateEVMCall(api, sender, jrc20.address, BigInt(0), data, baseFee).then((gasLimit) => {
+    fee.setGasLimit(gasLimit)
   })
+  return fee
 }
 
 export async function estimateEVMDepositJRC20 (
@@ -255,18 +192,18 @@ export async function estimateEVMDepositJRC20 (
   jrc20: JRC20Asset,
   amount: bigint
 ): Promise<EVMFeeData> {
-  const type: FeeType = FeeType.Deposit
-  const data: string = jrc20.adapter.getDepositData(jrc20.nativeAssetId, amount)
-  return await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, type).catch(async () => {
-    const baseFee: bigint = await estimateEVMBaseFee(api)
-    const transactionData: EVMTransactionData = new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)
-    return new EVMFeeData(
-      api.chain,
-      baseFee * DefaultDepositEstimate,
-      type,
-      baseFee,
-      DefaultDepositEstimate,
-      transactionData
-    )
+  const data = jrc20.adapter.getDepositData(jrc20.nativeAssetId, amount)
+  const baseFee = await estimateEVMBaseFee(api)
+  const fee = new EVMFeeData(
+    api.chain,
+    baseFee * DefaultDepositEstimate,
+    FeeType.Deposit,
+    baseFee,
+    DefaultDepositEstimate,
+    new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)
+  )
+  await estimateEVMCall(api, sender, NativeAssetCallContract, BigInt(0), data, baseFee).then((gasLimit) => {
+    fee.setGasLimit(gasLimit)
   })
+  return fee
 }

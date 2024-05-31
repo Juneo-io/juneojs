@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
-import * as abi from './abi'
-import { AssetId } from '../../transaction'
 import { ERC20Asset, type TokenAsset } from '../../asset'
+import { AssetId } from '../../transaction'
+import * as abi from './abi'
 
 export class ContractManager {
   private readonly handlers: SolidityTokenHandler[] = []
@@ -118,29 +118,5 @@ export class WrappedContractAdapter extends EVMCallAdapter {
 
   getDepositData (): string {
     return this.getFunctionData('deposit')
-  }
-}
-
-export class AuctionContractAdapter extends EVMCallAdapter {
-  constructor (contractAddress: string) {
-    super(contractAddress, abi.AuctionABI)
-  }
-
-  getRedeemAuctionData (auctionId: bigint): string {
-    return this.getFunctionData('redeemAuction', [auctionId])
-  }
-}
-
-export class StreamContractAdapter extends EVMCallAdapter {
-  constructor (contractAddress: string) {
-    super(contractAddress, abi.StreamABI)
-  }
-
-  getWithdrawFromStreamData (streamId: bigint, amount: bigint): string {
-    return this.getFunctionData('withdrawFromStream', [streamId, amount])
-  }
-
-  getCancelStreamData (streamId: bigint): string {
-    return this.getFunctionData('cancelStream', [streamId])
   }
 }

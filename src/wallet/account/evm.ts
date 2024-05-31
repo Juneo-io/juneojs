@@ -2,16 +2,13 @@ import { type JEVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
 import {
-  type CancelStreamOperation,
   type ChainNetworkOperation,
   ChainOperationSummary,
   type EthCallOperation,
   type ExecutableOperation,
   NetworkOperationType,
-  type RedeemAuctionOperation,
   type SendOperation,
   type UnwrapOperation,
-  type WithdrawStreamOperation,
   type WrapOperation
 } from '../operation'
 import {
@@ -21,11 +18,8 @@ import {
   type EVMFeeData,
   FeeType,
   TransactionType,
-  estimateEVMCancelStreamOperation,
   estimateEVMOperationCall,
-  estimateEVMRedeemAuctionOperation,
   estimateEVMTransfer,
-  estimateEVMWithdrawStreamOperation,
   estimateEthCallOperation,
   executeEVMTransaction
 } from '../transaction'
@@ -84,24 +78,6 @@ export class EVMAccount extends AbstractChainAccount {
         DefaultUnwrapEstimate,
         FeeType.Unwrap
       )
-    } else if (operation.type === NetworkOperationType.RedeemAuction) {
-      return await estimateEVMRedeemAuctionOperation(
-        provider,
-        this.chainWallet.getAddress(),
-        operation as RedeemAuctionOperation
-      )
-    } else if (operation.type === NetworkOperationType.WithdrawStream) {
-      return await estimateEVMWithdrawStreamOperation(
-        provider,
-        this.chainWallet.getAddress(),
-        operation as WithdrawStreamOperation
-      )
-    } else if (operation.type === NetworkOperationType.CancelStream) {
-      return await estimateEVMCancelStreamOperation(
-        provider,
-        this.chainWallet.getAddress(),
-        operation as CancelStreamOperation
-      )
     } else if (operation.type === NetworkOperationType.EthCall) {
       return await estimateEthCallOperation(provider, this.chainWallet.getAddress(), operation as EthCallOperation)
     }
@@ -117,12 +93,6 @@ export class EVMAccount extends AbstractChainAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.Wrap)
     } else if (operation === NetworkOperationType.Unwrap) {
       await this.executeAndTrackTransaction(summary, TransactionType.Unwrap)
-    } else if (operation === NetworkOperationType.RedeemAuction) {
-      await this.executeAndTrackTransaction(summary, TransactionType.RedeemAuction)
-    } else if (operation === NetworkOperationType.WithdrawStream) {
-      await this.executeAndTrackTransaction(summary, TransactionType.WithdrawStream)
-    } else if (operation === NetworkOperationType.CancelStream) {
-      await this.executeAndTrackTransaction(summary, TransactionType.CancelStream)
     } else if (operation === NetworkOperationType.EthCall) {
       await this.executeAndTrackTransaction(summary, TransactionType.EthCall)
     }

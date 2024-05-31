@@ -2,7 +2,7 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type UnsignedTransaction } from '../../transaction'
 import { type AssetValue } from '../../utils'
-import { type Spending, UtxoSpending, BaseSpending } from './transaction'
+import { BaseSpending, type Spending, UtxoSpending } from './transaction'
 
 export enum FeeType {
   Undefined = 'Undefined',
@@ -21,6 +21,7 @@ export enum FeeType {
   CreateSupernet = 'Create supernet fee',
   RemoveSupernetValidator = 'Remove supernet validator fee',
   CreateChain = 'Create chain fee',
+  EthCall = 'Eth call fee',
 }
 
 export interface FeeData {

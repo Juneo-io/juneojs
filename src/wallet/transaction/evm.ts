@@ -1,6 +1,6 @@
-import { type ethers } from 'ethers'
-import { BaseFeeData, FeeType } from './fee'
+import { ethers } from 'ethers'
 import { type JEVMAPI } from '../../api'
+import { type JRC20Asset } from '../../asset'
 import {
   AuctionContractAdapter,
   type JEVMBlockchain,
@@ -8,31 +8,32 @@ import {
   SendEtherGasLimit,
   StreamContractAdapter
 } from '../../chain'
+import { type MCNProvider } from '../../juneo'
+import { TransactionError, isContractAddress, sleep } from '../../utils'
 import {
   type CancelStreamOperation,
   ChainOperationSummary,
-  type WithdrawStreamOperation,
+  type EthCallOperation,
   type RedeemAuctionOperation,
   type UnwrapOperation,
+  type WithdrawStreamOperation,
   type WrapOperation
 } from '../operation'
-import { BaseSpending } from './transaction'
-import { TransactionError, sleep, isContractAddress } from '../../utils'
 import { type JEVMWallet } from '../wallet'
-import { type JRC20Asset } from '../../asset'
-import { type MCNProvider } from '../../juneo'
 import {
-  DefaultTransferEstimate,
-  MaxInvalidNonceAttempts,
-  InvalidNonceRetryDelay,
-  DefaultWrapEstimate,
-  DefaultUnwrapEstimate,
-  DefaultWithdrawEstimate,
+  DefaultCancelStreamEstimate,
   DefaultDepositEstimate,
   DefaultRedeemAuctionEstimate,
+  DefaultTransferEstimate,
+  DefaultUnwrapEstimate,
+  DefaultWithdrawEstimate,
   DefaultWithdrawStreamEstimate,
-  DefaultCancelStreamEstimate
+  DefaultWrapEstimate,
+  InvalidNonceRetryDelay,
+  MaxInvalidNonceAttempts
 } from './constants'
+import { BaseFeeData, FeeType } from './fee'
+import { BaseSpending } from './transaction'
 
 export class EVMTransactionData {
   from: string
@@ -194,7 +195,7 @@ export async function estimateEVMWrapOperation (
     },
     async () => {
       const baseFee: bigint = await estimateEVMBaseFee(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(from, wrap.asset.address, BigInt(0), data)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, wrap.asset.address, wrap.amount, data)
       const fee: EVMFeeData = new EVMFeeData(
         chain,
         baseFee * DefaultWrapEstimate,
@@ -327,6 +328,36 @@ export async function estimateEVMCancelStreamOperation (
         transactionData
       )
       return new ChainOperationSummary(provider, cancel, chain, fee, [fee.spending], new Map<string, bigint>())
+    }
+  )
+}
+
+export async function estimateEthCallOperation (
+  provider: MCNProvider,
+  from: string,
+  ethCall: EthCallOperation
+): Promise<ChainOperationSummary> {
+  const chain: JEVMBlockchain = ethCall.chain
+  const api: JEVMAPI = provider.jevmApi[chain.id]
+  const contract = new ethers.Contract(ethCall.contract, ethCall.abi, chain.ethProvider)
+  const data = contract.interface.encodeFunctionData(ethCall.functionName, ethCall.values)
+  const type: FeeType = FeeType.EthCall
+  return await estimateEVMCall(api, from, ethCall.contract, ethCall.amount, data, type).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, ethCall, chain, fee, [fee.spending], new Map<string, bigint>())
+    },
+    async () => {
+      const baseFee: bigint = await estimateEVMBaseFee(api)
+      const transactionData: EVMTransactionData = new EVMTransactionData(from, ethCall.contract, ethCall.amount, data)
+      const fee: EVMFeeData = new EVMFeeData(
+        chain,
+        baseFee * DefaultCancelStreamEstimate,
+        type,
+        baseFee,
+        DefaultCancelStreamEstimate,
+        transactionData
+      )
+      return new ChainOperationSummary(provider, ethCall, chain, fee, [fee.spending], new Map<string, bigint>())
     }
   )
 }

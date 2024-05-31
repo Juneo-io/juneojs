@@ -3,24 +3,24 @@ import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
   type JEVMExportTransaction,
-  buildJEVMExportTransaction,
+  type JEVMImportTransaction,
   UserInput,
   type Utxo,
-  type JEVMImportTransaction,
+  buildJEVMExportTransaction,
   buildJEVMImportTransaction
 } from '../../../transaction'
 import {
-  estimateAtomicExportGas,
-  calculateAtomicCost,
   AtomicDenomination,
-  sleep,
+  TimeUtils,
   TransactionError,
+  calculateAtomicCost,
+  estimateAtomicExportGas,
   estimateAtomicImportGas,
-  getUtxosAmountValues,
-  getImportUserInputs
+  getImportUserInputs,
+  getUtxosAmountValues
 } from '../../../utils'
-import { type MCNWallet, type JEVMWallet, type VMWallet } from '../../wallet'
-import { MaxInvalidNonceAttempts, InvalidNonceRetryDelay } from '../constants'
+import { type JEVMWallet, type MCNWallet, type VMWallet } from '../../wallet'
+import { InvalidNonceRetryDelay, MaxInvalidNonceAttempts } from '../constants'
 import { estimateEVMBaseFee, getWalletNonce } from '../evm'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
@@ -85,7 +85,7 @@ export async function executeEVMExportTransaction (
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(InvalidNonceRetryDelay)
+    await TimeUtils.sleep(InvalidNonceRetryDelay)
     nonce = await getWalletNonce(evmWallet, api, true)
   }
   throw new TransactionError(`could not provide a valid nonce ${evmWallet.nonce}`)

@@ -1,9 +1,33 @@
+import {
+  BaseFeeData,
+  BaseSpending,
+  estimateEVMDepositJRC20,
+  estimateEVMExportTransaction,
+  estimateEVMImportTransaction,
+  estimateEVMWithdrawJRC20,
+  estimateJVMExportTransaction,
+  estimateJVMImportTransaction,
+  estimatePlatformExportTransaction,
+  estimatePlatformImportTransaction,
+  executeEVMExportTransaction,
+  executeEVMImportTransaction,
+  executeEVMTransaction,
+  executeJVMExportTransaction,
+  executeJVMImportTransaction,
+  executePlatformExportTransaction,
+  executePlatformImportTransaction,
+  FeeType,
+  TransactionType,
+  type EVMFeeData,
+  type FeeData,
+  type Spending
+} from '..'
 import { type AbstractUtxoAPI, type JEVMAPI } from '../../../api'
 import { type JRC20Asset } from '../../../asset'
 import {
+  JEVM_ID,
   JVM_ID,
   PLATFORMVM_ID,
-  JEVM_ID,
   type Blockchain,
   type JEVMBlockchain,
   type JVMBlockchain
@@ -13,46 +37,22 @@ import { type Secp256k1Output, type Utxo } from '../../../transaction'
 import {
   AtomicDenomination,
   CrossError,
+  fetchUtxos,
   getUtxoAPI,
   getUtxosAmountValues,
-  trackJuneoTransaction,
-  fetchUtxos,
-  sleep
+  TimeUtils,
+  trackJuneoTransaction
 } from '../../../utils'
-import { type EVMAccount, type ChainAccount, type MCNAccount, type UtxoAccount } from '../../account'
+import { type ChainAccount, type EVMAccount, type MCNAccount, type UtxoAccount } from '../../account'
 import {
-  type ExecutableOperation,
-  CrossOperationSummary,
-  CrossResumeOperationSummary,
-  CrossResumeOperation,
   CrossOperation,
+  CrossOperationSummary,
+  CrossResumeOperation,
+  CrossResumeOperationSummary,
   DepositResumeOperation,
-  DepositResumeOperationSummary
+  DepositResumeOperationSummary,
+  type ExecutableOperation
 } from '../../operation'
-import {
-  estimateEVMExportTransaction,
-  estimateEVMImportTransaction,
-  estimateJVMExportTransaction,
-  estimateJVMImportTransaction,
-  estimatePlatformExportTransaction,
-  estimatePlatformImportTransaction,
-  executeJVMExportTransaction,
-  type FeeData,
-  executePlatformExportTransaction,
-  executeJVMImportTransaction,
-  executePlatformImportTransaction,
-  executeEVMImportTransaction,
-  executeEVMExportTransaction,
-  BaseFeeData,
-  TransactionType,
-  type Spending,
-  BaseSpending,
-  FeeType,
-  type EVMFeeData,
-  estimateEVMWithdrawJRC20,
-  executeEVMTransaction,
-  estimateEVMDepositJRC20
-} from '..'
 import { type MCNWallet } from '../../wallet'
 
 export class CrossManager {
@@ -399,7 +399,7 @@ export class CrossManager {
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching: ${status}`)
       }
       // generate withdraw utxos
-      await sleep(500)
+      await TimeUtils.sleep(500)
       // feeData.data.to is the jrc20 address for withdraw transactions
       // cross.assetId should be jrc20.nativeAssetId here
       await juneAccount.fetchBalances([cross.assetId, feeData.data.to, feeData.assetId])

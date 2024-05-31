@@ -1,5 +1,5 @@
 import { type JEVMAPI } from '../../api'
-import { sleep } from '../../utils'
+import { TimeUtils } from '../../utils'
 import { type TransactionStatusFetcher, TransactionStatusFetchDelay } from '../transaction'
 
 export enum JEVMTransactionStatus {
@@ -23,7 +23,7 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
   async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
     const maxAttempts: number = timeout / delay
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
+      await TimeUtils.sleep(delay)
       await this.jevmApi.getTxStatus(this.transactionId).then(
         (value) => {
           this.currentStatus = value.status
@@ -68,7 +68,7 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     this.currentStatus = EVMTransactionStatus.Pending
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
+      await TimeUtils.sleep(delay)
       const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash).catch(() => {
         return null
       })

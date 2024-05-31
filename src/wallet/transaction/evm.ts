@@ -9,7 +9,7 @@ import {
   StreamContractAdapter
 } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { TransactionError, isContractAddress, sleep } from '../../utils'
+import { TimeUtils, TransactionError, isContractAddress } from '../../utils'
 import {
   type CancelStreamOperation,
   ChainOperationSummary,
@@ -172,7 +172,7 @@ export async function executeEVMTransaction (
     if (typeof transactionId === 'string') {
       return transactionId
     }
-    await sleep(InvalidNonceRetryDelay)
+    await TimeUtils.sleep(InvalidNonceRetryDelay)
     unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
   }
   throw new TransactionError(`could not provide a valid nonce: ${wallet.nonce}`)

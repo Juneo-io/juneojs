@@ -1,9 +1,8 @@
-import { InputError, OutputError } from '../utils'
+import { InputError, OutputError, TimeUtils } from '../utils'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput, type Utxo } from './output'
-import * as time from '../utils/time'
-import { Address, AssetId } from './types'
 import { type TransactionFee } from './transaction'
+import { Address, AssetId } from './types'
 
 export function buildTransactionInputs (
   userInputs: UserInput[],
@@ -47,7 +46,7 @@ export function buildTransactionInputs (
     }
     const output: Secp256k1Output = utxo.output as Secp256k1Output
     // output cannot be consumed because it is timelocked
-    if (output.locktime > time.now()) {
+    if (output.locktime > TimeUtils.now()) {
       continue
     }
     // The utxo will be added as an input in any case

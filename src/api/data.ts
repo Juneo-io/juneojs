@@ -1,4 +1,4 @@
-import { now } from '../utils'
+import { TimeUtils } from '../utils'
 import { type JsonRpcRequest, type JsonRpcResponse, type JuneoClient } from './client'
 
 export class CachedResponse<T> {
@@ -30,7 +30,7 @@ export class CachedResponse<T> {
     if (this.duration === undefined) {
       return false
     }
-    const currentTime: bigint = now()
+    const currentTime: bigint = TimeUtils.now()
     const update: boolean = currentTime >= this.lastUpdate + this.duration
     if (update) {
       this.lastUpdate = currentTime

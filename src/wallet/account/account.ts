@@ -3,10 +3,10 @@ import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type Utxo } from '../../transaction'
-import { type AssetValue, fetchUtxos, now, calculateBalances } from '../../utils'
-import { type ChainOperationSummary, type ChainNetworkOperation } from '../operation'
-import { type UtxoSpending, type Spending } from '../transaction'
-import { type VMWallet, type MCNWallet } from '../wallet'
+import { type AssetValue, calculateBalances, fetchUtxos, TimeUtils } from '../../utils'
+import { type ChainNetworkOperation, type ChainOperationSummary } from '../operation'
+import { type Spending, type UtxoSpending } from '../transaction'
+import { type MCNWallet, type VMWallet } from '../wallet'
 import { Balance } from './balance'
 
 export enum AccountType {
@@ -205,7 +205,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     const spendableUtxoSet: Utxo[] = []
     this.utxoSetMultiSig = []
     this.utxoSetTimelocked = []
-    const currentTime: bigint = now()
+    const currentTime: bigint = TimeUtils.now()
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
         this.utxoSetTimelocked.push(utxo)

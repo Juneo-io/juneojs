@@ -1,5 +1,5 @@
 import { type JVMAPI } from '../../api'
-import { sleep } from '../../utils'
+import { TimeUtils } from '../../utils'
 import { type TransactionStatusFetcher, TransactionStatusFetchDelay } from '../transaction'
 
 export enum JVMTransactionStatus {
@@ -23,7 +23,7 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
     const maxAttempts: number = timeout / delay
     this.currentStatus = JVMTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
+      await TimeUtils.sleep(delay)
       await this.jvmApi.getTx(this.transactionId).then(
         () => {
           this.currentStatus = JVMTransactionStatus.Accepted

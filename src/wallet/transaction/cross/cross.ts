@@ -398,8 +398,9 @@ export class CrossManager {
         const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
         throw new CrossError(`error during withdraw transaction ${transactionHash} status fetching: ${status}`)
       }
-      // generate withdraw utxos
-      await TimeUtils.sleep(500)
+      // wait until withdraw utxos are generated (should be max block time)
+      // it may be better to do checks of existence of such utxos instead of assuming they exist after waiting
+      await TimeUtils.sleep(2000)
       // feeData.data.to is the jrc20 address for withdraw transactions
       // cross.assetId should be jrc20.nativeAssetId here
       await juneAccount.fetchBalances([cross.assetId, feeData.data.to, feeData.assetId])

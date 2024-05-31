@@ -15,7 +15,7 @@ export class TimeUtils {
 
   // TODO get time from an external service to avoid using local machine timestamp
   static now (): bigint {
-    return TimeUtils.INSTANCE!.provider.getCurrentClientTimeSeconds()
+    return TimeUtils.getSingleton().provider.getCurrentClientTimeSeconds()
   }
 
   static async sleep (milliseconds: number): Promise<void> {

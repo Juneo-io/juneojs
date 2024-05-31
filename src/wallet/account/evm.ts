@@ -16,14 +16,16 @@ import {
 } from '../operation'
 import {
   BaseSpending,
+  DefaultUnwrapEstimate,
+  DefaultWrapEstimate,
   type EVMFeeData,
+  FeeType,
   TransactionType,
   estimateEVMCancelStreamOperation,
+  estimateEVMOperationCall,
   estimateEVMRedeemAuctionOperation,
   estimateEVMTransfer,
-  estimateEVMUnwrapOperation,
   estimateEVMWithdrawStreamOperation,
-  estimateEVMWrapOperation,
   estimateEthCallOperation,
   executeEVMTransaction
 } from '../transaction'
@@ -59,9 +61,29 @@ export class EVMAccount extends AbstractChainAccount {
       const values = new Map<string, bigint>([[send.assetId, send.amount]])
       return new ChainOperationSummary(provider, operation, this.chain, fee, [spending, fee.spending], values)
     } else if (operation.type === NetworkOperationType.Wrap) {
-      return await estimateEVMWrapOperation(provider, this.chainWallet.getAddress(), operation as WrapOperation)
+      const wrap = operation as WrapOperation
+      return await estimateEVMOperationCall(
+        provider,
+        this.chainWallet.getAddress(),
+        wrap,
+        wrap.asset.address,
+        wrap.amount,
+        wrap.asset.adapter.getDepositData(),
+        DefaultWrapEstimate,
+        FeeType.Wrap
+      )
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      return await estimateEVMUnwrapOperation(provider, this.chainWallet.getAddress(), operation as UnwrapOperation)
+      const unwrap = operation as UnwrapOperation
+      return await estimateEVMOperationCall(
+        provider,
+        this.chainWallet.getAddress(),
+        unwrap,
+        unwrap.asset.address,
+        BigInt(0),
+        unwrap.asset.adapter.getWithdrawData(unwrap.amount),
+        DefaultUnwrapEstimate,
+        FeeType.Unwrap
+      )
     } else if (operation.type === NetworkOperationType.RedeemAuction) {
       return await estimateEVMRedeemAuctionOperation(
         provider,

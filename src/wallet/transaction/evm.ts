@@ -14,10 +14,9 @@ import {
   type CancelStreamOperation,
   ChainOperationSummary,
   type EthCallOperation,
+  type JEVMChainOperation,
   type RedeemAuctionOperation,
-  type UnwrapOperation,
-  type WithdrawStreamOperation,
-  type WrapOperation
+  type WithdrawStreamOperation
 } from '../operation'
 import { type JEVMWallet } from '../wallet'
 import {
@@ -25,10 +24,8 @@ import {
   DefaultDepositEstimate,
   DefaultRedeemAuctionEstimate,
   DefaultTransferEstimate,
-  DefaultUnwrapEstimate,
   DefaultWithdrawEstimate,
   DefaultWithdrawStreamEstimate,
-  DefaultWrapEstimate,
   InvalidNonceRetryDelay,
   MaxInvalidNonceAttempts
 } from './constants'
@@ -67,6 +64,11 @@ export class EVMFeeData extends BaseFeeData {
     this.gasLimit = gasLimit
     this.data = data
   }
+
+  setGasLimit (gasLimit: bigint): void {
+    this.amount = this.baseFee * this.gasLimit
+    this.gasLimit = gasLimit
+  }
 }
 
 export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchronize: boolean): Promise<bigint> {
@@ -92,9 +94,8 @@ export async function estimateEVMCall (
   to: string,
   value: bigint,
   data: string,
-  type: FeeType,
   baseFeeAmount?: bigint
-): Promise<EVMFeeData> {
+): Promise<bigint> {
   const baseFee: bigint = typeof baseFeeAmount === 'undefined' ? await estimateEVMBaseFee(api) : baseFeeAmount
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
     blockTag: 'pending',
@@ -108,8 +109,41 @@ export async function estimateEVMCall (
     gasPrice: baseFee,
     data
   })
-  const transactionData: EVMTransactionData = new EVMTransactionData(from, to, value, data)
-  return new EVMFeeData(api.chain, baseFee * gasLimit, type, baseFee, gasLimit, transactionData)
+  return gasLimit
+}
+
+export async function estimateEVMOperationCall (
+  provider: MCNProvider,
+  from: string,
+  operation: JEVMChainOperation,
+  address: string,
+  amount: bigint,
+  data: string,
+  defaultEstimate: bigint,
+  feeType: FeeType
+): Promise<ChainOperationSummary> {
+  const chain: JEVMBlockchain = operation.chain
+  const api: JEVMAPI = provider.jevmApi[chain.id]
+  const values = new Map<string, bigint>([[chain.assetId, amount]])
+  const baseFee: bigint = await estimateEVMBaseFee(api)
+  const fee = new EVMFeeData(
+    chain,
+    baseFee * defaultEstimate,
+    feeType,
+    baseFee,
+    defaultEstimate,
+    new EVMTransactionData(from, address, amount, data)
+  )
+  const spending: BaseSpending = new BaseSpending(chain, amount, chain.assetId)
+  return await estimateEVMCall(api, from, address, amount, data).then(
+    (gasLimit) => {
+      fee.setGasLimit(gasLimit)
+      return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [])
+    },
+    (error) => {
+      return new ChainOperationSummary(provider, operation, chain, fee, [spending, fee.spending], values, [error])
+    }
+  )
 }
 
 export async function estimateEVMTransfer (
@@ -176,70 +210,6 @@ export async function executeEVMTransaction (
     unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
   }
   throw new TransactionError(`could not provide a valid nonce: ${wallet.nonce}`)
-}
-
-export async function estimateEVMWrapOperation (
-  provider: MCNProvider,
-  from: string,
-  wrap: WrapOperation
-): Promise<ChainOperationSummary> {
-  const chain: JEVMBlockchain = wrap.chain
-  const api: JEVMAPI = provider.jevmApi[chain.id]
-  const data: string = wrap.asset.adapter.getDepositData()
-  const type: FeeType = FeeType.Wrap
-  const values = new Map<string, bigint>([[chain.assetId, wrap.amount]])
-  return await estimateEVMCall(api, from, wrap.asset.address, wrap.amount, data, type).then(
-    (fee) => {
-      const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
-      return new ChainOperationSummary(provider, wrap, chain, fee, [spending, fee.spending], values)
-    },
-    async () => {
-      const baseFee: bigint = await estimateEVMBaseFee(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(from, wrap.asset.address, wrap.amount, data)
-      const fee: EVMFeeData = new EVMFeeData(
-        chain,
-        baseFee * DefaultWrapEstimate,
-        type,
-        baseFee,
-        DefaultWrapEstimate,
-        transactionData
-      )
-      const spending: BaseSpending = new BaseSpending(chain, wrap.amount, chain.assetId)
-      return new ChainOperationSummary(provider, wrap, chain, fee, [spending, fee.spending], values)
-    }
-  )
-}
-
-export async function estimateEVMUnwrapOperation (
-  provider: MCNProvider,
-  from: string,
-  unwrap: UnwrapOperation
-): Promise<ChainOperationSummary> {
-  const chain: JEVMBlockchain = unwrap.chain
-  const api: JEVMAPI = provider.jevmApi[chain.id]
-  const data: string = unwrap.asset.adapter.getWithdrawData(unwrap.amount)
-  const type: FeeType = FeeType.Unwrap
-  const values = new Map<string, bigint>([[unwrap.asset.assetId, unwrap.amount]])
-  return await estimateEVMCall(api, from, unwrap.asset.address, BigInt(0), data, type).then(
-    (fee) => {
-      const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
-      return new ChainOperationSummary(provider, unwrap, chain, fee, [spending, fee.spending], values)
-    },
-    async () => {
-      const baseFee: bigint = await estimateEVMBaseFee(api)
-      const transactionData: EVMTransactionData = new EVMTransactionData(from, unwrap.asset.address, BigInt(0), data)
-      const fee: EVMFeeData = new EVMFeeData(
-        chain,
-        baseFee * DefaultUnwrapEstimate,
-        type,
-        baseFee,
-        DefaultUnwrapEstimate,
-        transactionData
-      )
-      const spending: BaseSpending = new BaseSpending(chain, unwrap.amount, unwrap.asset.assetId)
-      return new ChainOperationSummary(provider, unwrap, chain, fee, [spending, fee.spending], values)
-    }
-  )
 }
 
 export async function estimateEVMRedeemAuctionOperation (

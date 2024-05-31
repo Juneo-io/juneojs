@@ -90,7 +90,7 @@ export class SendUtxoOperation extends ChainNetworkOperation {
   }
 }
 
-abstract class JEVMChainOperation extends ChainNetworkOperation {
+export abstract class JEVMChainOperation extends ChainNetworkOperation {
   override chain: JEVMBlockchain
 
   constructor (type: NetworkOperationType, chain: JEVMBlockchain) {

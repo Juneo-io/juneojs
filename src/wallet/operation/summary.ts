@@ -1,15 +1,15 @@
-import { type PlatformBlockchain, type Blockchain } from '../../chain'
+import { type Blockchain, type PlatformBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { type Utxo } from '../../transaction'
-import { type UtxoFeeData, type FeeData, type Spending, type EVMFeeData } from '../transaction'
+import { type EVMFeeData, type FeeData, type Spending, type UtxoFeeData } from '../transaction'
 import { ExecutableOperation } from './executable'
 import {
-  type Staking,
-  type NetworkOperation,
-  type CrossResumeOperation,
   type ChainNetworkOperation,
   type CrossOperation,
-  type DepositResumeOperation
+  type CrossResumeOperation,
+  type DepositResumeOperation,
+  type NetworkOperation,
+  type Staking
 } from './operation'
 
 export interface OperationSummary {
@@ -23,6 +23,8 @@ export interface OperationSummary {
   getAssets: () => Set<string>
 
   getChains: () => Blockchain[]
+
+  getErrors: () => Error[]
 }
 
 abstract class AbstractOperationSummary implements OperationSummary {
@@ -30,6 +32,7 @@ abstract class AbstractOperationSummary implements OperationSummary {
   fees: FeeData[]
   spendings: Spending[]
   values: Map<string, bigint>
+  errors: Error[]
   private readonly executable: ExecutableOperation
 
   constructor (
@@ -37,13 +40,15 @@ abstract class AbstractOperationSummary implements OperationSummary {
     operation: NetworkOperation,
     fees: FeeData[],
     spendings: Spending[],
-    values: Map<string, bigint>
+    values: Map<string, bigint>,
+    errors: Error[]
   ) {
     this.operation = operation
     this.fees = fees
     this.spendings = spendings
     this.values = values
     this.executable = new ExecutableOperation(provider)
+    this.errors = errors
   }
 
   getExecutable (): ExecutableOperation {
@@ -69,6 +74,10 @@ abstract class AbstractOperationSummary implements OperationSummary {
   }
 
   abstract getChains (): Blockchain[]
+
+  getErrors (): Error[] {
+    return this.errors
+  }
 }
 
 export class ChainOperationSummary extends AbstractOperationSummary {
@@ -82,9 +91,10 @@ export class ChainOperationSummary extends AbstractOperationSummary {
     chain: Blockchain,
     fee: FeeData,
     spendings: Spending[],
-    values: Map<string, bigint>
+    values: Map<string, bigint>,
+    errors: Error[]
   ) {
-    super(provider, operation, [fee], spendings, values)
+    super(provider, operation, [fee], spendings, values, errors)
     this.operation = operation
     this.chain = chain
     this.fee = fee
@@ -105,9 +115,10 @@ export class CrossOperationSummary extends AbstractOperationSummary {
     chains: Blockchain[],
     fees: FeeData[],
     spendings: Spending[],
-    values: Map<string, bigint>
+    values: Map<string, bigint>,
+    errors: Error[]
   ) {
-    super(provider, operation, fees, spendings, values)
+    super(provider, operation, fees, spendings, values, errors)
     this.operation = operation
     this.chains = chains
   }
@@ -127,9 +138,10 @@ export class StakingOperationSummary extends ChainOperationSummary {
     fee: UtxoFeeData,
     spendings: Spending[],
     values: Map<string, bigint>,
-    potentialReward: bigint
+    potentialReward: bigint,
+    errors: Error[]
   ) {
-    super(provider, operation, chain, fee, spendings, values)
+    super(provider, operation, chain, fee, spendings, values, errors)
     this.potentialReward = potentialReward
   }
 }
@@ -147,9 +159,10 @@ export class CrossResumeOperationSummary extends ChainOperationSummary {
     spendings: Spending[],
     values: Map<string, bigint>,
     payImportFee: boolean,
-    utxoSet: Utxo[]
+    utxoSet: Utxo[],
+    errors: Error[]
   ) {
-    super(provider, operation, operation.destination, importFee, spendings, values)
+    super(provider, operation, operation.destination, importFee, spendings, values, errors)
     this.operation = operation
     this.importFee = importFee
     this.payImportFee = payImportFee
@@ -166,9 +179,10 @@ export class DepositResumeOperationSummary extends ChainOperationSummary {
     operation: DepositResumeOperation,
     fee: EVMFeeData,
     spendings: Spending[],
-    values: Map<string, bigint>
+    values: Map<string, bigint>,
+    errors: Error[]
   ) {
-    super(provider, operation, operation.chain, fee, spendings, values)
+    super(provider, operation, operation.chain, fee, spendings, values, errors)
     this.operation = operation
     this.fee = fee
   }

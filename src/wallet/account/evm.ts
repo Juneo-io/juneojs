@@ -1,33 +1,35 @@
 import { type JEVMBlockchain } from '../../chain'
+import { type MCNProvider } from '../../juneo'
 import { AccountError } from '../../utils'
 import {
-  BaseSpending,
-  TransactionType,
-  type EVMFeeData,
-  estimateEVMWrapOperation,
-  estimateEVMUnwrapOperation,
-  estimateEVMTransfer,
-  executeEVMTransaction,
-  estimateEVMRedeemAuctionOperation,
-  estimateEVMWithdrawStreamOperation,
-  estimateEVMCancelStreamOperation
-} from '../transaction'
-import {
+  type CancelStreamOperation,
+  type ChainNetworkOperation,
+  ChainOperationSummary,
+  type EthCallOperation,
   type ExecutableOperation,
   NetworkOperationType,
-  ChainOperationSummary,
-  type SendOperation,
-  type WrapOperation,
-  type UnwrapOperation,
-  type ChainNetworkOperation,
   type RedeemAuctionOperation,
+  type SendOperation,
+  type UnwrapOperation,
   type WithdrawStreamOperation,
-  type CancelStreamOperation
+  type WrapOperation
 } from '../operation'
+import {
+  BaseSpending,
+  type EVMFeeData,
+  TransactionType,
+  estimateEVMCancelStreamOperation,
+  estimateEVMRedeemAuctionOperation,
+  estimateEVMTransfer,
+  estimateEVMUnwrapOperation,
+  estimateEVMWithdrawStreamOperation,
+  estimateEVMWrapOperation,
+  estimateEthCallOperation,
+  executeEVMTransaction
+} from '../transaction'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
 import { AbstractChainAccount, AccountType } from './account'
 import { Balance } from './balance'
-import { type MCNProvider } from '../../juneo'
 
 export class EVMAccount extends AbstractChainAccount {
   override chain: JEVMBlockchain
@@ -78,6 +80,8 @@ export class EVMAccount extends AbstractChainAccount {
         this.chainWallet.getAddress(),
         operation as CancelStreamOperation
       )
+    } else if (operation.type === NetworkOperationType.EthCall) {
+      return await estimateEthCallOperation(provider, this.chainWallet.getAddress(), operation as EthCallOperation)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -97,6 +101,8 @@ export class EVMAccount extends AbstractChainAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.WithdrawStream)
     } else if (operation === NetworkOperationType.CancelStream) {
       await this.executeAndTrackTransaction(summary, TransactionType.CancelStream)
+    } else if (operation === NetworkOperationType.EthCall) {
+      await this.executeAndTrackTransaction(summary, TransactionType.EthCall)
     }
     // could be replaced with correct spend and fund but just sync all now for simplicity
     // if replaced it should take some extra cases into account e.g. sending to self

@@ -19,6 +19,7 @@ export enum TransactionType {
   ValidateSupernet = 'Supernet validation transaction',
   RemoveSupernetValidator = 'Remove supernet validator transaction',
   CreateChain = 'Create chain transaction',
+  EthCall = 'Eth call transaction',
 }
 
 export class TransactionReceipt {

@@ -1,5 +1,5 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
-import { type JEVMBlockchain, type Blockchain, type PlatformBlockchain } from '../../chain'
+import { type Blockchain, type JEVMBlockchain, type PlatformBlockchain } from '../../chain'
 import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
 
 export enum NetworkOperationType {
@@ -20,6 +20,7 @@ export enum NetworkOperationType {
   ValidateSupernet = 'Validate supernet',
   RemoveSupernetValidator = 'Remove supernet validator',
   CreateChain = 'Create chain',
+  EthCall = 'Eth call',
 }
 
 export enum NetworkOperationRange {
@@ -89,14 +90,21 @@ export class SendUtxoOperation extends ChainNetworkOperation {
   }
 }
 
-abstract class Wrapping extends ChainNetworkOperation {
+abstract class JEVMChainOperation extends ChainNetworkOperation {
   override chain: JEVMBlockchain
+
+  constructor (type: NetworkOperationType, chain: JEVMBlockchain) {
+    super(type, chain)
+    this.chain = chain
+  }
+}
+
+abstract class Wrapping extends JEVMChainOperation {
   asset: WrappedAsset
   amount: bigint
 
   constructor (type: NetworkOperationType, chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(type, chain)
-    this.chain = chain
     this.asset = asset
     this.amount = amount
   }
@@ -114,27 +122,23 @@ export class UnwrapOperation extends Wrapping {
   }
 }
 
-export class RedeemAuctionOperation extends ChainNetworkOperation {
-  override chain: JEVMBlockchain
+export class RedeemAuctionOperation extends JEVMChainOperation {
   auctionAddress: string
   auctionId: bigint
 
   constructor (chain: JEVMBlockchain, auctionAddress: string, auctionId: bigint) {
     super(NetworkOperationType.RedeemAuction, chain)
-    this.chain = chain
     this.auctionAddress = auctionAddress
     this.auctionId = auctionId
   }
 }
 
-abstract class StreamOperation extends ChainNetworkOperation {
-  override chain: JEVMBlockchain
+abstract class StreamOperation extends JEVMChainOperation {
   streamAddress: string
   streamId: bigint
 
   constructor (type: NetworkOperationType, chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
     super(type, chain)
-    this.chain = chain
     this.streamAddress = streamAddress
     this.streamId = streamId
   }
@@ -152,6 +156,30 @@ export class WithdrawStreamOperation extends StreamOperation {
 export class CancelStreamOperation extends StreamOperation {
   constructor (chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
     super(NetworkOperationType.CancelStream, chain, streamAddress, streamId)
+  }
+}
+
+export class EthCallOperation extends JEVMChainOperation {
+  contract: string
+  abi: string
+  functionName: string
+  values: any[]
+  amount: bigint
+
+  constructor (
+    chain: JEVMBlockchain,
+    contract: string,
+    abi: string,
+    functionName: string,
+    values: any[],
+    amount: bigint
+  ) {
+    super(NetworkOperationType.EthCall, chain)
+    this.contract = contract
+    this.abi = abi
+    this.functionName = functionName
+    this.values = values
+    this.amount = amount
   }
 }
 
@@ -353,14 +381,12 @@ export class CrossResumeOperation extends ChainNetworkOperation {
   }
 }
 
-export class DepositResumeOperation extends ChainNetworkOperation {
-  override chain: JEVMBlockchain
+export class DepositResumeOperation extends JEVMChainOperation {
   asset: JRC20Asset
   amount: bigint
 
   constructor (chain: JEVMBlockchain, asset: JRC20Asset, amount: bigint) {
     super(NetworkOperationType.DepositResume, chain)
-    this.chain = chain
     this.asset = asset
     this.amount = amount
   }

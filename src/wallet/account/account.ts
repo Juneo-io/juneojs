@@ -121,8 +121,8 @@ export abstract class AbstractChainAccount implements ChainAccount {
 export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoSetMultiSig: Utxo[] = []
-  utxoSetTimelocked: Utxo[] = []
-  readonly timelockedBalances: Map<string, Balance> = new Map<string, Balance>()
+  utxoSetLocked: Utxo[] = []
+  readonly lockedBalances: Map<string, Balance> = new Map<string, Balance>()
   protected fetching: boolean = false
   private readonly utxoApi: AbstractUtxoAPI
 
@@ -131,24 +131,24 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.utxoApi = utxoApi
   }
 
-  getTimelockedAssetValue (asset: TokenAsset): AssetValue {
-    return asset.getAssetValue(this.getTimelockedAmount(asset.assetId))
+  getLockedAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getLockedAmount(asset.assetId))
   }
 
-  async getTimelockedValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+  async getLockedValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
     const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
-    return this.getTimelockedAssetValue(asset)
+    return this.getLockedAssetValue(asset)
   }
 
-  getTimelockedAmount (assetId: string): bigint {
-    return this.getTimelockedBalance(assetId).getValue()
+  getLockedAmount (assetId: string): bigint {
+    return this.getLockedBalance(assetId).getValue()
   }
 
-  getTimelockedBalance (assetId: string): Balance {
-    if (!this.timelockedBalances.has(assetId)) {
-      this.timelockedBalances.set(assetId, new Balance())
+  getLockedBalance (assetId: string): Balance {
+    if (!this.lockedBalances.has(assetId)) {
+      this.lockedBalances.set(assetId, new Balance())
     }
-    return this.timelockedBalances.get(assetId)!
+    return this.lockedBalances.get(assetId)!
   }
 
   async fetchBalance (assetId: string): Promise<void> {
@@ -168,7 +168,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.utxoSet = await fetchUtxos(this.utxoApi, [this.address])
     this.sortUtxoSet()
     calculateBalances(this.utxoSet, this.balances)
-    calculateBalances(this.utxoSetTimelocked, this.timelockedBalances)
+    calculateBalances(this.utxoSetLocked, this.lockedBalances)
     this.fetching = false
   }
 
@@ -204,11 +204,11 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   private sortUtxoSet (): void {
     const spendableUtxoSet: Utxo[] = []
     this.utxoSetMultiSig = []
-    this.utxoSetTimelocked = []
+    this.utxoSetLocked = []
     const currentTime: bigint = TimeUtils.now()
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
-        this.utxoSetTimelocked.push(utxo)
+        this.utxoSetLocked.push(utxo)
       } else if (!this.hasThreshold(utxo)) {
         this.utxoSetMultiSig.push(utxo)
       } else {

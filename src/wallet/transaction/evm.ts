@@ -104,17 +104,16 @@ export async function estimateEVMOperation (
   address: string,
   amount: bigint,
   data: string,
-  defaultEstimate: bigint,
   feeType: FeeType
 ): Promise<ChainOperationSummary> {
   const api: JEVMAPI = provider.jevmApi[chain.id]
   const baseFee: bigint = await estimateEVMBaseFee(api)
   const fee = new EVMFeeData(
     chain,
-    baseFee * defaultEstimate,
+    baseFee * BigInt(0),
     feeType,
     baseFee,
-    defaultEstimate,
+    BigInt(0),
     new EVMTransactionData(from, address, amount, data)
   )
   spendings.push(fee.spending)

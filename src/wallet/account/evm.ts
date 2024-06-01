@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { type JEVMBlockchain, SendEtherGasLimit } from '../../chain'
+import { type JEVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError, isContractAddress } from '../../utils'
 import {
@@ -14,10 +14,6 @@ import {
 } from '../operation'
 import {
   BaseSpending,
-  DefaultEthCallEstimate,
-  DefaultTransferEstimate,
-  DefaultUnwrapEstimate,
-  DefaultWrapEstimate,
   type EVMFeeData,
   FeeType,
   TransactionType,
@@ -50,7 +46,6 @@ export class EVMAccount extends AbstractChainAccount {
       const data: string = isContract
         ? await this.chain.getContractTransactionData(provider, send.assetId, address, amount)
         : '0x'
-      const defaultEstimate = isContract ? DefaultTransferEstimate : SendEtherGasLimit
       return await estimateEVMOperation(
         provider,
         this.chain,
@@ -61,7 +56,6 @@ export class EVMAccount extends AbstractChainAccount {
         address,
         amount,
         data,
-        defaultEstimate,
         FeeType.BaseFee
       )
     } else if (operation.type === NetworkOperationType.Wrap) {
@@ -76,7 +70,6 @@ export class EVMAccount extends AbstractChainAccount {
         wrap.asset.address,
         wrap.amount,
         wrap.asset.adapter.getDepositData(),
-        DefaultWrapEstimate,
         FeeType.Wrap
       )
     } else if (operation.type === NetworkOperationType.Unwrap) {
@@ -91,7 +84,6 @@ export class EVMAccount extends AbstractChainAccount {
         unwrap.asset.address,
         BigInt(0),
         unwrap.asset.adapter.getWithdrawData(unwrap.amount),
-        DefaultUnwrapEstimate,
         FeeType.Unwrap
       )
     } else if (operation.type === NetworkOperationType.EthCall) {
@@ -112,7 +104,6 @@ export class EVMAccount extends AbstractChainAccount {
         ethCall.contract,
         ethCall.amount,
         data,
-        DefaultEthCallEstimate,
         FeeType.EthCall
       )
     }

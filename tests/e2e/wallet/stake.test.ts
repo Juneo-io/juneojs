@@ -2,7 +2,7 @@ import {
   AccountError,
   DecodingError,
   DelegatePrimaryOperation,
-  now,
+  TimeUtils,
   type ChainAccount,
   type ExecutableOperation
 } from '../../../src'
@@ -12,13 +12,13 @@ const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
 const ONE_DAY: bigint = BigInt(86_400)
-let currentTime: bigint = now() + BigInt(30)
+let currentTime: bigint = TimeUtils.now() + BigInt(30)
 let tomorrow: bigint = currentTime + ONE_DAY
 
 describe('Staking operations', (): void => {
   beforeAll(async () => {
     // TODO create time provider utils to manage those tests
-    currentTime = now() + BigInt(30)
+    currentTime = TimeUtils.now() + BigInt(30)
     tomorrow = currentTime + ONE_DAY
   })
 

@@ -1,14 +1,17 @@
 import { ethers } from 'ethers'
-import { ChainError, fetchJNT, isContractAddress } from '../utils'
-import { AssetId } from '../transaction'
 import { type JEVMAPI } from '../api'
-import { ERC20TokenHandler, ContractManager, type SolidityTokenHandler } from './solidity'
-import { type TokenAsset, type JRC20Asset, type JEVMGasToken, TokenType, type WrappedAsset } from '../asset'
-import { AbstractBlockchain, VMAccountType } from './chain'
+import { type JEVMGasToken, type JRC20Asset, type TokenAsset, TokenType, type WrappedAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
+import { AssetId } from '../transaction'
+import { ChainError, fetchJNT, isContractAddress } from '../utils'
+import { AbstractBlockchain } from './chain'
+import { ContractManager, ERC20TokenHandler, type SolidityTokenHandler } from './solidity'
+import { ChainVM, VMWalletType } from './vm'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
 export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
+
+const HD_PATH = 60
 
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
@@ -37,7 +40,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     jrc20Assets: JRC20Asset[] = [],
     wrappedAsset?: WrappedAsset | undefined
   ) {
-    super(name, id, JEVM_ID, VMAccountType.Nonce, asset, aliases, registeredAssets)
+    super(name, id, new ChainVM(JEVM_ID, VMWalletType.Nonce, HD_PATH), asset, aliases, registeredAssets)
     this.asset = asset
     this.chainId = chainId
     this.baseFee = baseFee

@@ -4,20 +4,20 @@ import { TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import {
-  BlockchainIdSize,
+  type Address,
+  type AssetId,
+  AssetIdSize,
   BlockchainId,
-  type SupernetId,
-  SupernetIdSize,
+  BlockchainIdSize,
   type DynamicId,
   DynamicIdSize,
-  type AssetId,
-  type Address,
-  AssetIdSize,
   type NodeId,
-  NodeIdSize
+  NodeIdSize,
+  type SupernetId,
+  SupernetIdSize
 } from '../types'
-import { SupernetAuth, type BLSSigner } from './supernet'
-import { Validator, Secp256k1OutputOwners } from './validation'
+import { type BLSSigner, SupernetAuth } from './supernet'
+import { Secp256k1OutputOwners, Validator } from './validation'
 
 const AddValidatorTransactionTypeId: number = 0x0000000c
 const AddSupernetValidatorTransactionType: number = 0x0000000d
@@ -420,7 +420,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     this.supernetId = supernetId
     this.name = name
     this.chainAssetId = chainAssetId
-    this.vmId = vmId
+    this.vm.id = vmId
     this.fxIds = fxIds
     this.genesisData = genesisData
     this.supernetAuth = supernetAuth
@@ -451,7 +451,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     buffer.writeUInt16(this.name.length)
     buffer.writeString(this.name)
     buffer.write(this.chainAssetId.serialize())
-    buffer.write(this.vmId.serialize())
+    buffer.write(this.vm.id.serialize())
     buffer.writeUInt32(this.fxIds.length)
     this.fxIds.forEach((fxId) => {
       buffer.write(fxId.serialize())

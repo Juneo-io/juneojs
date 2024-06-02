@@ -11,26 +11,16 @@ import {
 } from '../utils'
 import * as encoding from '../utils/encoding'
 
-const EVMHdPath = "m/44'/60'/0'/0"
-const JVMHdPath = "m/44'/9000'/0'/0"
-
 class NodeManager {
   mnemonic: string
-  evmHdWallet: HDNodeWallet
-  jvmHdWallet: HDNodeWallet
 
   constructor (mnemonic: string) {
     this.mnemonic = mnemonic
-    this.evmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', EVMHdPath)
-    this.jvmHdWallet = HDNodeWallet.fromPhrase(mnemonic, '', JVMHdPath)
   }
 
-  deriveEVMPrivateKey (index: number): string {
-    return this.evmHdWallet.deriveChild(index).privateKey.substring(2)
-  }
-
-  deriveJVMPrivateKey (index: number): string {
-    return this.jvmHdWallet.deriveChild(index).privateKey.substring(2)
+  derivePrivateKey (chain: Blockchain, index: number): string {
+    const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${chain.vm.hdPath}'/0'/0`)
+    return hdNode.deriveChild(index).privateKey.substring(2)
   }
 }
 
@@ -77,20 +67,20 @@ export class MCNWallet {
   }
 
   private setChainWallet (chain: Blockchain): void {
-    if (chain.vmId === JEVM_ID) {
+    if (chain.vm.id === JEVM_ID) {
       this.chainsWallets.set(chain.id, this.buildJEVMWallet(chain))
-    } else if (chain.vmId === JVM_ID) {
+    } else if (chain.vm.id === JVM_ID) {
       this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
-    } else if (chain.vmId === PLATFORMVM_ID) {
+    } else if (chain.vm.id === PLATFORMVM_ID) {
       this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
     } else {
-      throw new WalletError(`unsupported vm id: ${chain.vmId}`)
+      throw new WalletError(`unsupported vm id: ${chain.vm.id}`)
     }
   }
 
   private buildJVMWallet (chain: Blockchain): JVMWallet {
     if (this.nodeManager !== undefined) {
-      const privateKey = this.nodeManager.deriveJVMPrivateKey(0)
+      const privateKey = this.nodeManager.derivePrivateKey(chain, 0)
       return new JVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       return new JVMWallet(this.privateKey, this.hrp, chain)
@@ -100,7 +90,7 @@ export class MCNWallet {
 
   private buildJEVMWallet (chain: Blockchain): JEVMWallet {
     if (this.nodeManager !== undefined) {
-      const privateKey = this.nodeManager.deriveEVMPrivateKey(0)
+      const privateKey = this.nodeManager.derivePrivateKey(chain, 0)
       return new JEVMWallet(privateKey, this.hrp, chain)
     } else if (this.privateKey !== undefined) {
       return new JEVMWallet(this.privateKey, this.hrp, chain)

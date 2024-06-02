@@ -27,7 +27,7 @@ export class MCNProvider {
     this.juneApi = new JEVMAPI(client, this.juneChain)
     for (const supernet of this.mcn.supernets) {
       for (const chain of supernet.chains) {
-        if (chain.vmId === JEVM_ID) {
+        if (chain.vm.id === JEVM_ID) {
           this.jevmApi[chain.id] = new JEVMAPI(client, chain as JEVMBlockchain)
         }
       }

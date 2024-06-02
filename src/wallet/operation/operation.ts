@@ -304,7 +304,7 @@ export class CreateChainOperation extends ChainNetworkOperation {
     super(NetworkOperationType.CreateChain, chain)
     this.supernetId = supernetId
     this.chainName = chainName
-    this.vmId = new DynamicId(vmId)
+    this.vm.id = new DynamicId(vmId)
     this.genesisData = genesisData
     this.chainAssetId = chainAssetId
     this.fxIds = fxIds

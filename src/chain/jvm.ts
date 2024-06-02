@@ -1,13 +1,16 @@
-import { fetchJNT, validateBech32 } from '../utils'
-import { type TokenAsset, type JNTAsset } from '../asset'
-import { AbstractBlockchain, VMAccountType } from './chain'
+import { type JNTAsset, type TokenAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
+import { fetchJNT, validateBech32 } from '../utils'
+import { AbstractBlockchain } from './chain'
+import { ChainVM, VMWalletType } from './vm'
 
 export const JVM_ID: string = 'otSmSxFRBqdRX7kestRW732n3WS2MrLAoWwHZxHnmMGMuLYX8'
 
+const HD_PATH = 9000
+
 export class JVMBlockchain extends AbstractBlockchain {
   constructor (name: string, id: string, asset: JNTAsset, aliases?: string[], registeredAssets: TokenAsset[] = []) {
-    super(name, id, JVM_ID, VMAccountType.Utxo, asset, aliases, registeredAssets)
+    super(name, id, new ChainVM(JVM_ID, VMWalletType.Utxo, HD_PATH), asset, aliases, registeredAssets)
   }
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {

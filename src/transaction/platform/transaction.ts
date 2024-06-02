@@ -420,7 +420,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     this.supernetId = supernetId
     this.name = name
     this.chainAssetId = chainAssetId
-    this.vm.id = vmId
+    this.vmId = vmId
     this.fxIds = fxIds
     this.genesisData = genesisData
     this.supernetAuth = supernetAuth
@@ -451,7 +451,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
     buffer.writeUInt16(this.name.length)
     buffer.writeString(this.name)
     buffer.write(this.chainAssetId.serialize())
-    buffer.write(this.vm.id.serialize())
+    buffer.write(this.vmId.serialize())
     buffer.writeUInt32(this.fxIds.length)
     this.fxIds.forEach((fxId) => {
       buffer.write(fxId.serialize())

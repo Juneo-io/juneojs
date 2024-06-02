@@ -426,7 +426,7 @@ export async function estimatePlatformCreateChainOperation (
     account,
     createChain.supernetId,
     createChain.chainName,
-    createChain.vm.id,
+    createChain.vmId,
     createChain.genesisData,
     createChain.chainAssetId,
     createChain.fxIds

@@ -1,16 +1,10 @@
 import { type TokenAsset } from '../asset'
-import { type MCNProvider } from '../juneo'
-
-export enum VMAccountType {
-  Utxo = 'Utxo',
-  Nonce = 'Nonce',
-}
+import { type ChainVM, type MCNProvider } from '../juneo'
 
 export interface Blockchain {
   name: string
   id: string
-  vmId: string
-  accountType: VMAccountType
+  vm: ChainVM
   asset: TokenAsset
   assetId: string
   aliases: string[]
@@ -27,8 +21,7 @@ export interface Blockchain {
 export abstract class AbstractBlockchain implements Blockchain {
   name: string
   id: string
-  vmId: string
-  accountType: VMAccountType
+  vm: ChainVM
   asset: TokenAsset
   assetId: string
   aliases: string[]
@@ -37,16 +30,14 @@ export abstract class AbstractBlockchain implements Blockchain {
   constructor (
     name: string,
     id: string,
-    vmId: string,
-    accountType: VMAccountType,
+    vm: ChainVM,
     asset: TokenAsset,
     aliases: string[] = [],
     registeredAssets: TokenAsset[] = []
   ) {
     this.name = name
     this.id = id
-    this.vmId = vmId
-    this.accountType = accountType
+    this.vm = vm
     this.asset = asset
     this.assetId = asset.assetId
     this.aliases = aliases

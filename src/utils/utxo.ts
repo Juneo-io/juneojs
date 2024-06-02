@@ -95,7 +95,7 @@ export function calculateBalances (utxoSet: Utxo[], balances: Map<string, Balanc
 }
 
 export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {
-  const vmId: string = chain.vmId
+  const vmId: string = chain.vm.id
   if (vmId === JVM_ID) {
     return provider.jvmApi
   } else if (vmId === PLATFORMVM_ID) {

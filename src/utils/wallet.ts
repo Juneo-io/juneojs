@@ -1,8 +1,8 @@
-import { type Blockchain, JVM_ID, PLATFORMVM_ID, JEVM_ID } from '../chain'
+import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { UserInput } from '../transaction'
-import { type Spending, BaseSpending, type ExecutableOperation, type TransactionType, type MCNAccount } from '../wallet'
-import { sha256, rmd160 } from './crypto'
-import { isHex, hasHexPrefix, decodeCB58, isBase58, encodeBech32 } from './encoding'
+import { BaseSpending, type ExecutableOperation, type MCNAccount, type Spending, type TransactionType } from '../wallet'
+import { rmd160, sha256 } from './crypto'
+import { decodeCB58, encodeBech32, hasHexPrefix, isBase58, isHex } from './encoding'
 
 export const JVMPrivateKeyPrefix = 'PrivateKey-'
 const PrivateKeyLength: number = 64
@@ -45,7 +45,7 @@ export async function trackJuneoTransaction (
   transactionType: TransactionType
 ): Promise<boolean> {
   let success: boolean = false
-  const vmId: string = chain.vmId
+  const vmId: string = chain.vm.id
   if (vmId === JVM_ID) {
     success = await executable.trackJVMTransaction(transactionId, transactionType)
   } else if (vmId === PLATFORMVM_ID) {

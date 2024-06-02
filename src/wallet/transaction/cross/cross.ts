@@ -71,11 +71,11 @@ export class CrossManager {
     utxosCount?: number,
     assetsCount?: number
   ): Promise<BaseFeeData> {
-    if (destination.vmId === JVM_ID) {
+    if (destination.vm.id === JVM_ID) {
       return await estimateJVMImportTransaction(provider)
-    } else if (destination.vmId === PLATFORMVM_ID) {
+    } else if (destination.vm.id === PLATFORMVM_ID) {
       return await estimatePlatformImportTransaction(provider)
-    } else if (destination.vmId === JEVM_ID) {
+    } else if (destination.vm.id === JEVM_ID) {
       const api: JEVMAPI = provider.jevmApi[destination.id]
       const exportedAssetsCount: number = assetId === api.chain.assetId ? 1 : 2
       const inputsCount: number = typeof utxosCount === 'number' ? utxosCount : exportedAssetsCount
@@ -83,7 +83,7 @@ export class CrossManager {
       const outputsCount: number = typeof assetsCount === 'number' ? assetsCount : exportedAssetsCount // 1
       return await estimateEVMImportTransaction(api, inputsCount, outputsCount)
     }
-    throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
+    throw new CrossError(`destination vm id does not support cross: ${destination.vm.id}`)
   }
 
   async estimateExport (
@@ -92,19 +92,19 @@ export class CrossManager {
     destination: Blockchain,
     assetId: string
   ): Promise<BaseFeeData> {
-    if (source.vmId === JVM_ID) {
+    if (source.vm.id === JVM_ID) {
       return await estimateJVMExportTransaction(provider)
-    } else if (source.vmId === PLATFORMVM_ID) {
+    } else if (source.vm.id === PLATFORMVM_ID) {
       return await estimatePlatformExportTransaction(provider)
-    } else if (source.vmId === JEVM_ID) {
+    } else if (source.vm.id === JEVM_ID) {
       const api: JEVMAPI = provider.jevmApi[source.id]
       return await estimateEVMExportTransaction(api, assetId, destination)
     }
-    throw new CrossError(`source vm id does not support cross: ${source.vmId}`)
+    throw new CrossError(`source vm id does not support cross: ${source.vm.id}`)
   }
 
   canPayImportFee (destination: Blockchain, importFee: bigint, importFeeAssetDestinationBalance: bigint): boolean {
-    return destination.vmId !== JEVM_ID ? importFeeAssetDestinationBalance >= importFee : false
+    return destination.vm.id !== JEVM_ID ? importFeeAssetDestinationBalance >= importFee : false
   }
 
   shouldSendImportFee (
@@ -131,8 +131,8 @@ export class CrossManager {
     // initial cross transaction can be finalized by doing a regular JVM to JUNE chain cross transaction with the
     // initial exported funds towards it.
     return (
-      cross.source.vmId === JEVM_ID &&
-      cross.destination.vmId === JEVM_ID &&
+      cross.source.vm.id === JEVM_ID &&
+      cross.destination.vm.id === JEVM_ID &&
       cross.source.id !== this.provider.juneChain.id
     )
   }
@@ -153,7 +153,7 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
-    if (source.vmId === JVM_ID) {
+    if (source.vm.id === JVM_ID) {
       return await executeJVMExportTransaction(
         provider,
         this.wallet,
@@ -167,7 +167,7 @@ export class CrossManager {
         utxoSet,
         extraFeeAmount
       )
-    } else if (source.vmId === PLATFORMVM_ID) {
+    } else if (source.vm.id === PLATFORMVM_ID) {
       return await executePlatformExportTransaction(
         provider,
         this.wallet,
@@ -180,7 +180,7 @@ export class CrossManager {
         exportFee,
         utxoSet
       )
-    } else if (source.vmId === JEVM_ID) {
+    } else if (source.vm.id === JEVM_ID) {
       const api: JEVMAPI = provider.jevmApi[source.id]
       return await executeEVMExportTransaction(
         provider,
@@ -195,7 +195,7 @@ export class CrossManager {
         exportFee
       )
     }
-    throw new CrossError(`source vm id does not support cross: ${source.vmId}`)
+    throw new CrossError(`source vm id does not support cross: ${source.vm.id}`)
   }
 
   async import (
@@ -209,18 +209,18 @@ export class CrossManager {
     if (source.id === destination.id) {
       throw new CrossError('source and destination chain cannot be the same')
     }
-    if (destination.vmId === JVM_ID) {
+    if (destination.vm.id === JVM_ID) {
       return await executeJVMImportTransaction(provider, this.wallet, source, importFee, utxoSet)
-    } else if (destination.vmId === PLATFORMVM_ID) {
+    } else if (destination.vm.id === PLATFORMVM_ID) {
       return await executePlatformImportTransaction(provider, this.wallet, source, importFee, utxoSet)
-    } else if (destination.vmId === JEVM_ID) {
+    } else if (destination.vm.id === JEVM_ID) {
       if (payImportFee) {
-        throw new CrossError(`vm id ${destination.vmId} cannot pay import fee`)
+        throw new CrossError(`vm id ${destination.vm.id} cannot pay import fee`)
       }
       const api: JEVMAPI = provider.jevmApi[destination.id]
       return await executeEVMImportTransaction(provider, api, this.wallet, source, importFee, utxoSet)
     }
-    throw new CrossError(`destination vm id does not support cross: ${destination.vmId}`)
+    throw new CrossError(`destination vm id does not support cross: ${destination.vm.id}`)
   }
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<CrossOperationSummary> {
@@ -353,7 +353,7 @@ export class CrossManager {
       cross.destination = jvmChain
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[0], summary.fees[1])
       // jevm cross transactions amount must be changed because of atomic denominator
-      if (cross.source.vmId === JEVM_ID && cross.assetId === cross.source.assetId) {
+      if (cross.source.vm.id === JEVM_ID && cross.assetId === cross.source.assetId) {
         cross.amount /= AtomicDenomination
       }
       cross.source = jvmChain
@@ -408,7 +408,7 @@ export class CrossManager {
     const balancesSync: Array<Promise<void>> = []
     let sourceUtxos: Utxo[] = []
     const sourceAccount: ChainAccount = account.getAccount(cross.source.id)
-    if (cross.source.vmId === JVM_ID || cross.source.vmId === PLATFORMVM_ID) {
+    if (cross.source.vm.id === JVM_ID || cross.source.vm.id === PLATFORMVM_ID) {
       sourceUtxos = (sourceAccount as UtxoAccount).utxoSet
     }
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
@@ -451,7 +451,7 @@ export class CrossManager {
       cross.source.id,
       exportTransactionId
     )
-    const destinationVmId: string = cross.destination.vmId
+    const destinationVmId: string = cross.destination.vm.id
     if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }

@@ -1,5 +1,5 @@
 import { type PlatformAPI } from '../../api'
-import { sleep } from '../../utils'
+import { TimeUtils } from '../../utils'
 import { type TransactionStatusFetcher, TransactionStatusFetchDelay } from '../transaction'
 
 export enum PlatformTransactionStatus {
@@ -25,7 +25,7 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
     const maxAttempts: number = timeout / delay
     this.currentStatus = PlatformTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
-      await sleep(delay)
+      await TimeUtils.sleep(delay)
       await this.platformApi.getTxStatus(this.transactionId).then(
         (value) => {
           this.currentStatus = value.status

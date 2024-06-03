@@ -12,9 +12,6 @@ export enum TransactionType {
   Unwrap = 'Unwrap transaction',
   PrimaryValidation = 'Primary validation transaction',
   PrimaryDelegation = 'Primary delegation transaction',
-  RedeemAuction = 'Redeem auction transaction',
-  WithdrawStream = 'Withdraw stream transaction',
-  CancelStream = 'Cancel stream transaction',
   CreateSupernet = 'Create supernet transaction',
   ValidateSupernet = 'Supernet validation transaction',
   RemoveSupernetValidator = 'Remove supernet validator transaction',
@@ -60,5 +57,19 @@ export class UtxoSpending extends BaseSpending {
   constructor (chain: Blockchain, amount: bigint, assetId: string, utxos: Utxo[]) {
     super(chain, amount, assetId)
     this.utxos = utxos
+  }
+}
+
+export class EVMTransactionData {
+  from: string
+  to: string
+  value: bigint
+  data: string
+
+  constructor (from: string, to: string, value: bigint, data: string) {
+    this.from = from
+    this.to = to
+    this.value = value
+    this.data = data
   }
 }

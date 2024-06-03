@@ -14,7 +14,6 @@ const GENESIS_CODE: string = 'Genesis error'
 const ACCOUNT_CODE: string = 'Account error'
 const CHAIN_CODE: string = 'Chain error'
 const CROSS_CODE: string = 'Cross error'
-const TIME_CODE: string = 'Time error'
 const STAKE_CODE: string = 'Stake error'
 const AMOUNT_CODE: string = 'Amount error'
 const CAPACITY_CODE: string = 'Capacity error'
@@ -144,13 +143,6 @@ export class CrossError extends JuneoError {
   constructor (message: string) {
     super(message, CROSS_CODE)
     Object.setPrototypeOf(this, CrossError.prototype)
-  }
-}
-
-export class TimeError extends JuneoError {
-  constructor (message: string) {
-    super(message, TIME_CODE)
-    Object.setPrototypeOf(this, TimeError.prototype)
   }
 }
 

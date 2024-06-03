@@ -1,4 +1,4 @@
-import { now } from '../../utils'
+import { TimeUtils } from '../../utils'
 
 export enum BalanceStatus {
   Updating = 'Updating',
@@ -56,7 +56,7 @@ export class Balance {
   }
 
   shouldUpdate (): boolean {
-    return now() < this.lastUpdate + UpdateTimeValidity
+    return TimeUtils.now() < this.lastUpdate + UpdateTimeValidity
   }
 
   getStatus (): BalanceStatus {
@@ -75,7 +75,7 @@ export class Balance {
   }
 
   private callBalanceUpdateEvent (event: BalanceUpdateEvent): void {
-    this.lastUpdate = now()
+    this.lastUpdate = TimeUtils.now()
     this.listeners.forEach((listener) => {
       listener.onBalanceUpdateEvent(event)
     })

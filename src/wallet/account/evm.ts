@@ -1,30 +1,23 @@
+import { ethers } from 'ethers'
 import { type JEVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { AccountError } from '../../utils'
+import { AccountError, isContractAddress } from '../../utils'
 import {
-  type CancelStreamOperation,
   type ChainNetworkOperation,
-  ChainOperationSummary,
+  type ChainOperationSummary,
   type EthCallOperation,
   type ExecutableOperation,
   NetworkOperationType,
-  type RedeemAuctionOperation,
   type SendOperation,
   type UnwrapOperation,
-  type WithdrawStreamOperation,
   type WrapOperation
 } from '../operation'
 import {
   BaseSpending,
   type EVMFeeData,
+  FeeType,
   TransactionType,
-  estimateEVMCancelStreamOperation,
-  estimateEVMRedeemAuctionOperation,
-  estimateEVMTransfer,
-  estimateEVMUnwrapOperation,
-  estimateEVMWithdrawStreamOperation,
-  estimateEVMWrapOperation,
-  estimateEthCallOperation,
+  estimateEVMOperation,
   executeEVMTransaction
 } from '../transaction'
 import { type JEVMWallet, type MCNWallet } from '../wallet'
@@ -47,41 +40,72 @@ export class EVMAccount extends AbstractChainAccount {
     const provider: MCNProvider = await this.provider.getStaticProvider()
     if (operation.type === NetworkOperationType.Send) {
       const send: SendOperation = operation as SendOperation
-      const fee: EVMFeeData = await estimateEVMTransfer(
+      const isContract: boolean = isContractAddress(send.assetId)
+      const address: string = isContract ? send.assetId : send.address
+      const amount: bigint = isContract ? BigInt(0) : send.amount
+      const data: string = isContract
+        ? await this.chain.getContractTransactionData(provider, send.assetId, address, amount)
+        : '0x'
+      return await estimateEVMOperation(
         provider,
-        this.chainWallet,
-        this.chain.id,
-        send.assetId,
-        send.amount,
-        send.address
+        this.chain,
+        this.chainWallet.getAddress(),
+        send,
+        [new BaseSpending(this.chain, send.amount, send.assetId)],
+        new Map<string, bigint>([[send.assetId, send.amount]]),
+        address,
+        amount,
+        data,
+        FeeType.BaseFee
       )
-      const spending: BaseSpending = new BaseSpending(this.chain, send.amount, send.assetId)
-      const values = new Map<string, bigint>([[send.assetId, send.amount]])
-      return new ChainOperationSummary(provider, operation, this.chain, fee, [spending, fee.spending], values)
     } else if (operation.type === NetworkOperationType.Wrap) {
-      return await estimateEVMWrapOperation(provider, this.chainWallet.getAddress(), operation as WrapOperation)
+      const wrap = operation as WrapOperation
+      return await estimateEVMOperation(
+        provider,
+        this.chain,
+        this.chainWallet.getAddress(),
+        wrap,
+        [new BaseSpending(this.chain, wrap.amount, this.chain.assetId)],
+        new Map<string, bigint>([[this.chain.assetId, wrap.amount]]),
+        wrap.asset.address,
+        wrap.amount,
+        wrap.asset.adapter.getDepositData(),
+        FeeType.Wrap
+      )
     } else if (operation.type === NetworkOperationType.Unwrap) {
-      return await estimateEVMUnwrapOperation(provider, this.chainWallet.getAddress(), operation as UnwrapOperation)
-    } else if (operation.type === NetworkOperationType.RedeemAuction) {
-      return await estimateEVMRedeemAuctionOperation(
+      const unwrap = operation as UnwrapOperation
+      return await estimateEVMOperation(
         provider,
+        this.chain,
         this.chainWallet.getAddress(),
-        operation as RedeemAuctionOperation
-      )
-    } else if (operation.type === NetworkOperationType.WithdrawStream) {
-      return await estimateEVMWithdrawStreamOperation(
-        provider,
-        this.chainWallet.getAddress(),
-        operation as WithdrawStreamOperation
-      )
-    } else if (operation.type === NetworkOperationType.CancelStream) {
-      return await estimateEVMCancelStreamOperation(
-        provider,
-        this.chainWallet.getAddress(),
-        operation as CancelStreamOperation
+        unwrap,
+        [new BaseSpending(this.chain, unwrap.amount, unwrap.asset.assetId)],
+        new Map<string, bigint>([[unwrap.asset.assetId, unwrap.amount]]),
+        unwrap.asset.address,
+        BigInt(0),
+        unwrap.asset.adapter.getWithdrawData(unwrap.amount),
+        FeeType.Unwrap
       )
     } else if (operation.type === NetworkOperationType.EthCall) {
-      return await estimateEthCallOperation(provider, this.chainWallet.getAddress(), operation as EthCallOperation)
+      const ethCall = operation as EthCallOperation
+      const contract = new ethers.Contract(ethCall.contract, ethCall.abi, this.chain.ethProvider)
+      const data = contract.interface.encodeFunctionData(ethCall.functionName, ethCall.values)
+      const values = new Map<string, bigint>()
+      if (ethCall.amount > 0) {
+        values.set(this.chain.assetId, ethCall.amount)
+      }
+      return await estimateEVMOperation(
+        provider,
+        this.chain,
+        this.chainWallet.getAddress(),
+        ethCall,
+        [],
+        values,
+        ethCall.contract,
+        ethCall.amount,
+        data,
+        FeeType.EthCall
+      )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -95,12 +119,6 @@ export class EVMAccount extends AbstractChainAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.Wrap)
     } else if (operation === NetworkOperationType.Unwrap) {
       await this.executeAndTrackTransaction(summary, TransactionType.Unwrap)
-    } else if (operation === NetworkOperationType.RedeemAuction) {
-      await this.executeAndTrackTransaction(summary, TransactionType.RedeemAuction)
-    } else if (operation === NetworkOperationType.WithdrawStream) {
-      await this.executeAndTrackTransaction(summary, TransactionType.WithdrawStream)
-    } else if (operation === NetworkOperationType.CancelStream) {
-      await this.executeAndTrackTransaction(summary, TransactionType.CancelStream)
     } else if (operation === NetworkOperationType.EthCall) {
       await this.executeAndTrackTransaction(summary, TransactionType.EthCall)
     }

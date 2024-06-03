@@ -13,9 +13,6 @@ export enum NetworkOperationType {
   DelegatePrimary = 'Delegate primary',
   Wrap = 'Wrap',
   Unwrap = 'Unwrap',
-  RedeemAuction = 'Redeem auction',
-  WithdrawStream = 'Withdraw stream',
-  CancelStream = 'Cancel stream',
   CreateSupernet = 'Create supernet',
   ValidateSupernet = 'Validate supernet',
   RemoveSupernetValidator = 'Remove supernet validator',
@@ -119,43 +116,6 @@ export class WrapOperation extends Wrapping {
 export class UnwrapOperation extends Wrapping {
   constructor (chain: JEVMBlockchain, asset: WrappedAsset, amount: bigint) {
     super(NetworkOperationType.Unwrap, chain, asset, amount)
-  }
-}
-
-export class RedeemAuctionOperation extends JEVMChainOperation {
-  auctionAddress: string
-  auctionId: bigint
-
-  constructor (chain: JEVMBlockchain, auctionAddress: string, auctionId: bigint) {
-    super(NetworkOperationType.RedeemAuction, chain)
-    this.auctionAddress = auctionAddress
-    this.auctionId = auctionId
-  }
-}
-
-abstract class StreamOperation extends JEVMChainOperation {
-  streamAddress: string
-  streamId: bigint
-
-  constructor (type: NetworkOperationType, chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
-    super(type, chain)
-    this.streamAddress = streamAddress
-    this.streamId = streamId
-  }
-}
-
-export class WithdrawStreamOperation extends StreamOperation {
-  amount: bigint
-
-  constructor (chain: JEVMBlockchain, streamAddress: string, streamId: bigint, amount: bigint) {
-    super(NetworkOperationType.WithdrawStream, chain, streamAddress, streamId)
-    this.amount = amount
-  }
-}
-
-export class CancelStreamOperation extends StreamOperation {
-  constructor (chain: JEVMBlockchain, streamAddress: string, streamId: bigint) {
-    super(NetworkOperationType.CancelStream, chain, streamAddress, streamId)
   }
 }
 

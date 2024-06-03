@@ -1,29 +1,29 @@
-import { AccountError, type AssetValue, sortSpendings } from '../../utils'
-import { type MCNWallet } from '../wallet'
+import { type TokenAsset } from '../../asset'
+import { type Blockchain } from '../../chain'
+import { type MCNProvider } from '../../juneo'
+import { AccountError, sortSpendings, type AssetValue } from '../../utils'
 import {
-  NetworkOperationType,
-  NetworkOperationStatus,
-  type NetworkOperation,
-  type CrossOperationSummary,
-  type ExecutableOperation,
-  type ChainOperationSummary,
-  type OperationSummary,
-  type CrossResumeOperationSummary,
   NetworkOperationRange,
+  NetworkOperationStatus,
+  NetworkOperationType,
   type ChainNetworkOperation,
-  type CrossResumeOperation,
+  type ChainOperationSummary,
   type CrossOperation,
+  type CrossOperationSummary,
+  type CrossResumeOperation,
+  type CrossResumeOperationSummary,
   type DepositResumeOperation,
-  type DepositResumeOperationSummary
+  type DepositResumeOperationSummary,
+  type ExecutableOperation,
+  type NetworkOperation,
+  type OperationSummary
 } from '../operation'
-import { AccountType, type UtxoAccount, type ChainAccount, type AbstractChainAccount } from './account'
+import { CrossManager, type Spending } from '../transaction'
+import { type MCNWallet } from '../wallet'
+import { AccountType, type AbstractChainAccount, type ChainAccount, type UtxoAccount } from './account'
 import { EVMAccount } from './evm'
 import { JVMAccount } from './jvm'
 import { PlatformAccount } from './platform'
-import { type Spending, CrossManager } from '../transaction'
-import { type Blockchain } from '../../chain'
-import { type TokenAsset } from '../../asset'
-import { type MCNProvider } from '../../juneo'
 
 export class MCNAccount {
   readonly wallet: MCNWallet
@@ -67,15 +67,15 @@ export class MCNAccount {
     return totalAmount
   }
 
-  getTotalTimelockedAssetValue (asset: TokenAsset): AssetValue {
-    return asset.getAssetValue(this.getTotalTimelockedAmount(asset.assetId))
+  getTotalLockedAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getTotalLockedAmount(asset.assetId))
   }
 
-  getTotalTimelockedAmount (assetId: string): bigint {
+  getTotalLockedAmount (assetId: string): bigint {
     let totalAmount: bigint = BigInt(0)
     for (const [, account] of this.chainAccounts) {
       if (account.type === AccountType.Utxo) {
-        totalAmount += (account as UtxoAccount).getTimelockedBalance(assetId).getValue()
+        totalAmount += (account as UtxoAccount).getLockedBalance(assetId).getValue()
       }
     }
     return totalAmount

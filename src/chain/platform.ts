@@ -1,9 +1,12 @@
-import { fetchJNT, now, RewardCalculator, validateBech32 } from '../utils'
-import { type TokenAsset, type JNTAsset } from '../asset'
-import { AbstractBlockchain, VMAccountType } from './chain'
+import { type JNTAsset, type TokenAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
+import { fetchJNT, RewardCalculator, TimeUtils, validateBech32 } from '../utils'
+import { AbstractBlockchain } from './chain'
+import { ChainVM, VMWalletType } from './vm'
 
 export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
+
+const HD_PATH = 9000
 
 const BaseShare: number = 100_0000 // 100%
 
@@ -21,7 +24,7 @@ export class PlatformBlockchain extends AbstractBlockchain {
     aliases?: string[],
     registeredAssets: TokenAsset[] = []
   ) {
-    super(name, id, PLATFORMVM_ID, VMAccountType.Utxo, asset, aliases, registeredAssets)
+    super(name, id, new ChainVM(PLATFORMVM_ID, VMWalletType.Utxo, HD_PATH), asset, aliases, registeredAssets)
     this.stakeConfig = stakeConfig
     this.rewardConfig = rewardConfig
     this.rewardCalculator = new RewardCalculator(rewardConfig)
@@ -36,11 +39,11 @@ export class PlatformBlockchain extends AbstractBlockchain {
   }
 
   estimatePrimaryValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    return this.rewardCalculator.calculatePrimary(stakePeriod, now(), stakeAmount)
+    return this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
   }
 
   estimatePrimaryDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    const rewards: bigint = this.rewardCalculator.calculatePrimary(stakePeriod, now(), stakeAmount)
+    const rewards: bigint = this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
     return (rewards * BigInt(BaseShare - this.stakeConfig.minDelegationFee)) / BigInt(BaseShare)
   }
 }

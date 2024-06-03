@@ -2,10 +2,10 @@ import { type PlatformBlockchain } from '../../chain'
 import { InputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
-import { type UserOutput, TransferableOutput, Secp256k1Output, type Utxo } from '../output'
+import { Secp256k1Output, TransferableOutput, type UserOutput, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
-import { type SupernetAuth, type BLSSigner } from './supernet'
+import { type BLSSigner, type SupernetAuth } from './supernet'
 import {
   AddDelegatorTransaction,
   AddPermissionlessDelegatorTransaction,
@@ -196,10 +196,10 @@ export function buildAddValidatorTransaction (
   shares: number,
   stakeAddresses: string[],
   stakeThreshold: number,
-  stakeTimelock: bigint,
+  stakeLocktime: bigint,
   rewardAddresses: string[],
   rewardThreshold: number,
-  rewardTimelock: bigint,
+  rewardLocktime: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
@@ -226,11 +226,11 @@ export function buildAddValidatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
+      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardTimelock,
+    rewardLocktime,
     rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )
@@ -269,10 +269,10 @@ export function buildAddDelegatorTransaction (
   stakedAssetId: string,
   stakeAddresses: string[],
   stakeThreshold: number,
-  stakeTimelock: bigint,
+  stakeLocktime: bigint,
   rewardAddresses: string[],
   rewardThreshold: number,
-  rewardTimelock: bigint,
+  rewardLocktime: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
@@ -299,11 +299,11 @@ export function buildAddDelegatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
+      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardTimelock,
+    rewardLocktime,
     rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )
@@ -574,10 +574,10 @@ export function buildAddPermissionlessValidatorTransaction (
   signer: BLSSigner,
   stakeAddresses: string[],
   stakeThreshold: number,
-  stakeTimelock: bigint,
+  stakeLocktime: bigint,
   rewardAddresses: string[],
   rewardThreshold: number,
-  rewardTimelock: bigint,
+  rewardLocktime: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
@@ -604,11 +604,11 @@ export function buildAddPermissionlessValidatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
+      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardTimelock,
+    rewardLocktime,
     rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )
@@ -647,10 +647,10 @@ export function buildAddPermissionlessDelegatorTransaction (
   stakedAssetId: string,
   stakeAddresses: string[],
   stakeThreshold: number,
-  stakeTimelock: bigint,
+  stakeLocktime: bigint,
   rewardAddresses: string[],
   rewardThreshold: number,
-  rewardTimelock: bigint,
+  rewardLocktime: bigint,
   changeAddress: string,
   networkId: number,
   memo: string = ''
@@ -677,11 +677,11 @@ export function buildAddPermissionlessDelegatorTransaction (
   const stake: TransferableOutput[] = [
     new TransferableOutput(
       new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeTimelock, stakeThreshold, Address.toAddresses(stakeAddresses))
+      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
     )
   ]
   const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardTimelock,
+    rewardLocktime,
     rewardThreshold,
     Address.toAddresses(rewardAddresses)
   )

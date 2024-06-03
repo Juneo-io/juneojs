@@ -59,3 +59,17 @@ export class UtxoSpending extends BaseSpending {
     this.utxos = utxos
   }
 }
+
+export class EVMTransactionData {
+  from: string
+  to: string
+  value: bigint
+  data: string
+
+  constructor (from: string, to: string, value: bigint, data: string) {
+    this.from = from
+    this.to = to
+    this.value = value
+    this.data = data
+  }
+}

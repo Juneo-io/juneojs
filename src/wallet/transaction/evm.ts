@@ -12,47 +12,8 @@ import {
   InvalidNonceRetryDelay,
   MaxInvalidNonceAttempts
 } from './constants'
-import { BaseFeeData, FeeType } from './fee'
-import { type BaseSpending } from './transaction'
-
-export class EVMTransactionData {
-  from: string
-  to: string
-  value: bigint
-  data: string
-
-  constructor (from: string, to: string, value: bigint, data: string) {
-    this.from = from
-    this.to = to
-    this.value = value
-    this.data = data
-  }
-}
-
-export class EVMFeeData extends BaseFeeData {
-  baseFee: bigint
-  gasLimit: bigint
-  data: EVMTransactionData
-
-  constructor (
-    chain: JEVMBlockchain,
-    amount: bigint,
-    type: string,
-    baseFee: bigint,
-    gasLimit: bigint,
-    data: EVMTransactionData
-  ) {
-    super(chain, amount, type)
-    this.baseFee = baseFee
-    this.gasLimit = gasLimit
-    this.data = data
-  }
-
-  setGasLimit (gasLimit: bigint): void {
-    this.amount = this.baseFee * this.gasLimit
-    this.gasLimit = gasLimit
-  }
-}
+import { EVMFeeData, FeeType } from './fee'
+import { type BaseSpending, EVMTransactionData } from './transaction'
 
 export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchronize: boolean): Promise<bigint> {
   if (synchronize || !wallet.synchronized) {

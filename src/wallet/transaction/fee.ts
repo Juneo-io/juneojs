@@ -1,8 +1,8 @@
 import { type TokenAsset } from '../../asset'
-import { type Blockchain } from '../../chain'
+import { type JEVMBlockchain, type Blockchain } from '../../chain'
 import { type UnsignedTransaction } from '../../transaction'
 import { type AssetValue } from '../../utils'
-import { BaseSpending, type Spending, UtxoSpending } from './transaction'
+import { BaseSpending, type EVMTransactionData, UtxoSpending, type Spending } from './transaction'
 
 export enum FeeType {
   Undefined = 'Undefined',
@@ -65,5 +65,30 @@ export class UtxoFeeData extends BaseFeeData {
 
   getAssetValue (): AssetValue {
     return this.chain.asset.getAssetValue(this.amount)
+  }
+}
+
+export class EVMFeeData extends BaseFeeData {
+  baseFee: bigint
+  gasLimit: bigint
+  data: EVMTransactionData
+
+  constructor (
+    chain: JEVMBlockchain,
+    amount: bigint,
+    type: string,
+    baseFee: bigint,
+    gasLimit: bigint,
+    data: EVMTransactionData
+  ) {
+    super(chain, amount, type)
+    this.baseFee = baseFee
+    this.gasLimit = gasLimit
+    this.data = data
+  }
+
+  setGasLimit (gasLimit: bigint): void {
+    this.amount = this.baseFee * this.gasLimit
+    this.gasLimit = gasLimit
   }
 }

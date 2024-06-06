@@ -36,9 +36,10 @@ export class MCNProvider {
   }
 
   async getStaticProvider (): Promise<MCNProvider> {
-    const url = this.mcn.access.getStaticUrl()
-    const client: JuneoClient = JuneoClient.parse(url)
-    return new MCNProvider(this.mcn, client)
+    return this
+    // const url = this.mcn.access.getStaticUrl()
+    // const client: JuneoClient = JuneoClient.parse(url)
+    // return new MCNProvider(this.mcn, client)
   }
 }
 

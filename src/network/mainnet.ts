@@ -1,6 +1,6 @@
 import { JEVMGasToken, JNTAsset, JRC20Asset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
-import { MCN, PrimarySupernet } from './network'
+import { MCN, MCNAccess, PrimarySupernet } from './network'
 
 const MainnetNetworkId: number = 45
 const MainnetHrp: string = 'june'
@@ -26,6 +26,7 @@ const MainnetRewardConfig: RewardConfig = new RewardConfig(
   BigInt(6_7000) // 6.7%
 )
 const MainnetAddress: string = 'https://rpc.juneo-mainnet.network'
+const MainnetStaticAddresses = ['https://rpc1.juneo-mainnet.network', 'https://rpc2.juneo-mainnet.network']
 
 export const MainnetJUNEAssetId: string = '3WWxh5JEz7zu1RWdRxS6xugusNWzFFPwPw1xnZfAGzaAj8sTp'
 export const MainnetUSDT1AssetId: string = '2VsLGMQuboTekStUVqWC2JdLHQAb1rdYHTP9LRsy17ccEpNGH9'
@@ -246,4 +247,9 @@ export const MainnetPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   MainnetJUNEChain
 )
 
-export const MainNetwork: MCN = new MCN(MainnetAddress, MainnetNetworkId, MainnetHrp, MainnetPrimarySupernet)
+export const MainNetwork: MCN = new MCN(
+  new MCNAccess(MainnetAddress, MainnetStaticAddresses),
+  MainnetNetworkId,
+  MainnetHrp,
+  MainnetPrimarySupernet
+)

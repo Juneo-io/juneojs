@@ -1,4 +1,4 @@
-import { HttpProtocol, InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
+import { InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
 import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
 import { SocotraNetwork, type MCN } from './network'
 
@@ -15,7 +15,7 @@ export class MCNProvider {
   jevmApi: Record<string, JEVMAPI> = {}
   juneAssetId: string
 
-  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
+  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.access.url)) {
     this.mcn = mcn
     this.client = client
     this.info = new InfoAPI(client)
@@ -35,17 +35,10 @@ export class MCNProvider {
     this.juneAssetId = this.platformChain.assetId
   }
 
-  /**
-   * Get a provider that uses one same node only. Load balanced requests could cause issues in some cases.
-   * @param protocol The protocol that the provider should use. Defaults to Http.
-   * @param port The port that the provider should use. Defaults to 9650.
-   * @returns MCNProvider connecting with the ip address of one node.
-   */
-  async getStaticProvider (protocol: string = HttpProtocol, port: number = 9650): Promise<MCNProvider> {
-    return this
-    // const ip: string = (await this.info.getNodeIP()).ip.split(':')[0]
-    // const client: JuneoClient = JuneoClient.parse(`${protocol}://${ip}:${port}`)
-    // return new MCNProvider(this.mcn, client)
+  async getStaticProvider (): Promise<MCNProvider> {
+    const url = this.mcn.access.getStaticUrl()
+    const client: JuneoClient = JuneoClient.parse(url)
+    return new MCNProvider(this.mcn, client)
   }
 }
 

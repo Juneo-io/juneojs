@@ -1,6 +1,6 @@
-import { JNTAsset, JEVMGasToken } from '../asset'
-import { PlatformBlockchain, JVMBlockchain, JEVMBlockchain, RewardConfig, StakeConfig } from '../chain'
-import { PrimarySupernet, MCN } from './network'
+import { JEVMGasToken, JNTAsset } from '../asset'
+import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
+import { MCN, MCNAccess, PrimarySupernet } from './network'
 
 const LocalNetworkId: number = 12345
 const LocalHrp: string = 'local'
@@ -269,4 +269,4 @@ export const LocalPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   LocalJUNEChain
 )
 
-export const LocalNetwork: MCN = new MCN(LocalAddress, LocalNetworkId, LocalHrp, LocalPrimarySupernet)
+export const LocalNetwork: MCN = new MCN(new MCNAccess(LocalAddress), LocalNetworkId, LocalHrp, LocalPrimarySupernet)

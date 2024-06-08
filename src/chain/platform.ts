@@ -2,7 +2,7 @@ import { type JNTAsset, type TokenAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { fetchJNT, RewardCalculator, TimeUtils, validateBech32 } from '../utils'
 import { AbstractBlockchain } from './chain'
-import { ChainVM, VMWalletType } from './vm'
+import { ChainVM, VMType, VMWalletType } from './vm'
 
 export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
 
@@ -24,7 +24,14 @@ export class PlatformBlockchain extends AbstractBlockchain {
     aliases?: string[],
     registeredAssets: TokenAsset[] = []
   ) {
-    super(name, id, new ChainVM(PLATFORMVM_ID, VMWalletType.Utxo, HD_PATH), asset, aliases, registeredAssets)
+    super(
+      name,
+      id,
+      new ChainVM(PLATFORMVM_ID, VMType.JVM, VMWalletType.Utxo, HD_PATH),
+      asset,
+      aliases,
+      registeredAssets
+    )
     this.stakeConfig = stakeConfig
     this.rewardConfig = rewardConfig
     this.rewardCalculator = new RewardCalculator(rewardConfig)

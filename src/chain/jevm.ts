@@ -6,7 +6,7 @@ import { AssetId } from '../transaction'
 import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AbstractBlockchain } from './chain'
 import { ContractManager, ERC20TokenHandler, type SolidityTokenHandler } from './solidity'
-import { ChainVM, VMWalletType } from './vm'
+import { ChainVM, VMType, VMWalletType } from './vm'
 
 export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
 export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
@@ -40,7 +40,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     jrc20Assets: JRC20Asset[] = [],
     wrappedAsset?: WrappedAsset | undefined
   ) {
-    super(name, id, new ChainVM(JEVM_ID, VMWalletType.Nonce, HD_PATH), asset, aliases, registeredAssets)
+    super(name, id, new ChainVM(JEVM_ID, VMType.EVM, VMWalletType.Nonce, HD_PATH), asset, aliases, registeredAssets)
     this.asset = asset
     this.chainId = chainId
     this.baseFee = baseFee

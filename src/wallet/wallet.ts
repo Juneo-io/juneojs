@@ -67,33 +67,23 @@ export class MCNWallet {
   }
 
   private setChainWallet (chain: Blockchain): void {
+    const privateKey = this.getVMWalletPrivateKey(chain)
     if (chain.vm.id === JEVM_ID) {
-      this.chainsWallets.set(chain.id, this.buildJEVMWallet(chain))
+      this.chainsWallets.set(chain.id, new JEVMWallet(privateKey, this.hrp, chain))
     } else if (chain.vm.id === JVM_ID) {
-      this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
+      this.chainsWallets.set(chain.id, new JVMWallet(privateKey, this.hrp, chain))
     } else if (chain.vm.id === PLATFORMVM_ID) {
-      this.chainsWallets.set(chain.id, this.buildJVMWallet(chain))
+      this.chainsWallets.set(chain.id, new JVMWallet(privateKey, this.hrp, chain))
     } else {
       throw new WalletError(`unsupported vm id: ${chain.vm.id}`)
     }
   }
 
-  private buildJVMWallet (chain: Blockchain): JVMWallet {
+  private getVMWalletPrivateKey (chain: Blockchain): string {
     if (this.nodeManager !== undefined) {
-      const privateKey = this.nodeManager.derivePrivateKey(chain, 0)
-      return new JVMWallet(privateKey, this.hrp, chain)
+      return this.nodeManager.derivePrivateKey(chain, 0)
     } else if (this.privateKey !== undefined) {
-      return new JVMWallet(this.privateKey, this.hrp, chain)
-    }
-    throw new WalletError('missing recovery data to build wallet')
-  }
-
-  private buildJEVMWallet (chain: Blockchain): JEVMWallet {
-    if (this.nodeManager !== undefined) {
-      const privateKey = this.nodeManager.derivePrivateKey(chain, 0)
-      return new JEVMWallet(privateKey, this.hrp, chain)
-    } else if (this.privateKey !== undefined) {
-      return new JEVMWallet(this.privateKey, this.hrp, chain)
+      return this.privateKey
     }
     throw new WalletError('missing recovery data to build wallet')
   }

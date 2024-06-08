@@ -28,7 +28,7 @@ const MainnetRewardConfig: RewardConfig = new RewardConfig(
 const MainnetAddress: string = 'https://rpc.juneo-mainnet.network'
 const MainnetStaticAddresses = ['https://rpc1.juneo-mainnet.network', 'https://rpc2.juneo-mainnet.network']
 
-export const MainnetJUNEAssetId: string = '25nkzZfF1r1j8ggxsJ7czu23Kbt8teedCNXzwiS4bqdHnqVMVp'
+export const MainnetJUNEAssetId: string = '3WWxh5JEz7zu1RWdRxS6xugusNWzFFPwPw1xnZfAGzaAj8sTp'
 export const MainnetUSDT1AssetId: string = '2VsLGMQuboTekStUVqWC2JdLHQAb1rdYHTP9LRsy17ccEpNGH9'
 export const MainnetUSD1AssetId: string = 'pphgq7o18cXuAN5eKd8UAUwH82jbvBudZYbXZAXo6V8cQUqdi'
 export const MainnetDAI1AssetId: string = '2CFSqAJmkcv1k3YztAti5xArYA2P1qLHQvYJMBMAastaK7uMZK'
@@ -77,7 +77,7 @@ export const MainnetPlatformChain: PlatformBlockchain = new PlatformBlockchain(
 )
 export const MainnetJVMChain: JVMBlockchain = new JVMBlockchain(
   'JVM-Chain',
-  '2Vms9hFqnnJVFgHLbzDvYoZSjYSZo4PigyAX5Eaz8n8pTuB5QG',
+  'TS7kcXZxCtW7aLYfRMj7oJHTq1BKyU8LRddvdPyM4gPQe3xYt',
   MainnetJUNEAsset,
   ['JVM'],
   jntAssets
@@ -103,7 +103,7 @@ const jrc20Assets: JRC20Asset[] = [
 // )
 export const MainnetJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
-  '2P8hBTi1ohocWFT44P1ccGNt9RDppQjVCWvCE1jFRtrRCSo7Mz',
+  '2XjWAiAdw3BR56KhPSPxKJNzea2Ebvc67uhE1DTN9NsqCyP9eW',
   new JEVMGasToken(MainnetJUNEAsset),
   BigInt(45003),
   BigInt('48000000000'),

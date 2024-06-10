@@ -346,9 +346,9 @@ describe('Types', () => {
   describe('BlockchainId', () => {
     describe('Constructor', () => {
       test.each([
-        { blockchainId: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o' },
-        { blockchainId: 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN' },
-        { blockchainId: 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5' }
+        { blockchainId: '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGv' },
+        { blockchainId: 'vFZ8cj9v4SMPn4nvcmSw7KuxCvK9kLQq4u2wnTUFMzhUehwUN' },
+        { blockchainId: 'BUDQJ63154EiJZwwvukRB1tX3yQCDQdoEYYuCNKEruQ9MjRs4' }
       ])('Instantiate blockchainId: $blockchainId', ({ blockchainId }) => {
         expect(new BlockchainId(blockchainId)).toBeInstanceOf(BlockchainId)
       })
@@ -361,7 +361,7 @@ describe('Types', () => {
         },
         {
           description: 'Invalid size',
-          blockchainId: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2oq',
+          blockchainId: '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGvq',
           expectedError: DecodingError
         },
         {
@@ -396,7 +396,7 @@ describe('Types', () => {
         },
         {
           description: 'Upper bound size',
-          blockchainId: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2oq',
+          blockchainId: '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGvq',
           expectedError: DecodingError
         }
       ])('$description', ({ blockchainId, expectedError }) => {
@@ -406,16 +406,16 @@ describe('Types', () => {
       describe('serialization', () => {
         test.each([
           {
-            blockchainId: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o',
-            result: '2c2z3duV8XJhkZHedp19WTBtKEpkfG5BAcvKdL8tbjSgH8uj2o'
+            blockchainId: '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGv',
+            result: '2f1fGVRDot1V5CYeoiAN49LYrEBWmsZgnDXguvQ6u8YKdjqRGv'
           },
           {
-            blockchainId: 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN',
-            result: 'fqxdvHoxBciiVa7wAZjq48HYmFVyQefrDpPyVuPd5GAUHAjEN'
+            blockchainId: 'vFZ8cj9v4SMPn4nvcmSw7KuxCvK9kLQq4u2wnTUFMzhUehwUN',
+            result: 'vFZ8cj9v4SMPn4nvcmSw7KuxCvK9kLQq4u2wnTUFMzhUehwUN'
           },
           {
-            blockchainId: 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5',
-            result: 'NLp7mU4yqN9xfu3Yezc6Sq66xFx5E1bKaxsBZRBZ7N7FmKhb5'
+            blockchainId: 'BUDQJ63154EiJZwwvukRB1tX3yQCDQdoEYYuCNKEruQ9MjRs4',
+            result: 'BUDQJ63154EiJZwwvukRB1tX3yQCDQdoEYYuCNKEruQ9MjRs4'
           }
         ])('Serialize: $blockchainId', ({ blockchainId, result }) => {
           expect(new BlockchainId(blockchainId).serialize().toCB58()).toBe(result)

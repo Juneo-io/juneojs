@@ -10,7 +10,7 @@ import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT, PROVIDER } fro
 
 const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
-const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
+const validNodeId = 'NodeID-4JfgcoMWBpxCQL5VmyQ1f6L36mUbLLBga'
 const ONE_DAY: bigint = BigInt(86_400)
 let currentTime: bigint = TimeUtils.now() + BigInt(30)
 let tomorrow: bigint = currentTime + ONE_DAY
@@ -29,7 +29,7 @@ describe('Staking operations', (): void => {
       test.each([
         {
           nodeId: validNodeId,
-          amount: BigInt(10_000_000),
+          amount: BigInt(1_000_000),
           expectedStatus: DONE_STATUS,
           startTime: currentTime,
           endTime: tomorrow

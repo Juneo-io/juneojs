@@ -1,9 +1,9 @@
-import { GenesisJUNEChain } from '../../../src'
+import { SocotraJUNEChain } from '../../../src'
 import { PROVIDER } from '../constants'
 
 describe('InfoAPI', () => {
   describe('isBootstrapped', () => {
-    test.each([{ chainID: GenesisJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {
+    test.each([{ chainID: SocotraJUNEChain.id }])('Valid: $chainID', async ({ chainID }) => {
       const result = await PROVIDER.info.isBootstrapped(chainID)
       expect(result.isBootstrapped).toEqual(true)
     })
@@ -15,7 +15,7 @@ describe('InfoAPI', () => {
   describe('getBlockchainID', () => {
     test.each([{ alias: 'JUNE' }])('Valid: $alias', async ({ alias }) => {
       const result = await PROVIDER.info.getBlockchainID(alias)
-      expect(result.blockchainID).toEqual(GenesisJUNEChain.id)
+      expect(result.blockchainID).toEqual(SocotraJUNEChain.id)
     })
     test.failing.each([{ alias: 'WRONG_ALIAS' }])('Invalid: $alias', async ({ alias }) => {
       await PROVIDER.info.getBlockchainID('alias')

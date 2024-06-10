@@ -89,6 +89,7 @@ export class EVMFeeData extends BaseFeeData {
 
   setGasLimit (gasLimit: bigint): void {
     this.amount = this.baseFee * gasLimit
+    this.spending.amount = this.amount
     this.gasLimit = gasLimit
   }
 }

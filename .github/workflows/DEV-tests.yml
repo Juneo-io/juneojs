@@ -7,7 +7,7 @@ on:
 
 jobs:
   dev_build:
-    runs-on: [self-hosted, mcnRunner]
+    runs-on: [self-hosted]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
         run: npm install && npm run build
 
   dev_test:
-    runs-on: [self-hosted, mcnRunner]
+    runs-on: [self-hosted]
     env:
       MNEMONIC: ${{ secrets.MNEMONIC }}
     needs: dev_build

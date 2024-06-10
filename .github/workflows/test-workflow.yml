@@ -2,7 +2,7 @@ name: Test Runner Availability
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   test:

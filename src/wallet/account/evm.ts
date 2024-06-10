@@ -42,9 +42,8 @@ export class EVMAccount extends AbstractChainAccount {
       const send: SendOperation = operation as SendOperation
       const isContract: boolean = isContractAddress(send.assetId)
       const address: string = isContract ? send.assetId : send.address
-      const amount: bigint = isContract ? BigInt(0) : send.amount
       const data: string = isContract
-        ? await this.chain.getContractTransactionData(provider, send.assetId, address, amount)
+        ? await this.chain.getContractTransactionData(provider, send.assetId, address, send.amount)
         : '0x'
       return await estimateEVMOperation(
         provider,
@@ -54,7 +53,7 @@ export class EVMAccount extends AbstractChainAccount {
         [new BaseSpending(this.chain, send.amount, send.assetId)],
         new Map<string, bigint>([[send.assetId, send.amount]]),
         address,
-        amount,
+        isContract ? BigInt(0) : send.amount,
         data,
         FeeType.BaseFee
       )

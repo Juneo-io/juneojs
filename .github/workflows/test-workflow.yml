@@ -1,0 +1,11 @@
+name: Test Runner Availability
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: [self-hosted, mcnRunner]
+    steps:
+      - run: echo "Testing mcnRunner availability"

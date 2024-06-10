@@ -21,7 +21,7 @@ export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchron
     // In the future may set unsync if error occurs in sync process.
     // Verify that it would not negatively impact any other logics before.
     // Not doing it now because of doubt it could fail somewhere else.
-    return await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
+    wallet.nonce = await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
   }
   return wallet.nonce++
 }

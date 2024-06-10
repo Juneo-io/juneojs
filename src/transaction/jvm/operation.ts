@@ -1,4 +1,5 @@
 import { JuneoBuffer, type Serializable } from '../../utils'
+import { Secp256k1InitialStateFxId } from '../constants'
 import { type TransactionOutput } from '../output'
 import { type AssetId, type TransactionId } from '../types'
 
@@ -33,7 +34,7 @@ export interface InitialState extends Serializable {
 }
 
 export class Secp256k1InitialState implements InitialState {
-  fxId: number = 0x00000000
+  fxId: number = Secp256k1InitialStateFxId
   outputs: TransactionOutput[]
 
   constructor (outputs: TransactionOutput[]) {

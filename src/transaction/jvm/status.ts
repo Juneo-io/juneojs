@@ -1,6 +1,6 @@
 import { type JVMAPI } from '../../api'
 import { TimeUtils } from '../../utils'
-import { type TransactionStatusFetcher, TransactionStatusFetchDelay } from '../transaction'
+import { type TransactionStatusFetcher } from '../transaction'
 
 export enum JVMTransactionStatus {
   Accepted = 'Accepted',
@@ -19,7 +19,7 @@ export class JVMTransactionStatusFetcher implements TransactionStatusFetcher {
     this.transactionId = transactionId
   }
 
-  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
+  async fetch (timeout: number, delay: number): Promise<string> {
     const maxAttempts: number = timeout / delay
     this.currentStatus = JVMTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {

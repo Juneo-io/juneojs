@@ -1,14 +1,15 @@
 import { ethers } from 'ethers'
 import { GenesisError } from '../../utils'
-
-export const EVMFeeConfigDefaultGasLimit: number = 15_000_000
-export const EVMFeeConfigDefaultTargetBlockRate: number = 2
-export const EVMFeeConfigDefaultMinBaseFee: number = 25_000_000_000
-export const EVMFeeConfigDefaultTargetGas: number = 15_000_000
-export const EVMFeeConfigDefaultBaseFeeChangeDenominator: number = 36
-export const EVMFeeConfigDefaultMinBlockGasCost: number = 0
-export const EVMFeeConfigDefaultMaxBlockGasCost: number = 1_000_000
-export const EVMFeeConfigDefaultBlockGasCostStep: number = 200_000
+import {
+  EVMFeeConfigDefaultBaseFeeChangeDenominator,
+  EVMFeeConfigDefaultBlockGasCostStep,
+  EVMFeeConfigDefaultGasLimit,
+  EVMFeeConfigDefaultMaxBlockGasCost,
+  EVMFeeConfigDefaultMinBaseFee,
+  EVMFeeConfigDefaultMinBlockGasCost,
+  EVMFeeConfigDefaultTargetBlockRate,
+  EVMFeeConfigDefaultTargetGas
+} from '../constants'
 
 class EVMGenesis {
   chainId: number
@@ -21,7 +22,7 @@ class EVMGenesis {
 
   generate (): string {
     const alloc: any = {}
-    this.allocations.forEach((allocation) => {
+    for (const allocation of this.allocations) {
       let address: string = allocation.address
       try {
         address = ethers.getAddress(address).substring(2)
@@ -31,7 +32,7 @@ class EVMGenesis {
       alloc[address] = {
         balance: `0x${allocation.balance.toString(16).toUpperCase()}`
       }
-    })
+    }
     const json: any = JSON.parse(`{
         "config": {
             "chainId": ${this.chainId},

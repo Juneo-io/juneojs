@@ -1,6 +1,7 @@
-import { JuneoBuffer, type Serializable } from '../utils/bytes'
+import { JuneoBuffer, type Serializable } from '../utils'
 import { type VMWallet } from '../wallet'
-import { type Signature, SignatureSize } from './types'
+import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
+import { type Signature } from './types'
 
 export interface Signable {
   sign: (bytes: JuneoBuffer, wallets: VMWallet[]) => Signature[]
@@ -35,7 +36,7 @@ export abstract class TransactionCredentials implements Serializable {
 
 export class Secp256k1Credentials extends TransactionCredentials {
   constructor (signatures: Signature[]) {
-    super(0x00000009, signatures)
+    super(Secp256k1CredentialsTypeId, signatures)
   }
 }
 

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { type JEVMBlockchain } from '../../chain'
+import { EmptyCallData, type JEVMBlockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError, isContractAddress } from '../../utils'
 import {
@@ -44,7 +44,7 @@ export class EVMAccount extends AbstractChainAccount {
       const address: string = isContract ? send.assetId : send.address
       const data: string = isContract
         ? await this.chain.getContractTransactionData(provider, send.assetId, address, send.amount)
-        : '0x'
+        : EmptyCallData
       return await estimateEVMOperation(
         provider,
         this.chain,

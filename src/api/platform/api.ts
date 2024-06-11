@@ -9,6 +9,7 @@ import {
   type IssueTxResponse
 } from '../data'
 import {
+  type GetRewardPoolSupplyResponse,
   type GetBlockchainsResponse,
   type GetBlockchainStatusResponse,
   type GetCurrentSupplyResponse,
@@ -59,6 +60,11 @@ export class PlatformAPI extends AbstractUtxoAPI {
 
   async getCurrentSupply (supernetID?: string): Promise<GetCurrentSupplyResponse> {
     const response: JsonRpcResponse = await this.call('getCurrentSupply', [{ supernetID }])
+    return response.result
+  }
+
+  async getRewardPoolSupply (supernetID?: string): Promise<GetRewardPoolSupplyResponse> {
+    const response: JsonRpcResponse = await this.call('getRewardPoolSupply', [{ supernetID }])
     return response.result
   }
 

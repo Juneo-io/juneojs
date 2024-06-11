@@ -1,7 +1,7 @@
 import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../../api'
 import { type JRC20Asset } from '../../asset'
-import { type JEVMBlockchain, NativeAssetCallContract } from '../../chain'
+import { EmptyCallData, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { TimeUtils, TransactionError } from '../../utils'
 import { type ChainNetworkOperation, ChainOperationSummary } from '../operation'
@@ -40,6 +40,10 @@ export async function estimateEVMCall (
   data: string,
   baseFee: bigint
 ): Promise<bigint> {
+  // in case of native asset transfer return SendEtherLimit
+  if (value > BigInt(0) && data === EmptyCallData) {
+    return SendEtherGasLimit
+  }
   const gasLimit: bigint = await api.chain.ethProvider.estimateGas({
     blockTag: 'pending',
     from,

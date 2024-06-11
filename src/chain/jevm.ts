@@ -16,7 +16,8 @@ const HD_PATH = 60
 export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
 export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
 
-export const SendEtherGasLimit: bigint = BigInt(21_000)
+export const SendEtherGasLimit = BigInt(21_000)
+export const EmptyCallData = '0x'
 const Transferables: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
 
 export class JEVMBlockchain extends AbstractBlockchain {
@@ -65,7 +66,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     if (Transferables.includes(asset.type)) {
       return this.contractManager.getTransferData(this.ethProvider, assetId, to, amount)
     }
-    return '0x'
+    return EmptyCallData
   }
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {

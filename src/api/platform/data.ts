@@ -21,7 +21,11 @@ export interface GetBlockchainStatusResponse {
 }
 
 export interface GetCurrentSupplyResponse {
-  supply: number
+  supply: bigint
+}
+
+export interface GetRewardPoolSupplyResponse {
+  rewardPoolSupply: bigint
 }
 
 export interface GetCurrentValidatorsResponse {
@@ -32,24 +36,25 @@ export interface ValidatorData {
   txID: string
   startTime: string
   endTime: string
-  stakeAmount: string
-  nodeID: string
   weight: string
+  nodeID: string
+  stakeAmount: string
+  rewardOwner: RewardOwner
   validationRewardOwner: RewardOwner
   delegationRewardOwner: RewardOwner
   potentialReward: string
+  accruedDelegateeReward: string
   delegationFee: string
   uptime: string
   connected: boolean
   signer: Signer
   delegatorCount: string
   delegatorWeight: string
-  delegators: DelegatorData[]
 }
 
 export interface RewardOwner {
-  locktime: string
-  threshold: string
+  locktime: bigint
+  threshold: number
   addresses: string[]
 }
 
@@ -58,19 +63,9 @@ export interface Signer {
   proofOfPossession: string
 }
 
-export interface DelegatorData {
-  txID: string
-  startTime: string
-  endTime: string
-  stakeAmount: string
-  nodeID: string
-  rewardOwner: RewardOwner
-  potentialReward: string
-}
-
 export interface GetMinStakeResponse {
-  minValidatorStake: number
-  minDelegatorStake: number
+  minValidatorStake: bigint
+  minDelegatorStake: bigint
 }
 
 export interface GetStakingAssetIDResponse {
@@ -90,7 +85,7 @@ export interface GetSupernetsResponse {
 export interface SupernetData {
   id: string
   controlKeys: string[]
-  threshold: string
+  threshold: number
 }
 
 export interface GetTimestampResponse {
@@ -98,12 +93,17 @@ export interface GetTimestampResponse {
 }
 
 export interface GetTotalStakeResponse {
-  stake: number
-  weight: number
+  stake: bigint
+  weight: bigint
 }
 
 export interface GetValidatorsAtResponse {
-  validators: Record<string, number>
+  validators: Record<string, ValidatorAtData>
+}
+
+export interface ValidatorAtData {
+  publicKey: string
+  weight: bigint
 }
 
 export interface SampleValidatorsResponse {

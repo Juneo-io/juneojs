@@ -1,4 +1,4 @@
-import { JEVMGasToken, JNTAsset, JRC20Asset } from '../asset'
+import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
 import { MCN, MCNAccess, PrimarySupernet } from './network'
 
@@ -95,12 +95,12 @@ const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x3600000000000000000000000000000000000000', 'BCH.b', 'BCH.b', 9, MainnetBCH1AssetId),
   new JRC20Asset('0x3700000000000000000000000000000000000000', 'LINK.e', 'LINK.e', 9, MainnetLINK1AssetId)
 ]
-// export const MainnetWJUNEAsset: WrappedAsset = new WrappedAsset(
-//   '0xC984ae20d0Fed3B974959BCbd1721167214CDeD9',
-//   'Wrapped JUNE',
-//   'wJUNE',
-//   18
-// )
+export const MainnetWJUNEAsset = new WrappedAsset(
+  '0x466e8b1156e49D29B70447a9Af68038cF5562BdD',
+  'Wrapped JUNE',
+  'wJUNE',
+  18
+)
 export const MainnetJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   'JUNE-Chain',
   '2XjWAiAdw3BR56KhPSPxKJNzea2Ebvc67uhE1DTN9NsqCyP9eW',
@@ -110,8 +110,8 @@ export const MainnetJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   MainnetAddress,
   ['JUNE'],
   jrc20Assets,
-  jrc20Assets
-  //   MainnetWJUNEAsset
+  jrc20Assets,
+  MainnetWJUNEAsset
 )
 export const MainnetUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   'USDT1-Chain',

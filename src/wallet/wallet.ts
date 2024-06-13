@@ -1,6 +1,7 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
 import { MainNetwork } from '../network'
+import { type Address, type Signer } from '../transaction'
 import {
   ECKeyPair,
   encodeJuneoAddress,
@@ -128,14 +129,12 @@ export class MCNWallet {
   }
 }
 
-export interface VMWallet {
+export interface VMWallet extends Signer {
   getAddress: () => string
 
   getJuneoAddress: () => string
 
   getKeyPair: () => ECKeyPair
-
-  sign: (buffer: JuneoBuffer) => JuneoBuffer
 }
 
 abstract class AbstractVMWallet implements VMWallet {
@@ -144,11 +143,10 @@ abstract class AbstractVMWallet implements VMWallet {
   juneoAddress: string
   address?: string
 
-  constructor (privateKey: string, hrp: string, chain: Blockchain, address?: string) {
+  constructor (privateKey: string, hrp: string, chain: Blockchain) {
     this.keyPair = new ECKeyPair(privateKey)
     this.chain = chain
     this.juneoAddress = encodeJuneoAddress(this.keyPair.publicKey, hrp)
-    this.address = address
   }
 
   getAddress (): string {
@@ -169,8 +167,12 @@ abstract class AbstractVMWallet implements VMWallet {
     return this.keyPair
   }
 
-  sign (buffer: JuneoBuffer): JuneoBuffer {
-    return this.keyPair.sign(buffer)
+  async sign (bytes: JuneoBuffer): Promise<JuneoBuffer> {
+    return this.keyPair.sign(bytes)
+  }
+
+  matches (address: Address): boolean {
+    return address.matches(this.getAddress()) || address.matches(this.juneoAddress)
   }
 }
 

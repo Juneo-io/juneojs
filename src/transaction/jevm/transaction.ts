@@ -1,5 +1,4 @@
 import { JuneoBuffer, type Serializable, SignatureError } from '../../utils'
-import { type VMWallet } from '../../wallet'
 import {
   AssetIdSize,
   BlockchainIdSize,
@@ -12,7 +11,7 @@ import {
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
-import { sign, type Signable } from '../signature'
+import { type Signable, SignableTx, type Signer } from '../signature'
 import { Address, AssetId, type BlockchainId, Signature } from '../types'
 
 export class EVMOutput implements Serializable {
@@ -64,17 +63,17 @@ export class EVMInput implements Serializable, Signable, Spendable {
     return this.assetId
   }
 
-  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
     const signatures: Signature[] = []
-    const address: Address = this.address
-    for (const wallet of wallets) {
-      if (address.matches(wallet.getAddress())) {
-        signatures.push(new Signature(wallet.sign(bytes)))
+    for (const signer of signers) {
+      if (signer.matches(this.address)) {
+        const signature = await signer.sign(bytes)
+        signatures.push(new Signature(signature))
         break
       }
     }
     if (signatures.length < 1) {
-      throw new SignatureError('missing wallets to complete signatures')
+      throw new SignatureError('missing signer to complete signatures')
     }
     return signatures
   }
@@ -97,7 +96,7 @@ export class EVMInput implements Serializable, Signable, Spendable {
   }
 }
 
-export class JEVMExportTransaction implements Serializable {
+export class JEVMExportTransaction extends SignableTx implements Serializable {
   codecId: number = CodecId
   typeId: number = EVMExportTransactionTypeId
   networkId: number
@@ -113,6 +112,7 @@ export class JEVMExportTransaction implements Serializable {
     inputs: EVMInput[],
     exportedOutputs: TransferableOutput[]
   ) {
+    super()
     this.networkId = networkId
     this.blockchainId = blockchainId
     this.destinationChain = destinationChain
@@ -122,8 +122,8 @@ export class JEVMExportTransaction implements Serializable {
     this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
-  signTransaction (wallets: VMWallet[]): JuneoBuffer {
-    return sign(this.serialize(), this.inputs, wallets)
+  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
+    return await super.sign(this.serialize(), this.inputs, signers)
   }
 
   serialize (): JuneoBuffer {
@@ -188,7 +188,7 @@ export class JEVMExportTransaction implements Serializable {
   }
 }
 
-export class JEVMImportTransaction implements Serializable {
+export class JEVMImportTransaction extends SignableTx implements Serializable {
   codecId: number = CodecId
   typeId: number = EVMImportTransactionTypeId
   networkId: number
@@ -204,6 +204,7 @@ export class JEVMImportTransaction implements Serializable {
     importedInputs: TransferableInput[],
     outputs: EVMOutput[]
   ) {
+    super()
     this.networkId = networkId
     this.blockchainId = blockchainId
     this.sourceChain = sourceChain
@@ -213,8 +214,8 @@ export class JEVMImportTransaction implements Serializable {
     this.outputs.sort(EVMOutput.comparator)
   }
 
-  signTransaction (wallets: VMWallet[]): JuneoBuffer {
-    return sign(this.serialize(), this.importedInputs, wallets)
+  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
+    return await super.sign(this.serialize(), this.importedInputs, signers)
   }
 
   serialize (): JuneoBuffer {

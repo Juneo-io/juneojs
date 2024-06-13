@@ -1,10 +1,9 @@
 import { type Blockchain } from '../chain'
 import { InputError, JuneoBuffer, ParsingError, type Serializable, SignatureError } from '../utils'
-import { type VMWallet } from '../wallet'
 import { AssetIdSize, Secp256k1InputTypeId, TransactionIdSize } from './constants'
 import { type Utxo } from './output'
-import { type Signable } from './signature'
-import { type Address, AssetId, Signature, TransactionId } from './types'
+import { type Signable, type Signer } from './signature'
+import { AssetId, Signature, TransactionId } from './types'
 
 export class UserInput {
   assetId: string
@@ -66,24 +65,25 @@ export class TransferableInput implements Serializable, Signable, Spendable {
     return this.assetId
   }
 
-  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
     if (this.input.utxo === undefined) {
       throw new SignatureError('cannot sign read only inputs')
     }
-    const indices: number[] = this.input.addressIndices
+    const indices = this.input.addressIndices
     const signatures: Signature[] = []
-    const threshold: number = this.input.utxo.output.threshold
+    const threshold = this.input.utxo.output.threshold
     for (let i = 0; i < threshold && i < indices.length; i++) {
-      const address: Address = this.input.utxo.output.addresses[indices[i]]
-      for (const wallet of wallets) {
-        if (address.matches(wallet.getJuneoAddress())) {
-          signatures.push(new Signature(wallet.sign(bytes)))
+      const address = this.input.utxo.output.addresses[indices[i]]
+      for (const signer of signers) {
+        if (signer.matches(address)) {
+          const signature = await signer.sign(bytes)
+          signatures.push(new Signature(signature))
           break
         }
       }
     }
     if (signatures.length < threshold) {
-      throw new SignatureError('missing wallets to complete signatures')
+      throw new SignatureError('missing signer to complete signatures')
     }
     return signatures
   }

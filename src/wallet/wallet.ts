@@ -1,5 +1,5 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
-import { JEVM_ID, JVM_ID, PLATFORMVM_ID, type Blockchain, type JEVMBlockchain } from '../chain'
+import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
 import { MainNetwork } from '../network'
 import {
   ECKeyPair,
@@ -36,15 +36,13 @@ export class MCNWallet {
   }
 
   getAddress (chain: Blockchain): string {
-    if (!this.chainsWallets.has(chain.id)) {
-      this.setChainWallet(chain)
-    }
     return this.getWallet(chain).getAddress()
   }
 
   getWallet (chain: Blockchain): VMWallet {
     if (!this.chainsWallets.has(chain.id)) {
-      this.setChainWallet(chain)
+      const wallet = this.getVMWallet(chain)
+      this.chainsWallets.set(chain.id, wallet)
     }
     return this.chainsWallets.get(chain.id)!
   }
@@ -66,16 +64,18 @@ export class MCNWallet {
     this.chainsWallets.clear()
   }
 
-  private setChainWallet (chain: Blockchain): void {
+  private getVMWallet (chain: Blockchain): VMWallet {
     const privateKey = this.getVMWalletPrivateKey(chain)
-    if (chain.vm.id === JEVM_ID) {
-      this.chainsWallets.set(chain.id, new JEVMWallet(privateKey, this.hrp, chain))
-    } else if (chain.vm.id === JVM_ID) {
-      this.chainsWallets.set(chain.id, new JVMWallet(privateKey, this.hrp, chain))
-    } else if (chain.vm.id === PLATFORMVM_ID) {
-      this.chainsWallets.set(chain.id, new JVMWallet(privateKey, this.hrp, chain))
-    } else {
-      throw new WalletError(`unsupported vm id: ${chain.vm.id}`)
+    switch (chain.vm.type) {
+      case VMType.EVM: {
+        return new JEVMWallet(privateKey, this.hrp, chain)
+      }
+      case VMType.JVM: {
+        return new JVMWallet(privateKey, this.hrp, chain)
+      }
+      default: {
+        throw new WalletError(`unsupported vm type: ${chain.vm.type}`)
+      }
     }
   }
 
@@ -138,18 +138,14 @@ export interface VMWallet {
   sign: (buffer: JuneoBuffer) => JuneoBuffer
 }
 
-export abstract class AbstractVMWallet implements VMWallet {
-  privateKey: string
+abstract class AbstractVMWallet implements VMWallet {
   private readonly keyPair: ECKeyPair
-  hrp: string
   chain: Blockchain
   juneoAddress: string
   address?: string
 
   constructor (privateKey: string, hrp: string, chain: Blockchain, address?: string) {
-    this.privateKey = privateKey
     this.keyPair = new ECKeyPair(privateKey)
-    this.hrp = hrp
     this.chain = chain
     this.juneoAddress = encodeJuneoAddress(this.keyPair.publicKey, hrp)
     this.address = address
@@ -195,7 +191,7 @@ export class JEVMWallet extends AbstractVMWallet {
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
-    this.evmWallet = new Wallet(this.privateKey)
+    this.evmWallet = new Wallet(privateKey)
     this.address = this.evmWallet.address
   }
 }

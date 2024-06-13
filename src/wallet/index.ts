@@ -1,5 +1,6 @@
 export * from './account'
-export * from './transaction'
+export * from './metamask'
 export * from './operation'
+export * from './transaction'
 export * from './vault'
 export * from './wallet'

@@ -1,6 +1,6 @@
 import { type PlatformAPI } from '../../api'
 import { TimeUtils } from '../../utils'
-import { type TransactionStatusFetcher, TransactionStatusFetchDelay } from '../transaction'
+import { type TransactionStatusFetcher } from '../transaction'
 
 export enum PlatformTransactionStatus {
   Committed = 'Committed',
@@ -21,7 +21,7 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
     this.transactionId = transactionId
   }
 
-  async fetch (timeout: number, delay: number = TransactionStatusFetchDelay): Promise<string> {
+  async fetch (timeout: number, delay: number): Promise<string> {
     const maxAttempts: number = timeout / delay
     this.currentStatus = PlatformTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {

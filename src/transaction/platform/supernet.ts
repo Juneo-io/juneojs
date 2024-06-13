@@ -1,13 +1,10 @@
 import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
 import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
+import { EmptySignerTypeId, PrimarySignerTypeId, SupernetAuthTypeId } from '../constants'
 import { type Signable } from '../signature'
 import { type Address, type BLSPublicKey, type BLSSignature, Signature } from '../types'
 import { type Secp256k1OutputOwners } from './validation'
-
-export const SupernetAuthTypeId: number = 0x0000000a
-export const EmptySignerTypeId: number = 0x0000001b
-export const PrimarySignerTypeId: number = 0x0000001c
 
 export class SupernetAuth implements Serializable, Signable {
   readonly typeId: number = SupernetAuthTypeId
@@ -44,9 +41,9 @@ export class SupernetAuth implements Serializable, Signable {
     const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + 4 + this.addressIndices.length * 4)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.addressIndices.length)
-    this.addressIndices.forEach((indice) => {
+    for (const indice of this.addressIndices) {
       buffer.writeUInt32(indice)
-    })
+    }
     return buffer
   }
 }

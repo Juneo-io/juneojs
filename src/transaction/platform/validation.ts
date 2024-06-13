@@ -1,11 +1,9 @@
 import { type Serializable, JuneoBuffer } from '../../utils'
+import { AddressSize, NodeIdSize, Secp256k1OutputOwnersTypeId, ValidatorSize } from '../constants'
 import { type TransactionOutput } from '../output'
-import { NodeId, NodeIdSize, Address, AddressSize } from '../types'
-
-export const Secp256k1OutputOwnersTypeId: number = 0x0000000b
+import { Address, NodeId } from '../types'
 
 export class Validator implements Serializable {
-  static Size: number = 44
   nodeId: NodeId
   startTime: bigint
   endTime: bigint
@@ -19,7 +17,7 @@ export class Validator implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(NodeIdSize + 8 + 8 + 8)
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(ValidatorSize)
     buffer.write(this.nodeId.serialize())
     buffer.writeUInt64(this.startTime)
     buffer.writeUInt64(this.endTime)
@@ -62,9 +60,9 @@ export class Secp256k1OutputOwners implements TransactionOutput {
     buffer.writeUInt64(this.locktime)
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
-    this.addresses.forEach((address) => {
+    for (const address of this.addresses) {
       buffer.write(address.serialize())
-    })
+    }
     return buffer
   }
 

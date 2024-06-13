@@ -1,7 +1,6 @@
-import { ParsingError, JuneoBuffer, type Serializable } from '../utils'
-import { Address, AddressSize, AssetId, AssetIdSize, TransactionId, TransactionIdSize } from './types'
-
-export const Secp256k1OutputTypeId: number = 0x00000007
+import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
+import { AddressSize, AssetIdSize, Secp256k1OutputTypeId, TransactionIdSize } from './constants'
+import { Address, AssetId, TransactionId } from './types'
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
@@ -87,9 +86,9 @@ export class Secp256k1Output implements TransactionOutput {
     buffer.writeUInt64(this.locktime)
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
-    this.addresses.forEach((address) => {
+    for (const address of this.addresses) {
       buffer.write(address.serialize())
-    })
+    }
     return buffer
   }
 

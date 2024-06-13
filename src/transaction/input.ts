@@ -1,11 +1,10 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, ParsingError, type Serializable, SignatureError, InputError } from '../utils'
+import { InputError, JuneoBuffer, ParsingError, type Serializable, SignatureError } from '../utils'
 import { type VMWallet } from '../wallet'
+import { AssetIdSize, Secp256k1InputTypeId, TransactionIdSize } from './constants'
 import { type Utxo } from './output'
 import { type Signable } from './signature'
-import { type Address, AssetId, AssetIdSize, Signature, TransactionId, TransactionIdSize } from './types'
-
-const Secp256k1InputTypeId: number = 0x00000005
+import { type Address, AssetId, Signature, TransactionId } from './types'
 
 export class UserInput {
   assetId: string
@@ -27,7 +26,7 @@ export class UserInput {
   ) {
     this.assetId = assetId
     this.sourceChain = sourceChain
-    if (amount < BigInt(1)) {
+    if (amount <= BigInt(0)) {
       throw new InputError('user input amount must be greater than 0')
     }
     this.amount = amount
@@ -162,9 +161,9 @@ export class Secp256k1Input implements TransactionInput {
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt64(this.amount)
     buffer.writeUInt32(this.addressIndices.length)
-    this.addressIndices.forEach((indice) => {
+    for (const indice of this.addressIndices) {
       buffer.writeUInt32(indice)
-    })
+    }
     return buffer
   }
 

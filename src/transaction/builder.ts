@@ -1,6 +1,7 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
+import { Secp256k1OutputTypeId } from './constants'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, Secp256k1OutputTypeId, type TransactionOutput, UserOutput, type Utxo } from './output'
+import { Secp256k1Output, type TransactionOutput, UserOutput, type Utxo } from './output'
 import { type TransactionFee } from './transaction'
 import { Address, AssetId } from './types'
 
@@ -11,7 +12,7 @@ export function buildTransactionInputs (
   fees: TransactionFee[]
 ): TransferableInput[] {
   const targetAmounts = new Map<string, bigint>()
-  fees.forEach((fee) => {
+  for (const fee of fees) {
     if (fee.amount > 0) {
       const assetId: string = fee.assetId
       let targetAmount: bigint = BigInt(fee.amount)
@@ -20,16 +21,16 @@ export function buildTransactionInputs (
       }
       targetAmounts.set(assetId, targetAmount)
     }
-  })
+  }
   // gathering data needed to build transaction inputs
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     const assetId: string = input.assetId
     let targetAmount: bigint = BigInt(input.amount)
     if (targetAmounts.has(assetId)) {
       targetAmount += targetAmounts.get(assetId)!
     }
     targetAmounts.set(assetId, targetAmount)
-  })
+  }
   const gatheredAmounts = new Map<string, bigint>()
   const inputs: TransferableInput[] = []
   // This loop tries to gather required amounts from the provided utxo set
@@ -73,12 +74,12 @@ export function buildTransactionInputs (
 
 function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
   let complete: boolean = true
-  targets.forEach((target, key) => {
+  for (const [key, target] of targets) {
     if (!gathereds.has(key) || gathereds.get(key)! < target) {
       complete = false
       return false
     }
-  })
+  }
   return complete
 }
 
@@ -107,7 +108,7 @@ export function buildTransactionOutputs (
   spentAmounts.set(fee.assetId, fee.amount)
   let outputs: UserOutput[] = []
   // adding outputs matching user inputs
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     outputs.push(
       new UserOutput(
         new AssetId(input.assetId),
@@ -121,17 +122,17 @@ export function buildTransactionOutputs (
       spentAmount += spentAmounts.get(assetId)!
     }
     spentAmounts.set(assetId, spentAmount)
-  })
+  }
   const availableAmounts = new Map<string, bigint>()
   // getting the total amount spendable for each asset in provided inputs
-  inputs.forEach((input) => {
+  for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
     let amount: bigint = BigInt(input.getAmount())
     if (availableAmounts.has(assetId)) {
       amount += availableAmounts.get(assetId)!
     }
     availableAmounts.set(assetId, amount)
-  })
+  }
   outputs = mergeSecp256k1Outputs(outputs)
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
@@ -172,14 +173,14 @@ export function buildTransactionOutputs (
 function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     let key: string = output.assetId.assetId
     key += output.output.locktime
     key += output.output.threshold.toString()
     output.output.addresses.sort(Address.comparator)
-    output.output.addresses.forEach((address) => {
+    for (const address of output.output.addresses) {
       key += address.serialize().toHex()
-    })
+    }
     if (spendings.has(key)) {
       const out: TransactionOutput = spendings.get(key)!.output
       ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
@@ -187,6 +188,6 @@ function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
       mergedOutputs.push(output)
       spendings.set(key, output)
     }
-  })
+  }
   return mergedOutputs
 }

@@ -141,7 +141,7 @@ abstract class AbstractVMWallet implements VMWallet {
   private readonly keyPair: ECKeyPair
   chain: Blockchain
   juneoAddress: string
-  address?: string
+  protected address?: string
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     this.keyPair = new ECKeyPair(privateKey)

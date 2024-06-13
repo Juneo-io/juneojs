@@ -100,7 +100,7 @@ export async function executeEVMTransaction (
 ): Promise<string> {
   const api: JEVMAPI = provider.jevmApi[wallet.chain.id]
   const unsignedTransaction: ethers.TransactionRequest = {
-    from: wallet.address,
+    from: wallet.getAddress(),
     to: feeData.data.to,
     value: feeData.data.value,
     nonce: Number(await getWalletNonce(wallet, api, false)),

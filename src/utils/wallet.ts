@@ -1,4 +1,4 @@
-import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
+import { JEVM_ID, JVM_ID, PLATFORMVM_ID, type Blockchain } from '../chain'
 import { UserInput } from '../transaction'
 import { BaseSpending, type ExecutableOperation, type MCNAccount, type Spending, type TransactionType } from '../wallet'
 import { rmd160, sha256 } from './crypto'

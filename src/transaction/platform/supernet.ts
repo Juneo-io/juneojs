@@ -1,8 +1,7 @@
 import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
-import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
 import { EmptySignerTypeId, PrimarySignerTypeId, SupernetAuthTypeId } from '../constants'
-import { type Signable } from '../signature'
+import { type Signable, type Signer } from '../signature'
 import { type Address, type BLSPublicKey, type BLSSignature, Signature } from '../types'
 import { type Secp256k1OutputOwners } from './validation'
 
@@ -19,20 +18,21 @@ export class SupernetAuth implements Serializable, Signable {
     this.rewardsOwner = rewardsOwner
   }
 
-  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
     const signatures: Signature[] = []
-    const threshold: number = this.rewardsOwner.threshold
+    const threshold = this.rewardsOwner.threshold
     for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
-      const address: Address = this.rewardsOwner.addresses[i]
-      for (const wallet of wallets) {
-        if (address.matches(wallet.getJuneoAddress())) {
-          signatures.push(new Signature(wallet.sign(bytes)))
+      const address = this.rewardsOwner.addresses[i]
+      for (const signer of signers) {
+        if (signer.matches(address)) {
+          const signature = await signer.sign(bytes)
+          signatures.push(new Signature(signature))
           break
         }
       }
     }
     if (signatures.length < threshold) {
-      throw new SignatureError('missing wallets to complete supernet signatures')
+      throw new SignatureError('missing signer to complete supernet signatures')
     }
     return signatures
   }

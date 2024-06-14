@@ -1,10 +1,9 @@
 import { type Blockchain } from '../chain'
 import { JuneoBuffer, type Serializable } from '../utils'
-import { type VMWallet } from '../wallet'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
-import { type Signable, sign } from './signature'
+import { SignableTx, type Signable, type Signer } from './signature'
 import { type BlockchainId } from './types'
 
 export class TransactionFee {
@@ -33,10 +32,10 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getUtxos: () => Utxo[]
-  signTransaction: (wallets: VMWallet[]) => JuneoBuffer
+  signTransaction: (signers: Signer[]) => Promise<JuneoBuffer>
 }
 
-export abstract class AbstractBaseTransaction implements UnsignedTransaction {
+export abstract class AbstractBaseTransaction extends SignableTx implements UnsignedTransaction {
   codecId: number
   typeId: number
   networkId: number
@@ -53,6 +52,7 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction {
     inputs: TransferableInput[],
     memo: string
   ) {
+    super()
     this.codecId = CodecId
     this.typeId = typeId
     this.networkId = networkId
@@ -76,8 +76,8 @@ export abstract class AbstractBaseTransaction implements UnsignedTransaction {
     return utxos
   }
 
-  signTransaction (wallets: VMWallet[]): JuneoBuffer {
-    return sign(this.serialize(), this.getSignables(), wallets)
+  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
+    return await super.sign(this.serialize(), this.getSignables(), signers)
   }
 
   serialize (): JuneoBuffer {

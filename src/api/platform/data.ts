@@ -47,7 +47,7 @@ export interface ValidatorData {
   delegationFee: string
   uptime: string
   connected: boolean
-  signer: Signer
+  signer: ValidatorSigner
   delegatorCount: string
   delegatorWeight: string
 }
@@ -58,7 +58,7 @@ export interface RewardOwner {
   addresses: string[]
 }
 
-export interface Signer {
+export interface ValidatorSigner {
   publicKey: string
   proofOfPossession: string
 }

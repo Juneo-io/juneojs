@@ -2,11 +2,11 @@ import { type PlatformAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
-  type Utxo,
   type UnsignedTransaction,
   UserInput,
-  buildPlatformImportTransaction,
-  buildPlatformExportTransaction
+  type Utxo,
+  buildPlatformExportTransaction,
+  buildPlatformImportTransaction
 } from '../../../transaction'
 import { getImportUserInputs, getUtxosAmountValues } from '../../../utils'
 import { type MCNWallet } from '../../wallet'
@@ -41,7 +41,8 @@ export async function executePlatformExportTransaction (
     sender,
     provider.mcn.id
   )
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
+  return (await api.issueTx(signedTx.toCHex())).txID
 }
 
 export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
@@ -67,5 +68,6 @@ export async function executePlatformImportTransaction (
     sender,
     provider.mcn.id
   )
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
+  return (await api.issueTx(signedTx.toCHex())).txID
 }

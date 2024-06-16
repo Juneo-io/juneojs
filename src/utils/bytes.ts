@@ -47,6 +47,10 @@ export class JuneoBuffer {
     return this.cursor
   }
 
+  getReader (): JuneoReader {
+    return new JuneoReader(this)
+  }
+
   private verifyWriteIndexes (length: number): void {
     if (this.cursor + length > this.length) {
       throw new CapacityError(`writing at ${this.cursor} with length of ${length} to capacity of ${this.length}`)
@@ -215,5 +219,54 @@ export class JuneoBuffer {
 
   static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {
     return a.bytes.compare(b.bytes)
+  }
+}
+
+export class JuneoReader {
+  private readonly buffer: JuneoBuffer
+  private cursor: number = 0
+
+  constructor (buffer: JuneoBuffer) {
+    this.buffer = buffer
+  }
+
+  getCursor (): number {
+    return this.cursor
+  }
+
+  readUInt8 (): number {
+    const value = this.buffer.readUInt8(this.cursor)
+    this.cursor += 1
+    return value
+  }
+
+  readUInt16 (): number {
+    const value = this.buffer.readUInt16(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  readUInt32 (): number {
+    const value = this.buffer.readUInt32(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  readUInt64 (): bigint {
+    const value = this.buffer.readUInt64(this.cursor)
+    this.cursor += 8
+    return value
+  }
+
+  readString (length: number, encoding: BufferEncoding = 'utf8'): string {
+    const value = this.buffer.read(this.cursor, length).getBytes().toString(encoding)
+    this.cursor += length
+    return value
+  }
+
+  read (length: number): JuneoBuffer {
+    const value = JuneoBuffer.fromBytes(this.buffer.getBytes().subarray(this.cursor, this.cursor + length))
+    this.cursor += length
+    return value
   }
 }

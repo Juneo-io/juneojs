@@ -47,7 +47,7 @@ export class JuneoBuffer {
     return this.cursor
   }
 
-  getReader (): JuneoReader {
+  createReader (): JuneoReader {
     return new JuneoReader(this)
   }
 
@@ -153,20 +153,7 @@ export class JuneoBuffer {
   }
 
   copyOf (start: number = 0, end: number = this.length): JuneoBuffer {
-    if (start === null || end === null) {
-      throw new CapacityError(`cannot have null indices but got ${start} and ${end}`)
-    }
-    if (start > end) {
-      throw new CapacityError('start index cannot be higher than end')
-    }
-    if (start < 0) {
-      throw new CapacityError(`cannot start at negative index but got ${start}`)
-    }
-    if (end > this.length) {
-      throw new CapacityError(`end index ${end} out of bounds of ${this.length}`)
-    }
-    const buffer: Buffer = this.bytes.subarray(start, end)
-    return JuneoBuffer.fromBytes(buffer)
+    return this.read(start, end)
   }
 
   static alloc (size: number): JuneoBuffer {
@@ -230,7 +217,11 @@ export class JuneoBuffer {
    * @param data Data that should be in the buffer.
    */
   static from (data: JuneoBuffer | string): JuneoBuffer {
-    return typeof data === 'string' ? JuneoBuffer.fromString(data) : data.copyOf(2, data.length)
+    if (typeof data === 'string') {
+      const buffer = JuneoBuffer.fromString(data)
+      return buffer.copyOf(2, buffer.length)
+    }
+    return data
   }
 
   static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {
@@ -248,6 +239,10 @@ export class JuneoReader {
 
   getCursor (): number {
     return this.cursor
+  }
+
+  skip (amount: number): void {
+    this.cursor += amount
   }
 
   readUInt8 (): number {
@@ -275,13 +270,11 @@ export class JuneoReader {
   }
 
   readString (length: number, encoding: BufferEncoding = 'utf8'): string {
-    const value = this.buffer.read(this.cursor, length).getBytes().toString(encoding)
-    this.cursor += length
-    return value
+    return this.read(length).getBytes().toString(encoding)
   }
 
   read (length: number): JuneoBuffer {
-    const value = JuneoBuffer.fromBytes(this.buffer.getBytes().subarray(this.cursor, this.cursor + length))
+    const value = this.buffer.read(this.cursor, length)
     this.cursor += length
     return value
   }

@@ -24,20 +24,15 @@ export class TransferableOutput implements Serializable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableOutput {
-    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
-    // start at 2 to skip codec if from string from api
-    let position: number = typeof data === 'string' ? 2 : 0
-    const assetId: JuneoBuffer = buffer.read(position, AssetIdSize)
-    position += AssetIdSize
-    return new TransferableOutput(
-      new AssetId(assetId.toCB58()),
-      this.parseOutput(buffer.read(position, buffer.length - position))
-    )
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    return new TransferableOutput(assetId, this.parseOutput(reader.read(buffer.length - reader.getCursor())))
   }
 
   static parseOutput (data: string | JuneoBuffer): TransactionOutput {
-    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
-    const typeId: number = buffer.readUInt32(0)
+    const reader = JuneoBuffer.from(data).createReader()
+    const typeId = reader.readUInt32()
     if (typeId === Secp256k1OutputTypeId) {
       return Secp256k1Output.parse(data)
     } else {
@@ -63,7 +58,7 @@ export interface TransactionOutput extends Serializable {
 }
 
 export class Secp256k1Output implements TransactionOutput {
-  readonly typeId: number = Secp256k1OutputTypeId
+  readonly typeId = Secp256k1OutputTypeId
   amount: bigint
   locktime: bigint
   threshold: number
@@ -93,21 +88,19 @@ export class Secp256k1Output implements TransactionOutput {
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1Output {
-    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
-    // start at 4 to skip type id reading
-    let position: number = 4
-    const amount: bigint = buffer.readUInt64(position)
-    position += 8
-    const locktime: bigint = buffer.readUInt64(position)
-    position += 8
-    const threshold: number = buffer.readUInt32(position)
-    position += 4
-    const addressesCount: number = buffer.readUInt32(position)
-    position += 4
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== Secp256k1OutputTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1OutputTypeId}`)
+    }
+    const amount = reader.readUInt64()
+    const locktime = reader.readUInt64()
+    const threshold = reader.readUInt32()
+    const addressesCount = reader.readUInt32()
     const addresses: Address[] = []
     for (let i = 0; i < addressesCount; i++) {
-      const address: Address = new Address(buffer.read(position, AddressSize))
-      position += AddressSize
+      const address = new Address(reader.read(AddressSize))
       addresses.push(address)
     }
     return new Secp256k1Output(amount, locktime, threshold, addresses)
@@ -128,19 +121,14 @@ export class Utxo {
     this.output = output
   }
 
-  static parse (data: string): Utxo {
-    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
-    let position: number = 0
-    // skip codec reading
-    position += 2
-    const transactionId: TransactionId = new TransactionId(buffer.read(position, TransactionIdSize).toCB58())
-    position += TransactionIdSize
-    const utxoIndex: number = buffer.readUInt32(position)
-    position += 4
-    const assetId: AssetId = new AssetId(buffer.read(position, AssetIdSize).toCB58())
-    position += AssetIdSize
-    const outputBuffer: JuneoBuffer = buffer.read(position, buffer.length - position)
-    const output: TransactionOutput = TransferableOutput.parseOutput(outputBuffer)
+  static parse (data: string | JuneoBuffer): Utxo {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
+    const utxoIndex = reader.readUInt32()
+    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    const outputBuffer = reader.read(buffer.length - reader.getCursor())
+    const output = TransferableOutput.parseOutput(outputBuffer)
     return new Utxo(transactionId, utxoIndex, assetId, output)
   }
 }

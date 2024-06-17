@@ -1,4 +1,4 @@
-import { type Serializable, JuneoBuffer } from '../../utils'
+import { type Serializable, JuneoBuffer, ParsingError } from '../../utils'
 import { AddressSize, NodeIdSize, Secp256k1OutputOwnersTypeId, ValidatorSize } from '../constants'
 import { type TransactionOutput } from '../output'
 import { Address, NodeId } from '../types'
@@ -26,21 +26,14 @@ export class Validator implements Serializable {
   }
 
   static parse (data: string | JuneoBuffer): Validator {
-    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
-    let position: number = 0
-    const nodeId: NodeId = new NodeId(buffer.read(position, NodeIdSize).toCB58())
-    position += NodeIdSize
-    const startTime: bigint = buffer.readUInt64(position)
-    position += 8
-    const endTime: bigint = buffer.readUInt64(position)
-    position += 8
-    const weight: bigint = buffer.readUInt64(position)
-    return new Validator(nodeId, startTime, endTime, weight)
+    const reader = JuneoBuffer.from(data).createReader()
+    const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
+    return new Validator(nodeId, reader.readUInt64(), reader.readUInt64(), reader.readUInt64())
   }
 }
 
 export class Secp256k1OutputOwners implements TransactionOutput {
-  readonly typeId: number = Secp256k1OutputOwnersTypeId
+  readonly typeId = Secp256k1OutputOwnersTypeId
   locktime: bigint
   threshold: number
   addresses: Address[]
@@ -67,18 +60,17 @@ export class Secp256k1OutputOwners implements TransactionOutput {
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1OutputOwners {
-    const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data) : data
-    let position: number = 4
-    const locktime: bigint = buffer.readUInt64(position)
-    position += 8
-    const threshold: number = buffer.readUInt32(position)
-    position += 4
-    const addressesCount: number = buffer.readUInt32(position)
-    position += 4
+    const reader = JuneoBuffer.from(data).createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== Secp256k1OutputOwnersTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1OutputOwnersTypeId}`)
+    }
+    const locktime = reader.readUInt64()
+    const threshold = reader.readUInt32()
+    const addressesCount = reader.readUInt32()
     const addresses: Address[] = []
     for (let i = 0; i < addressesCount; i++) {
-      const address: Address = new Address(buffer.read(position, AddressSize))
-      position += AddressSize
+      const address = new Address(reader.read(AddressSize))
       addresses.push(address)
     }
     return new Secp256k1OutputOwners(locktime, threshold, addresses)

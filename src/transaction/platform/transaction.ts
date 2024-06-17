@@ -1,4 +1,4 @@
-import { JuneoBuffer } from '../../utils'
+import { JuneoBuffer, ParsingError } from '../../utils'
 import {
   AddDelegatorTransactionTypeId,
   AddPermissionlessDelegatorTransactionTypeId,
@@ -137,49 +137,41 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
     return buffer
   }
 
-  static parse (data: string): AddValidatorTransaction {
-    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
-    // start at 2 + 4 to skip codec and type id reading
-    let position: number = 6
-    const networkId: number = buffer.readUInt32(position)
-    position += 4
-    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
-    position += BlockchainIdSize
-    const outputsLength: number = buffer.readUInt32(position)
-    position += 4
+  static parse (data: string | JuneoBuffer): AddValidatorTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== AddValidatorTransactionTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${AddValidatorTransactionTypeId}`)
+    }
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const outputsLength = reader.readUInt32()
     const outputs: TransferableOutput[] = []
-    for (let i: number = 0; i < outputsLength; i++) {
-      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
-      position += output.serialize().length
+    for (let i = 0; i < outputsLength; i++) {
+      const output = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(output.serialize().length)
       outputs.push(output)
     }
-    const inputsLength: number = buffer.readUInt32(position)
-    position += 4
+    const inputsLength = reader.readUInt32()
     const inputs: TransferableInput[] = []
-    for (let i: number = 0; i < inputsLength; i++) {
-      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
-      position += input.serialize().length
+    for (let i = 0; i < inputsLength; i++) {
+      const input = TransferableInput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(input.serialize().length)
       inputs.push(input)
     }
-    const memoLength: number = buffer.readUInt32(position)
-    position += 4
-    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
-    position += memoLength
-    const validator: Validator = Validator.parse(buffer.read(position, buffer.length - position))
-    position += ValidatorSize
-    const stakeLength: number = buffer.readUInt32(position)
-    position += 4
+    const memoLength = reader.readUInt32()
+    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
+    const validator = Validator.parse(reader.read(ValidatorSize))
+    const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
-    for (let i: number = 0; i < stakeLength; i++) {
-      const stake: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
-      position += stake.serialize().length
+    for (let i = 0; i < stakeLength; i++) {
+      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(stake.serialize().length)
       stakes.push(stake)
     }
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
-      buffer.read(position, buffer.length - position)
-    )
-    position += rewardsOwner.serialize().length
-    const shares: number = buffer.readUInt32(position)
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - 4))
+    const shares = reader.readUInt32()
     return new AddValidatorTransaction(
       networkId,
       blockchainId,
@@ -246,47 +238,40 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
     return buffer
   }
 
-  static parse (data: string): AddDelegatorTransaction {
-    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
-    // start at 2 + 4 to skip codec and type id reading
-    let position: number = 6
-    const networkId: number = buffer.readUInt32(position)
-    position += 4
-    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
-    position += BlockchainIdSize
-    const outputsLength: number = buffer.readUInt32(position)
-    position += 4
+  static parse (data: string | JuneoBuffer): AddDelegatorTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== AddDelegatorTransactionTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${AddDelegatorTransactionTypeId}`)
+    }
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const outputsLength = reader.readUInt32()
     const outputs: TransferableOutput[] = []
-    for (let i: number = 0; i < outputsLength; i++) {
-      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
-      position += output.serialize().length
+    for (let i = 0; i < outputsLength; i++) {
+      const output = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(output.serialize().length)
       outputs.push(output)
     }
-    const inputsLength: number = buffer.readUInt32(position)
-    position += 4
+    const inputsLength = reader.readUInt32()
     const inputs: TransferableInput[] = []
-    for (let i: number = 0; i < inputsLength; i++) {
-      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
-      position += input.serialize().length
+    for (let i = 0; i < inputsLength; i++) {
+      const input = TransferableInput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(input.serialize().length)
       inputs.push(input)
     }
-    const memoLength: number = buffer.readUInt32(position)
-    position += 4
-    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
-    position += memoLength
-    const validator: Validator = Validator.parse(buffer.read(position, buffer.length - position))
-    position += ValidatorSize
-    const stakeLength: number = buffer.readUInt32(position)
-    position += 4
+    const memoLength = reader.readUInt32()
+    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
+    const validator = Validator.parse(reader.read(ValidatorSize))
+    const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
-    for (let i: number = 0; i < stakeLength; i++) {
-      const stake: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
-      position += stake.serialize().length
+    for (let i = 0; i < stakeLength; i++) {
+      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(stake.serialize().length)
       stakes.push(stake)
     }
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
-      buffer.read(position, buffer.length - position)
-    )
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
     return new AddDelegatorTransaction(networkId, blockchainId, outputs, inputs, memo, validator, stakes, rewardsOwner)
   }
 }
@@ -362,37 +347,34 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
     return buffer
   }
 
-  static parse (data: string): CreateSupernetTransaction {
-    const buffer: JuneoBuffer = JuneoBuffer.fromString(data)
-    // start at 2 + 4 to skip codec and type id reading
-    let position: number = 6
-    const networkId: number = buffer.readUInt32(position)
-    position += 4
-    const blockchainId: BlockchainId = new BlockchainId(buffer.read(position, BlockchainIdSize).toCB58())
-    position += BlockchainIdSize
-    const outputsLength: number = buffer.readUInt32(position)
-    position += 4
+  static parse (data: string | JuneoBuffer): CreateSupernetTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== CreateSupernetTransactionTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${CreateSupernetTransactionTypeId}`)
+    }
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const outputsLength = reader.readUInt32()
     const outputs: TransferableOutput[] = []
-    for (let i: number = 0; i < outputsLength; i++) {
-      const output: TransferableOutput = TransferableOutput.parse(buffer.read(position, buffer.length - position))
-      position += output.serialize().length
+    for (let i = 0; i < outputsLength; i++) {
+      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const output = TransferableOutput.parse(outputBuffer)
+      reader.skip(output.serialize().length)
       outputs.push(output)
     }
-    const inputsLength: number = buffer.readUInt32(position)
-    position += 4
+    const inputsLength = reader.readUInt32()
     const inputs: TransferableInput[] = []
-    for (let i: number = 0; i < inputsLength; i++) {
-      const input: TransferableInput = TransferableInput.parse(buffer.read(position, buffer.length - position))
-      position += input.serialize().length
+    for (let i = 0; i < inputsLength; i++) {
+      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const input = TransferableInput.parse(inputBuffer)
+      reader.skip(input.serialize().length)
       inputs.push(input)
     }
-    const memoLength: number = buffer.readUInt32(position)
-    position += 4
-    const memo: string = memoLength > 0 ? String(buffer.read(position, memoLength)) : ''
-    position += memoLength
-    const rewardsOwner: Secp256k1OutputOwners = Secp256k1OutputOwners.parse(
-      buffer.read(position, buffer.length - position)
-    )
+    const memoLength = reader.readUInt32()
+    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
     return new CreateSupernetTransaction(networkId, blockchainId, outputs, inputs, memo, rewardsOwner)
   }
 }

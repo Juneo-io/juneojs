@@ -104,6 +104,9 @@ export class JuneoBuffer {
     if (index + length > this.length) {
       throw new CapacityError(`reading at ${index} with length of ${length} to capacity of ${this.length}`)
     }
+    if (index === null || length === null) {
+      throw new CapacityError(`cannot have null indices or length but got ${index} and ${length}`)
+    }
   }
 
   readUInt8 (index: number): number {

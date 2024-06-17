@@ -153,7 +153,7 @@ export class JuneoBuffer {
   }
 
   copyOf (start: number = 0, end: number = this.length): JuneoBuffer {
-    return this.read(start, end)
+    return this.read(start, end - start)
   }
 
   static alloc (size: number): JuneoBuffer {

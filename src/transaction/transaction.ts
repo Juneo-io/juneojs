@@ -120,12 +120,12 @@ export class BaseTransaction extends SignableTx implements UnsignedTransaction {
     return buffer
   }
 
-  static parse (data: string | JuneoBuffer): BaseTransaction {
+  static parse (data: string | JuneoBuffer, expectedTypeId: number): BaseTransaction {
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
     // skip codec reading
     reader.skip(2)
-    const typeId = reader.readUInt32()
+    const typeId = reader.readTypeId(expectedTypeId)
     const networkId = reader.readUInt32()
     const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
     const outputsLength = reader.readUInt32()

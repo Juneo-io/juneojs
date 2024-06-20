@@ -21,6 +21,10 @@ export class JVMBaseTransaction extends BaseTransaction {
   ) {
     super(JVMBaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
+
+  static parse (data: string | JuneoBuffer): JVMBaseTransaction {
+    return BaseTransaction.parse(data, JVMBaseTransactionTypeId)
+  }
 }
 
 export class JVMExportTransaction extends AbstractExportTransaction {

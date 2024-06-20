@@ -1,4 +1,4 @@
-import { SocotraBCH1Chain, SocotraJUNEChain, type GetBlockResponse } from '../../../src'
+import { SocotraBCH1Chain, type GetBlockResponse } from '../../../src'
 import { PROVIDER } from '../constants'
 
 describe('PlatformAPI', () => {
@@ -31,7 +31,7 @@ describe('PlatformAPI', () => {
 
   describe('getBlockchainStatus', () => {
     test.each([
-      { blockchainID: SocotraJUNEChain.id },
+      { blockchainID: PROVIDER.juneChain.id },
       { blockchainID: SocotraBCH1Chain.id },
       { blockchainID: '2k1EyxAV5XYPxnsuPVrKyquUTLC3EMA1c5AhM7r8sRy1Kg7Zje' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
@@ -221,7 +221,7 @@ describe('PlatformAPI', () => {
 
   describe('validatedBy', () => {
     test.each([
-      { blockchainID: SocotraJUNEChain.id },
+      { blockchainID: PROVIDER.juneChain.id },
       { blockchainID: '3pW4zxtzuMAWLA6rdttWDqkVMtGRTqohthSDW962k8GTNyKXj' }
     ])('Valid blockchainID: $blockchainID', async ({ blockchainID }) => {
       const result = await PROVIDER.platformApi.validatedBy(blockchainID)

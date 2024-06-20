@@ -1,7 +1,6 @@
 import {
   SocotraBCH1Asset,
   SocotraEUR1Asset,
-  SocotraJUNEAsset,
   type GetAssetDescriptionResponse,
   type GetBlockResponse,
   type GetHeightResponse,
@@ -15,7 +14,7 @@ describe('JVMAPI', () => {
   })
 
   describe('getAssetDescription', () => {
-    test.each([{ asset: SocotraJUNEAsset }, { asset: SocotraEUR1Asset }, { asset: SocotraBCH1Asset }])(
+    test.each([{ asset: PROVIDER.jvmChain.asset }, { asset: SocotraEUR1Asset }, { asset: SocotraBCH1Asset }])(
       'Valid: $asset.assetId ($asset.symbol)',
       async ({ asset }) => {
         const result: GetAssetDescriptionResponse = await PROVIDER.jvmApi.getAssetDescription(asset.assetId)

@@ -7,12 +7,11 @@ import {
 } from '../constants'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
-import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
 import { type InitialState } from './operation'
 
-export class JVMBaseTransaction extends AbstractBaseTransaction {
+export class JVMBaseTransaction extends BaseTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -23,8 +22,8 @@ export class JVMBaseTransaction extends AbstractBaseTransaction {
     super(JVMBaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
 
-  getSignables (): Signable[] {
-    return this.inputs
+  static parse (data: string | JuneoBuffer): JVMBaseTransaction {
+    return BaseTransaction.parse(data, JVMBaseTransactionTypeId)
   }
 }
 
@@ -56,7 +55,7 @@ export class JVMImportTransaction extends AbstractImportTransaction {
   }
 }
 
-export class CreateAssetTransaction extends AbstractBaseTransaction {
+export class CreateAssetTransaction extends BaseTransaction {
   name: string
   symbol: string
   denomination: number
@@ -78,10 +77,6 @@ export class CreateAssetTransaction extends AbstractBaseTransaction {
     this.symbol = symbol
     this.denomination = denomination
     this.initialStates = initialStates
-  }
-
-  getSignables (): Signable[] {
-    return this.inputs
   }
 
   serialize (): JuneoBuffer {

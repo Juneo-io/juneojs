@@ -357,8 +357,8 @@ describe('Bytes', () => {
           description: 'Copy one byte',
           size: 32,
           start: 0,
-          end: 0,
-          expectedLength: 0
+          end: 1,
+          expectedLength: 1
         },
         {
           description: 'Copy the entire buffer when indices are not provided',

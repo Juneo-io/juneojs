@@ -47,6 +47,10 @@ export class JuneoBuffer {
     return this.cursor
   }
 
+  createReader (): JuneoReader {
+    return new JuneoReader(this)
+  }
+
   private verifyWriteIndexes (length: number): void {
     if (this.cursor + length > this.length) {
       throw new CapacityError(`writing at ${this.cursor} with length of ${length} to capacity of ${this.length}`)
@@ -100,6 +104,9 @@ export class JuneoBuffer {
     if (index + length > this.length) {
       throw new CapacityError(`reading at ${index} with length of ${length} to capacity of ${this.length}`)
     }
+    if (index === null || length === null) {
+      throw new CapacityError(`cannot have null indices or length but got ${index} and ${length}`)
+    }
   }
 
   readUInt8 (index: number): number {
@@ -149,20 +156,7 @@ export class JuneoBuffer {
   }
 
   copyOf (start: number = 0, end: number = this.length): JuneoBuffer {
-    if (start === null || end === null) {
-      throw new CapacityError(`cannot have null indices but got ${start} and ${end}`)
-    }
-    if (start > end) {
-      throw new CapacityError('start index cannot be higher than end')
-    }
-    if (start < 0) {
-      throw new CapacityError(`cannot start at negative index but got ${start}`)
-    }
-    if (end > this.length) {
-      throw new CapacityError(`end index ${end} out of bounds of ${this.length}`)
-    }
-    const buffer: Buffer = this.bytes.subarray(start, end)
-    return JuneoBuffer.fromBytes(buffer)
+    return this.read(start, end - start)
   }
 
   static alloc (size: number): JuneoBuffer {
@@ -213,7 +207,73 @@ export class JuneoBuffer {
     }
   }
 
+  static from (data: JuneoBuffer | string): JuneoBuffer {
+    if (typeof data === 'string') {
+      return JuneoBuffer.fromString(data)
+    }
+    return data
+  }
+
   static comparator = (a: JuneoBuffer, b: JuneoBuffer): number => {
     return a.bytes.compare(b.bytes)
+  }
+}
+
+export class JuneoReader {
+  private readonly buffer: JuneoBuffer
+  private cursor: number = 0
+
+  constructor (buffer: JuneoBuffer) {
+    this.buffer = buffer
+  }
+
+  getCursor (): number {
+    return this.cursor
+  }
+
+  skip (amount: number): void {
+    this.cursor += amount
+  }
+
+  readUInt8 (): number {
+    const value = this.buffer.readUInt8(this.cursor)
+    this.cursor += 1
+    return value
+  }
+
+  readUInt16 (): number {
+    const value = this.buffer.readUInt16(this.cursor)
+    this.cursor += 2
+    return value
+  }
+
+  readUInt32 (): number {
+    const value = this.buffer.readUInt32(this.cursor)
+    this.cursor += 4
+    return value
+  }
+
+  readUInt64 (): bigint {
+    const value = this.buffer.readUInt64(this.cursor)
+    this.cursor += 8
+    return value
+  }
+
+  readString (length: number, encoding: BufferEncoding = 'utf8'): string {
+    return this.read(length).getBytes().toString(encoding)
+  }
+
+  readTypeId (expectedTypeId: number): number {
+    const typeId = this.readUInt32()
+    if (typeId !== expectedTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${expectedTypeId}`)
+    }
+    return typeId
+  }
+
+  read (length: number): JuneoBuffer {
+    const value = this.buffer.read(this.cursor, length)
+    this.cursor += length
+    return value
   }
 }

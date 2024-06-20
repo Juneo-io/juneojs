@@ -1,17 +1,18 @@
 import {
   AccountError,
-  GenesisEUROC1Chain,
-  GenesisJUNEChain,
-  GenesisJVMChain,
   SendOperation,
+  SocotraEUR1Chain,
+  SocotraJUNEChain,
+  SocotraJVMChain,
   type ExecutableOperation
 } from '../../../src'
 import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Send operations', () => {
-  const juneChain = GenesisJUNEChain
-  const euroChain = GenesisEUROC1Chain
-  const jvmChain = GenesisJVMChain
+  const juneChain = SocotraJUNEChain
+  const euroChain = SocotraEUR1Chain
+  const jvmChain = SocotraJVMChain
+  const euroAddress = '0x3000000000000000000000000000000000000000'
 
   describe('EVM send', () => {
     describe('Valid execute', () => {
@@ -25,7 +26,7 @@ describe('Send operations', () => {
         },
         {
           chain: juneChain,
-          assetId: '0x2d00000000000000000000000000000000000000',
+          assetId: euroAddress,
           symbol: 'ETH.e',
           value: BigInt(1),
           recipient: '0x3c647d88Bc92766075feA7A965CA599CAAB2FD26'

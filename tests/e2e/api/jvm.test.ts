@@ -1,7 +1,6 @@
 import {
-  GenesisBCH1Asset,
-  GenesisETH1Asset,
-  GenesisJUNEAsset,
+  SocotraBCH1Asset,
+  SocotraEUR1Asset,
   type GetAssetDescriptionResponse,
   type GetBlockResponse,
   type GetHeightResponse,
@@ -15,7 +14,7 @@ describe('JVMAPI', () => {
   })
 
   describe('getAssetDescription', () => {
-    test.each([{ asset: GenesisJUNEAsset }, { asset: GenesisETH1Asset }, { asset: GenesisBCH1Asset }])(
+    test.each([{ asset: PROVIDER.jvmChain.asset }, { asset: SocotraEUR1Asset }, { asset: SocotraBCH1Asset }])(
       'Valid: $asset.assetId ($asset.symbol)',
       async ({ asset }) => {
         const result: GetAssetDescriptionResponse = await PROVIDER.jvmApi.getAssetDescription(asset.assetId)
@@ -69,8 +68,8 @@ describe('JVMAPI', () => {
 
   describe('getTx', () => {
     test.each([
-      { txID: 'dGJVWGj3GHQRAvt87xqcVUwKNKcJRaB7iUwGpNP9PYSrk6rie' },
-      { txID: '2FKNX3WoJwtbanNxVV44qaXsv8SgkiBtD4psHC2wdbLizXvGS' }
+      { txID: 'P1ogBpExP9gRM2Pjqr7J32bzACcob4hZtEj62T71feW6Q8KGb' },
+      { txID: '2E5DxrCSQkAc1FoAQ7q1QQyaHnHskEkvDjzFG9YYN7dfsjKGjB' }
     ])('Valid: $txID', async ({ txID }) => {
       const result: GetTxResponse = await PROVIDER.jvmApi.getTx(txID)
       expect(result.encoding).toBeDefined()

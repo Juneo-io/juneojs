@@ -8,11 +8,11 @@ import {
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
 import { type InitialState } from './operation'
 
-export class JVMBaseTransaction extends AbstractBaseTransaction {
+export class JVMBaseTransaction extends BaseTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -56,7 +56,7 @@ export class JVMImportTransaction extends AbstractImportTransaction {
   }
 }
 
-export class CreateAssetTransaction extends AbstractBaseTransaction {
+export class CreateAssetTransaction extends BaseTransaction {
   name: string
   symbol: string
   denomination: number

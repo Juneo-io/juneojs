@@ -4,7 +4,7 @@ import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
 import { SignableTx, type Signable, type Signer } from './signature'
-import { type BlockchainId } from './types'
+import { BlockchainId } from './types'
 
 export class TransactionFee {
   chain: Blockchain
@@ -35,7 +35,7 @@ export interface UnsignedTransaction extends Serializable {
   signTransaction: (signers: Signer[]) => Promise<JuneoBuffer>
 }
 
-export abstract class AbstractBaseTransaction extends SignableTx implements UnsignedTransaction {
+export class BaseTransaction extends SignableTx implements UnsignedTransaction {
   codecId: number
   typeId: number
   networkId: number
@@ -64,7 +64,9 @@ export abstract class AbstractBaseTransaction extends SignableTx implements Unsi
     this.memo = memo
   }
 
-  abstract getSignables (): Signable[]
+  getSignables (): Signable[] {
+    return this.inputs
+  }
 
   getUtxos (): Utxo[] {
     const utxos: Utxo[] = []
@@ -117,9 +119,38 @@ export abstract class AbstractBaseTransaction extends SignableTx implements Unsi
     buffer.writeString('') // '' instead of this.memo
     return buffer
   }
+
+  static parse (data: string | JuneoBuffer): BaseTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    // skip codec reading
+    reader.skip(2)
+    const typeId = reader.readUInt32()
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const outputsLength = reader.readUInt32()
+    const outputs: TransferableOutput[] = []
+    for (let i = 0; i < outputsLength; i++) {
+      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const output = TransferableOutput.parse(outputBuffer)
+      reader.skip(output.serialize().length)
+      outputs.push(output)
+    }
+    const inputsLength = reader.readUInt32()
+    const inputs: TransferableInput[] = []
+    for (let i = 0; i < inputsLength; i++) {
+      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const input = TransferableInput.parse(inputBuffer)
+      reader.skip(input.serialize().length)
+      inputs.push(input)
+    }
+    const memoLength = reader.readUInt32()
+    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
+    return new BaseTransaction(typeId, networkId, blockchainId, outputs, inputs, memo)
+  }
 }
 
-export class AbstractExportTransaction extends AbstractBaseTransaction {
+export class AbstractExportTransaction extends BaseTransaction {
   destinationChain: BlockchainId
   exportedOutputs: TransferableOutput[]
 
@@ -163,7 +194,7 @@ export class AbstractExportTransaction extends AbstractBaseTransaction {
   }
 }
 
-export class AbstractImportTransaction extends AbstractBaseTransaction {
+export class AbstractImportTransaction extends BaseTransaction {
   sourceChain: BlockchainId
   importedInputs: TransferableInput[]
 

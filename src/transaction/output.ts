@@ -23,7 +23,13 @@ export class Utxo {
   }
 
   static parse (data: string | JuneoBuffer): Utxo {
-    const buffer = JuneoBuffer.from(data)
+    const isString = typeof data === 'string'
+    let buffer = JuneoBuffer.from(data)
+    // The data could be provided with a codec, if it is a string then
+    // we assume that there are extra codec bytes at the beginning and skip it.
+    if (isString) {
+      buffer = buffer.copyOf(2, buffer.length)
+    }
     const reader = buffer.createReader()
     const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
     const utxoIndex = reader.readUInt32()

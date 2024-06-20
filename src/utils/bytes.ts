@@ -207,22 +207,9 @@ export class JuneoBuffer {
     }
   }
 
-  /**
-   * Attempt to create a JuneoBuffer from some network component
-   * (e.g.: TransferableInput, BaseTransaction, etc).
-   * Some could be provided from the network and thus be encoded with a codec.
-   * Other data could be directly derived from juneojs. This function takes
-   * care of that by assuming that data as a JuneoBuffer as already been
-   * processed by juneojs and does not have extra codec bytes. On the other hand,
-   * if the data is a string then it assumes that the origin of it is the network
-   * with, for example, a call to the getUtxos or getTx rpc method.
-   *
-   * @param data Data that should be in the buffer.
-   */
   static from (data: JuneoBuffer | string): JuneoBuffer {
     if (typeof data === 'string') {
-      const buffer = JuneoBuffer.fromString(data)
-      return buffer.copyOf(2, buffer.length)
+      return JuneoBuffer.fromString(data)
     }
     return data
   }

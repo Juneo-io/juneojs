@@ -23,11 +23,11 @@ import {
 import { TransferableInput } from '../input'
 import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
 import { type Address, type AssetId, BlockchainId, type DynamicId, type NodeId, type SupernetId } from '../types'
 import { type BLSSigner, SupernetAuth, Validator } from './supernet'
 
-export class PlatformBaseTransaction extends AbstractBaseTransaction {
+export class PlatformBaseTransaction extends BaseTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -84,7 +84,7 @@ export class PlatformImportTransaction extends AbstractImportTransaction {
  * @deprecated
  * Use AddPermissionlessValidatorTransaction
  */
-export class AddValidatorTransaction extends AbstractBaseTransaction {
+export class AddValidatorTransaction extends BaseTransaction {
   validator: Validator
   stake: TransferableOutput[]
   rewardsOwner: Secp256k1OutputOwners
@@ -189,7 +189,7 @@ export class AddValidatorTransaction extends AbstractBaseTransaction {
  * @deprecated
  * Use AddPermissionlessDelegatorTransaction
  */
-export class AddDelegatorTransaction extends AbstractBaseTransaction {
+export class AddDelegatorTransaction extends BaseTransaction {
   validator: Validator
   stake: TransferableOutput[]
   rewardsOwner: Secp256k1OutputOwners
@@ -275,7 +275,7 @@ export class AddDelegatorTransaction extends AbstractBaseTransaction {
   }
 }
 
-export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
+export class AddSupernetValidatorTransaction extends BaseTransaction {
   validator: Validator
   supernetId: SupernetId
   supernetAuth: SupernetAuth
@@ -314,7 +314,7 @@ export class AddSupernetValidatorTransaction extends AbstractBaseTransaction {
   }
 }
 
-export class CreateSupernetTransaction extends AbstractBaseTransaction {
+export class CreateSupernetTransaction extends BaseTransaction {
   rewardsOwner: Secp256k1OutputOwners
 
   constructor (
@@ -347,38 +347,27 @@ export class CreateSupernetTransaction extends AbstractBaseTransaction {
   }
 
   static parse (data: string | JuneoBuffer): CreateSupernetTransaction {
+    const baseTx = BaseTransaction.parse(data)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    const typeId = reader.readUInt32()
+    reader.skip(baseTx.serialize().length)
+    const typeId = baseTx.typeId
     if (typeId !== CreateSupernetTransactionTypeId) {
       throw new ParsingError(`invalid type id ${typeId} expected ${CreateSupernetTransactionTypeId}`)
     }
-    const networkId = reader.readUInt32()
-    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
-    const outputsLength = reader.readUInt32()
-    const outputs: TransferableOutput[] = []
-    for (let i = 0; i < outputsLength; i++) {
-      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const output = TransferableOutput.parse(outputBuffer)
-      reader.skip(output.serialize().length)
-      outputs.push(output)
-    }
-    const inputsLength = reader.readUInt32()
-    const inputs: TransferableInput[] = []
-    for (let i = 0; i < inputsLength; i++) {
-      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const input = TransferableInput.parse(inputBuffer)
-      reader.skip(input.serialize().length)
-      inputs.push(input)
-    }
-    const memoLength = reader.readUInt32()
-    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
     const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
-    return new CreateSupernetTransaction(networkId, blockchainId, outputs, inputs, memo, rewardsOwner)
+    return new CreateSupernetTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      rewardsOwner
+    )
   }
 }
 
-export class CreateChainTransaction extends AbstractBaseTransaction {
+export class CreateChainTransaction extends BaseTransaction {
   supernetId: SupernetId
   name: string
   chainAssetId: AssetId
@@ -448,7 +437,7 @@ export class CreateChainTransaction extends AbstractBaseTransaction {
   }
 }
 
-export class TransferSupernetOwnershipTransaction extends AbstractBaseTransaction {
+export class TransferSupernetOwnershipTransaction extends BaseTransaction {
   supernetId: SupernetId
   supernetAuth: SupernetAuth
   owner: Secp256k1OutputOwners
@@ -488,7 +477,7 @@ export class TransferSupernetOwnershipTransaction extends AbstractBaseTransactio
   }
 }
 
-export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction {
+export class RemoveSupernetValidatorTransaction extends BaseTransaction {
   nodeId: NodeId
   supernetId: SupernetId
   supernetAuth: SupernetAuth
@@ -527,7 +516,7 @@ export class RemoveSupernetValidatorTransaction extends AbstractBaseTransaction 
   }
 }
 
-export class TransformSupernetTransaction extends AbstractBaseTransaction {
+export class TransformSupernetTransaction extends BaseTransaction {
   supernetId: SupernetId
   assetId: AssetId
   initialRewardPoolSupply: bigint
@@ -644,7 +633,7 @@ export class TransformSupernetTransaction extends AbstractBaseTransaction {
   }
 }
 
-export class AddPermissionlessValidatorTransaction extends AbstractBaseTransaction {
+export class AddPermissionlessValidatorTransaction extends BaseTransaction {
   validator: Validator
   supernetId: SupernetId
   signer: BLSSigner
@@ -719,7 +708,7 @@ export class AddPermissionlessValidatorTransaction extends AbstractBaseTransacti
   }
 }
 
-export class AddPermissionlessDelegatorTransaction extends AbstractBaseTransaction {
+export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
   validator: Validator
   supernetId: SupernetId
   stake: TransferableOutput[]

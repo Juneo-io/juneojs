@@ -504,7 +504,7 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     const reader = buffer.createReader()
     reader.skip(baseTx.serialize().length)
     const validator = Validator.parse(reader.read(ValidatorSize))
-    const supernetId = new SupernetId(reader.readString(SupernetIdSize))
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const signer = PrimarySigner.parse(reader.read(PrimarySignerSize))
     const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
@@ -593,7 +593,7 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     const reader = buffer.createReader()
     reader.skip(baseTx.serialize().length)
     const validator = Validator.parse(reader.read(ValidatorSize))
-    const supernetId = new SupernetId(reader.readString(SupernetIdSize))
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
     for (let i = 0; i < stakeLength; i++) {

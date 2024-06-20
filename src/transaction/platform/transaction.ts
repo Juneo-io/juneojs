@@ -21,12 +21,11 @@ import {
   ValidatorSize
 } from '../constants'
 import { TransferableInput } from '../input'
-import { TransferableOutput } from '../output'
+import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { AbstractBaseTransaction, AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import { type Address, type AssetId, BlockchainId, type DynamicId, type NodeId, type SupernetId } from '../types'
-import { type BLSSigner, SupernetAuth } from './supernet'
-import { Secp256k1OutputOwners, Validator } from './validation'
+import { type BLSSigner, SupernetAuth, Validator } from './supernet'
 
 export class PlatformBaseTransaction extends AbstractBaseTransaction {
   constructor (

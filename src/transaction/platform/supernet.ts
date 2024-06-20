@@ -1,9 +1,38 @@
 import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
 import { getSignersIndices } from '../builder'
-import { EmptySignerTypeId, PrimarySignerTypeId, SupernetAuthTypeId } from '../constants'
+import { EmptySignerTypeId, NodeIdSize, PrimarySignerTypeId, SupernetAuthTypeId, ValidatorSize } from '../constants'
+import { type Secp256k1OutputOwners } from '../output'
 import { type Signable, type Signer } from '../signature'
-import { type Address, type BLSPublicKey, type BLSSignature, Signature } from '../types'
-import { type Secp256k1OutputOwners } from './validation'
+import { type Address, type BLSPublicKey, type BLSSignature, NodeId, Signature } from '../types'
+
+export class Validator implements Serializable {
+  nodeId: NodeId
+  startTime: bigint
+  endTime: bigint
+  weight: bigint
+
+  constructor (nodeId: NodeId, startTime: bigint, endTime: bigint, weight: bigint) {
+    this.nodeId = nodeId
+    this.startTime = startTime
+    this.endTime = endTime
+    this.weight = weight
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(ValidatorSize)
+    buffer.write(this.nodeId.serialize())
+    buffer.writeUInt64(this.startTime)
+    buffer.writeUInt64(this.endTime)
+    buffer.writeUInt64(this.weight)
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): Validator {
+    const reader = JuneoBuffer.from(data).createReader()
+    const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
+    return new Validator(nodeId, reader.readUInt64(), reader.readUInt64(), reader.readUInt64())
+  }
+}
 
 export class SupernetAuth implements Serializable, Signable {
   readonly typeId: number = SupernetAuthTypeId

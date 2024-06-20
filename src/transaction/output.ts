@@ -1,6 +1,38 @@
 import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
-import { AddressSize, AssetIdSize, Secp256k1OutputTypeId, TransactionIdSize } from './constants'
+import {
+  AddressSize,
+  AssetIdSize,
+  Secp256k1OutputOwnersTypeId,
+  Secp256k1OutputTypeId,
+  TransactionIdSize
+} from './constants'
 import { Address, AssetId, TransactionId } from './types'
+
+export class Utxo {
+  transactionId: TransactionId
+  utxoIndex: number
+  assetId: AssetId
+  output: TransactionOutput
+  sourceChain?: string
+
+  constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, output: TransactionOutput) {
+    this.transactionId = transactionId
+    this.utxoIndex = utxoIndex
+    this.assetId = assetId
+    this.output = output
+  }
+
+  static parse (data: string | JuneoBuffer): Utxo {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
+    const utxoIndex = reader.readUInt32()
+    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    const outputBuffer = reader.read(buffer.length - reader.getCursor())
+    const output = TransferableOutput.parseOutput(outputBuffer)
+    return new Utxo(transactionId, utxoIndex, assetId, output)
+  }
+}
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
@@ -107,28 +139,47 @@ export class Secp256k1Output implements TransactionOutput {
   }
 }
 
-export class Utxo {
-  transactionId: TransactionId
-  utxoIndex: number
-  assetId: AssetId
-  output: TransactionOutput
-  sourceChain?: string
+export class Secp256k1OutputOwners implements TransactionOutput {
+  readonly typeId = Secp256k1OutputOwnersTypeId
+  locktime: bigint
+  threshold: number
+  addresses: Address[]
 
-  constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, output: TransactionOutput) {
-    this.transactionId = transactionId
-    this.utxoIndex = utxoIndex
-    this.assetId = assetId
-    this.output = output
+  constructor (locktime: bigint, threshold: number, addresses: Address[]) {
+    this.locktime = locktime
+    this.threshold = threshold
+    this.addresses = addresses.sort(Address.comparator)
   }
 
-  static parse (data: string | JuneoBuffer): Utxo {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
-    const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
-    const utxoIndex = reader.readUInt32()
-    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
-    const outputBuffer = reader.read(buffer.length - reader.getCursor())
-    const output = TransferableOutput.parseOutput(outputBuffer)
-    return new Utxo(transactionId, utxoIndex, assetId, output)
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      // 4 + 8 + 4 + 4 = 20
+      20 + AddressSize * this.addresses.length
+    )
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt64(this.locktime)
+    buffer.writeUInt32(this.threshold)
+    buffer.writeUInt32(this.addresses.length)
+    for (const address of this.addresses) {
+      buffer.write(address.serialize())
+    }
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): Secp256k1OutputOwners {
+    const reader = JuneoBuffer.from(data).createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== Secp256k1OutputOwnersTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1OutputOwnersTypeId}`)
+    }
+    const locktime = reader.readUInt64()
+    const threshold = reader.readUInt32()
+    const addressesCount = reader.readUInt32()
+    const addresses: Address[] = []
+    for (let i = 0; i < addressesCount; i++) {
+      const address = new Address(reader.read(AddressSize))
+      addresses.push(address)
+    }
+    return new Secp256k1OutputOwners(locktime, threshold, addresses)
   }
 }

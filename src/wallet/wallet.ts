@@ -1,4 +1,5 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
+import { type JEVMAPI } from '../api'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
 import { MainNetwork } from '../network'
 import { type Address, type Signer } from '../transaction'
@@ -187,13 +188,43 @@ export class JVMWallet extends AbstractVMWallet {
 }
 
 export class JEVMWallet extends AbstractVMWallet {
+  private readonly nonce = new NonceSync()
   evmWallet: Wallet
-  nonce: bigint = BigInt(0)
-  synchronized: boolean = false
 
   constructor (privateKey: string, hrp: string, chain: Blockchain) {
     super(privateKey, hrp, chain)
     this.evmWallet = new Wallet(privateKey)
     this.address = this.evmWallet.address
+  }
+
+  async getNonceAndIncrement (api: JEVMAPI): Promise<bigint> {
+    return await this.nonce.increment(api, this.address!)
+  }
+
+  getNonce (): bigint {
+    return this.nonce.nonce
+  }
+
+  async syncNonce (api: JEVMAPI): Promise<void> {
+    await this.nonce.syncNonce(api, this.address!)
+  }
+}
+
+class NonceSync {
+  nonce = BigInt(0)
+  synchronized = false
+
+  async increment (api: JEVMAPI, address: string): Promise<bigint> {
+    if (!this.synchronized) {
+      await this.syncNonce(api, address)
+    }
+    return this.nonce++
+  }
+
+  async syncNonce (api: JEVMAPI, address: string): Promise<void> {
+    await api.eth_getTransactionCount(address, 'pending').then((nonce) => {
+      this.nonce = nonce
+      this.synchronized = true
+    })
   }
 }

@@ -128,10 +128,7 @@ export class Secp256k1Output implements TransactionOutput {
   static parse (data: string | JuneoBuffer): Secp256k1Output {
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== Secp256k1OutputTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1OutputTypeId}`)
-    }
+    reader.readTypeId(Secp256k1OutputTypeId)
     const amount = reader.readUInt64()
     const locktime = reader.readUInt64()
     const threshold = reader.readUInt32()
@@ -174,10 +171,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
 
   static parse (data: string | JuneoBuffer): Secp256k1OutputOwners {
     const reader = JuneoBuffer.from(data).createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== Secp256k1OutputOwnersTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1OutputOwnersTypeId}`)
-    }
+    reader.readTypeId(Secp256k1OutputOwnersTypeId)
     const locktime = reader.readUInt64()
     const threshold = reader.readUInt32()
     const addressesCount = reader.readUInt32()

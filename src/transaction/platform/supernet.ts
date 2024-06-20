@@ -1,4 +1,4 @@
-import { type Serializable, JuneoBuffer, ParsingError, SignatureError } from '../../utils'
+import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
 import { getSignersIndices } from '../builder'
 import {
   BLSPublicKeySize,
@@ -146,10 +146,7 @@ export class PrimarySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): PrimarySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== PrimarySignerTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${PrimarySignerTypeId}`)
-    }
+    reader.readTypeId(PrimarySignerTypeId)
     return new PrimarySigner(ProofOfPossession.parse(reader.read(ProofOfPossessionSize)))
   }
 }
@@ -161,10 +158,7 @@ export class EmptySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): EmptySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== EmptySignerTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${EmptySignerTypeId}`)
-    }
+    reader.readTypeId(EmptySignerTypeId)
     return new EmptySigner()
   }
 }

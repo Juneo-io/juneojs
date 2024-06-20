@@ -1,4 +1,4 @@
-import { JuneoBuffer, ParsingError } from '../../utils'
+import { JuneoBuffer } from '../../utils'
 import {
   AddPermissionlessDelegatorTransactionTypeId,
   AddPermissionlessValidatorTransactionTypeId,
@@ -154,10 +154,7 @@ export class CreateSupernetTransaction extends BaseTransaction {
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
     reader.skip(baseTx.serialize().length)
-    const typeId = baseTx.typeId
-    if (typeId !== CreateSupernetTransactionTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${CreateSupernetTransactionTypeId}`)
-    }
+    reader.readTypeId(CreateSupernetTransactionTypeId)
     const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
     return new CreateSupernetTransaction(
       baseTx.networkId,
@@ -515,10 +512,7 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
     reader.skip(baseTx.serialize().length)
-    const typeId = baseTx.typeId
-    if (typeId !== AddPermissionlessValidatorTransactionTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${AddPermissionlessValidatorTransactionTypeId}`)
-    }
+    reader.readTypeId(AddPermissionlessValidatorTransactionTypeId)
     const validator = Validator.parse(reader.read(ValidatorSize))
     const supernetId = new SupernetId(reader.readString(SupernetIdSize))
     const signer = PrimarySigner.parse(reader.read(PrimarySignerSize))
@@ -611,10 +605,7 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== AddPermissionlessDelegatorTransactionTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${AddPermissionlessDelegatorTransactionTypeId}`)
-    }
+    reader.readTypeId(AddPermissionlessDelegatorTransactionTypeId)
 
     const validator = Validator.parse(reader.read(ValidatorSize))
     const supernetId = new SupernetId(reader.readString(SupernetIdSize))

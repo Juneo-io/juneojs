@@ -165,10 +165,7 @@ export class Secp256k1Input implements TransactionInput {
 
   static parse (data: string | JuneoBuffer): Secp256k1Input {
     const reader = JuneoBuffer.from(data).createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== Secp256k1InputTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${Secp256k1InputTypeId}`)
-    }
+    reader.readTypeId(Secp256k1InputTypeId)
     const amount = reader.readUInt64()
     const addressIndicesCount = reader.readUInt32()
     const indices: number[] = []

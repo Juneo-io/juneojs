@@ -35,10 +35,6 @@ export class PlatformBaseTransaction extends BaseTransaction {
   ) {
     super(PlatformBaseTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
   }
-
-  getSignables (): Signable[] {
-    return this.inputs
-  }
 }
 
 export class PlatformExportTransaction extends AbstractExportTransaction {
@@ -134,10 +130,6 @@ export class CreateSupernetTransaction extends BaseTransaction {
 
   getSupernetAuth (addresses: Address[]): SupernetAuth {
     return new SupernetAuth(addresses, this.rewardsOwner)
-  }
-
-  getSignables (): Signable[] {
-    return this.inputs
   }
 
   serialize (): JuneoBuffer {
@@ -466,10 +458,6 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     this.shares = shares
   }
 
-  getSignables (): Signable[] {
-    return this.inputs
-  }
-
   serialize (): JuneoBuffer {
     const baseTransaction: JuneoBuffer = super.serialize()
     const signerBytes: JuneoBuffer = this.signer.serialize()
@@ -571,10 +559,6 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     this.supernetId = supernetId
     this.stake = stake
     this.delegatorRewardsOwner = delegatorRewardsOwner
-  }
-
-  getSignables (): Signable[] {
-    return this.inputs
   }
 
   serialize (): JuneoBuffer {

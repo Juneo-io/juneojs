@@ -170,10 +170,6 @@ export class AbstractExportTransaction extends BaseTransaction {
     this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
-  getSignables (): Signable[] {
-    return this.inputs
-  }
-
   serialize (): JuneoBuffer {
     const baseTransaction: JuneoBuffer = super.serialize()
     const exportedOutputsBytes: JuneoBuffer[] = []
@@ -215,7 +211,7 @@ export class AbstractImportTransaction extends BaseTransaction {
   }
 
   getSignables (): Signable[] {
-    return this.inputs.concat(this.importedInputs)
+    return [...this.inputs, ...this.importedInputs]
   }
 
   serialize (): JuneoBuffer {

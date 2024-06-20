@@ -1,6 +1,7 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type Blockchain, type JEVMBlockchain, type PlatformBlockchain } from '../../chain'
 import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
+import { type UtxoAccount } from '../account'
 
 export enum NetworkOperationType {
   Send = 'Send',
@@ -63,7 +64,23 @@ export class SendOperation extends ChainNetworkOperation {
   }
 }
 
-export class SendUtxoOperation extends ChainNetworkOperation {
+export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
+  utxoSet: Utxo[] | undefined
+
+  constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: Utxo[]) {
+    super(type, chain)
+    this.utxoSet = utxoSet
+  }
+
+  getPreferredUtxoSet (account: UtxoAccount): Utxo[] {
+    if (typeof this.utxoSet === 'undefined') {
+      return account.utxoSet
+    }
+    return this.utxoSet
+  }
+}
+
+export class SendUtxoOperation extends MultiSigUtxoOperation {
   assetId: string
   amount: bigint
   addresses: string[]
@@ -143,7 +160,7 @@ export class EthCallOperation extends JEVMChainOperation {
   }
 }
 
-export abstract class Staking extends ChainNetworkOperation {
+export abstract class Staking extends MultiSigUtxoOperation {
   nodeId: string
   amount: bigint
   startTime: bigint

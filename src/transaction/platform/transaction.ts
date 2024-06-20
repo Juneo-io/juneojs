@@ -1,12 +1,9 @@
 import { JuneoBuffer, ParsingError } from '../../utils'
 import {
-  AddDelegatorTransactionTypeId,
   AddPermissionlessDelegatorTransactionTypeId,
   AddPermissionlessValidatorTransactionTypeId,
   AddSupernetValidatorTransactionType,
-  AddValidatorTransactionTypeId,
   AssetIdSize,
-  BlockchainIdSize,
   CreateChainTransactionTypeId,
   CreateSupernetTransactionTypeId,
   DynamicIdSize,
@@ -14,18 +11,19 @@ import {
   PlatformBaseTransactionTypeId,
   PlatformExportTransactionTypeId,
   PlatformImportTransactionTypeId,
+  PrimarySignerSize,
   RemoveSupernetTransactionTypeId,
   SupernetIdSize,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
   ValidatorSize
 } from '../constants'
-import { TransferableInput } from '../input'
+import { type TransferableInput } from '../input'
 import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
-import { type Address, type AssetId, BlockchainId, type DynamicId, type NodeId, type SupernetId } from '../types'
-import { type BLSSigner, SupernetAuth, Validator } from './supernet'
+import { type Address, type AssetId, type BlockchainId, type DynamicId, type NodeId, SupernetId } from '../types'
+import { type BLSSigner, PrimarySigner, SupernetAuth, Validator } from './supernet'
 
 export class PlatformBaseTransaction extends BaseTransaction {
   constructor (
@@ -77,201 +75,6 @@ export class PlatformImportTransaction extends AbstractImportTransaction {
     importedInputs: TransferableInput[]
   ) {
     super(PlatformImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
-  }
-}
-
-/**
- * @deprecated
- * Use AddPermissionlessValidatorTransaction
- */
-export class AddValidatorTransaction extends BaseTransaction {
-  validator: Validator
-  stake: TransferableOutput[]
-  rewardsOwner: Secp256k1OutputOwners
-  shares: number
-
-  constructor (
-    networkId: number,
-    blockchainId: BlockchainId,
-    outputs: TransferableOutput[],
-    inputs: TransferableInput[],
-    memo: string,
-    validator: Validator,
-    stake: TransferableOutput[],
-    rewardsOwner: Secp256k1OutputOwners,
-    shares: number
-  ) {
-    super(AddValidatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
-    this.validator = validator
-    this.stake = stake
-    this.rewardsOwner = rewardsOwner
-    this.shares = shares
-  }
-
-  getSignables (): Signable[] {
-    return this.inputs
-  }
-
-  serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const stakeBytes: JuneoBuffer[] = []
-    let stakeBytesSize: number = 0
-    for (const output of this.stake) {
-      const bytes: JuneoBuffer = output.serialize()
-      stakeBytesSize += bytes.length
-      stakeBytes.push(bytes)
-    }
-    const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + ValidatorSize + 4 + stakeBytesSize + rewardsOwnerBytes.length + 4
-    )
-    buffer.write(baseTransaction)
-    buffer.write(this.validator.serialize())
-    buffer.writeUInt32(this.stake.length)
-    for (const output of stakeBytes) {
-      buffer.write(output)
-    }
-    buffer.write(rewardsOwnerBytes)
-    buffer.writeUInt32(this.shares)
-    return buffer
-  }
-
-  static parse (data: string | JuneoBuffer): AddValidatorTransaction {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== AddValidatorTransactionTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${AddValidatorTransactionTypeId}`)
-    }
-    const networkId = reader.readUInt32()
-    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
-    const outputsLength = reader.readUInt32()
-    const outputs: TransferableOutput[] = []
-    for (let i = 0; i < outputsLength; i++) {
-      const output = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(output.serialize().length)
-      outputs.push(output)
-    }
-    const inputsLength = reader.readUInt32()
-    const inputs: TransferableInput[] = []
-    for (let i = 0; i < inputsLength; i++) {
-      const input = TransferableInput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(input.serialize().length)
-      inputs.push(input)
-    }
-    const memoLength = reader.readUInt32()
-    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
-    const validator = Validator.parse(reader.read(ValidatorSize))
-    const stakeLength = reader.readUInt32()
-    const stakes: TransferableOutput[] = []
-    for (let i = 0; i < stakeLength; i++) {
-      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(stake.serialize().length)
-      stakes.push(stake)
-    }
-    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - 4))
-    const shares = reader.readUInt32()
-    return new AddValidatorTransaction(
-      networkId,
-      blockchainId,
-      outputs,
-      inputs,
-      memo,
-      validator,
-      stakes,
-      rewardsOwner,
-      shares
-    )
-  }
-}
-
-/**
- * @deprecated
- * Use AddPermissionlessDelegatorTransaction
- */
-export class AddDelegatorTransaction extends BaseTransaction {
-  validator: Validator
-  stake: TransferableOutput[]
-  rewardsOwner: Secp256k1OutputOwners
-
-  constructor (
-    networkId: number,
-    blockchainId: BlockchainId,
-    outputs: TransferableOutput[],
-    inputs: TransferableInput[],
-    memo: string,
-    validator: Validator,
-    stake: TransferableOutput[],
-    rewardsOwner: Secp256k1OutputOwners
-  ) {
-    super(AddDelegatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
-    this.validator = validator
-    this.stake = stake
-    this.rewardsOwner = rewardsOwner
-  }
-
-  getSignables (): Signable[] {
-    return this.inputs
-  }
-
-  serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const stakeBytes: JuneoBuffer[] = []
-    let stakeBytesSize: number = 0
-    for (const output of this.stake) {
-      const bytes: JuneoBuffer = output.serialize()
-      stakeBytesSize += bytes.length
-      stakeBytes.push(bytes)
-    }
-    const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + ValidatorSize + 4 + stakeBytesSize + rewardsOwnerBytes.length
-    )
-    buffer.write(baseTransaction)
-    buffer.write(this.validator.serialize())
-    buffer.writeUInt32(this.stake.length)
-    for (const output of stakeBytes) {
-      buffer.write(output)
-    }
-    buffer.write(rewardsOwnerBytes)
-    return buffer
-  }
-
-  static parse (data: string | JuneoBuffer): AddDelegatorTransaction {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
-    const typeId = reader.readUInt32()
-    if (typeId !== AddDelegatorTransactionTypeId) {
-      throw new ParsingError(`invalid type id ${typeId} expected ${AddDelegatorTransactionTypeId}`)
-    }
-    const networkId = reader.readUInt32()
-    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
-    const outputsLength = reader.readUInt32()
-    const outputs: TransferableOutput[] = []
-    for (let i = 0; i < outputsLength; i++) {
-      const output = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(output.serialize().length)
-      outputs.push(output)
-    }
-    const inputsLength = reader.readUInt32()
-    const inputs: TransferableInput[] = []
-    for (let i = 0; i < inputsLength; i++) {
-      const input = TransferableInput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(input.serialize().length)
-      inputs.push(input)
-    }
-    const memoLength = reader.readUInt32()
-    const memo = memoLength > 0 ? reader.readString(memoLength) : ''
-    const validator = Validator.parse(reader.read(ValidatorSize))
-    const stakeLength = reader.readUInt32()
-    const stakes: TransferableOutput[] = []
-    for (let i = 0; i < stakeLength; i++) {
-      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(stake.serialize().length)
-      stakes.push(stake)
-    }
-    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
-    return new AddDelegatorTransaction(networkId, blockchainId, outputs, inputs, memo, validator, stakes, rewardsOwner)
   }
 }
 
@@ -706,6 +509,50 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     buffer.writeUInt32(this.shares)
     return buffer
   }
+
+  static parse (data: string | JuneoBuffer): AddPermissionlessValidatorTransaction {
+    const baseTx = BaseTransaction.parse(data)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    reader.skip(baseTx.serialize().length)
+    const typeId = baseTx.typeId
+    if (typeId !== AddPermissionlessValidatorTransactionTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${AddPermissionlessValidatorTransactionTypeId}`)
+    }
+    const validator = Validator.parse(reader.read(ValidatorSize))
+    const supernetId = new SupernetId(reader.readString(SupernetIdSize))
+    const signer = PrimarySigner.parse(reader.read(PrimarySignerSize))
+    const stakeLength = reader.readUInt32()
+    const stakes: TransferableOutput[] = []
+    for (let i = 0; i < stakeLength; i++) {
+      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(stake.serialize().length)
+      stakes.push(stake)
+    }
+    const validatorRewardsOwner = Secp256k1OutputOwners.parse(
+      buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+    )
+    reader.skip(validatorRewardsOwner.serialize().length)
+    const delegatorRewardsOwner = Secp256k1OutputOwners.parse(
+      buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+    )
+    reader.skip(delegatorRewardsOwner.serialize().length)
+    const shares = reader.readUInt32()
+    return new AddPermissionlessValidatorTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      validator,
+      supernetId,
+      signer,
+      stakes,
+      validatorRewardsOwner,
+      delegatorRewardsOwner,
+      shares
+    )
+  }
 }
 
 export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
@@ -758,5 +605,37 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     }
     buffer.write(delegatorRewardsOwnerBytes)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): AddPermissionlessDelegatorTransaction {
+    const baseTx = BaseTransaction.parse(data)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    if (typeId !== AddPermissionlessDelegatorTransactionTypeId) {
+      throw new ParsingError(`invalid type id ${typeId} expected ${AddPermissionlessDelegatorTransactionTypeId}`)
+    }
+
+    const validator = Validator.parse(reader.read(ValidatorSize))
+    const supernetId = new SupernetId(reader.readString(SupernetIdSize))
+    const stakeLength = reader.readUInt32()
+    const stakes: TransferableOutput[] = []
+    for (let i = 0; i < stakeLength; i++) {
+      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      reader.skip(stake.serialize().length)
+      stakes.push(stake)
+    }
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
+    return new AddPermissionlessDelegatorTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      validator,
+      supernetId,
+      stakes,
+      rewardsOwner
+    )
   }
 }

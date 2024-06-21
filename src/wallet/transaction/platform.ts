@@ -14,6 +14,7 @@ import {
   PrimarySigner,
   ProofOfPossession,
   type UnsignedTransaction,
+  type Utxo,
   Validator
 } from '../../transaction'
 import { type PlatformAccount } from '../account'
@@ -63,6 +64,7 @@ async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFe
 export async function estimatePlatformAddPrimaryValidatorTransaction (
   provider: MCNProvider,
   account: PlatformAccount,
+  utxoSet: Utxo[],
   validator: Validator,
   share: number,
   pop: ProofOfPossession,
@@ -73,7 +75,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessValidatorTransaction(
-    account.utxoSet,
+    utxoSet,
     account.getSignersAddresses(),
     fee.amount,
     provider.platformChain,
@@ -102,21 +104,14 @@ export async function estimatePlatformValidatePrimaryOperation (
   validate: ValidatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
-  const chain: PlatformBlockchain = provider.platformChain
-  const potentialReward: bigint = chain.estimatePrimaryValidationReward(
-    validate.endTime - validate.startTime,
-    validate.amount
-  )
-  const validator: Validator = new Validator(
-    new NodeId(validate.nodeId),
-    validate.startTime,
-    validate.endTime,
-    validate.amount
-  )
+  const chain = provider.platformChain
+  const potentialReward = chain.estimatePrimaryValidationReward(validate.endTime - validate.startTime, validate.amount)
+  const validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   const values = new Map<string, bigint>()
   return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
     account,
+    validate.getPreferredUtxoSet(account),
     validator,
     chain.stakeConfig.minDelegationFee, // this is the only value possible for primary network as min = max value
     new ProofOfPossession(validate.publicKey, validate.signature),
@@ -154,6 +149,7 @@ export async function estimatePlatformValidatePrimaryOperation (
 export async function estimatePlatformAddPrimaryDelegatorTransaction (
   provider: MCNProvider,
   account: PlatformAccount,
+  utxoSet: Utxo[],
   validator: Validator,
   stakeAddresses: string[],
   stakeThreshold: number,
@@ -162,7 +158,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessDelegatorTransaction(
-    account.utxoSet,
+    utxoSet,
     account.getSignersAddresses(),
     fee.amount,
     provider.platformChain,
@@ -189,21 +185,14 @@ export async function estimatePlatformDelegatePrimaryOperation (
   delegate: DelegatePrimaryOperation,
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
-  const chain: PlatformBlockchain = provider.platformChain
-  const potentialReward: bigint = chain.estimatePrimaryDelegationReward(
-    delegate.endTime - delegate.startTime,
-    delegate.amount
-  )
-  const validator: Validator = new Validator(
-    new NodeId(delegate.nodeId),
-    delegate.startTime,
-    delegate.endTime,
-    delegate.amount
-  )
+  const chain = provider.platformChain
+  const potentialReward = chain.estimatePrimaryDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
+  const validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   const values = new Map<string, bigint>()
   return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
     account,
+    delegate.getPreferredUtxoSet(account),
     validator,
     delegate.stakeAddresses,
     delegate.stakeThreshold,

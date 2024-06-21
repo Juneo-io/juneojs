@@ -10,16 +10,18 @@ import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT, PROVIDER } fro
 
 const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
-const validNodeId = 'NodeID-P6qNB7Zk2tUirf9TvBiXxiCHxa5Hzq6sL'
+const validNodeId = 'NodeID-4JfgcoMWBpxCQL5VmyQ1f6L36mUbLLBga'
 const ONE_DAY: bigint = BigInt(86_400)
 let currentTime: bigint = TimeUtils.now() + BigInt(30)
 let tomorrow: bigint = currentTime + ONE_DAY
+let twoWeeks: bigint = currentTime + BigInt(14) * ONE_DAY
 
 describe('Staking operations', (): void => {
   beforeAll(async () => {
     // TODO create time provider utils to manage those tests
     currentTime = TimeUtils.now() + BigInt(30)
     tomorrow = currentTime + ONE_DAY
+    twoWeeks = currentTime + BigInt(14) * ONE_DAY + BigInt(30)
   })
 
   test.todo('operations instantiations')
@@ -29,10 +31,10 @@ describe('Staking operations', (): void => {
       test.each([
         {
           nodeId: validNodeId,
-          amount: BigInt(10_000_000),
+          amount: BigInt(100_000_000), // 0.1 JUNE
           expectedStatus: DONE_STATUS,
           startTime: currentTime,
-          endTime: tomorrow
+          endTime: twoWeeks
         }
       ])(
         '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',

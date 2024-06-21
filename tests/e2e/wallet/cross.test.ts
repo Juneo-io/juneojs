@@ -1,29 +1,30 @@
 import {
   AccountError,
   CrossOperation,
-  GenesisEUROC1Chain,
-  GenesisJUNEChain,
-  GenesisJVMChain,
-  GenesisPlatformChain,
   InputError,
   NetworkOperationRange,
   NetworkOperationType,
+  SocotraEUR1Chain,
+  SocotraJUNEChain,
+  SocotraJVMChain,
+  SocotraPlatformChain,
   type ExecutableOperation
 } from '../../../src'
 import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Cross operations', () => {
-  const juneChain = GenesisJUNEChain
-  const euroChain = GenesisEUROC1Chain
-  const platformChain = GenesisPlatformChain
-  const jvmChain = GenesisJVMChain
+  const juneChain = SocotraJUNEChain
+  const euroChain = SocotraEUR1Chain
+  const platformChain = SocotraPlatformChain
+  const jvmChain = SocotraJVMChain
+  const euroAddress = '0x3000000000000000000000000000000000000000'
 
   describe('Instantiation', () => {
     test.each([
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: BigInt(1_000)
       },
@@ -58,21 +59,21 @@ describe('Cross operations', () => {
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: EXCESSIVE_AMOUNT
       },
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: BigInt(0)
       },
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: BigInt(-1_000)
       }
@@ -96,7 +97,7 @@ describe('Cross operations', () => {
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: BigInt(1_000)
       },
@@ -167,7 +168,7 @@ describe('Cross operations', () => {
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: BigInt(-1),
         expectedError: InputError
@@ -175,7 +176,7 @@ describe('Cross operations', () => {
       {
         source: juneChain,
         destination: euroChain,
-        assetId: '0x3300000000000000000000000000000000000000',
+        assetId: euroAddress,
         symbol: 'EUROC.e',
         value: EXCESSIVE_AMOUNT,
         expectedError: AccountError

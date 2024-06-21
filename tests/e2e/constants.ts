@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv'
-import { GenesisNetwork, MCNAccount, MCNProvider, MCNWallet } from '../../src'
+import { MCNAccount, MCNProvider, MCNWallet, SocotraNetwork } from '../../src'
 dotenv.config()
 
-export const PROVIDER: MCNProvider = new MCNProvider(GenesisNetwork)
+export const PROVIDER: MCNProvider = new MCNProvider(SocotraNetwork)
 const WALLET = MCNWallet.recover(process.env.MNEMONIC ?? '', PROVIDER.mcn.hrp)
 export const ACCOUNT: MCNAccount = new MCNAccount(PROVIDER, WALLET)
 

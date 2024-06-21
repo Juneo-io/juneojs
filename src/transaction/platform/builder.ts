@@ -2,16 +2,14 @@ import { type PlatformBlockchain } from '../../chain'
 import { InputError } from '../../utils'
 import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
-import { Secp256k1Output, TransferableOutput, type UserOutput, type Utxo } from '../output'
+import { Secp256k1Output, Secp256k1OutputOwners, TransferableOutput, type UserOutput, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
-import { type BLSSigner, type SupernetAuth } from './supernet'
+import { Validator, type BLSSigner, type SupernetAuth } from './supernet'
 import {
-  AddDelegatorTransaction,
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessValidatorTransaction,
   AddSupernetValidatorTransaction,
-  AddValidatorTransaction,
   CreateChainTransaction,
   CreateSupernetTransaction,
   PlatformBaseTransaction,
@@ -21,7 +19,6 @@ import {
   TransferSupernetOwnershipTransaction,
   TransformSupernetTransaction
 } from './transaction'
-import { Secp256k1OutputOwners, Validator } from './validation'
 
 export function buildPlatformBaseTransaction (
   userInputs: UserInput[],
@@ -36,11 +33,11 @@ export function buildPlatformBaseTransaction (
     throw new InputError('user inputs cannot be empty')
   }
   const sourceId: string = userInputs[0].sourceChain.id
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     if (input.sourceChain.id !== sourceId || input.destinationChain.id !== sourceId) {
       throw new InputError('jvm base transaction cannot have different source/destination chain user inputs')
     }
-  })
+  }
   const feeData = new TransactionFee(userInputs[0].sourceChain, fee)
   const inputs: TransferableInput[] = buildTransactionInputs(
     userInputs,
@@ -68,14 +65,14 @@ export function buildPlatformExportTransaction (
   }
   const sourceId: string = userInputs[0].sourceChain.id
   const destinationId: string = userInputs[0].destinationChain.id
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     if (input.sourceChain.id !== sourceId || input.destinationChain.id !== destinationId) {
       throw new InputError('jvm export transaction cannot have different source or destination chain user inputs')
     }
     if (input.sourceChain.id === input.destinationChain.id) {
       throw new InputError('jvm export transaction cannot have the same chain as source and destination user inputs')
     }
-  })
+  }
   const sourceFeeData: TransactionFee = new TransactionFee(userInputs[0].sourceChain, sourceFee)
   const destinationFeeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, destinationFee)
   const fees: TransactionFee[] = [sourceFeeData, destinationFeeData]
@@ -87,11 +84,11 @@ export function buildPlatformExportTransaction (
   )
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     fixedUserInputs.push(
       new UserInput(input.assetId, input.sourceChain, input.amount, [exportAddress], 1, input.destinationChain)
     )
-  })
+  }
   if (destinationFeeData.amount > BigInt(0)) {
     // adding fees as user input to be able to export it
     fixedUserInputs.push(
@@ -108,13 +105,13 @@ export function buildPlatformExportTransaction (
   const outputs: UserOutput[] = buildTransactionOutputs(fixedUserInputs, inputs, sourceFeeData, changeAddress)
   const exportedOutputs: TransferableOutput[] = []
   const changeOutputs: TransferableOutput[] = []
-  outputs.forEach((output) => {
+  for (const output of outputs) {
     if (!output.isChange) {
       exportedOutputs.push(output)
     } else {
       changeOutputs.push(output)
     }
-  })
+  }
   return new PlatformExportTransaction(
     networkId,
     new BlockchainId(sourceId),
@@ -140,18 +137,18 @@ export function buildPlatformImportTransaction (
   }
   const sourceId: string = userInputs[0].sourceChain.id
   const destinationId: string = userInputs[0].destinationChain.id
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     if (input.sourceChain.id !== sourceId || input.destinationChain.id !== destinationId) {
       throw new InputError('jvm import transaction cannot have different source or destination chain user inputs')
     }
     if (input.sourceChain.id === input.destinationChain.id) {
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
-  })
+  }
   const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
-  buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData]).forEach((input) => {
+  for (const input of buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(sendersAddresses), [feeData])) {
     if (input.input.utxo === undefined) {
       throw new InputError('input cannot use read only utxo')
     }
@@ -161,7 +158,7 @@ export function buildPlatformImportTransaction (
     } else {
       importedInputs.push(input)
     }
-  })
+  }
   const outputs: UserOutput[] = buildTransactionOutputs(
     userInputs,
     inputs.concat(importedInputs),
@@ -176,152 +173,6 @@ export function buildPlatformImportTransaction (
     memo,
     new BlockchainId(sourceId),
     importedInputs
-  )
-}
-
-/**
- * @deprecated
- * Use AddPermissionlessValidatorTransaction
- */
-export function buildAddValidatorTransaction (
-  utxoSet: Utxo[],
-  sendersAddresses: string[],
-  fee: bigint,
-  chain: PlatformBlockchain,
-  nodeId: string | NodeId,
-  startTime: bigint,
-  endTime: bigint,
-  stakeAmount: bigint,
-  stakedAssetId: string,
-  shares: number,
-  stakeAddresses: string[],
-  stakeThreshold: number,
-  stakeLocktime: bigint,
-  rewardAddresses: string[],
-  rewardThreshold: number,
-  rewardLocktime: bigint,
-  changeAddress: string,
-  networkId: number,
-  memo: string = ''
-): AddValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs(
-    [userInput],
-    utxoSet,
-    Address.toAddresses(sendersAddresses),
-    [new TransactionFee(chain, fee)]
-  )
-  const outputs: UserOutput[] = buildTransactionOutputs(
-    [userInput],
-    inputs,
-    new TransactionFee(chain, fee),
-    changeAddress
-  )
-  const validator: Validator = new Validator(
-    typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    startTime,
-    endTime,
-    stakeAmount
-  )
-  const stake: TransferableOutput[] = [
-    new TransferableOutput(
-      new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
-    )
-  ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardLocktime,
-    rewardThreshold,
-    Address.toAddresses(rewardAddresses)
-  )
-  const changeOutputs: TransferableOutput[] = []
-  for (const output of outputs) {
-    if (output.isChange) {
-      changeOutputs.push(output)
-    }
-  }
-  return new AddValidatorTransaction(
-    networkId,
-    new BlockchainId(chain.id),
-    changeOutputs, // only using change outputs because of stake
-    inputs,
-    memo,
-    validator,
-    stake,
-    rewardsOwner,
-    shares
-  )
-}
-
-/**
- * @deprecated
- * Use AddPermissionlessDelegatorTransaction
- */
-export function buildAddDelegatorTransaction (
-  utxoSet: Utxo[],
-  sendersAddresses: string[],
-  fee: bigint,
-  chain: PlatformBlockchain,
-  nodeId: string | NodeId,
-  startTime: bigint,
-  endTime: bigint,
-  stakeAmount: bigint,
-  stakedAssetId: string,
-  stakeAddresses: string[],
-  stakeThreshold: number,
-  stakeLocktime: bigint,
-  rewardAddresses: string[],
-  rewardThreshold: number,
-  rewardLocktime: bigint,
-  changeAddress: string,
-  networkId: number,
-  memo: string = ''
-): AddDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs(
-    [userInput],
-    utxoSet,
-    Address.toAddresses(sendersAddresses),
-    [new TransactionFee(chain, fee)]
-  )
-  const outputs: UserOutput[] = buildTransactionOutputs(
-    [userInput],
-    inputs,
-    new TransactionFee(chain, fee),
-    changeAddress
-  )
-  const validator: Validator = new Validator(
-    typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    startTime,
-    endTime,
-    stakeAmount
-  )
-  const stake: TransferableOutput[] = [
-    new TransferableOutput(
-      new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
-    )
-  ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardLocktime,
-    rewardThreshold,
-    Address.toAddresses(rewardAddresses)
-  )
-  const changeOutputs: TransferableOutput[] = []
-  for (const output of outputs) {
-    if (output.isChange) {
-      changeOutputs.push(output)
-    }
-  }
-  return new AddDelegatorTransaction(
-    networkId,
-    new BlockchainId(chain.id),
-    changeOutputs, // only using change outputs because of stake
-    inputs,
-    memo,
-    validator,
-    stake,
-    rewardsOwner
   )
 }
 

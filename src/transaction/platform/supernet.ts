@@ -1,13 +1,47 @@
 import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
-import { type VMWallet } from '../../wallet'
 import { getSignersIndices } from '../builder'
-import { type Signable } from '../signature'
-import { type Address, type BLSPublicKey, type BLSSignature, Signature } from '../types'
-import { type Secp256k1OutputOwners } from './validation'
+import {
+  BLSPublicKeySize,
+  BLSSignatureSize,
+  EmptySignerTypeId,
+  NodeIdSize,
+  PrimarySignerTypeId,
+  ProofOfPossessionSize,
+  SupernetAuthTypeId,
+  ValidatorSize
+} from '../constants'
+import { type Secp256k1OutputOwners } from '../output'
+import { type Signable, type Signer } from '../signature'
+import { type Address, BLSPublicKey, BLSSignature, NodeId, Signature } from '../types'
 
-export const SupernetAuthTypeId: number = 0x0000000a
-export const EmptySignerTypeId: number = 0x0000001b
-export const PrimarySignerTypeId: number = 0x0000001c
+export class Validator implements Serializable {
+  nodeId: NodeId
+  startTime: bigint
+  endTime: bigint
+  weight: bigint
+
+  constructor (nodeId: NodeId, startTime: bigint, endTime: bigint, weight: bigint) {
+    this.nodeId = nodeId
+    this.startTime = startTime
+    this.endTime = endTime
+    this.weight = weight
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(ValidatorSize)
+    buffer.write(this.nodeId.serialize())
+    buffer.writeUInt64(this.startTime)
+    buffer.writeUInt64(this.endTime)
+    buffer.writeUInt64(this.weight)
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): Validator {
+    const reader = JuneoBuffer.from(data).createReader()
+    const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
+    return new Validator(nodeId, reader.readUInt64(), reader.readUInt64(), reader.readUInt64())
+  }
+}
 
 export class SupernetAuth implements Serializable, Signable {
   readonly typeId: number = SupernetAuthTypeId
@@ -22,20 +56,21 @@ export class SupernetAuth implements Serializable, Signable {
     this.rewardsOwner = rewardsOwner
   }
 
-  sign (bytes: JuneoBuffer, wallets: VMWallet[]): Signature[] {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
     const signatures: Signature[] = []
-    const threshold: number = this.rewardsOwner.threshold
+    const threshold = this.rewardsOwner.threshold
     for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
-      const address: Address = this.rewardsOwner.addresses[i]
-      for (const wallet of wallets) {
-        if (address.matches(wallet.getJuneoAddress())) {
-          signatures.push(new Signature(wallet.sign(bytes)))
+      const address = this.rewardsOwner.addresses[i]
+      for (const signer of signers) {
+        if (signer.matches(address)) {
+          const signature = await signer.sign(bytes)
+          signatures.push(new Signature(signature))
           break
         }
       }
     }
     if (signatures.length < threshold) {
-      throw new SignatureError('missing wallets to complete supernet signatures')
+      throw new SignatureError('missing signer to complete supernet signatures')
     }
     return signatures
   }
@@ -44,9 +79,9 @@ export class SupernetAuth implements Serializable, Signable {
     const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + 4 + this.addressIndices.length * 4)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.addressIndices.length)
-    this.addressIndices.forEach((indice) => {
+    for (const indice of this.addressIndices) {
       buffer.writeUInt32(indice)
-    })
+    }
     return buffer
   }
 }
@@ -68,6 +103,14 @@ export class ProofOfPossession implements Serializable {
     buffer.write(signatureBytes)
     return buffer
   }
+
+  static parse (data: string | JuneoBuffer): ProofOfPossession {
+    const reader = JuneoBuffer.from(data).createReader()
+    return new ProofOfPossession(
+      new BLSPublicKey(reader.read(BLSPublicKeySize).toHex()),
+      new BLSSignature(reader.read(BLSSignatureSize).toHex())
+    )
+  }
 }
 
 export class BLSSigner implements Serializable {
@@ -78,7 +121,7 @@ export class BLSSigner implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(4)
+    const buffer = JuneoBuffer.alloc(4)
     buffer.writeUInt32(this.typeId)
     return buffer
   }
@@ -93,17 +136,29 @@ export class PrimarySigner extends BLSSigner {
   }
 
   serialize (): JuneoBuffer {
-    const baseBytes: JuneoBuffer = super.serialize()
-    const signerBytes: JuneoBuffer = this.signer.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseBytes.length + signerBytes.length)
+    const baseBytes = super.serialize()
+    const signerBytes = this.signer.serialize()
+    const buffer = JuneoBuffer.alloc(baseBytes.length + signerBytes.length)
     buffer.write(baseBytes)
     buffer.write(signerBytes)
     return buffer
   }
+
+  static parse (data: string | JuneoBuffer): PrimarySigner {
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readTypeId(PrimarySignerTypeId)
+    return new PrimarySigner(ProofOfPossession.parse(reader.read(ProofOfPossessionSize)))
+  }
 }
 
-export class EmptySignature extends BLSSigner {
+export class EmptySigner extends BLSSigner {
   constructor () {
     super(EmptySignerTypeId)
+  }
+
+  static parse (data: string | JuneoBuffer): EmptySigner {
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readTypeId(EmptySignerTypeId)
+    return new EmptySigner()
   }
 }

@@ -67,9 +67,9 @@ export async function executeEVMExportTransaction (
       sendImportFee ? importFee : BigInt(0),
       provider.mcn.id
     )
-    const transaction: string = unsignedTransaction.signTransaction([wallet.getWallet(api.chain)]).toCHex()
+    const signedTx = await unsignedTransaction.signTransaction([wallet.getWallet(api.chain)])
     const transactionId: string | undefined = await api
-      .issueTx(transaction)
+      .issueTx(signedTx.toCHex())
       .then((response) => {
         return response.txID
       })
@@ -130,5 +130,6 @@ export async function executeEVMImportTransaction (
     fee.amount,
     provider.mcn.id
   )
-  return (await api.issueTx(transaction.signTransaction([chainWallet]).toCHex())).txID
+  const signedTx = await transaction.signTransaction([chainWallet])
+  return (await api.issueTx(signedTx.toCHex())).txID
 }

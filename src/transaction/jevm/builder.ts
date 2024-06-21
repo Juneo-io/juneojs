@@ -15,16 +15,16 @@ export function buildTransactionEVMInputs (
   const inputs: EVMInput[] = []
   const values = new Map<string, bigint>()
   // merging inputs
-  userInputs.forEach((userInput) => {
+  for (const userInput of userInputs) {
     const assetId: string = userInput.assetId
     let value: bigint = userInput.amount
     if (values.has(assetId)) {
       value += values.get(assetId)!
     }
     values.set(assetId, value)
-  })
+  }
   // adding and merging fees
-  fees.forEach((fee) => {
+  for (const fee of fees) {
     if (fee.amount > 0) {
       const assetId: string = fee.assetId
       let value: bigint = fee.amount
@@ -33,7 +33,7 @@ export function buildTransactionEVMInputs (
       }
       values.set(assetId, value)
     }
-  })
+  }
   // adding inputs
   for (const [key, value] of values) {
     inputs.push(new EVMInput(new Address(signer), value, new AssetId(key), nonce))
@@ -51,7 +51,7 @@ export function buildTransactionEVMOutputs (
   spentAmounts.set(feeData.assetId, feeData.amount)
   // adding outputs matching user inputs
   const outputs: EVMOutput[] = []
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     const assetId: string = input.assetId
     if (input.addresses.length !== 1) {
       throw new InputError('user input must have a unique address for EVM output')
@@ -62,10 +62,10 @@ export function buildTransactionEVMOutputs (
       spentAmount += spentAmounts.get(assetId)!
     }
     spentAmounts.set(assetId, spentAmount)
-  })
+  }
   const availableAmounts: Record<string, bigint> = {}
   // getting the total amount spendable for each asset in provided inputs
-  inputs.forEach((input) => {
+  for (const input of inputs) {
     const availableAmount: bigint = availableAmounts[input.getAssetId().assetId]
     const amount: bigint = input.getAmount()
     if (availableAmount === undefined) {
@@ -73,7 +73,7 @@ export function buildTransactionEVMOutputs (
     } else {
       availableAmounts[input.getAssetId().assetId] += BigInt(amount)
     }
-  })
+  }
   // verifying that inputs have the funds to pay for the spent amounts
   for (const input of inputs) {
     const assetId: string = input.getAssetId().assetId
@@ -100,25 +100,25 @@ export function buildJEVMExportTransaction (
   }
   const sourceId: string = userInputs[0].sourceChain.id
   const destinationId: string = userInputs[0].destinationChain.id
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     if (input.sourceChain.id !== sourceId || input.destinationChain.id !== destinationId) {
       throw new InputError('jevm export transaction cannot have different source or destination chain user inputs')
     }
     if (input.sourceChain.id === input.destinationChain.id) {
       throw new InputError('jevm export transaction cannot have the same chain as source and destination user inputs')
     }
-  })
+  }
   const sourceFeeData: TransactionFee = new TransactionFee(userInputs[0].sourceChain, sourceFee)
   const destinationFeeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, destinationFee)
   const fees: TransactionFee[] = [sourceFeeData, destinationFeeData]
   const inputs: EVMInput[] = buildTransactionEVMInputs(userInputs, signer, nonce, fees)
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     fixedUserInputs.push(
       new UserInput(input.assetId, input.sourceChain, input.amount, [exportAddress], 1, input.destinationChain)
     )
-  })
+  }
   if (destinationFeeData.amount > BigInt(0)) {
     // adding fees as user input to be able to export it
     fixedUserInputs.push(
@@ -156,14 +156,14 @@ export function buildJEVMImportTransaction (
   }
   const sourceId: string = userInputs[0].sourceChain.id
   const destinationId: string = userInputs[0].destinationChain.id
-  userInputs.forEach((input) => {
+  for (const input of userInputs) {
     if (input.sourceChain.id !== sourceId || input.destinationChain.id !== destinationId) {
       throw new InputError('jvm import transaction cannot have different source or destination chain user inputs')
     }
     if (input.sourceChain.id === input.destinationChain.id) {
       throw new InputError('jvm import transaction cannot have the same chain as source and destination user inputs')
     }
-  })
+  }
   const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
   const importedInputs: TransferableInput[] = buildTransactionInputs(
     userInputs,

@@ -1,9 +1,9 @@
 import {
   AccountError,
-  GenesisJUNEChain,
-  GenesisWJUNEAsset,
   NetworkOperationRange,
   NetworkOperationType,
+  SocotraJUNEChain,
+  SocotraWJUNEAsset,
   UnwrapOperation,
   WrapOperation,
   type ExecutableOperation
@@ -11,8 +11,8 @@ import {
 import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT } from '../constants'
 
 describe('Wrapping operations', () => {
-  const juneChain = GenesisJUNEChain
-  const wJuneAsset = GenesisWJUNEAsset
+  const juneChain = SocotraJUNEChain
+  const wJuneAsset = SocotraWJUNEAsset
 
   describe('WrapOperation', () => {
     describe('Instantiation', () => {

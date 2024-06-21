@@ -22,7 +22,7 @@ jobs:
         run: npm install
 
       - name: Run the tests 🧪
-        run: npm run test
+        run: npm run test-unit
 
   publish:
     needs: prod_test

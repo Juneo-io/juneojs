@@ -4,7 +4,8 @@ import {
   buildJVMBaseTransaction,
   buildPlatformBaseTransaction,
   type UnsignedTransaction,
-  UserInput
+  UserInput,
+  type Utxo
 } from '../../transaction'
 import { type UtxoAccount } from '../account'
 import { ChainOperationSummary, type SendOperation, type SendUtxoOperation } from '../operation'
@@ -19,6 +20,7 @@ export async function estimateBaseTransaction (
   provider: MCNProvider,
   chain: Blockchain,
   account: UtxoAccount,
+  utxoSet: Utxo[],
   assetId: string,
   amount: bigint,
   addresses: string[],
@@ -30,7 +32,7 @@ export async function estimateBaseTransaction (
     chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
-        account.utxoSet,
+        utxoSet,
         account.getSignersAddresses(),
         fee.amount,
         account.address,
@@ -38,7 +40,7 @@ export async function estimateBaseTransaction (
       )
       : buildJVMBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
-        account.utxoSet,
+        utxoSet,
         account.getSignersAddresses(),
         fee.amount,
         account.address,
@@ -58,6 +60,7 @@ export async function estimateSendOperation (
     provider,
     chain,
     account,
+    account.utxoSet,
     send.assetId,
     send.amount,
     [send.address],
@@ -93,6 +96,7 @@ export async function estimateSendUtxoOperation (
     provider,
     chain,
     account,
+    send.getPreferredUtxoSet(account),
     send.assetId,
     send.amount,
     send.addresses,

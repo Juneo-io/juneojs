@@ -2,13 +2,13 @@ import { type JVMAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
-  type Utxo,
-  UserInput,
   type UnsignedTransaction,
+  UserInput,
+  type Utxo,
   buildJVMExportTransaction,
   buildJVMImportTransaction
 } from '../../../transaction'
-import { getUtxosAmountValues, getImportUserInputs } from '../../../utils'
+import { getImportUserInputs, getUtxosAmountValues } from '../../../utils'
 import { type MCNWallet } from '../../wallet'
 import { BaseFeeData, type FeeData, FeeType } from '../fee'
 
@@ -46,7 +46,8 @@ export async function executeJVMExportTransaction (
     sender,
     provider.mcn.id
   )
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
+  return (await api.issueTx(signedTx.toCHex())).txID
 }
 
 export async function estimateJVMImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
@@ -72,5 +73,6 @@ export async function executeJVMImportTransaction (
     sender,
     provider.mcn.id
   )
-  return (await api.issueTx(transaction.signTransaction([wallet.getWallet(api.chain)]).toCHex())).txID
+  const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
+  return (await api.issueTx(signedTx.toCHex())).txID
 }

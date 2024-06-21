@@ -1,16 +1,17 @@
 import { BytesData, JuneoBuffer, JuneoTypeError } from '../utils'
 import * as encoding from '../utils/encoding'
-
-export const AddressSize: number = 20
-export const AssetIdSize: number = 32
-export const TransactionIdSize: number = 32
-export const BlockchainIdSize: number = 32
-export const SupernetIdSize: number = 32
-export const DynamicIdSize: number = 32
-export const SignatureSize: number = 65
-export const NodeIdSize: number = 20
-export const BLSPublicKeySize: number = 48
-export const BLSSignatureSize: number = 96
+import {
+  AddressSize,
+  AssetIdSize,
+  BlockchainIdSize,
+  BLSPublicKeySize,
+  BLSSignatureSize,
+  DynamicIdSize,
+  NodeIdSize,
+  SignatureSize,
+  SupernetIdSize,
+  TransactionIdSize
+} from './constants'
 
 function validateData (data: any): void {
   if (data === undefined || data === null) {

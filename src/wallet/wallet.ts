@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex'
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
 import { type JEVMAPI } from '../api'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
@@ -188,6 +189,7 @@ export class JVMWallet extends AbstractVMWallet {
 }
 
 export class JEVMWallet extends AbstractVMWallet {
+  private readonly mutex = new Mutex()
   private readonly nonce = new NonceSync()
   evmWallet: Wallet
 
@@ -198,21 +200,27 @@ export class JEVMWallet extends AbstractVMWallet {
   }
 
   async getNonceAndIncrement (api: JEVMAPI): Promise<bigint> {
-    return await this.nonce.increment(api, this.address!)
+    return await this.mutex.runExclusive(async () => {
+      return await this.nonce.increment(api, this.address!)
+    })
   }
 
-  getNonce (): bigint {
-    return this.nonce.nonce
+  async getNonce (): Promise<bigint> {
+    return await this.mutex.runExclusive(() => {
+      return this.nonce.nonce
+    })
   }
 
   async syncNonce (api: JEVMAPI): Promise<void> {
-    await this.nonce.syncNonce(api, this.address!)
+    await this.mutex.runExclusive(async () => {
+      await this.nonce.syncNonce(api, this.address!)
+    })
   }
 }
 
 class NonceSync {
   nonce = BigInt(0)
-  synchronized = false
+  private synchronized = false
 
   async increment (api: JEVMAPI, address: string): Promise<bigint> {
     if (!this.synchronized) {
@@ -222,9 +230,7 @@ class NonceSync {
   }
 
   async syncNonce (api: JEVMAPI, address: string): Promise<void> {
-    await api.eth_getTransactionCount(address, 'pending').then((nonce) => {
-      this.nonce = nonce
-      this.synchronized = true
-    })
+    this.nonce = await api.eth_getTransactionCount(address, 'pending')
+    this.synchronized = true
   }
 }

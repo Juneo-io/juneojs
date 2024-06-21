@@ -146,7 +146,7 @@ export class PrimarySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): PrimarySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(PrimarySignerTypeId)
+    reader.readAndVerifyTypeId(PrimarySignerTypeId)
     return new PrimarySigner(ProofOfPossession.parse(reader.read(ProofOfPossessionSize)))
   }
 }
@@ -158,7 +158,7 @@ export class EmptySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): EmptySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(EmptySignerTypeId)
+    reader.readAndVerifyTypeId(EmptySignerTypeId)
     return new EmptySigner()
   }
 }

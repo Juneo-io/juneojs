@@ -45,17 +45,17 @@ export class Secp256k1Credentials extends TransactionCredentials {
 }
 
 export abstract class SignableTx {
-  async sign (bytes: JuneoBuffer, unsignedInputs: Signable[], signers: Signer[]): Promise<JuneoBuffer> {
+  async sign (bytes: JuneoBuffer, signables: Signable[], signers: Signer[]): Promise<JuneoBuffer> {
     const credentials: JuneoBuffer[] = []
     let credentialsSize: number = 0
-    for (const input of unsignedInputs) {
-      const signatures = await input.sign(bytes, signers)
+    for (const signable of signables) {
+      const signatures = await signable.sign(bytes, signers)
       const credential = new Secp256k1Credentials(signatures)
       const credentialBytes = credential.serialize()
       credentialsSize += credentialBytes.length
       credentials.push(credentialBytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
+    const buffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
     buffer.write(bytes)
     buffer.writeUInt32(credentials.length)
     credentials.sort(JuneoBuffer.comparator)

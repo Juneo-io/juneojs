@@ -103,26 +103,23 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableInput {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
+    const reader = JuneoBuffer.from(data).createReader()
     const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
     const utxoIndex = reader.readUInt32()
     const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
-    return new TransferableInput(
-      transactionId,
-      utxoIndex,
-      assetId,
-      this.parseInput(reader.read(buffer.length - reader.getCursor()))
-    )
+    return new TransferableInput(transactionId, utxoIndex, assetId, this.parseInput(reader.readRemaining()))
   }
 
   static parseInput (data: string | JuneoBuffer): TransactionInput {
     const reader = JuneoBuffer.from(data).createReader()
     const typeId = reader.readUInt32()
-    if (typeId === Secp256k1InputTypeId) {
-      return Secp256k1Input.parse(data)
-    } else {
-      throw new ParsingError(`unsupported input type id "${typeId}"`)
+    switch (typeId) {
+      case Secp256k1InputTypeId: {
+        return Secp256k1Input.parse(data)
+      }
+      default: {
+        throw new ParsingError(`unsupported input type id "${typeId}"`)
+      }
     }
   }
 }
@@ -165,7 +162,7 @@ export class Secp256k1Input implements TransactionInput {
 
   static parse (data: string | JuneoBuffer): Secp256k1Input {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(Secp256k1InputTypeId)
+    reader.readAndVerifyTypeId(Secp256k1InputTypeId)
     const amount = reader.readUInt64()
     const addressIndicesCount = reader.readUInt32()
     const indices: number[] = []

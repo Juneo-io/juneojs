@@ -125,7 +125,7 @@ export class BaseTransaction extends SignableTx implements UnsignedTransaction {
     const reader = buffer.createReader()
     // skip codec reading
     reader.skip(2)
-    const typeId = reader.readTypeId(expectedTypeId)
+    const typeId = reader.readAndVerifyTypeId(expectedTypeId)
     const networkId = reader.readUInt32()
     const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
     const outputsLength = reader.readUInt32()

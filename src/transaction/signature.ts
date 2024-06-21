@@ -1,6 +1,6 @@
-import { JuneoBuffer, type Serializable } from '../utils'
+import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
 import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
-import { type Address, type Signature } from './types'
+import { Signature, type Address } from './types'
 
 export interface Signer {
   sign: (bytes: JuneoBuffer) => Promise<JuneoBuffer>
@@ -9,6 +9,20 @@ export interface Signer {
 
 export interface Signable {
   sign: (bytes: JuneoBuffer, signers: Signer[]) => Promise<Signature[]>
+  getThreshold: () => number
+}
+
+export abstract class AbstractSignable {
+  async sign (bytes: JuneoBuffer, signers: Signer[], address: Address, signatures: Signature[]): Promise<Signature[]> {
+    for (const signer of signers) {
+      if (signer.matches(address)) {
+        const signature = await signer.sign(bytes)
+        signatures.push(new Signature(signature))
+        break
+      }
+    }
+    return signatures
+  }
 }
 
 export abstract class TransactionCredentials implements Serializable {
@@ -50,6 +64,9 @@ export abstract class SignableTx {
     let credentialsSize: number = 0
     for (const signable of signables) {
       const signatures = await signable.sign(bytes, signers)
+      if (signatures.length < signable.getThreshold()) {
+        throw new SignatureError('missing signer to complete signatures')
+      }
       const credential = new Secp256k1Credentials(signatures)
       const credentialBytes = credential.serialize()
       credentialsSize += credentialBytes.length

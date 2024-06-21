@@ -2,8 +2,8 @@ import { type Blockchain } from '../chain'
 import { InputError, JuneoBuffer, ParsingError, type Serializable, SignatureError } from '../utils'
 import { AssetIdSize, Secp256k1InputTypeId, TransactionIdSize } from './constants'
 import { type Utxo } from './output'
-import { type Signable, type Signer } from './signature'
-import { AssetId, Signature, TransactionId } from './types'
+import { AbstractSignable, type Signer } from './signature'
+import { AssetId, type Signature, TransactionId } from './types'
 
 export class UserInput {
   assetId: string
@@ -41,13 +41,14 @@ export interface Spendable {
   getAssetId: () => AssetId
 }
 
-export class TransferableInput implements Serializable, Signable, Spendable {
+export class TransferableInput extends AbstractSignable implements Serializable, Spendable {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
   input: TransactionInput
 
   constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, input: TransactionInput) {
+    super()
     this.transactionId = transactionId
     this.utxoIndex = utxoIndex
     this.assetId = assetId
@@ -74,18 +75,16 @@ export class TransferableInput implements Serializable, Signable, Spendable {
     const threshold = this.input.utxo.output.threshold
     for (let i = 0; i < threshold && i < indices.length; i++) {
       const address = this.input.utxo.output.addresses[indices[i]]
-      for (const signer of signers) {
-        if (signer.matches(address)) {
-          const signature = await signer.sign(bytes)
-          signatures.push(new Signature(signature))
-          break
-        }
-      }
-    }
-    if (signatures.length < threshold) {
-      throw new SignatureError('missing signer to complete signatures')
+      await super.sign(bytes, signers, address, signatures)
     }
     return signatures
+  }
+
+  getThreshold (): number {
+    if (this.input.utxo === undefined) {
+      throw new SignatureError('cannot get threshold of read only inputs')
+    }
+    return this.input.utxo.output.threshold
   }
 
   serialize (): JuneoBuffer {

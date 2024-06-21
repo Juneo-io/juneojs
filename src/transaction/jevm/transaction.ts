@@ -1,4 +1,4 @@
-import { JuneoBuffer, type Serializable, SignatureError } from '../../utils'
+import { JuneoBuffer, type Serializable } from '../../utils'
 import {
   AssetIdSize,
   BlockchainIdSize,
@@ -11,8 +11,8 @@ import {
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
-import { type Signable, SignableTx, type Signer } from '../signature'
-import { Address, AssetId, type BlockchainId, Signature } from '../types'
+import { AbstractSignable, SignableTx, type Signer } from '../signature'
+import { Address, AssetId, type BlockchainId, type Signature } from '../types'
 
 export class EVMOutput implements Serializable {
   address: Address
@@ -42,13 +42,14 @@ export class EVMOutput implements Serializable {
   }
 }
 
-export class EVMInput implements Serializable, Signable, Spendable {
+export class EVMInput extends AbstractSignable implements Serializable, Spendable {
   address: Address
   amount: bigint
   assetId: AssetId
   nonce: bigint
 
   constructor (address: Address, amount: bigint, assetId: AssetId, nonce: bigint) {
+    super()
     this.address = address
     this.amount = amount
     this.assetId = assetId
@@ -64,18 +65,11 @@ export class EVMInput implements Serializable, Signable, Spendable {
   }
 
   async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
-    const signatures: Signature[] = []
-    for (const signer of signers) {
-      if (signer.matches(this.address)) {
-        const signature = await signer.sign(bytes)
-        signatures.push(new Signature(signature))
-        break
-      }
-    }
-    if (signatures.length < 1) {
-      throw new SignatureError('missing signer to complete signatures')
-    }
-    return signatures
+    return await super.sign(bytes, signers, this.address, [])
+  }
+
+  getThreshold (): number {
+    return 1
   }
 
   serialize (): JuneoBuffer {

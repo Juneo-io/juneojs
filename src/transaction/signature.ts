@@ -1,4 +1,4 @@
-import { JuneoBuffer, type Serializable } from '../utils'
+import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
 import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
 import { Signature, type Address } from './types'
 
@@ -47,6 +47,24 @@ export abstract class TransactionCredentials implements Serializable {
     return buffer
   }
 
+  static parse (data: string | JuneoBuffer): TransactionCredentials {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    const signatures: Signature[] = []
+    while (reader.getCursor() < buffer.length - SignatureSize) {
+      signatures.push(new Signature(reader.read(SignatureSize)))
+    }
+    switch (typeId) {
+      case Secp256k1CredentialsTypeId: {
+        return new Secp256k1Credentials(signatures)
+      }
+      default: {
+        throw new ParsingError(`unsupported credentials type id "${typeId}"`)
+      }
+    }
+  }
+
   static comparator = (a: TransactionCredentials, b: TransactionCredentials): number => {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
@@ -57,7 +75,3 @@ export class Secp256k1Credentials extends TransactionCredentials {
     super(Secp256k1CredentialsTypeId, signatures)
   }
 }
-
-// export class SignedTransaction {
-//   unsignedTransaction: UnsignedTransaction
-// }

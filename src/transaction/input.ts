@@ -2,8 +2,8 @@ import { type Blockchain } from '../chain'
 import { InputError, JuneoBuffer, ParsingError, type Serializable, SignatureError } from '../utils'
 import { AssetIdSize, Secp256k1InputTypeId, TransactionIdSize } from './constants'
 import { type Utxo } from './output'
-import { AbstractSignable, type Signer } from './signature'
-import { AssetId, type Signature, TransactionId } from './types'
+import { AbstractSignable } from './signature'
+import { type Address, AssetId, TransactionId } from './types'
 
 export class UserInput {
   assetId: string
@@ -66,18 +66,16 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     return this.assetId
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
+  getAddresses (): Address[] {
     if (this.input.utxo === undefined) {
-      throw new SignatureError('cannot sign read only inputs')
+      throw new SignatureError('cannot get addresses of read only inputs')
     }
+    const addresses: Address[] = []
     const indices = this.input.addressIndices
-    const signatures: Signature[] = []
-    const threshold = this.input.utxo.output.threshold
-    for (let i = 0; i < threshold && i < indices.length; i++) {
-      const address = this.input.utxo.output.addresses[indices[i]]
-      await super.sign(bytes, signers, address, signatures)
+    for (let i = 0; i < this.input.utxo.output.threshold && i < indices.length; i++) {
+      addresses.push(this.input.utxo.output.addresses[indices[i]])
     }
-    return signatures
+    return addresses
   }
 
   getThreshold (): number {

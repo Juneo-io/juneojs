@@ -9,20 +9,30 @@ export interface Signer {
 
 export interface Signable {
   sign: (bytes: JuneoBuffer, signers: Signer[]) => Promise<Signature[]>
+  getAddresses: () => Address[]
   getThreshold: () => number
 }
 
-export abstract class AbstractSignable {
-  async sign (bytes: JuneoBuffer, signers: Signer[], address: Address, signatures: Signature[]): Promise<Signature[]> {
-    for (const signer of signers) {
-      if (signer.matches(address)) {
-        const signature = await signer.sign(bytes)
-        signatures.push(new Signature(signature))
-        break
+export abstract class AbstractSignable implements Signable {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
+    const addresses = this.getAddresses()
+    const signatures: Signature[] = []
+    for (let i = 0; i < this.getThreshold() && i < addresses.length; i++) {
+      const address = addresses[i]
+      for (const signer of signers) {
+        if (signer.matches(address)) {
+          const signature = await signer.sign(bytes)
+          signatures.push(new Signature(signature))
+          break
+        }
       }
     }
     return signatures
   }
+
+  abstract getAddresses (): Address[]
+
+  abstract getThreshold (): number
 }
 
 export abstract class TransactionCredentials implements Serializable {

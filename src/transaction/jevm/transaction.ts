@@ -10,9 +10,9 @@ import {
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
-import { AbstractSignable, type Signable, type Signer } from '../signature'
+import { AbstractSignable, type Signable } from '../signature'
 import { BaseTransaction } from '../transaction'
-import { Address, AssetId, type BlockchainId, type Signature } from '../types'
+import { Address, AssetId, type BlockchainId } from '../types'
 
 export class EVMOutput implements Serializable {
   address: Address
@@ -64,8 +64,8 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
     return this.assetId
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
-    return await super.sign(bytes, signers, this.address, [])
+  getAddresses (): Address[] {
+    return [this.address]
   }
 
   getThreshold (): number {

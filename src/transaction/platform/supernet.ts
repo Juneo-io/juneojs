@@ -11,8 +11,8 @@ import {
   ValidatorSize
 } from '../constants'
 import { type Secp256k1OutputOwners } from '../output'
-import { AbstractSignable, type Signer } from '../signature'
-import { type Address, BLSPublicKey, BLSSignature, NodeId, type Signature } from '../types'
+import { AbstractSignable } from '../signature'
+import { type Address, BLSPublicKey, BLSSignature, NodeId } from '../types'
 
 export class Validator implements Serializable {
   nodeId: NodeId
@@ -57,14 +57,12 @@ export class SupernetAuth extends AbstractSignable implements Serializable {
     this.rewardsOwner = rewardsOwner
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
-    const signatures: Signature[] = []
-    const threshold = this.rewardsOwner.threshold
-    for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
-      const address = this.rewardsOwner.addresses[i]
-      await super.sign(bytes, signers, address, signatures)
+  getAddresses (): Address[] {
+    const addresses: Address[] = []
+    for (let i = 0; i < this.rewardsOwner.threshold && i < this.addressIndices.length; i++) {
+      addresses.push(this.rewardsOwner.addresses[i])
     }
-    return signatures
+    return addresses
   }
 
   getThreshold (): number {

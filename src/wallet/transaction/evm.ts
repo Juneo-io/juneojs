@@ -110,7 +110,7 @@ export async function executeEVMTransaction (
     data: feeData.data.data
   }
   for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
-    const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
+    const transaction = await wallet.evmWallet.signTransaction(unsignedTransaction)
     const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
       const errorMessage: string = error.message as string
       if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {

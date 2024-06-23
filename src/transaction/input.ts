@@ -2,8 +2,8 @@ import { type Blockchain } from '../chain'
 import { InputError, JuneoBuffer, ParsingError, type Serializable, SignatureError } from '../utils'
 import { AssetIdSize, Secp256k1InputTypeId, TransactionIdSize } from './constants'
 import { type Utxo } from './output'
-import { type Signable, type Signer } from './signature'
-import { AssetId, Signature, TransactionId } from './types'
+import { AbstractSignable } from './signature'
+import { type Address, AssetId, TransactionId } from './types'
 
 export class UserInput {
   assetId: string
@@ -41,13 +41,14 @@ export interface Spendable {
   getAssetId: () => AssetId
 }
 
-export class TransferableInput implements Serializable, Signable, Spendable {
+export class TransferableInput extends AbstractSignable implements Serializable, Spendable {
   transactionId: TransactionId
   utxoIndex: number
   assetId: AssetId
   input: TransactionInput
 
   constructor (transactionId: TransactionId, utxoIndex: number, assetId: AssetId, input: TransactionInput) {
+    super()
     this.transactionId = transactionId
     this.utxoIndex = utxoIndex
     this.assetId = assetId
@@ -65,27 +66,23 @@ export class TransferableInput implements Serializable, Signable, Spendable {
     return this.assetId
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
+  getAddresses (): Address[] {
     if (this.input.utxo === undefined) {
-      throw new SignatureError('cannot sign read only inputs')
+      throw new SignatureError('cannot get addresses of read only inputs')
     }
+    const addresses: Address[] = []
     const indices = this.input.addressIndices
-    const signatures: Signature[] = []
-    const threshold = this.input.utxo.output.threshold
-    for (let i = 0; i < threshold && i < indices.length; i++) {
-      const address = this.input.utxo.output.addresses[indices[i]]
-      for (const signer of signers) {
-        if (signer.matches(address)) {
-          const signature = await signer.sign(bytes)
-          signatures.push(new Signature(signature))
-          break
-        }
-      }
+    for (let i = 0; i < this.input.utxo.output.threshold && i < indices.length; i++) {
+      addresses.push(this.input.utxo.output.addresses[indices[i]])
     }
-    if (signatures.length < threshold) {
-      throw new SignatureError('missing signer to complete signatures')
+    return addresses
+  }
+
+  getThreshold (): number {
+    if (this.input.utxo === undefined) {
+      throw new SignatureError('cannot get threshold of read only inputs')
     }
-    return signatures
+    return this.input.utxo.output.threshold
   }
 
   serialize (): JuneoBuffer {
@@ -103,26 +100,23 @@ export class TransferableInput implements Serializable, Signable, Spendable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableInput {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
+    const reader = JuneoBuffer.from(data).createReader()
     const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
     const utxoIndex = reader.readUInt32()
     const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
-    return new TransferableInput(
-      transactionId,
-      utxoIndex,
-      assetId,
-      this.parseInput(reader.read(buffer.length - reader.getCursor()))
-    )
+    return new TransferableInput(transactionId, utxoIndex, assetId, this.parseInput(reader.readRemaining()))
   }
 
   static parseInput (data: string | JuneoBuffer): TransactionInput {
     const reader = JuneoBuffer.from(data).createReader()
     const typeId = reader.readUInt32()
-    if (typeId === Secp256k1InputTypeId) {
-      return Secp256k1Input.parse(data)
-    } else {
-      throw new ParsingError(`unsupported input type id "${typeId}"`)
+    switch (typeId) {
+      case Secp256k1InputTypeId: {
+        return Secp256k1Input.parse(data)
+      }
+      default: {
+        throw new ParsingError(`unsupported input type id "${typeId}"`)
+      }
     }
   }
 }
@@ -165,7 +159,7 @@ export class Secp256k1Input implements TransactionInput {
 
   static parse (data: string | JuneoBuffer): Secp256k1Input {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(Secp256k1InputTypeId)
+    reader.readAndVerifyTypeId(Secp256k1InputTypeId)
     const amount = reader.readUInt64()
     const addressIndicesCount = reader.readUInt32()
     const indices: number[] = []

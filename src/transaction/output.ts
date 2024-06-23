@@ -23,18 +23,17 @@ export class Utxo {
   }
 
   static parse (data: string | JuneoBuffer): Utxo {
-    const isString = typeof data === 'string'
     let buffer = JuneoBuffer.from(data)
     // The data could be provided with a codec, if it is a string then
     // we assume that there are extra codec bytes at the beginning and skip it.
-    if (isString) {
+    if (typeof data === 'string') {
       buffer = buffer.copyOf(2, buffer.length)
     }
     const reader = buffer.createReader()
     const transactionId = new TransactionId(reader.read(TransactionIdSize).toCB58())
     const utxoIndex = reader.readUInt32()
     const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
-    const outputBuffer = reader.read(buffer.length - reader.getCursor())
+    const outputBuffer = reader.readRemaining()
     const output = TransferableOutput.parseOutput(outputBuffer)
     return new Utxo(transactionId, utxoIndex, assetId, output)
   }
@@ -62,19 +61,24 @@ export class TransferableOutput implements Serializable {
   }
 
   static parse (data: string | JuneoBuffer): TransferableOutput {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
+    const reader = JuneoBuffer.from(data).createReader()
     const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
-    return new TransferableOutput(assetId, this.parseOutput(reader.read(buffer.length - reader.getCursor())))
+    return new TransferableOutput(assetId, this.parseOutput(reader.readRemaining()))
   }
 
   static parseOutput (data: string | JuneoBuffer): TransactionOutput {
     const reader = JuneoBuffer.from(data).createReader()
     const typeId = reader.readUInt32()
-    if (typeId === Secp256k1OutputTypeId) {
-      return Secp256k1Output.parse(data)
-    } else {
-      throw new ParsingError(`unsupported output type id "${typeId}"`)
+    switch (typeId) {
+      case Secp256k1OutputTypeId: {
+        return Secp256k1Output.parse(data)
+      }
+      case Secp256k1OutputOwnersTypeId: {
+        return Secp256k1OutputOwners.parse(data)
+      }
+      default: {
+        throw new ParsingError(`unsupported output type id "${typeId}"`)
+      }
     }
   }
 }
@@ -126,9 +130,8 @@ export class Secp256k1Output implements TransactionOutput {
   }
 
   static parse (data: string | JuneoBuffer): Secp256k1Output {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
-    reader.readTypeId(Secp256k1OutputTypeId)
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readAndVerifyTypeId(Secp256k1OutputTypeId)
     const amount = reader.readUInt64()
     const locktime = reader.readUInt64()
     const threshold = reader.readUInt32()
@@ -171,7 +174,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
 
   static parse (data: string | JuneoBuffer): Secp256k1OutputOwners {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(Secp256k1OutputOwnersTypeId)
+    reader.readAndVerifyTypeId(Secp256k1OutputOwnersTypeId)
     const locktime = reader.readUInt64()
     const threshold = reader.readUInt32()
     const addressesCount = reader.readUInt32()

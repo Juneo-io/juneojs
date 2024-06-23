@@ -1,6 +1,7 @@
 import { JEVM_ID, JVM_ID, PLATFORMVM_ID, type Blockchain } from '../chain'
 import { UserInput } from '../transaction'
 import { BaseSpending, type ExecutableOperation, type MCNAccount, type Spending, type TransactionType } from '../wallet'
+import { type JuneoBuffer } from './bytes'
 import { rmd160, sha256 } from './crypto'
 import { decodeCB58, encodeBech32, hasHexPrefix, isBase58, isHex } from './encoding'
 
@@ -70,8 +71,12 @@ export function validatePrivateKey (data: string): boolean {
   return false
 }
 
+export function publicKeyToAddress (publicKey: string): JuneoBuffer {
+  return rmd160(sha256(publicKey))
+}
+
 export function encodeJuneoAddress (publicKey: string, hrp: string): string {
-  return encodeBech32(hrp, rmd160(sha256(publicKey)))
+  return encodeBech32(hrp, publicKeyToAddress(publicKey))
 }
 
 /**

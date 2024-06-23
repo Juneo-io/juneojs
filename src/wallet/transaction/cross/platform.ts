@@ -42,7 +42,7 @@ export async function executePlatformExportTransaction (
     provider.mcn.id
   )
   const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
-  return (await api.issueTx(signedTx.toCHex())).txID
+  return (await api.issueTx(signedTx)).txID
 }
 
 export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
@@ -69,5 +69,5 @@ export async function executePlatformImportTransaction (
     provider.mcn.id
   )
   const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
-  return (await api.issueTx(signedTx.toCHex())).txID
+  return (await api.issueTx(signedTx)).txID
 }

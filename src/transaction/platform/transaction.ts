@@ -147,10 +147,9 @@ export class CreateSupernetTransaction extends BaseTransaction {
 
   static parse (data: string | JuneoBuffer): CreateSupernetTransaction {
     const baseTx = BaseTransaction.parse(data, CreateSupernetTransactionTypeId)
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
+    const reader = JuneoBuffer.from(data).createReader()
     reader.skip(baseTx.serialize().length)
-    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())
     return new CreateSupernetTransaction(
       baseTx.networkId,
       baseTx.blockchainId,
@@ -601,7 +600,7 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
       reader.skip(stake.serialize().length)
       stakes.push(stake)
     }
-    const rewardsOwner = Secp256k1OutputOwners.parse(reader.read(buffer.length - reader.getCursor()))
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())
     return new AddPermissionlessDelegatorTransaction(
       baseTx.networkId,
       baseTx.blockchainId,

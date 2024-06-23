@@ -1,9 +1,9 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, type Serializable } from '../utils'
+import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
-import { SignableTx, type Signable, type Signer } from './signature'
+import { Secp256k1Credentials, type TransactionCredentials, type Signable, type Signer } from './signature'
 import { BlockchainId } from './types'
 
 export class TransactionFee {
@@ -32,10 +32,10 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getUtxos: () => Utxo[]
-  signTransaction: (signers: Signer[]) => Promise<JuneoBuffer>
+  signTransaction: (signers: Signer[]) => Promise<string>
 }
 
-export class BaseTransaction extends SignableTx implements UnsignedTransaction {
+export class BaseTransaction implements UnsignedTransaction {
   codecId: number
   typeId: number
   networkId: number
@@ -52,7 +52,6 @@ export class BaseTransaction extends SignableTx implements UnsignedTransaction {
     inputs: TransferableInput[],
     memo: string
   ) {
-    super()
     this.codecId = CodecId
     this.typeId = typeId
     this.networkId = networkId
@@ -78,8 +77,38 @@ export class BaseTransaction extends SignableTx implements UnsignedTransaction {
     return utxos
   }
 
-  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
-    return await super.sign(this.serialize(), this.getSignables(), signers)
+  async sign (signers: Signer[]): Promise<TransactionCredentials[]> {
+    const bytes = this.serialize()
+    const credentials: TransactionCredentials[] = []
+    for (const signable of this.getSignables()) {
+      const signatures = await signable.sign(bytes, signers)
+      credentials.push(new Secp256k1Credentials(signatures))
+    }
+    return credentials
+  }
+
+  async signTransaction (signers: Signer[]): Promise<string> {
+    const bytes = this.serialize()
+    const credentials: JuneoBuffer[] = []
+    let credentialsSize: number = 0
+    for (const signable of this.getSignables()) {
+      const signatures = await signable.sign(bytes, signers)
+      if (signatures.length < signable.getThreshold()) {
+        throw new SignatureError('missing signer to complete signatures')
+      }
+      const creds = new Secp256k1Credentials(signatures)
+      const credentialBytes = creds.serialize()
+      credentialsSize += credentialBytes.length
+      credentials.push(credentialBytes)
+    }
+    const buffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
+    buffer.write(bytes)
+    buffer.writeUInt32(credentials.length)
+    credentials.sort(JuneoBuffer.comparator)
+    for (const credential of credentials) {
+      buffer.write(credential)
+    }
+    return buffer.toCHex()
   }
 
   serialize (): JuneoBuffer {
@@ -125,7 +154,7 @@ export class BaseTransaction extends SignableTx implements UnsignedTransaction {
     const reader = buffer.createReader()
     // skip codec reading
     reader.skip(2)
-    const typeId = reader.readTypeId(expectedTypeId)
+    const typeId = reader.readAndVerifyTypeId(expectedTypeId)
     const networkId = reader.readUInt32()
     const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
     const outputsLength = reader.readUInt32()

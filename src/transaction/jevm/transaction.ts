@@ -1,8 +1,7 @@
-import { JuneoBuffer, type Serializable, SignatureError } from '../../utils'
+import { JuneoBuffer, type Serializable } from '../../utils'
 import {
   AssetIdSize,
   BlockchainIdSize,
-  CodecId,
   EVMExportTransactionTypeId,
   EVMImportTransactionTypeId,
   EVMInputSize,
@@ -11,8 +10,9 @@ import {
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
 import { TransferableOutput } from '../output'
-import { type Signable, SignableTx, type Signer } from '../signature'
-import { Address, AssetId, type BlockchainId, Signature } from '../types'
+import { AbstractSignable, type Signable } from '../signature'
+import { BaseTransaction } from '../transaction'
+import { Address, AssetId, type BlockchainId } from '../types'
 
 export class EVMOutput implements Serializable {
   address: Address
@@ -42,13 +42,14 @@ export class EVMOutput implements Serializable {
   }
 }
 
-export class EVMInput implements Serializable, Signable, Spendable {
+export class EVMInput extends AbstractSignable implements Serializable, Spendable {
   address: Address
   amount: bigint
   assetId: AssetId
   nonce: bigint
 
   constructor (address: Address, amount: bigint, assetId: AssetId, nonce: bigint) {
+    super()
     this.address = address
     this.amount = amount
     this.assetId = assetId
@@ -63,19 +64,12 @@ export class EVMInput implements Serializable, Signable, Spendable {
     return this.assetId
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
-    const signatures: Signature[] = []
-    for (const signer of signers) {
-      if (signer.matches(this.address)) {
-        const signature = await signer.sign(bytes)
-        signatures.push(new Signature(signature))
-        break
-      }
-    }
-    if (signatures.length < 1) {
-      throw new SignatureError('missing signer to complete signatures')
-    }
-    return signatures
+  getAddresses (): Address[] {
+    return [this.address]
+  }
+
+  getThreshold (): number {
+    return 1
   }
 
   serialize (): JuneoBuffer {
@@ -96,13 +90,9 @@ export class EVMInput implements Serializable, Signable, Spendable {
   }
 }
 
-export class JEVMExportTransaction extends SignableTx implements Serializable {
-  codecId: number = CodecId
-  typeId: number = EVMExportTransactionTypeId
-  networkId: number
-  blockchainId: BlockchainId
+export class JEVMExportTransaction extends BaseTransaction {
   destinationChain: BlockchainId
-  inputs: EVMInput[]
+  evmInputs: EVMInput[]
   exportedOutputs: TransferableOutput[]
 
   constructor (
@@ -112,24 +102,22 @@ export class JEVMExportTransaction extends SignableTx implements Serializable {
     inputs: EVMInput[],
     exportedOutputs: TransferableOutput[]
   ) {
-    super()
-    this.networkId = networkId
-    this.blockchainId = blockchainId
+    super(EVMExportTransactionTypeId, networkId, blockchainId, [], [], '')
     this.destinationChain = destinationChain
-    this.inputs = inputs
-    this.inputs.sort(EVMInput.comparator)
+    this.evmInputs = inputs
+    this.evmInputs.sort(EVMInput.comparator)
     this.exportedOutputs = exportedOutputs
     this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
-  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
-    return await super.sign(this.serialize(), this.inputs, signers)
+  getSignables (): Signable[] {
+    return this.evmInputs
   }
 
   serialize (): JuneoBuffer {
     const inputsBytes: JuneoBuffer[] = []
     let inputsSize: number = 0
-    for (const input of this.inputs) {
+    for (const input of this.evmInputs) {
       const bytes: JuneoBuffer = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
@@ -150,7 +138,7 @@ export class JEVMExportTransaction extends SignableTx implements Serializable {
     buffer.writeUInt32(this.networkId)
     buffer.write(this.blockchainId.serialize())
     buffer.write(this.destinationChain.serialize())
-    buffer.writeUInt32(this.inputs.length)
+    buffer.writeUInt32(this.evmInputs.length)
     for (const input of inputsBytes) {
       buffer.write(input)
     }
@@ -188,34 +176,28 @@ export class JEVMExportTransaction extends SignableTx implements Serializable {
   }
 }
 
-export class JEVMImportTransaction extends SignableTx implements Serializable {
-  codecId: number = CodecId
-  typeId: number = EVMImportTransactionTypeId
-  networkId: number
-  blockchainId: BlockchainId
+export class JEVMImportTransaction extends BaseTransaction {
   sourceChain: BlockchainId
   importedInputs: TransferableInput[]
-  outputs: EVMOutput[]
+  evmOutputs: EVMOutput[]
 
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
     sourceChain: BlockchainId,
     importedInputs: TransferableInput[],
-    outputs: EVMOutput[]
+    evmOutputs: EVMOutput[]
   ) {
-    super()
-    this.networkId = networkId
-    this.blockchainId = blockchainId
+    super(EVMImportTransactionTypeId, networkId, blockchainId, [], [], '')
     this.sourceChain = sourceChain
     this.importedInputs = importedInputs
     this.importedInputs.sort(TransferableInput.comparator)
-    this.outputs = outputs
-    this.outputs.sort(EVMOutput.comparator)
+    this.evmOutputs = evmOutputs
+    this.evmOutputs.sort(EVMOutput.comparator)
   }
 
-  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
-    return await super.sign(this.serialize(), this.importedInputs, signers)
+  getSignables (): Signable[] {
+    return this.importedInputs
   }
 
   serialize (): JuneoBuffer {
@@ -228,7 +210,7 @@ export class JEVMImportTransaction extends SignableTx implements Serializable {
     }
     const outputsBytes: JuneoBuffer[] = []
     let outputsSize: number = 0
-    for (const output of this.outputs) {
+    for (const output of this.evmOutputs) {
       const bytes: JuneoBuffer = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
@@ -246,7 +228,7 @@ export class JEVMImportTransaction extends SignableTx implements Serializable {
     for (const input of inputsBytes) {
       buffer.write(input)
     }
-    buffer.writeUInt32(this.outputs.length)
+    buffer.writeUInt32(this.evmOutputs.length)
     for (const output of outputsBytes) {
       buffer.write(output)
     }

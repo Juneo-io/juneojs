@@ -96,7 +96,7 @@ export class PlatformAccount extends UtxoAccount {
   private async executeAndTrackTransaction (summary: ChainOperationSummary, type: TransactionType): Promise<void> {
     const executable: ExecutableOperation = summary.getExecutable()
     const signedTx = await (summary.fee as UtxoFeeData).transaction.signTransaction(this.signers)
-    const transactionHash: string = (await executable.provider.platformApi.issueTx(signedTx.toCHex())).txID
+    const transactionHash = (await executable.provider.platformApi.issueTx(signedTx)).txID
     await executable.trackPlatformTransaction(transactionHash, type)
   }
 }

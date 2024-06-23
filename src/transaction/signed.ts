@@ -25,14 +25,15 @@ import {
 } from './platform'
 import { TransactionCredentials } from './signature'
 import { type UnsignedTransaction } from './transaction'
+import { type Address } from './types'
 
 export class SignedTransaction {
   unsignedTransaction: UnsignedTransaction
-  signatures: TransactionCredentials[]
+  credentials: TransactionCredentials[]
 
   constructor (unsignedTransaction: UnsignedTransaction, credentials: TransactionCredentials[]) {
     this.unsignedTransaction = unsignedTransaction
-    this.signatures = credentials
+    this.credentials = credentials
   }
 
   static parse (data: string | JuneoBuffer): SignedTransaction {
@@ -48,6 +49,59 @@ export class SignedTransaction {
       )
     }
     return new SignedTransaction(unsignedTransaction, credentials)
+  }
+
+  /**
+   * Verify if the signed transaction has enough signatures to be sent over the network.
+   *
+   * We expect that each address that has signed the transaction has effectively signed
+   * all of the Signable components of it that they match. That way we can verify credentials
+   * faster and more easily, as well as identifying missing ones. This should always be
+   * the case if signatures functions are called within regular usage of juneojs.
+   *
+   * @return Address[] List of addresses of which at least a signature is missing.
+   * If no signature is missing, then an empty list is returned.
+   */
+  verifySignatures (): Address[] {
+    const missing: Address[] = []
+    const signablesAddresses = this.getSignablesAddresses()
+    const credentialsAddresses = this.getCredentialsAddresses()
+    for (const address of signablesAddresses) {
+      if (!address.matchesList(credentialsAddresses) && !address.matchesList(missing)) {
+        missing.push(address)
+      }
+    }
+    return missing
+  }
+
+  private getSignablesAddresses (): Address[] {
+    const addresses: Address[] = []
+    for (const signable of this.unsignedTransaction.getSignables()) {
+      for (const address of signable.getAddresses()) {
+        if (!address.matchesList(addresses)) {
+          addresses.push(address)
+        }
+      }
+    }
+    return addresses
+  }
+
+  private getCredentialsAddresses (): Address[] {
+    const addresses: Address[] = []
+    const message = this.unsignedTransaction.serialize()
+    for (const credential of this.credentials) {
+      for (const address of credential.recoverAddresses(message, 0)) {
+        if (!address.matchesList(addresses)) {
+          addresses.push(address)
+        }
+      }
+      for (const address of credential.recoverAddresses(message, 1)) {
+        if (!address.matchesList(addresses)) {
+          addresses.push(address)
+        }
+      }
+    }
+    return addresses
   }
 
   static parseUnsignedTransaction (data: string | JuneoBuffer): UnsignedTransaction {

@@ -1,6 +1,6 @@
-import { JuneoBuffer, ParsingError, type Serializable } from '../utils'
+import { JuneoBuffer, ParsingError, publicKeyToAddress, recoverPubKey, type Serializable } from '../utils'
 import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
-import { Signature, type Address } from './types'
+import { Address, Signature } from './types'
 
 export interface Signer {
   sign: (bytes: JuneoBuffer) => Promise<JuneoBuffer>
@@ -42,6 +42,15 @@ export abstract class TransactionCredentials implements Serializable {
   constructor (typeId: number, signatures: Signature[]) {
     this.typeId = typeId
     this.signatures = signatures
+  }
+
+  recoverAddresses (message: JuneoBuffer, recovery: number): Address[] {
+    const addresses: Address[] = []
+    for (const signature of this.signatures) {
+      const publicKey = recoverPubKey(signature.serialize(), message, recovery)
+      addresses.push(new Address(publicKeyToAddress(publicKey)))
+    }
+    return addresses
   }
 
   serialize (): JuneoBuffer {

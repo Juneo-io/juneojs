@@ -3,7 +3,7 @@ import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
-import { Secp256k1Credentials, type Signable, type Signer } from './signature'
+import { Secp256k1Credentials, type TransactionCredentials, type Signable, type Signer } from './signature'
 import { BlockchainId } from './types'
 
 export class TransactionFee {
@@ -32,7 +32,7 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getUtxos: () => Utxo[]
-  signTransaction: (signers: Signer[]) => Promise<JuneoBuffer>
+  signTransaction: (signers: Signer[]) => Promise<string>
 }
 
 export class BaseTransaction implements UnsignedTransaction {
@@ -77,7 +77,17 @@ export class BaseTransaction implements UnsignedTransaction {
     return utxos
   }
 
-  async signTransaction (signers: Signer[]): Promise<JuneoBuffer> {
+  async sign (signers: Signer[]): Promise<TransactionCredentials[]> {
+    const bytes = this.serialize()
+    const credentials: TransactionCredentials[] = []
+    for (const signable of this.getSignables()) {
+      const signatures = await signable.sign(bytes, signers)
+      credentials.push(new Secp256k1Credentials(signatures))
+    }
+    return credentials
+  }
+
+  async signTransaction (signers: Signer[]): Promise<string> {
     const bytes = this.serialize()
     const credentials: JuneoBuffer[] = []
     let credentialsSize: number = 0
@@ -86,8 +96,8 @@ export class BaseTransaction implements UnsignedTransaction {
       if (signatures.length < signable.getThreshold()) {
         throw new SignatureError('missing signer to complete signatures')
       }
-      const credential = new Secp256k1Credentials(signatures)
-      const credentialBytes = credential.serialize()
+      const creds = new Secp256k1Credentials(signatures)
+      const credentialBytes = creds.serialize()
       credentialsSize += credentialBytes.length
       credentials.push(credentialBytes)
     }
@@ -98,7 +108,7 @@ export class BaseTransaction implements UnsignedTransaction {
     for (const credential of credentials) {
       buffer.write(credential)
     }
-    return buffer
+    return buffer.toCHex()
   }
 
   serialize (): JuneoBuffer {

@@ -41,7 +41,7 @@ export function buildTransactionInputs (
   // This is not an issue but note that it may require to group some utxos together
   // for the outputs so make sure to spend them to avoid losses.
   for (let i = 0; i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts); i++) {
-    const utxo: Utxo = utxoSet[i]
+    const utxo = utxoSet[i]
     if (utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
     }
@@ -85,21 +85,19 @@ export function buildTransactionInputs (
 }
 
 function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<string, bigint>): boolean {
-  let complete: boolean = true
   for (const [key, target] of targets) {
     if (!gathereds.has(key) || gathereds.get(key)! < target) {
-      complete = false
       return false
     }
   }
-  return complete
+  return true
 }
 
 export function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
   const indices: number[] = []
   for (const signer of signers) {
     for (let i = 0; i < addresses.length; i++) {
-      const address: Address = addresses[i]
+      const address = addresses[i]
       if (signer.matches(address)) {
         indices.push(i)
         break

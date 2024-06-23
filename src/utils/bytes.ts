@@ -263,7 +263,7 @@ export class JuneoReader {
     return this.read(length).getBytes().toString(encoding)
   }
 
-  readTypeId (expectedTypeId: number): number {
+  readAndVerifyTypeId (expectedTypeId: number): number {
     const typeId = this.readUInt32()
     if (typeId !== expectedTypeId) {
       throw new ParsingError(`invalid type id ${typeId} expected ${expectedTypeId}`)
@@ -275,5 +275,9 @@ export class JuneoReader {
     const value = this.buffer.read(this.cursor, length)
     this.cursor += length
     return value
+  }
+
+  readRemaining (): JuneoBuffer {
+    return this.read(this.buffer.length - this.cursor)
   }
 }

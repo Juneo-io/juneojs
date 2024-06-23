@@ -1,6 +1,6 @@
-import { JuneoBuffer, type Serializable } from '../utils'
+import { JuneoBuffer, ParsingError, publicKeyToAddress, recoverPubKey, type Serializable } from '../utils'
 import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
-import { type Address, type Signature } from './types'
+import { Address, Signature } from './types'
 
 export interface Signer {
   sign: (bytes: JuneoBuffer) => Promise<JuneoBuffer>
@@ -9,6 +9,30 @@ export interface Signer {
 
 export interface Signable {
   sign: (bytes: JuneoBuffer, signers: Signer[]) => Promise<Signature[]>
+  getAddresses: () => Address[]
+  getThreshold: () => number
+}
+
+export abstract class AbstractSignable implements Signable {
+  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
+    const addresses = this.getAddresses()
+    const signatures: Signature[] = []
+    for (let i = 0; i < this.getThreshold() && i < addresses.length; i++) {
+      const address = addresses[i]
+      for (const signer of signers) {
+        if (signer.matches(address)) {
+          const signature = await signer.sign(bytes)
+          signatures.push(new Signature(signature))
+          break
+        }
+      }
+    }
+    return signatures
+  }
+
+  abstract getAddresses (): Address[]
+
+  abstract getThreshold (): number
 }
 
 export abstract class TransactionCredentials implements Serializable {
@@ -18,6 +42,15 @@ export abstract class TransactionCredentials implements Serializable {
   constructor (typeId: number, signatures: Signature[]) {
     this.typeId = typeId
     this.signatures = signatures
+  }
+
+  recoverAddresses (message: JuneoBuffer, recovery: number): Address[] {
+    const addresses: Address[] = []
+    for (const signature of this.signatures) {
+      const publicKey = recoverPubKey(signature.serialize(), message, recovery)
+      addresses.push(new Address(publicKeyToAddress(publicKey)))
+    }
+    return addresses
   }
 
   serialize (): JuneoBuffer {
@@ -33,6 +66,24 @@ export abstract class TransactionCredentials implements Serializable {
     return buffer
   }
 
+  static parse (data: string | JuneoBuffer): TransactionCredentials {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const typeId = reader.readUInt32()
+    const signatures: Signature[] = []
+    while (reader.getCursor() < buffer.length - SignatureSize) {
+      signatures.push(new Signature(reader.read(SignatureSize)))
+    }
+    switch (typeId) {
+      case Secp256k1CredentialsTypeId: {
+        return new Secp256k1Credentials(signatures)
+      }
+      default: {
+        throw new ParsingError(`unsupported credentials type id "${typeId}"`)
+      }
+    }
+  }
+
   static comparator = (a: TransactionCredentials, b: TransactionCredentials): number => {
     return JuneoBuffer.comparator(a.serialize(), b.serialize())
   }
@@ -41,27 +92,5 @@ export abstract class TransactionCredentials implements Serializable {
 export class Secp256k1Credentials extends TransactionCredentials {
   constructor (signatures: Signature[]) {
     super(Secp256k1CredentialsTypeId, signatures)
-  }
-}
-
-export abstract class SignableTx {
-  async sign (bytes: JuneoBuffer, unsignedInputs: Signable[], signers: Signer[]): Promise<JuneoBuffer> {
-    const credentials: JuneoBuffer[] = []
-    let credentialsSize: number = 0
-    for (const input of unsignedInputs) {
-      const signatures = await input.sign(bytes, signers)
-      const credential = new Secp256k1Credentials(signatures)
-      const credentialBytes = credential.serialize()
-      credentialsSize += credentialBytes.length
-      credentials.push(credentialBytes)
-    }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
-    buffer.write(bytes)
-    buffer.writeUInt32(credentials.length)
-    credentials.sort(JuneoBuffer.comparator)
-    for (const credential of credentials) {
-      buffer.write(credential)
-    }
-    return buffer
   }
 }

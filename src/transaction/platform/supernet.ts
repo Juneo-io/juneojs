@@ -1,4 +1,4 @@
-import { type Serializable, JuneoBuffer, SignatureError } from '../../utils'
+import { JuneoBuffer, type Serializable } from '../../utils'
 import { getSignersIndices } from '../builder'
 import {
   BLSPublicKeySize,
@@ -11,8 +11,8 @@ import {
   ValidatorSize
 } from '../constants'
 import { type Secp256k1OutputOwners } from '../output'
-import { type Signable, type Signer } from '../signature'
-import { type Address, BLSPublicKey, BLSSignature, NodeId, Signature } from '../types'
+import { AbstractSignable } from '../signature'
+import { type Address, BLSPublicKey, BLSSignature, NodeId } from '../types'
 
 export class Validator implements Serializable {
   nodeId: NodeId
@@ -43,12 +43,13 @@ export class Validator implements Serializable {
   }
 }
 
-export class SupernetAuth implements Serializable, Signable {
+export class SupernetAuth extends AbstractSignable implements Serializable {
   readonly typeId: number = SupernetAuthTypeId
   addressIndices: number[]
   rewardsOwner: Secp256k1OutputOwners
 
   constructor (addresses: Address[], rewardsOwner: Secp256k1OutputOwners) {
+    super()
     this.addressIndices = getSignersIndices(addresses, rewardsOwner.addresses)
     this.addressIndices.sort((a: number, b: number) => {
       return a - b
@@ -56,23 +57,16 @@ export class SupernetAuth implements Serializable, Signable {
     this.rewardsOwner = rewardsOwner
   }
 
-  async sign (bytes: JuneoBuffer, signers: Signer[]): Promise<Signature[]> {
-    const signatures: Signature[] = []
-    const threshold = this.rewardsOwner.threshold
-    for (let i = 0; i < threshold && i < this.addressIndices.length; i++) {
-      const address = this.rewardsOwner.addresses[i]
-      for (const signer of signers) {
-        if (signer.matches(address)) {
-          const signature = await signer.sign(bytes)
-          signatures.push(new Signature(signature))
-          break
-        }
-      }
+  getAddresses (): Address[] {
+    const addresses: Address[] = []
+    for (let i = 0; i < this.rewardsOwner.threshold && i < this.addressIndices.length; i++) {
+      addresses.push(this.rewardsOwner.addresses[i])
     }
-    if (signatures.length < threshold) {
-      throw new SignatureError('missing signer to complete supernet signatures')
-    }
-    return signatures
+    return addresses
+  }
+
+  getThreshold (): number {
+    return this.rewardsOwner.threshold
   }
 
   serialize (): JuneoBuffer {
@@ -146,7 +140,7 @@ export class PrimarySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): PrimarySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(PrimarySignerTypeId)
+    reader.readAndVerifyTypeId(PrimarySignerTypeId)
     return new PrimarySigner(ProofOfPossession.parse(reader.read(ProofOfPossessionSize)))
   }
 }
@@ -158,7 +152,7 @@ export class EmptySigner extends BLSSigner {
 
   static parse (data: string | JuneoBuffer): EmptySigner {
     const reader = JuneoBuffer.from(data).createReader()
-    reader.readTypeId(EmptySignerTypeId)
+    reader.readAndVerifyTypeId(EmptySignerTypeId)
     return new EmptySigner()
   }
 }

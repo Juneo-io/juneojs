@@ -38,6 +38,15 @@ export class Address extends BytesData {
     return JuneoBuffer.comparator(buffer, this.getBuffer()) === 0
   }
 
+  matchesList (addresses: string[] | Address[]): boolean {
+    for (const address of addresses) {
+      if (this.matches(address)) {
+        return true
+      }
+    }
+    return false
+  }
+
   static toAddresses (values: string[]): Address[] {
     if (values.length < 1) {
       throw new JuneoTypeError('provided values length should be greater than 0')

@@ -47,7 +47,7 @@ export async function executeJVMExportTransaction (
     provider.mcn.id
   )
   const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
-  return (await api.issueTx(signedTx.toCHex())).txID
+  return (await api.issueTx(signedTx)).txID
 }
 
 export async function estimateJVMImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
@@ -74,5 +74,5 @@ export async function executeJVMImportTransaction (
     provider.mcn.id
   )
   const signedTx = await transaction.signTransaction([wallet.getWallet(api.chain)])
-  return (await api.issueTx(signedTx.toCHex())).txID
+  return (await api.issueTx(signedTx)).txID
 }

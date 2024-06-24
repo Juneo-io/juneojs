@@ -1,32 +1,14 @@
 import { type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from '../chain'
 
-export class MCNAccess {
-  url: string
-  staticUrls: string[]
-
-  constructor (url: string, staticUrls: string[] = []) {
-    this.url = url
-    this.staticUrls = staticUrls
-  }
-
-  getStaticUrl (): string {
-    if (this.staticUrls.length < 1) {
-      return this.url
-    }
-    const index = Math.floor(Math.random() * this.staticUrls.length)
-    return this.staticUrls[index]
-  }
-}
-
 export class MCN {
-  access: MCNAccess
+  url: string
   id: number
   hrp: string
   primary: PrimarySupernet
   supernets: Supernet[]
 
-  constructor (access: MCNAccess, id: number, hrp: string, primary: PrimarySupernet, supernets: Supernet[] = [primary]) {
-    this.access = access
+  constructor (url: string, id: number, hrp: string, primary: PrimarySupernet, supernets: Supernet[] = [primary]) {
+    this.url = url
     this.id = id
     this.hrp = hrp
     this.primary = primary

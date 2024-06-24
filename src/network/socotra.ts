@@ -1,6 +1,6 @@
 import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
-import { MCN, MCNAccess, PrimarySupernet } from './network'
+import { MCN, PrimarySupernet } from './network'
 
 const SocotraNetworkId: number = 46
 const SocotraHrp: string = 'socotra'
@@ -26,7 +26,6 @@ const SocotraRewardConfig: RewardConfig = new RewardConfig(
   BigInt(6_7000) // 6.7%
 )
 const SocotraAddress: string = 'https://rpc.socotra-testnet.network'
-const SocotraStaticAddresses = ['https://api1.socotra-testnet.network', 'https://api2.socotra-testnet.network']
 
 export const SocotraJUNEAssetId: string = 'HviVNFzh2nCqyi7bQxw6pt5fUPjZC8r3DCDrt7mRmScZS2zp5'
 export const SocotraUSDT1AssetId: string = 'Ld5aCozSMQ1hC5jdXS3mhGNgoYVjVDe8zPTtPSbs4xS5JQSfJ'
@@ -247,11 +246,6 @@ export const SocotraPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   SocotraJUNEChain
 )
 
-export const SocotraNetwork: MCN = new MCN(
-  new MCNAccess(SocotraAddress, SocotraStaticAddresses),
-  SocotraNetworkId,
-  SocotraHrp,
-  SocotraPrimarySupernet
-)
+export const SocotraNetwork: MCN = new MCN(SocotraAddress, SocotraNetworkId, SocotraHrp, SocotraPrimarySupernet)
 
 export const TestNetwork: MCN = SocotraNetwork

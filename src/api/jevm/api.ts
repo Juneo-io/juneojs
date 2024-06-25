@@ -58,6 +58,11 @@ export class JEVMAPI extends AbstractUtxoAPI {
     return BigInt.asUintN(256, response.result)
   }
 
+  async eth_blockNumber (): Promise<bigint> {
+    const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_blockNumber')
+    return BigInt.asUintN(256, response.result)
+  }
+
   async eth_getChainConfig (): Promise<JSON> {
     const response: JsonRpcResponse = await this.callServiceAt('', this.rpcEndpoint, 'eth_getChainConfig')
     return response.result

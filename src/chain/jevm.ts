@@ -87,11 +87,11 @@ export class JEVMBlockchain extends AbstractBlockchain {
   async queryBalance (api: JEVMAPI, address: string, assetId: string): Promise<bigint> {
     // native asset
     if (assetId === this.assetId) {
-      return await api.eth_getBalance(address, 'pending')
+      return await api.eth_getBalance(address, 'latest')
     }
     // jnt asset
     if (AssetId.validate(assetId)) {
-      return await api.eth_getAssetBalance(address, 'pending', assetId)
+      return await api.eth_getAssetBalance(address, 'latest', assetId)
     }
     // from here should only be solidity smart contract
     if (!isContractAddress(assetId)) {

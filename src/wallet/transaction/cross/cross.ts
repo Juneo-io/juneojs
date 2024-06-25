@@ -435,6 +435,9 @@ export class CrossManager {
       const status: string = executable.receipts[executable.receipts.length - 1].transactionStatus
       throw new CrossError(`error during export transaction ${exportTransactionId} status fetching: ${status}`)
     }
+    // wait until export utxos are generated (should be max block time)
+    // it may be better to do checks of existence of such utxos instead of assuming they exist after waiting
+    await TimeUtils.sleep(2000)
     const exportTransactionAssets: string[] = [cross.assetId]
     if (cross.assetId !== exportFee.assetId) {
       exportTransactionAssets.push(exportFee.assetId)
@@ -621,7 +624,7 @@ export class CrossManager {
   ): Promise<void> {
     const api: JEVMAPI = this.provider.jevmApi[chain.id]
     const address: string = this.wallet.getAddress(chain)
-    const balance: bigint = await api.eth_getAssetBalance(address, 'pending', jrc20.nativeAssetId)
+    const balance: bigint = await api.eth_getAssetBalance(address, 'latest', jrc20.nativeAssetId)
     if (balance > BigInt(0)) {
       list.push(new DepositResumeOperation(chain, jrc20, balance))
     }

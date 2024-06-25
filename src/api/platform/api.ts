@@ -1,20 +1,14 @@
 import { type PlatformBlockchain } from '../../chain'
 import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
+import { type GetBlockResponse, type GetHeightResponse, type GetTxStatusResponse } from '../data'
 import {
-  type GetBlockResponse,
-  type GetHeightResponse,
-  type GetTxResponse,
-  type GetTxStatusResponse,
-  type IssueTxResponse
-} from '../data'
-import {
-  type GetRewardPoolSupplyResponse,
   type GetBlockchainsResponse,
   type GetBlockchainStatusResponse,
   type GetCurrentSupplyResponse,
   type GetCurrentValidatorsResponse,
   type GetMinStakeResponse,
+  type GetRewardPoolSupplyResponse,
   type GetStakingAssetIDResponse,
   type GetSupernetsResponse,
   type GetTimestampResponse,
@@ -107,11 +101,6 @@ export class PlatformAPI extends AbstractUtxoAPI {
     return response.result
   }
 
-  async getTx (txID: string, encoding?: string): Promise<GetTxResponse> {
-    const response: JsonRpcResponse = await this.call('getTx', [{ txID, encoding }])
-    return response.result
-  }
-
   async getTxStatus (txID: string): Promise<GetTxStatusResponse> {
     const response: JsonRpcResponse = await this.call('getTxStatus', [{ txID }])
     return response.result
@@ -119,11 +108,6 @@ export class PlatformAPI extends AbstractUtxoAPI {
 
   async getValidatorsAt (height: number, supernetID?: string): Promise<GetValidatorsAtResponse> {
     const response: JsonRpcResponse = await this.call('getValidatorsAt', [{ height, supernetID }])
-    return response.result
-  }
-
-  async issueTx (tx: string, encoding?: string): Promise<IssueTxResponse> {
-    const response: JsonRpcResponse = await this.call('issueTx', [{ tx, encoding }])
     return response.result
   }
 

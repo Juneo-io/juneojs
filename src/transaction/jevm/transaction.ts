@@ -9,9 +9,9 @@ import {
   TransactionIdSize
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
-import { TransferableOutput } from '../output'
+import { type TransferableOutput } from '../output'
 import { AbstractSignable, type Signable } from '../signature'
-import { BaseTransaction } from '../transaction'
+import { AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
 import { Address, AssetId, type BlockchainId } from '../types'
 
 export class EVMOutput implements Serializable {
@@ -26,7 +26,7 @@ export class EVMOutput implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(EVMOutputSize)
+    const buffer = JuneoBuffer.alloc(EVMOutputSize)
     buffer.write(this.address.serialize())
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
@@ -34,7 +34,7 @@ export class EVMOutput implements Serializable {
   }
 
   static comparator = (a: EVMOutput, b: EVMOutput): number => {
-    const comparison: number = Address.comparator(a.address, b.address)
+    const comparison = Address.comparator(a.address, b.address)
     if (comparison !== 0) {
       return comparison
     }
@@ -73,7 +73,7 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(EVMInputSize)
+    const buffer = JuneoBuffer.alloc(EVMInputSize)
     buffer.write(this.address.serialize())
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
@@ -82,7 +82,7 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
   }
 
   static comparator = (a: EVMInput, b: EVMInput): number => {
-    let comparison: number = JuneoBuffer.comparator(a.address.serialize(), b.address.serialize())
+    let comparison = JuneoBuffer.comparator(a.address.serialize(), b.address.serialize())
     if (comparison === 0) {
       comparison = JuneoBuffer.comparator(a.assetId.serialize(), b.assetId.serialize())
     }
@@ -90,10 +90,8 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
   }
 }
 
-export class JEVMExportTransaction extends BaseTransaction {
-  destinationChain: BlockchainId
+export class JEVMExportTransaction extends AbstractExportTransaction {
   evmInputs: EVMInput[]
-  exportedOutputs: TransferableOutput[]
 
   constructor (
     networkId: number,
@@ -102,12 +100,9 @@ export class JEVMExportTransaction extends BaseTransaction {
     inputs: EVMInput[],
     exportedOutputs: TransferableOutput[]
   ) {
-    super(EVMExportTransactionTypeId, networkId, blockchainId, [], [], '')
-    this.destinationChain = destinationChain
+    super(EVMExportTransactionTypeId, networkId, blockchainId, [], [], '', destinationChain, exportedOutputs)
     this.evmInputs = inputs
     this.evmInputs.sort(EVMInput.comparator)
-    this.exportedOutputs = exportedOutputs
-    this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
   getSignables (): Signable[] {
@@ -116,20 +111,20 @@ export class JEVMExportTransaction extends BaseTransaction {
 
   serialize (): JuneoBuffer {
     const inputsBytes: JuneoBuffer[] = []
-    let inputsSize: number = 0
+    let inputsSize = 0
     for (const input of this.evmInputs) {
-      const bytes: JuneoBuffer = input.serialize()
+      const bytes = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
     }
     const outputsBytes: JuneoBuffer[] = []
-    let outputsSize: number = 0
+    let outputsSize = 0
     for (const output of this.exportedOutputs) {
-      const bytes: JuneoBuffer = output.serialize()
+      const bytes = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 2 + 4 + 4 + 4 + 4 = 18
       18 + BlockchainIdSize * 2 + inputsSize + outputsSize
     )
@@ -151,9 +146,9 @@ export class JEVMExportTransaction extends BaseTransaction {
 
   static estimateSignaturesCount (exportedAssets: string[], exportFeeAssetId: string, importFeeAssetId: string): number {
     // see if import/export fee outputs will be merged with exported assets
-    const ignoreImportFee: boolean = exportedAssets.includes(importFeeAssetId)
-    const ignoreExportFee: boolean = exportedAssets.includes(exportFeeAssetId)
-    let feeInputsCount: number = ignoreImportFee ? 0 : 1
+    const ignoreImportFee = exportedAssets.includes(importFeeAssetId)
+    const ignoreExportFee = exportedAssets.includes(exportFeeAssetId)
+    let feeInputsCount = ignoreImportFee ? 0 : 1
     // import and export fee could also be merged together
     if (!ignoreExportFee && exportFeeAssetId !== importFeeAssetId) {
       feeInputsCount += 1
@@ -163,7 +158,7 @@ export class JEVMExportTransaction extends BaseTransaction {
 
   static estimateSize (inputsCount: number): number {
     // for now consider inputs + 2 outputs for fees outputs
-    const outputsCount: number = inputsCount
+    const outputsCount = inputsCount
     // 2 + 4 + 4 + 4 + 4 = 18
     return 18 + BlockchainIdSize * 2 + EVMInputSize * inputsCount + this.estimateOutputsSize(outputsCount)
   }
@@ -176,9 +171,7 @@ export class JEVMExportTransaction extends BaseTransaction {
   }
 }
 
-export class JEVMImportTransaction extends BaseTransaction {
-  sourceChain: BlockchainId
-  importedInputs: TransferableInput[]
+export class JEVMImportTransaction extends AbstractImportTransaction {
   evmOutputs: EVMOutput[]
 
   constructor (
@@ -188,34 +181,28 @@ export class JEVMImportTransaction extends BaseTransaction {
     importedInputs: TransferableInput[],
     evmOutputs: EVMOutput[]
   ) {
-    super(EVMImportTransactionTypeId, networkId, blockchainId, [], [], '')
-    this.sourceChain = sourceChain
-    this.importedInputs = importedInputs
+    super(EVMImportTransactionTypeId, networkId, blockchainId, [], [], '', sourceChain, importedInputs)
     this.importedInputs.sort(TransferableInput.comparator)
     this.evmOutputs = evmOutputs
     this.evmOutputs.sort(EVMOutput.comparator)
   }
 
-  getSignables (): Signable[] {
-    return this.importedInputs
-  }
-
   serialize (): JuneoBuffer {
     const inputsBytes: JuneoBuffer[] = []
-    let inputsSize: number = 0
+    let inputsSize = 0
     for (const input of this.importedInputs) {
-      const bytes: JuneoBuffer = input.serialize()
+      const bytes = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
     }
     const outputsBytes: JuneoBuffer[] = []
-    let outputsSize: number = 0
+    let outputsSize = 0
     for (const output of this.evmOutputs) {
-      const bytes: JuneoBuffer = output.serialize()
+      const bytes = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 2 + 4 + 4 + 4 + 4 = 18
       18 + BlockchainIdSize * 2 + inputsSize + outputsSize
     )

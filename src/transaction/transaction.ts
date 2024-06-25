@@ -1,8 +1,9 @@
+import { type AbstractUtxoAPI } from '../api'
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
+import { JuneoBuffer, SignatureError, TransactionUtils, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
-import { TransferableOutput, type Utxo } from './output'
+import { TransferableOutput, Utxo } from './output'
 import { Secp256k1Credentials, type Signable, type Signer, type TransactionCredentials } from './signature'
 import { BlockchainId } from './types'
 
@@ -31,7 +32,9 @@ export interface UnsignedTransaction extends Serializable {
   inputs: TransferableInput[]
   memo: string
   getSignables: () => Signable[]
+  getInputs: () => TransferableInput[]
   getUtxos: () => Utxo[]
+  syncUtxos: (api: AbstractUtxoAPI) => Promise<void>
   sign: (signers: Signer[]) => Promise<TransactionCredentials[]>
   signTransaction: (signers: Signer[]) => Promise<string>
 }
@@ -68,6 +71,10 @@ export class BaseTransaction implements UnsignedTransaction {
     return this.inputs
   }
 
+  getInputs (): TransferableInput[] {
+    return this.inputs
+  }
+
   getUtxos (): Utxo[] {
     const utxos: Utxo[] = []
     for (const transferable of this.inputs) {
@@ -76,6 +83,15 @@ export class BaseTransaction implements UnsignedTransaction {
       utxos.push(transferable.input.utxo!)
     }
     return utxos
+  }
+
+  async syncUtxos (api: AbstractUtxoAPI): Promise<void> {
+    for (const input of this.getInputs()) {
+      const data = (await api.getTx(input.transactionId.transactionId)).tx
+      const tx = TransactionUtils.parseUnsignedTransaction(data)
+      const output = tx.outputs[input.utxoIndex]
+      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
+    }
   }
 
   async sign (signers: Signer[]): Promise<TransactionCredentials[]> {
@@ -240,8 +256,22 @@ export class AbstractImportTransaction extends BaseTransaction {
     this.importedInputs.sort(TransferableInput.comparator)
   }
 
+  getInputs (): TransferableInput[] {
+    return [...this.inputs, ...this.importedInputs]
+  }
+
   getSignables (): Signable[] {
     return [...this.inputs, ...this.importedInputs]
+  }
+
+  getUtxos (): Utxo[] {
+    const utxos = super.getUtxos()
+    for (const transferable of this.importedInputs) {
+      // should be Utxo here because transaction should be from builder
+      // undefined should only be the case if it is an input from parsing bytes
+      utxos.push(transferable.input.utxo!)
+    }
+    return utxos
   }
 
   serialize (): JuneoBuffer {

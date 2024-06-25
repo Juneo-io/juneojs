@@ -1,7 +1,7 @@
 import { type JVMBlockchain } from '../../chain'
 import { AbstractUtxoAPI } from '../api'
 import { type JsonRpcResponse, type JuneoClient } from '../client'
-import { type GetBlockResponse, type GetHeightResponse, type GetTxResponse, type IssueTxResponse } from '../data'
+import { type GetBlockResponse, type GetHeightResponse } from '../data'
 import { type BuildGenesisResponse, type GetAssetDescriptionResponse } from './data'
 
 const Service: string = 'jvm'
@@ -39,16 +39,6 @@ export class JVMAPI extends AbstractUtxoAPI {
 
   async getHeight (): Promise<GetHeightResponse> {
     const response: JsonRpcResponse = await this.call('getHeight')
-    return response.result
-  }
-
-  async getTx (txID: string, encoding?: string): Promise<GetTxResponse> {
-    const response: JsonRpcResponse = await this.call('getTx', [{ txID, encoding }])
-    return response.result
-  }
-
-  async issueTx (tx: string, encoding?: string): Promise<IssueTxResponse> {
-    const response: JsonRpcResponse = await this.call('issueTx', [{ tx, encoding }])
     return response.result
   }
 }

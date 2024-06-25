@@ -1,0 +1,100 @@
+import {
+  AddPermissionlessDelegatorTransaction,
+  AddPermissionlessDelegatorTransactionTypeId,
+  AddPermissionlessValidatorTransaction,
+  AddPermissionlessValidatorTransactionTypeId,
+  AddSupernetValidatorTransactionType,
+  CreateAssetTransactionTypeId,
+  CreateChainTransactionTypeId,
+  CreateSupernetTransaction,
+  CreateSupernetTransactionTypeId,
+  JVMBaseTransaction,
+  JVMBaseTransactionTypeId,
+  JVMExportTransactionTypeId,
+  JVMImportTransactionTypeId,
+  PlatformBaseTransaction,
+  PlatformBaseTransactionTypeId,
+  PlatformExportTransactionTypeId,
+  PlatformImportTransactionTypeId,
+  RemoveSupernetTransactionTypeId,
+  TransferSupernetOwnershipTransactionTypeId,
+  TransformSupernetTransactionTypeId,
+  type UnsignedTransaction
+} from '../transaction'
+import { JuneoBuffer } from './bytes'
+import { ParsingError } from './errors'
+
+export class TransactionUtils {
+  private static INSTANCE: TransactionUtils | undefined
+
+  private constructor () {}
+
+  static getSingleton (): TransactionUtils {
+    if (TransactionUtils.INSTANCE === undefined) {
+      TransactionUtils.INSTANCE = new TransactionUtils()
+    }
+    return TransactionUtils.INSTANCE
+  }
+
+  static parseUnsignedTransaction (data: string | JuneoBuffer): UnsignedTransaction {
+    const reader = JuneoBuffer.from(data).createReader()
+    // skip codec reading
+    reader.skip(2)
+    const typeId = reader.readUInt32()
+    const notImplementedTypeIdError = new Error(`type id ${typeId} parsing is not implemented yet`)
+    switch (typeId) {
+      case JVMBaseTransactionTypeId: {
+        return JVMBaseTransaction.parse(data)
+        // it has the same id as EVMImportTx
+        // when it is implemented try the other if this one failed
+      }
+      case CreateAssetTransactionTypeId: {
+        throw notImplementedTypeIdError
+        // it has the same id as EVMExportTx
+        // when it is implemented try the other if this one failed
+      }
+      case JVMImportTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case JVMExportTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case AddSupernetValidatorTransactionType: {
+        throw notImplementedTypeIdError
+      }
+      case CreateChainTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case CreateSupernetTransactionTypeId: {
+        return CreateSupernetTransaction.parse(data)
+      }
+      case PlatformImportTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case PlatformExportTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case RemoveSupernetTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case TransformSupernetTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case AddPermissionlessValidatorTransactionTypeId: {
+        return AddPermissionlessValidatorTransaction.parse(data)
+      }
+      case AddPermissionlessDelegatorTransactionTypeId: {
+        return AddPermissionlessDelegatorTransaction.parse(data)
+      }
+      case TransferSupernetOwnershipTransactionTypeId: {
+        throw notImplementedTypeIdError
+      }
+      case PlatformBaseTransactionTypeId: {
+        return PlatformBaseTransaction.parse(data)
+      }
+      default: {
+        throw new ParsingError(`unsupported transaction type id "${typeId}"`)
+      }
+    }
+  }
+}

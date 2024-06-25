@@ -204,18 +204,6 @@ export class JEVMWallet extends AbstractVMWallet {
       return await this.nonce.increment(api, this.address!)
     })
   }
-
-  async getNonce (): Promise<bigint> {
-    return await this.mutex.runExclusive(() => {
-      return this.nonce.nonce
-    })
-  }
-
-  async syncNonce (api: JEVMAPI): Promise<void> {
-    await this.mutex.runExclusive(async () => {
-      await this.nonce.syncNonce(api, this.address!)
-    })
-  }
 }
 
 class NonceSync {

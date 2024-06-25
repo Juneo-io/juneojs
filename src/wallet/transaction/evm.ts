@@ -2,7 +2,7 @@ import { type ethers } from 'ethers'
 import { type JEVMAPI } from '../../api'
 import { type JRC20Asset } from '../../asset'
 import { EmptyCallData, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
-import { type MCNProvider, TimeUtils, TransactionError } from '../../juneo'
+import { type MCNProvider } from '../../juneo'
 import { type ChainNetworkOperation, ChainOperationSummary } from '../operation'
 import { type JEVMWallet } from '../wallet'
 import { DefaultDepositEstimate, DefaultWithdrawEstimate } from './constants'
@@ -82,7 +82,6 @@ export async function executeEVMTransaction (
   feeData: EVMFeeData
 ): Promise<string> {
   const api: JEVMAPI = provider.jevmApi[wallet.chain.id]
-  await wallet.syncNonce(api)
   const unsignedTransaction: ethers.TransactionRequest = {
     from: wallet.getAddress(),
     to: feeData.data.to,
@@ -93,23 +92,8 @@ export async function executeEVMTransaction (
     gasPrice: feeData.baseFee,
     data: feeData.data.data
   }
-  for (let i = 0; i < 1; i++) {
-    const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
-    const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
-      const errorMessage: string = error.message as string
-      if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
-        return undefined
-      }
-      throw error
-    })
-    if (typeof transactionId === 'string') {
-      return transactionId
-    }
-    await TimeUtils.sleep(3000)
-    await wallet.syncNonce(api)
-    unsignedTransaction.nonce = Number(await wallet.getNonceAndIncrement(api))
-  }
-  throw new TransactionError(`could not provide a valid nonce: ${unsignedTransaction.nonce}`)
+  const transaction: string = await wallet.evmWallet.signTransaction(unsignedTransaction)
+  return await api.eth_sendRawTransaction(transaction)
 }
 
 export async function estimateEVMWithdrawJRC20 (

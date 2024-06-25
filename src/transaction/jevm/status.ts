@@ -21,19 +21,18 @@ export class JEVMTransactionStatusFetcher implements TransactionStatusFetcher {
   }
 
   async fetch (timeout: number, delay: number): Promise<string> {
-    const maxAttempts: number = timeout / delay
+    const maxAttempts = timeout / delay
+    this.currentStatus = JEVMTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await TimeUtils.sleep(delay)
-      await this.jevmApi.getTxStatus(this.transactionId).then(
-        (value) => {
-          this.currentStatus = value.status
-        },
-        (error) => {
-          if (error.message !== 'not found') {
-            this.currentStatus = JEVMTransactionStatus.Unknown
-          }
-        }
-      )
+      const receipt: any = await this.jevmApi.getTx(this.transactionId).catch(() => {
+        return null
+      })
+      if (receipt === null) {
+        this.attempts += 1
+        continue
+      }
+      this.currentStatus = (await this.jevmApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus
@@ -65,9 +64,9 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
   }
 
   async fetch (timeout: number, delay: number): Promise<string> {
-    const maxAttempts: number = timeout / delay
+    const maxAttempts = timeout / delay
     this.currentStatus = EVMTransactionStatus.Pending
-    while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
+    while (this.attempts < maxAttempts) {
       await TimeUtils.sleep(delay)
       const receipt: any = await this.jevmApi.eth_getTransactionReceipt(this.transactionHash).catch(() => {
         return null
@@ -76,13 +75,10 @@ export class EVMTransactionStatusFetcher implements TransactionStatusFetcher {
         this.attempts += 1
         continue
       }
-      const status: number = Number(receipt.status)
+      const status = Number(receipt.status)
       this.currentStatus = status === 1 ? EVMTransactionStatus.Success : EVMTransactionStatus.Failure
+      break
     }
     return this.currentStatus
-  }
-
-  private isCurrentStatusSettled (): boolean {
-    return this.currentStatus !== EVMTransactionStatus.Unknown && this.currentStatus !== EVMTransactionStatus.Pending
   }
 }

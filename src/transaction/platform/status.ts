@@ -26,16 +26,14 @@ export class PlatformTransactionStatusFetcher implements TransactionStatusFetche
     this.currentStatus = PlatformTransactionStatus.Processing
     while (this.attempts < maxAttempts && !this.isCurrentStatusSettled()) {
       await TimeUtils.sleep(delay)
-      await this.platformApi.getTxStatus(this.transactionId).then(
-        (value) => {
-          this.currentStatus = value.status
-        },
-        (error) => {
-          if (error.message !== 'not found') {
-            this.currentStatus = PlatformTransactionStatus.Unknown
-          }
-        }
-      )
+      const receipt: any = await this.platformApi.getTx(this.transactionId).catch(() => {
+        return null
+      })
+      if (receipt === null) {
+        this.attempts += 1
+        continue
+      }
+      this.currentStatus = (await this.platformApi.getTxStatus(this.transactionId)).status
       this.attempts += 1
     }
     return this.currentStatus

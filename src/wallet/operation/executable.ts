@@ -1,20 +1,19 @@
-import { type JEVMAPI } from '../../api'
 import { type MCNProvider } from '../../juneo'
 import {
   EVMTransactionStatus,
   EVMTransactionStatusFetcher,
   JEVMTransactionStatus,
   JEVMTransactionStatusFetcher,
-  PlatformTransactionStatus,
-  PlatformTransactionStatusFetcher,
   JVMTransactionStatus,
-  JVMTransactionStatusFetcher
+  JVMTransactionStatusFetcher,
+  PlatformTransactionStatus,
+  PlatformTransactionStatusFetcher
 } from '../../transaction'
 import {
-  TransactionType,
-  WalletStatusFetcherTimeout,
+  TransactionReceipt,
+  type TransactionType,
   WalletStatusFetcherDelay,
-  TransactionReceipt
+  WalletStatusFetcherTimeout
 } from '../transaction'
 import { NetworkOperationStatus } from './operation'
 
@@ -27,102 +26,110 @@ export class ExecutableOperation {
     this.provider = provider
   }
 
-  async trackEVMTransaction (
-    chainId: string,
-    transactionHash: string,
-    type: TransactionType = TransactionType.Base
-  ): Promise<boolean> {
-    const api: JEVMAPI = this.provider.jevmApi[chainId]
-    const receipt: TransactionReceipt = new TransactionReceipt(
-      api.chain.id,
-      type,
-      EVMTransactionStatus.Pending,
-      transactionHash
-    )
+  async trackEVMTransaction (chainId: string, transactionHash: string, type: TransactionType): Promise<boolean> {
+    const api = this.provider.jevmApi[chainId]
+    const receipt = new TransactionReceipt(api.chain.id, type, EVMTransactionStatus.Pending, transactionHash)
     this.receipts.push(receipt)
-    const transactionStatus: string = await new EVMTransactionStatusFetcher(api, transactionHash).fetch(
+    const transactionStatus = await new EVMTransactionStatusFetcher(api, transactionHash).fetch(
       WalletStatusFetcherTimeout,
       WalletStatusFetcherDelay
     )
     receipt.transactionStatus = transactionStatus
-    if (transactionStatus === EVMTransactionStatus.Failure) {
-      this.status = NetworkOperationStatus.Error
-    } else if (transactionStatus !== EVMTransactionStatus.Success) {
-      this.status = NetworkOperationStatus.Timeout
+    switch (transactionStatus) {
+      case EVMTransactionStatus.Failure: {
+        this.status = NetworkOperationStatus.Error
+        break
+      }
+      case EVMTransactionStatus.Pending: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
+      case EVMTransactionStatus.Unknown: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
     }
     return transactionStatus === EVMTransactionStatus.Success
   }
 
-  async trackJEVMTransaction (
-    chainId: string,
-    transactionId: string,
-    type: TransactionType = TransactionType.Base
-  ): Promise<boolean> {
-    const api: JEVMAPI = this.provider.jevmApi[chainId]
-    const receipt: TransactionReceipt = new TransactionReceipt(
-      api.chain.id,
-      type,
-      JEVMTransactionStatus.Processing,
-      transactionId
-    )
+  async trackJEVMTransaction (chainId: string, transactionId: string, type: TransactionType): Promise<boolean> {
+    const api = this.provider.jevmApi[chainId]
+    const receipt = new TransactionReceipt(api.chain.id, type, JEVMTransactionStatus.Processing, transactionId)
     this.receipts.push(receipt)
-    const transactionStatus: string = await new JEVMTransactionStatusFetcher(api, transactionId).fetch(
+    const transactionStatus = await new JEVMTransactionStatusFetcher(api, transactionId).fetch(
       WalletStatusFetcherTimeout,
       WalletStatusFetcherDelay
     )
     receipt.transactionStatus = transactionStatus
-    if (transactionStatus === JEVMTransactionStatus.Dropped) {
-      this.status = NetworkOperationStatus.Error
-    } else if (transactionStatus !== JEVMTransactionStatus.Accepted) {
-      this.status = NetworkOperationStatus.Timeout
+    switch (transactionStatus) {
+      case JEVMTransactionStatus.Dropped: {
+        this.status = NetworkOperationStatus.Error
+        break
+      }
+      case JEVMTransactionStatus.Processing: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
+      case JEVMTransactionStatus.Unknown: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
     }
     return transactionStatus === JEVMTransactionStatus.Accepted
   }
 
-  async trackPlatformTransaction (
-    transactionId: string,
-    type: TransactionType = TransactionType.Base
-  ): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(
+  async trackPlatformTransaction (transactionId: string, type: TransactionType): Promise<boolean> {
+    const receipt = new TransactionReceipt(
       this.provider.platformChain.id,
       type,
       PlatformTransactionStatus.Processing,
       transactionId
     )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new PlatformTransactionStatusFetcher(
+    const transactionStatus = await new PlatformTransactionStatusFetcher(
       this.provider.platformApi,
       transactionId
     ).fetch(WalletStatusFetcherTimeout, WalletStatusFetcherDelay)
     receipt.transactionStatus = transactionStatus
-    if (
-      transactionStatus === PlatformTransactionStatus.Dropped ||
-      transactionStatus === PlatformTransactionStatus.Aborted
-    ) {
-      this.status = NetworkOperationStatus.Error
-    } else if (transactionStatus !== PlatformTransactionStatus.Committed) {
-      this.status = NetworkOperationStatus.Timeout
+    switch (transactionStatus) {
+      case PlatformTransactionStatus.Dropped: {
+        this.status = NetworkOperationStatus.Error
+        break
+      }
+      case PlatformTransactionStatus.Processing: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
+      case PlatformTransactionStatus.Unknown: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
     }
     return transactionStatus === PlatformTransactionStatus.Committed
   }
 
-  async trackJVMTransaction (transactionId: string, type: TransactionType = TransactionType.Base): Promise<boolean> {
-    const receipt: TransactionReceipt = new TransactionReceipt(
+  async trackJVMTransaction (transactionId: string, type: TransactionType): Promise<boolean> {
+    const receipt = new TransactionReceipt(
       this.provider.jvmChain.id,
       type,
       JVMTransactionStatus.Processing,
       transactionId
     )
     this.receipts.push(receipt)
-    const transactionStatus: string = await new JVMTransactionStatusFetcher(this.provider.jvmApi, transactionId).fetch(
+    const transactionStatus = await new JVMTransactionStatusFetcher(this.provider.jvmApi, transactionId).fetch(
       WalletStatusFetcherTimeout,
       WalletStatusFetcherDelay
     )
     receipt.transactionStatus = transactionStatus
-    if (transactionStatus === JVMTransactionStatus.Unknown) {
-      this.status = NetworkOperationStatus.Error
-    } else if (transactionStatus !== JVMTransactionStatus.Accepted) {
-      this.status = NetworkOperationStatus.Timeout
+    switch (transactionStatus) {
+      case JVMTransactionStatus.Processing: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
+      case JVMTransactionStatus.Unknown: {
+        this.status = NetworkOperationStatus.Timeout
+        break
+      }
     }
     return transactionStatus === JVMTransactionStatus.Accepted
   }

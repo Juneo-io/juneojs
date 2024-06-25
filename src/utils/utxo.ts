@@ -61,6 +61,22 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
   return false
 }
 
+export function getUtxoSetAssetAmountUtxos (utxoSet: Utxo[], assetId: string, amount: bigint): Utxo[] {
+  const utxos: Utxo[] = []
+  let totalAmount = BigInt(0)
+  for (const utxo of utxoSet) {
+    if (utxo.assetId.assetId !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {
+      continue
+    }
+    totalAmount += (utxo.output as Secp256k1Output).amount
+    utxos.push(utxo)
+    if (totalAmount >= amount) {
+      break
+    }
+  }
+  return utxos
+}
+
 export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<string, bigint> {
   const values = new Map<string, bigint>()
   for (const utxo of utxoSet) {

@@ -92,11 +92,12 @@ export async function estimateSendUtxoOperation (
   send: SendUtxoOperation
 ): Promise<ChainOperationSummary> {
   const values = new Map<string, bigint>([[send.assetId, send.amount]])
+  const fee = await getBaseTxFee(provider, FeeType.BaseFee, chain)
   return await estimateBaseTransaction(
     provider,
     chain,
     account,
-    send.getPreferredUtxoSet(account),
+    send.getPreferredUtxoSet(account, fee.amount),
     send.assetId,
     send.amount,
     send.addresses,
@@ -104,11 +105,10 @@ export async function estimateSendUtxoOperation (
     send.locktime
   ).then(
     (fee) => {
-      const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
+      const spending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
       return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
     },
     async () => {
-      const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
       return new ChainOperationSummary(
         provider,
         send,

@@ -108,10 +108,11 @@ export async function estimatePlatformValidatePrimaryOperation (
   const potentialReward = chain.estimatePrimaryValidationReward(validate.endTime - validate.startTime, validate.amount)
   const validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   const values = new Map<string, bigint>()
+  const fee = await getPlatformAddPrimaryValidatorFee(provider)
   return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
     account,
-    validate.getPreferredUtxoSet(account),
+    validate.getPreferredUtxoSet(account, fee.amount),
     validator,
     chain.stakeConfig.minDelegationFee, // this is the only value possible for primary network as min = max value
     new ProofOfPossession(validate.publicKey, validate.signature),
@@ -121,7 +122,7 @@ export async function estimatePlatformValidatePrimaryOperation (
     validate.rewardThreshold
   ).then(
     (fee) => {
-      const spending: UtxoSpending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
+      const spending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
       return new StakingOperationSummary(
         provider,
         validate,
@@ -133,7 +134,6 @@ export async function estimatePlatformValidatePrimaryOperation (
       )
     },
     async () => {
-      const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
       return new ChainOperationSummary(
         provider,
         validate,
@@ -189,10 +189,11 @@ export async function estimatePlatformDelegatePrimaryOperation (
   const potentialReward = chain.estimatePrimaryDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
   const validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   const values = new Map<string, bigint>()
+  const fee = await getPlatformAddPrimaryDelegatorFee(provider)
   return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
     account,
-    delegate.getPreferredUtxoSet(account),
+    delegate.getPreferredUtxoSet(account, fee.amount),
     validator,
     delegate.stakeAddresses,
     delegate.stakeThreshold,
@@ -200,7 +201,7 @@ export async function estimatePlatformDelegatePrimaryOperation (
     delegate.rewardThreshold
   ).then(
     (fee) => {
-      const spending: UtxoSpending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
+      const spending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
       return new StakingOperationSummary(
         provider,
         delegate,
@@ -212,7 +213,6 @@ export async function estimatePlatformDelegatePrimaryOperation (
       )
     },
     async () => {
-      const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
       return new ChainOperationSummary(
         provider,
         delegate,

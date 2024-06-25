@@ -3,7 +3,7 @@ import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
-import { Secp256k1Credentials, type TransactionCredentials, type Signable, type Signer } from './signature'
+import { Secp256k1Credentials, type Signable, type Signer, type TransactionCredentials } from './signature'
 import { BlockchainId } from './types'
 
 export class TransactionFee {
@@ -32,6 +32,7 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getUtxos: () => Utxo[]
+  sign: (signers: Signer[]) => Promise<TransactionCredentials[]>
   signTransaction: (signers: Signer[]) => Promise<string>
 }
 

@@ -32,6 +32,7 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getUtxos: () => Utxo[]
+  syncUtxos: () => Promise<void>
   sign: (signers: Signer[]) => Promise<TransactionCredentials[]>
   signTransaction: (signers: Signer[]) => Promise<string>
 }
@@ -77,6 +78,8 @@ export class BaseTransaction implements UnsignedTransaction {
     }
     return utxos
   }
+
+  async syncUtxos (): Promise<void> {}
 
   async sign (signers: Signer[]): Promise<TransactionCredentials[]> {
     const bytes = this.serialize()
@@ -242,6 +245,16 @@ export class AbstractImportTransaction extends BaseTransaction {
 
   getSignables (): Signable[] {
     return [...this.inputs, ...this.importedInputs]
+  }
+
+  getUtxos (): Utxo[] {
+    const utxos = super.getUtxos()
+    for (const transferable of this.importedInputs) {
+      // should be Utxo here because transaction should be from builder
+      // undefined should only be the case if it is an input from parsing bytes
+      utxos.push(transferable.input.utxo!)
+    }
+    return utxos
   }
 
   serialize (): JuneoBuffer {

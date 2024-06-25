@@ -1,9 +1,8 @@
-import { type AbstractUtxoAPI } from '../api'
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, SignatureError, TransactionUtils, type Serializable } from '../utils'
+import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
-import { TransferableOutput, Utxo } from './output'
+import { TransferableOutput, type Utxo } from './output'
 import { Secp256k1Credentials, type Signable, type Signer, type TransactionCredentials } from './signature'
 import { BlockchainId } from './types'
 
@@ -34,7 +33,6 @@ export interface UnsignedTransaction extends Serializable {
   getSignables: () => Signable[]
   getInputs: () => TransferableInput[]
   getUtxos: () => Utxo[]
-  syncUtxos: (api: AbstractUtxoAPI) => Promise<void>
   sign: (signers: Signer[]) => Promise<TransactionCredentials[]>
   signTransaction: (signers: Signer[]) => Promise<string>
 }
@@ -83,15 +81,6 @@ export class BaseTransaction implements UnsignedTransaction {
       utxos.push(transferable.input.utxo!)
     }
     return utxos
-  }
-
-  async syncUtxos (api: AbstractUtxoAPI): Promise<void> {
-    for (const input of this.getInputs()) {
-      const data = (await api.getTx(input.transactionId.transactionId)).tx
-      const tx = TransactionUtils.parseUnsignedTransaction(data)
-      const output = tx.outputs[input.utxoIndex]
-      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
-    }
   }
 
   async sign (signers: Signer[]): Promise<TransactionCredentials[]> {

@@ -1,6 +1,7 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type Blockchain, type JEVMBlockchain, type PlatformBlockchain } from '../../chain'
 import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
+import { getUtxoSetAssetAmountUtxos } from '../../utils'
 import { type UtxoAccount } from '../account'
 
 export enum NetworkOperationType {
@@ -72,11 +73,12 @@ export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
     this.utxoSet = utxoSet
   }
 
-  getPreferredUtxoSet (account: UtxoAccount): Utxo[] {
+  getPreferredUtxoSet (account: UtxoAccount, amount: bigint): Utxo[] {
     if (typeof this.utxoSet === 'undefined') {
       return account.utxoSet
     }
-    return this.utxoSet
+    const feeUtxos = getUtxoSetAssetAmountUtxos(account.utxoSet, this.chain.assetId, amount)
+    return [...feeUtxos, ...this.utxoSet]
   }
 }
 

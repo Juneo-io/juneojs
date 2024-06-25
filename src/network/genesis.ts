@@ -1,6 +1,6 @@
 import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
-import { MCN, MCNAccess, PrimarySupernet } from './network'
+import { MCN, PrimarySupernet } from './network'
 
 const GenesisNetworkId: number = 2
 const GenesisHrp: string = 'socotra'
@@ -293,9 +293,4 @@ export const GenesisPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   GenesisJUNEChain
 )
 
-export const GenesisNetwork: MCN = new MCN(
-  new MCNAccess(GenesisAddress),
-  GenesisNetworkId,
-  GenesisHrp,
-  GenesisPrimarySupernet
-)
+export const GenesisNetwork: MCN = new MCN(GenesisAddress, GenesisNetworkId, GenesisHrp, GenesisPrimarySupernet)

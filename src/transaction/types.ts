@@ -68,53 +68,53 @@ export class Address extends BytesData {
 }
 
 export class AssetId extends BytesData {
-  assetId: string
+  value: string
 
-  constructor (assetId: string) {
-    validateData(assetId)
-    const buffer: JuneoBuffer = encoding.decodeCB58(assetId)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeCB58(value)
     if (buffer.length !== AssetIdSize) {
       throw new JuneoTypeError(`asset id is not ${AssetIdSize} bytes long`)
     }
     super(buffer)
-    this.assetId = assetId
+    this.value = value
   }
 
-  static validate (assetId: string): boolean {
-    validateData(assetId)
-    if (!encoding.isBase58(assetId)) {
+  static validate (value: string): boolean {
+    validateData(value)
+    if (!encoding.isBase58(value)) {
       return false
     }
-    const buffer: JuneoBuffer = encoding.decodeCB58(assetId)
+    const buffer: JuneoBuffer = encoding.decodeCB58(value)
     return buffer.length === AssetIdSize
   }
 }
 
 export class TransactionId extends BytesData {
-  transactionId: string
+  value: string
 
-  constructor (transactionId: string) {
-    validateData(transactionId)
-    const buffer: JuneoBuffer = encoding.decodeCB58(transactionId)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeCB58(value)
     if (buffer.length !== TransactionIdSize) {
       throw new JuneoTypeError(`transaction id is not ${TransactionIdSize} bytes long`)
     }
     super(buffer)
-    this.transactionId = transactionId
+    this.value = value
   }
 }
 
 export class BlockchainId extends BytesData {
-  blockchainId: string
+  value: string
 
-  constructor (blockchainId: string) {
-    validateData(blockchainId)
-    const buffer: JuneoBuffer = encoding.decodeCB58(blockchainId)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeCB58(value)
     if (buffer.length !== BlockchainIdSize) {
       throw new JuneoTypeError(`blockchain id is not ${BlockchainIdSize} bytes long`)
     }
     super(buffer)
-    this.blockchainId = blockchainId
+    this.value = value
   }
 }
 
@@ -129,32 +129,32 @@ export class Signature extends BytesData {
 }
 
 export class NodeId extends BytesData {
-  nodeId: string
+  value: string
 
-  constructor (nodeId: string) {
-    validateData(nodeId)
-    const split: string[] = nodeId.split('-')
+  constructor (value: string) {
+    validateData(value)
+    const split: string[] = value.split('-')
     const parsedNodeId = split.length > 1 ? split[1] : split[0]
     const buffer: JuneoBuffer = encoding.decodeCB58(parsedNodeId)
     if (buffer.length !== NodeIdSize) {
       throw new JuneoTypeError(`node id is not ${NodeIdSize} bytes long`)
     }
     super(buffer)
-    this.nodeId = parsedNodeId
+    this.value = parsedNodeId
   }
 }
 
 export class SupernetId extends BytesData {
-  supernetId: string
+  value: string
 
-  constructor (supernetId: string) {
-    validateData(supernetId)
-    const buffer: JuneoBuffer = encoding.decodeCB58(supernetId)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeCB58(value)
     if (buffer.length !== SupernetIdSize) {
       throw new JuneoTypeError(`supernet id is not ${SupernetIdSize} bytes long`)
     }
     super(buffer)
-    this.supernetId = supernetId
+    this.value = value
   }
 }
 
@@ -174,29 +174,29 @@ export class DynamicId extends BytesData {
 }
 
 export class BLSPublicKey extends BytesData {
-  publicKey: string
+  value: string
 
-  constructor (publicKey: string) {
-    validateData(publicKey)
-    const buffer: JuneoBuffer = encoding.decodeHex(publicKey)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeHex(value)
     if (buffer.length !== BLSPublicKeySize) {
       throw new JuneoTypeError(`bls public key is not ${BLSPublicKeySize} bytes long`)
     }
     super(buffer)
-    this.publicKey = publicKey
+    this.value = value
   }
 }
 
 export class BLSSignature extends BytesData {
-  signature: string
+  value: string
 
-  constructor (signature: string) {
-    validateData(signature)
-    const buffer: JuneoBuffer = encoding.decodeHex(signature)
+  constructor (value: string) {
+    validateData(value)
+    const buffer: JuneoBuffer = encoding.decodeHex(value)
     if (buffer.length !== BLSSignatureSize) {
       throw new JuneoTypeError(`bls signature is not ${BLSSignatureSize} bytes long`)
     }
     super(buffer)
-    this.signature = signature
+    this.value = value
   }
 }

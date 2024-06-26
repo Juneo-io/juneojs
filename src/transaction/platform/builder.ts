@@ -364,7 +364,7 @@ export function buildTransformSupernetTransaction (
   memo: string = ''
 ): TransformSupernetTransaction {
   // TODO when multisig update [changeAddress] and threshold
-  const userInput: UserInput = new UserInput(assetId.assetId, chain, initialRewardPoolSupply, [changeAddress], 1, chain)
+  const userInput: UserInput = new UserInput(assetId.value, chain, initialRewardPoolSupply, [changeAddress], 1, chain)
   const inputs: TransferableInput[] = buildTransactionInputs(
     [userInput],
     utxoSet,

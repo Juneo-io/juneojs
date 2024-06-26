@@ -1,10 +1,11 @@
 import { ethers } from 'ethers'
-import { AssetId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
-import { isHex } from './encoding'
-import { type JVMAPI, type GetAssetDescriptionResponse } from '../api'
+import { type GetAssetDescriptionResponse, type JVMAPI } from '../api'
 import { TokenAsset } from '../asset'
-import { ChainError } from './errors'
+import { type Blockchain } from '../chain'
 import { type MCNProvider } from '../juneo'
+import { AssetId, type BlockchainId, JEVMExportTransaction, JEVMImportTransaction } from '../transaction'
+import { isHex } from './encoding'
+import { ChainError } from './errors'
 
 export const AtomicDenomination: bigint = BigInt(1_000_000_000)
 const AtomicSignatureCost: bigint = BigInt(1_000)
@@ -57,4 +58,12 @@ export async function fetchJNT (provider: MCNProvider, assetId: string): Promise
   // use the jvm registered assets as a cache
   jvm.chain.addRegisteredAsset(asset)
   return asset
+}
+
+export function getBlockchain (provider: MCNProvider, blockchainId: BlockchainId): Blockchain {
+  const chain = provider.mcn.getChain(blockchainId.value)
+  if (typeof chain === 'undefined') {
+    throw new ChainError(`unregistered chain id: ${blockchainId.value}`)
+  }
+  return chain
 }

@@ -1,3 +1,4 @@
+import { type MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessDelegatorTransactionTypeId,
@@ -19,10 +20,13 @@ import {
   RemoveSupernetTransactionTypeId,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
+  Utxo,
   type UnsignedTransaction
 } from '../transaction'
 import { JuneoBuffer } from './bytes'
+import { getBlockchain } from './chain'
 import { ParsingError } from './errors'
+import { getUtxoAPI } from './utxo'
 
 export class TransactionUtils {
   private static INSTANCE: TransactionUtils | undefined
@@ -34,6 +38,17 @@ export class TransactionUtils {
       TransactionUtils.INSTANCE = new TransactionUtils()
     }
     return TransactionUtils.INSTANCE
+  }
+
+  static async syncUtxos (provider: MCNProvider, unsignedTx: UnsignedTransaction): Promise<void> {
+    const chain = getBlockchain(provider, unsignedTx.blockchainId)
+    const api = getUtxoAPI(provider, chain)
+    for (const input of unsignedTx.getInputs()) {
+      const data = (await api.getTx(input.transactionId.value)).tx
+      const tx = TransactionUtils.parseUnsignedTransaction(data)
+      const output = tx.outputs[input.utxoIndex]
+      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
+    }
   }
 
   static parseUnsignedTransaction (data: string | JuneoBuffer): UnsignedTransaction {

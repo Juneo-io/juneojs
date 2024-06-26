@@ -59,7 +59,7 @@ export function buildTransactionInputs (
         new Secp256k1Input(output.amount, getSignersIndices(signersAddresses, utxo.output.addresses), utxo)
       )
     )
-    const assetId = utxo.assetId.assetId
+    const assetId = utxo.assetId.value
     gatheredAmounts.set(assetId, gatheredAmounts.get(assetId)! + BigInt(output.amount))
   }
   const missingFunds = !isGatheringComplete(targetAmounts, gatheredAmounts)
@@ -133,7 +133,7 @@ export function buildTransactionOutputs (
   const availableAmounts = new Map<string, bigint>()
   // getting the total amount spendable for each asset in provided inputs
   for (const input of inputs) {
-    const assetId = input.getAssetId().assetId
+    const assetId = input.getAssetId().value
     const amount = availableAmounts.has(assetId) ? availableAmounts.get(assetId)! : BigInt(0)
     availableAmounts.set(assetId, amount + BigInt(input.getAmount()))
   }
@@ -141,7 +141,7 @@ export function buildTransactionOutputs (
   // verifying that inputs have the funds to pay for the spent amounts
   // also adding extra outputs to avoid losses if we have unspent values
   for (const input of inputs) {
-    const assetId = input.getAssetId().assetId
+    const assetId = input.getAssetId().value
     const spent = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     const available = availableAmounts.has(assetId) ? availableAmounts.get(assetId)! : BigInt(0)
     if (spent > available) {
@@ -175,7 +175,7 @@ function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
   for (const output of outputs) {
-    let key = output.assetId.assetId
+    let key = output.assetId.value
     key += output.output.locktime
     key += output.output.threshold.toString()
     output.output.addresses.sort(Address.comparator)

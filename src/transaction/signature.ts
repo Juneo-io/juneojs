@@ -2,6 +2,7 @@ import {
   JuneoBuffer,
   ParsingError,
   publicKeyToAddress,
+  recoverAddress,
   recoverPubKey,
   TransactionUtils,
   type Serializable
@@ -103,6 +104,16 @@ export class Secp256k1Credentials extends TransactionCredentials {
   }
 }
 
+class SignatureData {
+  signature: Signature
+  addresses: Address[]
+
+  constructor (signature: Signature, addresses: Address[]) {
+    this.signature = signature
+    this.addresses = addresses
+  }
+}
+
 export class SignedTransaction {
   unsignedTransaction: UnsignedTransaction
   credentials: TransactionCredentials[]
@@ -110,21 +121,6 @@ export class SignedTransaction {
   constructor (unsignedTransaction: UnsignedTransaction, credentials: TransactionCredentials[]) {
     this.unsignedTransaction = unsignedTransaction
     this.credentials = credentials
-  }
-
-  static parse (data: string | JuneoBuffer): SignedTransaction {
-    const buffer = JuneoBuffer.from(data)
-    const reader = buffer.createReader()
-    const unsignedTransaction = TransactionUtils.parseUnsignedTransaction(data)
-    reader.skip(unsignedTransaction.serialize().length)
-    const credentials: TransactionCredentials[] = []
-    const credentialsLength = reader.readUInt32()
-    for (let i = 0; i < credentialsLength; i++) {
-      credentials.push(
-        TransactionCredentials.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      )
-    }
-    return new SignedTransaction(unsignedTransaction, credentials)
   }
 
   /**
@@ -140,8 +136,8 @@ export class SignedTransaction {
    */
   verifySignatures (): Address[] {
     const missing: Address[] = []
-    const signablesAddresses = this.getSignablesAddresses()
-    const credentialsAddresses = this.getCredentialsAddresses()
+    const signablesAddresses = this.getSignablesUniqueAddresses()
+    const credentialsAddresses = this.getCredentialsUniqueAddresses()
     for (const address of signablesAddresses) {
       if (!address.matchesList(credentialsAddresses) && !address.matchesList(missing)) {
         missing.push(address)
@@ -150,7 +146,24 @@ export class SignedTransaction {
     return missing
   }
 
-  private getSignablesAddresses (): Address[] {
+  mergeCredentials (): void {
+    const credentials: TransactionCredentials[] = []
+    const signaturesData = this.getSignaturesData()
+    for (const signable of this.unsignedTransaction.getSignables()) {
+      for (const signableAddress of signable.getAddresses()) {
+        const signatures: Signature[] = []
+        for (const signatureData of signaturesData) {
+          if (signableAddress.matchesList(signatureData.addresses)) {
+            signatures.push(signatureData.signature)
+          }
+        }
+        credentials.push(new Secp256k1Credentials(signatures))
+      }
+    }
+    this.credentials = credentials
+  }
+
+  getSignablesUniqueAddresses (): Address[] {
     const addresses: Address[] = []
     for (const signable of this.unsignedTransaction.getSignables()) {
       for (const address of signable.getAddresses()) {
@@ -162,7 +175,7 @@ export class SignedTransaction {
     return addresses
   }
 
-  private getCredentialsAddresses (): Address[] {
+  getCredentialsUniqueAddresses (): Address[] {
     const addresses: Address[] = []
     const message = this.unsignedTransaction.serialize()
     for (const credential of this.credentials) {
@@ -178,5 +191,54 @@ export class SignedTransaction {
       }
     }
     return addresses
+  }
+
+  private getSignaturesData (): SignatureData[] {
+    const message = this.unsignedTransaction.serialize()
+    const signaturesData: SignatureData[] = []
+    for (const credential of this.credentials) {
+      const addresses: Address[] = []
+      for (const signature of credential.signatures) {
+        addresses.push(
+          ...[recoverAddress(signature.serialize(), message, 0), recoverAddress(signature.serialize(), message, 1)]
+        )
+        signaturesData.push(new SignatureData(signature, addresses))
+      }
+    }
+    return signaturesData
+  }
+
+  serialize (): JuneoBuffer {
+    const bytes = this.unsignedTransaction.serialize()
+    const credentials: JuneoBuffer[] = []
+    let credentialsSize: number = 0
+    for (const credential of this.credentials) {
+      const credentialBytes = credential.serialize()
+      credentialsSize += credentialBytes.length
+      credentials.push(credentialBytes)
+    }
+    const buffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
+    buffer.write(bytes)
+    buffer.writeUInt32(credentials.length)
+    credentials.sort(JuneoBuffer.comparator)
+    for (const credential of credentials) {
+      buffer.write(credential)
+    }
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): SignedTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    const unsignedTransaction = TransactionUtils.parseUnsignedTransaction(data)
+    reader.skip(unsignedTransaction.serialize().length)
+    const credentials: TransactionCredentials[] = []
+    const credentialsLength = reader.readUInt32()
+    for (let i = 0; i < credentialsLength; i++) {
+      credentials.push(
+        TransactionCredentials.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
+      )
+    }
+    return new SignedTransaction(unsignedTransaction, credentials)
   }
 }

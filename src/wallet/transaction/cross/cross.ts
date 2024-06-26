@@ -636,7 +636,7 @@ export class CrossManager {
       }
       const utxoSet: Utxo[] = await fetchUtxos(utxoApi, [this.wallet.getWallet(chain).getJuneoAddress()], source.id)
       // in case we are importing the fee asset make sure it will be worth it to import it
-      if (utxoSet.length === 1 && utxoSet[0].assetId.assetId === chain.assetId) {
+      if (utxoSet.length === 1 && utxoSet[0].assetId.value === chain.assetId) {
         const fee: FeeData = await this.estimateImport(this.provider, chain, chain.assetId, 1, 1)
         // if is fee asset cannot be another output type than this
         const amount: bigint = (utxoSet[0].output as Secp256k1Output).amount

@@ -66,17 +66,17 @@ export function buildTransactionEVMOutputs (
   const availableAmounts: Record<string, bigint> = {}
   // getting the total amount spendable for each asset in provided inputs
   for (const input of inputs) {
-    const availableAmount: bigint = availableAmounts[input.getAssetId().assetId]
+    const availableAmount: bigint = availableAmounts[input.getAssetId().value]
     const amount: bigint = input.getAmount()
     if (availableAmount === undefined) {
-      availableAmounts[input.getAssetId().assetId] = BigInt(amount)
+      availableAmounts[input.getAssetId().value] = BigInt(amount)
     } else {
-      availableAmounts[input.getAssetId().assetId] += BigInt(amount)
+      availableAmounts[input.getAssetId().value] += BigInt(amount)
     }
   }
   // verifying that inputs have the funds to pay for the spent amounts
   for (const input of inputs) {
-    const assetId: string = input.getAssetId().assetId
+    const assetId: string = input.getAssetId().value
     const spent: bigint = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     const available: bigint = availableAmounts[assetId]
     if (spent > available) {

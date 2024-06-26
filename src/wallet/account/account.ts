@@ -183,7 +183,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
       let spent: boolean = false
       for (const spending of spendings) {
         for (const spend of spending.utxos) {
-          const sameTransaction: boolean = spend.transactionId.transactionId === utxo.transactionId.transactionId
+          const sameTransaction: boolean = spend.transactionId.value === utxo.transactionId.value
           const sameIndex: boolean = spend.utxoIndex === utxo.utxoIndex
           if (sameTransaction && sameIndex) {
             spent = true

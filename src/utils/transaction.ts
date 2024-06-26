@@ -44,7 +44,7 @@ export class TransactionUtils {
     const chain = getBlockchain(provider, unsignedTx.blockchainId)
     const api = getUtxoAPI(provider, chain)
     for (const input of unsignedTx.getInputs()) {
-      const data = (await api.getTx(input.transactionId.transactionId)).tx
+      const data = (await api.getTx(input.transactionId.value)).tx
       const tx = TransactionUtils.parseUnsignedTransaction(data)
       const output = tx.outputs[input.utxoIndex]
       input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)

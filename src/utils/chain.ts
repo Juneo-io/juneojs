@@ -61,9 +61,9 @@ export async function fetchJNT (provider: MCNProvider, assetId: string): Promise
 }
 
 export function getBlockchain (provider: MCNProvider, blockchainId: BlockchainId): Blockchain {
-  const chain = provider.mcn.getChain(blockchainId.blockchainId)
+  const chain = provider.mcn.getChain(blockchainId.value)
   if (typeof chain === 'undefined') {
-    throw new ChainError(`unregistered chain id: ${blockchainId.blockchainId}`)
+    throw new ChainError(`unregistered chain id: ${blockchainId.value}`)
   }
   return chain
 }

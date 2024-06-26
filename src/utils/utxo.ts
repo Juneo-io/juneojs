@@ -26,7 +26,7 @@ export async function fetchUtxos (
     const utxo: Utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
     if (addUtxo(utxos, utxo, transactionId)) {
-      utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+      utxoSet.add(`${utxo.transactionId.value}_${utxo.utxoIndex}}`)
     }
   })
   while (utxoResponse.numFetched === UtxoRequestLimit) {
@@ -37,12 +37,12 @@ export async function fetchUtxos (
     for (const data of utxoResponse.utxos) {
       const utxo: Utxo = Utxo.parse(data)
       utxo.sourceChain = sourceChain
-      const key: string = `${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`
+      const key: string = `${utxo.transactionId.value}_${utxo.utxoIndex}}`
       if (utxoSet.has(key)) {
         continue
       }
       if (addUtxo(utxos, utxo, transactionId)) {
-        utxoSet.add(`${utxo.transactionId.transactionId}_${utxo.utxoIndex}}`)
+        utxoSet.add(`${utxo.transactionId.value}_${utxo.utxoIndex}}`)
       }
     }
   }
@@ -54,7 +54,7 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
     utxos.push(utxo)
     return true
   }
-  if (transactionId === utxo.transactionId.transactionId) {
+  if (transactionId === utxo.transactionId.value) {
     utxos.push(utxo)
     return true
   }
@@ -65,7 +65,7 @@ export function getUtxoSetAssetAmountUtxos (utxoSet: Utxo[], assetId: string, am
   const utxos: Utxo[] = []
   let totalAmount = BigInt(0)
   for (const utxo of utxoSet) {
-    if (utxo.assetId.assetId !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (utxo.assetId.value !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
     }
     totalAmount += (utxo.output as Secp256k1Output).amount
@@ -84,7 +84,7 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
       continue
     }
     let value: bigint = (utxo.output as Secp256k1Output).amount
-    const assetId: string = utxo.assetId.assetId
+    const assetId: string = utxo.assetId.value
     if (values.has(assetId)) {
       value += values.get(assetId)!
     }

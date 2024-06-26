@@ -1,6 +1,6 @@
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
-import { Signature, recoverPublicKey, getPublicKey, signSync, verify } from '@noble/secp256k1'
+import { Signature, getPublicKey, recoverPublicKey, signSync, verify } from '@noble/secp256k1'
 import { JuneoBuffer } from './bytes'
 
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {

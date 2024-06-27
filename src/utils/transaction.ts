@@ -51,6 +51,63 @@ export class TransactionUtils {
     }
   }
 
+  static getTypeIdName (typeId: number): string {
+    switch (typeId) {
+      case JVMBaseTransactionTypeId: {
+        return 'JVM Base Transaction'
+        // it has the same id as EVMImportTx
+        // when it is implemented try the other if this one failed
+      }
+      case CreateAssetTransactionTypeId: {
+        return 'Create Asset Transaction'
+        // it has the same id as EVMExportTx
+        // when it is implemented try the other if this one failed
+      }
+      case JVMImportTransactionTypeId: {
+        return 'JVM Import Transaction'
+      }
+      case JVMExportTransactionTypeId: {
+        return 'JVM Export Transaction'
+      }
+      case AddSupernetValidatorTransactionType: {
+        return 'Add Supernet Validator Transaction'
+      }
+      case CreateChainTransactionTypeId: {
+        return 'Create Chain Transaction'
+      }
+      case CreateSupernetTransactionTypeId: {
+        return 'Create Supernet Transaction'
+      }
+      case PlatformImportTransactionTypeId: {
+        return 'Platform Import Transaction'
+      }
+      case PlatformExportTransactionTypeId: {
+        return 'Platform Export Transaction'
+      }
+      case RemoveSupernetTransactionTypeId: {
+        return 'Remove Supernet Transaction'
+      }
+      case TransformSupernetTransactionTypeId: {
+        return 'Transform Supernet Transaction'
+      }
+      case AddPermissionlessValidatorTransactionTypeId: {
+        return 'Add Permissionless Validator Transaction'
+      }
+      case AddPermissionlessDelegatorTransactionTypeId: {
+        return 'Add Permissionless Delegator Transaction'
+      }
+      case TransferSupernetOwnershipTransactionTypeId: {
+        return 'Transfer Supernet Ownership Transaction'
+      }
+      case PlatformBaseTransactionTypeId: {
+        return 'Platform Base Transaction'
+      }
+      default: {
+        throw new ParsingError(`unsupported transaction type id "${typeId}"`)
+      }
+    }
+  }
+
   static parseUnsignedTransaction (data: string | JuneoBuffer): UnsignedTransaction {
     const reader = JuneoBuffer.from(data).createReader()
     // skip codec reading

@@ -21,7 +21,7 @@ import {
 import { type TransferableInput } from '../input'
 import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
-import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
+import { BaseTransaction, ExportTransaction, ImportTransaction } from '../transaction'
 import { type Address, type AssetId, type BlockchainId, type DynamicId, type NodeId, SupernetId } from '../types'
 import { type BLSSigner, PrimarySigner, SupernetAuth, Validator } from './supernet'
 
@@ -41,7 +41,7 @@ export class PlatformBaseTransaction extends BaseTransaction {
   }
 }
 
-export class PlatformExportTransaction extends AbstractExportTransaction {
+export class PlatformExportTransaction extends ExportTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -62,9 +62,13 @@ export class PlatformExportTransaction extends AbstractExportTransaction {
       exportedOutputs
     )
   }
+
+  static parse (data: string | JuneoBuffer): PlatformExportTransaction {
+    return ExportTransaction.parse(data, PlatformExportTransactionTypeId)
+  }
 }
 
-export class PlatformImportTransaction extends AbstractImportTransaction {
+export class PlatformImportTransaction extends ImportTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -75,6 +79,10 @@ export class PlatformImportTransaction extends AbstractImportTransaction {
     importedInputs: TransferableInput[]
   ) {
     super(PlatformImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
+  }
+
+  static parse (data: string | JuneoBuffer): PlatformImportTransaction {
+    return ImportTransaction.parse(data, PlatformImportTransactionTypeId)
   }
 }
 

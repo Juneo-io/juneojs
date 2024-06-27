@@ -11,11 +11,15 @@ import {
   CreateSupernetTransactionTypeId,
   JVMBaseTransaction,
   JVMBaseTransactionTypeId,
+  JVMExportTransaction,
   JVMExportTransactionTypeId,
+  JVMImportTransaction,
   JVMImportTransactionTypeId,
   PlatformBaseTransaction,
   PlatformBaseTransactionTypeId,
+  PlatformExportTransaction,
   PlatformExportTransactionTypeId,
+  PlatformImportTransaction,
   PlatformImportTransactionTypeId,
   RemoveSupernetTransactionTypeId,
   TransferSupernetOwnershipTransactionTypeId,
@@ -126,10 +130,10 @@ export class TransactionUtils {
         // when it is implemented try the other if this one failed
       }
       case JVMImportTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return JVMImportTransaction.parse(data)
       }
       case JVMExportTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return JVMExportTransaction.parse(data)
       }
       case AddSupernetValidatorTransactionType: {
         throw notImplementedTypeIdError
@@ -141,10 +145,10 @@ export class TransactionUtils {
         return CreateSupernetTransaction.parse(data)
       }
       case PlatformImportTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return PlatformImportTransaction.parse(data)
       }
       case PlatformExportTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return PlatformExportTransaction.parse(data)
       }
       case RemoveSupernetTransactionTypeId: {
         throw notImplementedTypeIdError

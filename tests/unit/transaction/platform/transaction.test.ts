@@ -1,8 +1,36 @@
 import {
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessValidatorTransaction,
-  CreateSupernetTransaction
+  CreateSupernetTransaction,
+  ExportTransaction,
+  ImportTransaction,
+  PlatformExportTransaction,
+  PlatformImportTransaction
 } from '../../../../src'
+
+describe('PlatformExportTransaction', () => {
+  test.each([
+    {
+      description: 'Parsing from PlatformAPI hex data',
+      data: '0x0000000000120000002e000000000000000000000000000000000000000000000000000000000000000000000001266ecea3035b1435f5cbb17dfc33cc1f4e9b058677915cc52c7ccfae1507b56300000007000000024ce4d600000000000000000000000001000000014a68dd4dc1bafa2bbcd2d3ea2e69dff3cb739385000000016a645f7a6892d8c9989d13aa479a9d13b0fc0da97a0c069c35ee4826dc37575200000001266ecea3035b1435f5cbb17dfc33cc1f4e9b058677915cc52c7ccfae1507b5630000000500000002540be4000000000100000000000000008f4b348b4e89d5d614c666bc9d2fed3c2366612efec49853898e6f7505b1768900000001266ecea3035b1435f5cbb17dfc33cc1f4e9b058677915cc52c7ccfae1507b5630000000700000000068e7780000000000000000000000001000000014a68dd4dc1bafa2bbcd2d3ea2e69dff3cb739385000000010000000900000001ac3142816aff947dcdd338a64a2a24e2f1970c7d08bd9250518a4e7bb0272d2679c8f02ea63ea4f30d8c05d335f3c2572c7256135b4cc1357326f4764153e24f012afb91be'
+    }
+  ])('$description', async ({ data }) => {
+    const parsed = PlatformExportTransaction.parse(data)
+    expect(parsed).toBeInstanceOf(ExportTransaction)
+  })
+})
+
+describe('PlatformImportTransaction', () => {
+  test.each([
+    {
+      description: 'Parsing from PlatformAPI hex data',
+      data: '0x0000000000110000002e000000000000000000000000000000000000000000000000000000000000000000000001266ecea3035b1435f5cbb17dfc33cc1f4e9b058677915cc52c7ccfae1507b56300000007002386f26fc1000000000000000000000000000100000001328a3e6647df8b2581ac8e3f538327843c3bb26d00000000000000008f4b348b4e89d5d614c666bc9d2fed3c2366612efec49853898e6f7505b176890000000101bc2afd70b09ae0b47fc7f4a210d9178c636d7ceb68fcf7c5fe5ad220c5ce0c00000001266ecea3035b1435f5cbb17dfc33cc1f4e9b058677915cc52c7ccfae1507b56300000005002386f27059968000000001000000000000000100000009000000016d9f64bca2a1dec995feb37e247d08ab3bcd1a3fd5ae5fb6230bf9b1e73093d314f9987a3cda2d5cb783ca33d86b645cf35c9d4859c0ab8e629c512af8416bcc00cc20962b'
+    }
+  ])('$description', async ({ data }) => {
+    const parsed = PlatformImportTransaction.parse(data)
+    expect(parsed).toBeInstanceOf(ImportTransaction)
+  })
+})
 
 describe('CreateSupernetTx', () => {
   test.each([

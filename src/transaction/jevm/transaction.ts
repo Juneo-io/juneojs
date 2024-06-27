@@ -11,7 +11,7 @@ import {
 import { type Spendable, TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
 import { AbstractSignable, type Signable } from '../signature'
-import { AbstractExportTransaction, AbstractImportTransaction } from '../transaction'
+import { ExportTransaction, ImportTransaction } from '../transaction'
 import { Address, AssetId, type BlockchainId } from '../types'
 
 export class EVMOutput implements Serializable {
@@ -90,7 +90,7 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
   }
 }
 
-export class JEVMExportTransaction extends AbstractExportTransaction {
+export class JEVMExportTransaction extends ExportTransaction {
   evmInputs: EVMInput[]
 
   constructor (
@@ -171,7 +171,7 @@ export class JEVMExportTransaction extends AbstractExportTransaction {
   }
 }
 
-export class JEVMImportTransaction extends AbstractImportTransaction {
+export class JEVMImportTransaction extends ImportTransaction {
   evmOutputs: EVMOutput[]
 
   constructor (

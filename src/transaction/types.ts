@@ -140,7 +140,7 @@ export class NodeId extends BytesData {
       throw new JuneoTypeError(`node id is not ${NodeIdSize} bytes long`)
     }
     super(buffer)
-    this.value = value
+    this.value = `NodeID-${parsedNodeId}`
   }
 }
 

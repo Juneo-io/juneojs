@@ -7,7 +7,7 @@ import {
 } from '../constants'
 import { type TransferableInput } from '../input'
 import { type TransferableOutput } from '../output'
-import { AbstractExportTransaction, AbstractImportTransaction, BaseTransaction } from '../transaction'
+import { BaseTransaction, ExportTransaction, ImportTransaction } from '../transaction'
 import { type BlockchainId } from '../types'
 import { type InitialState } from './operation'
 
@@ -27,7 +27,7 @@ export class JVMBaseTransaction extends BaseTransaction {
   }
 }
 
-export class JVMExportTransaction extends AbstractExportTransaction {
+export class JVMExportTransaction extends ExportTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -39,9 +39,13 @@ export class JVMExportTransaction extends AbstractExportTransaction {
   ) {
     super(JVMExportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, destinationChain, exportedOutputs)
   }
+
+  static parse (data: string | JuneoBuffer): JVMExportTransaction {
+    return ExportTransaction.parse(data, JVMExportTransactionTypeId)
+  }
 }
 
-export class JVMImportTransaction extends AbstractImportTransaction {
+export class JVMImportTransaction extends ImportTransaction {
   constructor (
     networkId: number,
     blockchainId: BlockchainId,
@@ -52,6 +56,10 @@ export class JVMImportTransaction extends AbstractImportTransaction {
     importedInputs: TransferableInput[]
   ) {
     super(JVMImportTransactionTypeId, networkId, blockchainId, outputs, inputs, memo, sourceChain, importedInputs)
+  }
+
+  static parse (data: string | JuneoBuffer): JVMImportTransaction {
+    return ImportTransaction.parse(data, JVMImportTransactionTypeId)
   }
 }
 

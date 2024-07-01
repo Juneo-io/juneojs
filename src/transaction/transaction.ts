@@ -185,7 +185,7 @@ export class BaseTransaction implements UnsignedTransaction {
   }
 }
 
-export class AbstractExportTransaction extends BaseTransaction {
+export class ExportTransaction extends BaseTransaction {
   destinationChain: BlockchainId
   exportedOutputs: TransferableOutput[]
 
@@ -223,9 +223,35 @@ export class AbstractExportTransaction extends BaseTransaction {
     }
     return buffer
   }
+
+  static parse (data: string | JuneoBuffer, expectedTypeId: number): ExportTransaction {
+    const baseTx = BaseTransaction.parse(data, expectedTypeId)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    reader.skip(baseTx.serialize().length)
+    const destinationChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const exportedOutputsLength = reader.readUInt32()
+    const exportedoutputs: TransferableOutput[] = []
+    for (let i = 0; i < exportedOutputsLength; i++) {
+      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const output = TransferableOutput.parse(outputBuffer)
+      reader.skip(output.serialize().length)
+      exportedoutputs.push(output)
+    }
+    return new ExportTransaction(
+      baseTx.typeId,
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      destinationChain,
+      exportedoutputs
+    )
+  }
 }
 
-export class AbstractImportTransaction extends BaseTransaction {
+export class ImportTransaction extends BaseTransaction {
   sourceChain: BlockchainId
   importedInputs: TransferableInput[]
 
@@ -280,5 +306,31 @@ export class AbstractImportTransaction extends BaseTransaction {
       buffer.write(input)
     }
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer, expectedTypeId: number): ImportTransaction {
+    const baseTx = BaseTransaction.parse(data, expectedTypeId)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    reader.skip(baseTx.serialize().length)
+    const sourceChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const importedInputsLength = reader.readUInt32()
+    const importedInputs: TransferableInput[] = []
+    for (let i = 0; i < importedInputsLength; i++) {
+      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const input = TransferableInput.parse(inputBuffer)
+      reader.skip(input.serialize().length)
+      importedInputs.push(input)
+    }
+    return new ImportTransaction(
+      baseTx.typeId,
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      sourceChain,
+      importedInputs
+    )
   }
 }

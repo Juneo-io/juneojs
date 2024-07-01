@@ -63,6 +63,9 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
 
 export function getUtxoSetAssetAmountUtxos (utxoSet: Utxo[], assetId: string, amount: bigint): Utxo[] {
   const utxos: Utxo[] = []
+  if (amount === BigInt(0)) {
+    return utxos
+  }
   let totalAmount = BigInt(0)
   for (const utxo of utxoSet) {
     if (utxo.assetId.value !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {

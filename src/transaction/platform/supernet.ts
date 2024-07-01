@@ -10,7 +10,7 @@ import {
   SupernetAuthTypeId,
   ValidatorSize
 } from '../constants'
-import { type Secp256k1OutputOwners } from '../output'
+import { Secp256k1OutputOwners } from '../output'
 import { AbstractSignable } from '../signature'
 import { type Address, BLSPublicKey, BLSSignature, NodeId } from '../types'
 
@@ -77,6 +77,21 @@ export class SupernetAuth extends AbstractSignable implements Serializable {
       buffer.writeUInt32(indice)
     }
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): SupernetAuth {
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readAndVerifyTypeId(SupernetAuthTypeId)
+    const addressIndicesCount = reader.readUInt32()
+    const indices: number[] = []
+    for (let i = 0; i < addressIndicesCount; i++) {
+      const indice = reader.readUInt32()
+      indices.push(indice)
+    }
+    const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())
+    const supernetAuth = new SupernetAuth([], rewardsOwner)
+    supernetAuth.addressIndices = indices
+    return supernetAuth
   }
 }
 

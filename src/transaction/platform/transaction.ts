@@ -2,7 +2,7 @@ import { JuneoBuffer } from '../../utils'
 import {
   AddPermissionlessDelegatorTransactionTypeId,
   AddPermissionlessValidatorTransactionTypeId,
-  AddSupernetValidatorTransactionType,
+  AddSupernetValidatorTransactionType as AddSupernetValidatorTransactionTypeId,
   AssetIdSize,
   CreateChainTransactionTypeId,
   CreateSupernetTransactionTypeId,
@@ -22,7 +22,7 @@ import { type TransferableInput } from '../input'
 import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { BaseTransaction, ExportTransaction, ImportTransaction } from '../transaction'
-import { type Address, type AssetId, type BlockchainId, type DynamicId, type NodeId, SupernetId } from '../types'
+import { type Address, AssetId, type BlockchainId, DynamicId, type NodeId, SupernetId } from '../types'
 import { type BLSSigner, PrimarySigner, SupernetAuth, Validator } from './supernet'
 
 export class PlatformBaseTransaction extends BaseTransaction {
@@ -101,7 +101,7 @@ export class AddSupernetValidatorTransaction extends BaseTransaction {
     supernetId: SupernetId,
     supernetAuth: SupernetAuth
   ) {
-    super(AddSupernetValidatorTransactionType, networkId, blockchainId, outputs, inputs, memo)
+    super(AddSupernetValidatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.validator = validator
     this.supernetId = supernetId
     this.supernetAuth = supernetAuth
@@ -122,6 +122,26 @@ export class AddSupernetValidatorTransaction extends BaseTransaction {
     buffer.write(this.supernetId.serialize())
     buffer.write(supernetAuthBytes)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): AddSupernetValidatorTransaction {
+    const baseTx = BaseTransaction.parse(data, AddSupernetValidatorTransactionTypeId)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    reader.skip(baseTx.serialize().length)
+    const validator = Validator.parse(reader.read(ValidatorSize))
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
+    const supernetAuth = SupernetAuth.parse(reader.readRemaining())
+    return new AddSupernetValidatorTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      validator,
+      supernetId,
+      supernetAuth
+    )
   }
 }
 
@@ -236,6 +256,39 @@ export class CreateChainTransaction extends BaseTransaction {
     buffer.writeString(this.genesisData)
     buffer.write(supernetAuthBytes)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): CreateChainTransaction {
+    const baseTx = BaseTransaction.parse(data, CreateChainTransactionTypeId)
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.skip(baseTx.serialize().length)
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
+    const nameLength = reader.readUInt16()
+    const name = reader.readString(nameLength)
+    const chainAssetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    const vmId = new DynamicId(reader.readString(DynamicIdSize))
+    const fxIdsLength = reader.readUInt32()
+    const fxIds: DynamicId[] = []
+    for (let i = 0; i < fxIdsLength; i++) {
+      fxIds.push(new DynamicId(reader.readString(DynamicIdSize)))
+    }
+    const genesisDataLength = reader.readUInt32()
+    const genesisData = reader.readString(genesisDataLength)
+    const supernetAuth = SupernetAuth.parse(reader.readRemaining())
+    return new CreateChainTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      supernetId,
+      name,
+      chainAssetId,
+      vmId,
+      fxIds,
+      genesisData,
+      supernetAuth
+    )
   }
 }
 

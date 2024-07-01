@@ -4,8 +4,10 @@ import {
   AddPermissionlessDelegatorTransactionTypeId,
   AddPermissionlessValidatorTransaction,
   AddPermissionlessValidatorTransactionTypeId,
+  AddSupernetValidatorTransaction,
   AddSupernetValidatorTransactionType,
   CreateAssetTransactionTypeId,
+  CreateChainTransaction,
   CreateChainTransactionTypeId,
   CreateSupernetTransaction,
   CreateSupernetTransactionTypeId,
@@ -136,10 +138,10 @@ export class TransactionUtils {
         return JVMExportTransaction.parse(data)
       }
       case AddSupernetValidatorTransactionType: {
-        throw notImplementedTypeIdError
+        return AddSupernetValidatorTransaction.parse(data)
       }
       case CreateChainTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return CreateChainTransaction.parse(data)
       }
       case CreateSupernetTransactionTypeId: {
         return CreateSupernetTransaction.parse(data)

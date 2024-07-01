@@ -1,4 +1,4 @@
-import { JuneoBuffer, type Serializable } from '../../utils'
+import { JuneoBuffer, SignatureError, type Serializable } from '../../utils'
 import { getSignersIndices } from '../builder'
 import {
   BLSPublicKeySize,
@@ -10,9 +10,9 @@ import {
   SupernetAuthTypeId,
   ValidatorSize
 } from '../constants'
-import { Secp256k1OutputOwners } from '../output'
+import { type Secp256k1OutputOwners } from '../output'
 import { AbstractSignable } from '../signature'
-import { type Address, BLSPublicKey, BLSSignature, NodeId } from '../types'
+import { BLSPublicKey, BLSSignature, NodeId, type Address } from '../types'
 
 export class Validator implements Serializable {
   nodeId: NodeId
@@ -46,18 +46,24 @@ export class Validator implements Serializable {
 export class SupernetAuth extends AbstractSignable implements Serializable {
   readonly typeId: number = SupernetAuthTypeId
   addressIndices: number[]
-  rewardsOwner: Secp256k1OutputOwners
+  rewardsOwner: Secp256k1OutputOwners | undefined
 
-  constructor (addresses: Address[], rewardsOwner: Secp256k1OutputOwners) {
+  constructor (addresses: Address[], rewardsOwner?: Secp256k1OutputOwners) {
     super()
-    this.addressIndices = getSignersIndices(addresses, rewardsOwner.addresses)
-    this.addressIndices.sort((a: number, b: number) => {
-      return a - b
-    })
+    this.addressIndices = []
+    if (typeof rewardsOwner !== 'undefined') {
+      this.addressIndices = getSignersIndices(addresses, rewardsOwner.addresses)
+      this.addressIndices.sort((a: number, b: number) => {
+        return a - b
+      })
+    }
     this.rewardsOwner = rewardsOwner
   }
 
   getAddresses (): Address[] {
+    if (typeof this.rewardsOwner === 'undefined') {
+      throw new SignatureError('cannot get addresses of read only supernet auth')
+    }
     const addresses: Address[] = []
     for (let i = 0; i < this.rewardsOwner.threshold && i < this.addressIndices.length; i++) {
       addresses.push(this.rewardsOwner.addresses[i])
@@ -66,6 +72,9 @@ export class SupernetAuth extends AbstractSignable implements Serializable {
   }
 
   getThreshold (): number {
+    if (typeof this.rewardsOwner === 'undefined') {
+      throw new SignatureError('cannot get threshold of read only supernet auth')
+    }
     return this.rewardsOwner.threshold
   }
 
@@ -88,8 +97,7 @@ export class SupernetAuth extends AbstractSignable implements Serializable {
       const indice = reader.readUInt32()
       indices.push(indice)
     }
-    const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())
-    const supernetAuth = new SupernetAuth([], rewardsOwner)
+    const supernetAuth = new SupernetAuth([])
     supernetAuth.addressIndices = indices
     return supernetAuth
   }

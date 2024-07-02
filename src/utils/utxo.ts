@@ -1,7 +1,7 @@
 import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
 import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { type Secp256k1Output, Secp256k1OutputTypeId, Utxo } from '../transaction'
+import { type Address, type Secp256k1Output, Secp256k1OutputTypeId, Utxo } from '../transaction'
 import { Balance } from '../wallet'
 import { WalletError } from './errors'
 
@@ -59,6 +59,26 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
     return true
   }
   return false
+}
+
+export function getUtxoSetHighestThreshold (utxoSet: Utxo[]): number {
+  let highest = 1
+  for (const utxo of utxoSet) {
+    highest = Math.max(highest, utxo.output.threshold)
+  }
+  return highest
+}
+
+export function getUtxoSetUniqueAddresses (utxoSet: Utxo[]): Address[] {
+  const addresses: Address[] = []
+  for (const utxo of utxoSet) {
+    for (const address of utxo.output.addresses) {
+      if (!address.matchesList(addresses)) {
+        addresses.push(address)
+      }
+    }
+  }
+  return addresses
 }
 
 export function getUtxoSetAssetAmountUtxos (utxoSet: Utxo[], assetId: string, amount: bigint): Utxo[] {

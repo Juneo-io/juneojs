@@ -63,8 +63,9 @@ async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFe
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (
   provider: MCNProvider,
-  account: PlatformAccount,
   utxoSet: Utxo[],
+  signersAddresses: string[],
+  changeAddress: string,
   validator: Validator,
   share: number,
   pop: ProofOfPossession,
@@ -76,7 +77,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
   const fee: BaseFeeData = await getPlatformAddPrimaryValidatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessValidatorTransaction(
     utxoSet,
-    account.getSignersAddresses(),
+    signersAddresses,
     fee.amount,
     provider.platformChain,
     validator.nodeId,
@@ -93,7 +94,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
     rewardAddresses,
     rewardThreshold,
     BigInt(0),
-    account.address,
+    changeAddress,
     provider.mcn.id
   )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
@@ -111,8 +112,9 @@ export async function estimatePlatformValidatePrimaryOperation (
   const fee = await getPlatformAddPrimaryValidatorFee(provider)
   return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
-    account,
     validate.getPreferredUtxoSet(account, fee.amount),
+    validate.getPreferredSigners(account),
+    account.address,
     validator,
     chain.stakeConfig.minDelegationFee, // this is the only value possible for primary network as min = max value
     new ProofOfPossession(validate.publicKey, validate.signature),
@@ -148,8 +150,9 @@ export async function estimatePlatformValidatePrimaryOperation (
 
 export async function estimatePlatformAddPrimaryDelegatorTransaction (
   provider: MCNProvider,
-  account: PlatformAccount,
   utxoSet: Utxo[],
+  signersAddresses: string[],
+  changeAddress: string,
   validator: Validator,
   stakeAddresses: string[],
   stakeThreshold: number,
@@ -159,7 +162,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
   const fee: BaseFeeData = await getPlatformAddPrimaryDelegatorFee(provider)
   const transaction: UnsignedTransaction = buildAddPermissionlessDelegatorTransaction(
     utxoSet,
-    account.getSignersAddresses(),
+    signersAddresses,
     fee.amount,
     provider.platformChain,
     validator.nodeId,
@@ -174,7 +177,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
     rewardAddresses,
     rewardThreshold,
     BigInt(0),
-    account.address,
+    changeAddress,
     provider.mcn.id
   )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
@@ -192,8 +195,9 @@ export async function estimatePlatformDelegatePrimaryOperation (
   const fee = await getPlatformAddPrimaryDelegatorFee(provider)
   return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
-    account,
     delegate.getPreferredUtxoSet(account, fee.amount),
+    delegate.getPreferredSigners(account),
+    account.address,
     validator,
     delegate.stakeAddresses,
     delegate.stakeThreshold,

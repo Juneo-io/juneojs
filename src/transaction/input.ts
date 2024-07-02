@@ -72,7 +72,7 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     }
     const addresses: Address[] = []
     const indices = this.input.addressIndices
-    for (let i = 0; i < this.input.utxo.output.threshold && i < indices.length; i++) {
+    for (let i = 0; i < indices.length; i++) {
       addresses.push(this.input.utxo.output.addresses[indices[i]])
     }
     return addresses

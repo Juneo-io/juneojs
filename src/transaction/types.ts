@@ -62,6 +62,16 @@ export class Address extends BytesData {
     return addresses
   }
 
+  static uniqueAddresses (addresses: Address[]): Address[] {
+    const unique: Address[] = []
+    for (const address of addresses) {
+      if (!address.matchesList(unique)) {
+        unique.push(address)
+      }
+    }
+    return unique
+  }
+
   private static decodeAddress (address: string): JuneoBuffer {
     if (encoding.isHex(address)) {
       return encoding.decodeHex(address)

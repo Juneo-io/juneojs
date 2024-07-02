@@ -47,6 +47,10 @@ export class Address extends BytesData {
     return false
   }
 
+  encode (hrp: string): string {
+    return encoding.encodeBech32(hrp, this.getBuffer())
+  }
+
   static toAddresses (values: string[]): Address[] {
     if (values.length < 1) {
       throw new JuneoTypeError('provided values length should be greater than 0')

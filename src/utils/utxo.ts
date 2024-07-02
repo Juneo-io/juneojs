@@ -1,4 +1,4 @@
-import { type AbstractUtxoAPI, type GetUTXOsResponse } from '../api'
+import { type AbstractUtxoAPI } from '../api'
 import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
 import { Address, type Secp256k1Output, Secp256k1OutputTypeId, Utxo } from '../transaction'
@@ -18,31 +18,31 @@ export async function fetchUtxos (
   // or even if one transaction changes one of the utxos between two calls.
   const utxoSet = new Set<string>()
   const utxos: Utxo[] = []
-  let utxoResponse: GetUTXOsResponse =
+  let utxoResponse =
     sourceChain === undefined
       ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit)
       : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit)
-  utxoResponse.utxos.forEach((data) => {
-    const utxo: Utxo = Utxo.parse(data)
+  for (const data of utxoResponse.utxos) {
+    const utxo = Utxo.parse(data)
     utxo.sourceChain = sourceChain
     if (addUtxo(utxos, utxo, transactionId)) {
-      utxoSet.add(`${utxo.transactionId.value}_${utxo.utxoIndex}}`)
+      utxoSet.add(utxo.getUniqueId())
     }
-  })
+  }
   while (utxoResponse.numFetched === UtxoRequestLimit) {
     utxoResponse =
       sourceChain === undefined
         ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)
         : await utxoApi.getUTXOsFrom(addresses, sourceChain, UtxoRequestLimit, utxoResponse.endIndex)
     for (const data of utxoResponse.utxos) {
-      const utxo: Utxo = Utxo.parse(data)
+      const utxo = Utxo.parse(data)
       utxo.sourceChain = sourceChain
-      const key: string = `${utxo.transactionId.value}_${utxo.utxoIndex}}`
+      const key = utxo.getUniqueId()
       if (utxoSet.has(key)) {
         continue
       }
       if (addUtxo(utxos, utxo, transactionId)) {
-        utxoSet.add(`${utxo.transactionId.value}_${utxo.utxoIndex}}`)
+        utxoSet.add(key)
       }
     }
   }
@@ -77,15 +77,28 @@ export function getUtxoSetUniqueAddresses (utxoSet: Utxo[]): Address[] {
   return Address.uniqueAddresses(addresses)
 }
 
-export function getUtxoSetAssetAmountUtxos (utxoSet: Utxo[], assetId: string, amount: bigint): Utxo[] {
+export function getUtxoSetAssetAmountUtxos (
+  utxoSet: Utxo[],
+  assetId: string,
+  amount: bigint,
+  ignoredUtxos?: Utxo[]
+): Utxo[] {
   const utxos: Utxo[] = []
   if (amount === BigInt(0)) {
     return utxos
   }
+  const hasIgnoredUtxos = typeof ignoredUtxos !== 'undefined'
   let totalAmount = BigInt(0)
   for (const utxo of utxoSet) {
     if (utxo.assetId.value !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {
       continue
+    }
+    if (hasIgnoredUtxos) {
+      for (const ignored of ignoredUtxos) {
+        if (utxo.getUniqueId() === ignored.getUniqueId()) {
+          continue
+        }
+      }
     }
     totalAmount += (utxo.output as Secp256k1Output).amount
     utxos.push(utxo)

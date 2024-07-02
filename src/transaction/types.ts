@@ -47,6 +47,10 @@ export class Address extends BytesData {
     return false
   }
 
+  encode (hrp: string): string {
+    return encoding.encodeBech32(hrp, this.getBuffer())
+  }
+
   static toAddresses (values: string[]): Address[] {
     if (values.length < 1) {
       throw new JuneoTypeError('provided values length should be greater than 0')
@@ -56,6 +60,16 @@ export class Address extends BytesData {
       addresses.push(new Address(value))
     }
     return addresses
+  }
+
+  static uniqueAddresses (addresses: Address[]): Address[] {
+    const unique: Address[] = []
+    for (const address of addresses) {
+      if (!address.matchesList(unique)) {
+        unique.push(address)
+      }
+    }
+    return unique
   }
 
   private static decodeAddress (address: string): JuneoBuffer {
@@ -140,7 +154,7 @@ export class NodeId extends BytesData {
       throw new JuneoTypeError(`node id is not ${NodeIdSize} bytes long`)
     }
     super(buffer)
-    this.value = value
+    this.value = `NodeID-${parsedNodeId}`
   }
 }
 

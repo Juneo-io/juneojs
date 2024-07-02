@@ -19,8 +19,9 @@ async function getBaseTxFee (provider: MCNProvider, type: FeeType, chain: Blockc
 export async function estimateBaseTransaction (
   provider: MCNProvider,
   chain: Blockchain,
-  account: UtxoAccount,
   utxoSet: Utxo[],
+  signersAddresses: string[],
+  changeAddress: string,
   assetId: string,
   amount: bigint,
   addresses: string[],
@@ -33,17 +34,17 @@ export async function estimateBaseTransaction (
       ? buildPlatformBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
         utxoSet,
-        account.getSignersAddresses(),
+        signersAddresses,
         fee.amount,
-        account.address,
+        changeAddress,
         provider.mcn.id
       )
       : buildJVMBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
         utxoSet,
-        account.getSignersAddresses(),
+        signersAddresses,
         fee.amount,
-        account.address,
+        changeAddress,
         provider.mcn.id
       )
   return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
@@ -59,8 +60,9 @@ export async function estimateSendOperation (
   return await estimateBaseTransaction(
     provider,
     chain,
-    account,
     account.utxoSet,
+    account.getSignersAddresses(),
+    account.address,
     send.assetId,
     send.amount,
     [send.address],
@@ -96,8 +98,9 @@ export async function estimateSendUtxoOperation (
   return await estimateBaseTransaction(
     provider,
     chain,
-    account,
     send.getPreferredUtxoSet(account, fee.amount),
+    send.getPreferredSigners(account),
+    account.address,
     send.assetId,
     send.amount,
     send.addresses,

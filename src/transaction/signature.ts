@@ -166,31 +166,18 @@ export class SignedTransaction {
   getSignablesUniqueAddresses (): Address[] {
     const addresses: Address[] = []
     for (const signable of this.unsignedTransaction.getSignables()) {
-      for (const address of signable.getAddresses()) {
-        if (!address.matchesList(addresses)) {
-          addresses.push(address)
-        }
-      }
+      addresses.push(...signable.getAddresses())
     }
-    return addresses
+    return Address.uniqueAddresses(addresses)
   }
 
   getCredentialsUniqueAddresses (): Address[] {
     const addresses: Address[] = []
     const message = this.unsignedTransaction.serialize()
     for (const credential of this.credentials) {
-      for (const address of credential.recoverAddresses(message, 0)) {
-        if (!address.matchesList(addresses)) {
-          addresses.push(address)
-        }
-      }
-      for (const address of credential.recoverAddresses(message, 1)) {
-        if (!address.matchesList(addresses)) {
-          addresses.push(address)
-        }
-      }
+      addresses.push(...credential.recoverAddresses(message, 0), ...credential.recoverAddresses(message, 1))
     }
-    return addresses
+    return Address.uniqueAddresses(addresses)
   }
 
   private getSignaturesData (): SignatureData[] {

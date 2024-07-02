@@ -67,18 +67,27 @@ export class SendOperation extends ChainNetworkOperation {
 
 export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
   utxoSet: Utxo[] | undefined
+  signersAddresses: string[] | undefined
 
-  constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: Utxo[]) {
+  constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: Utxo[], signersAddress?: string[]) {
     super(type, chain)
     this.utxoSet = utxoSet
+    this.signersAddresses = signersAddress
   }
 
   getPreferredUtxoSet (account: UtxoAccount, amount: bigint): Utxo[] {
     if (typeof this.utxoSet === 'undefined') {
       return account.utxoSet
     }
+    // adding a fee utxo allows the user to fully spend the chosen utxos
     const feeUtxos = getUtxoSetAssetAmountUtxos(account.utxoSet, this.chain.assetId, amount)
     return [...feeUtxos, ...this.utxoSet]
+  }
+
+  getPreferredSigners (account: UtxoAccount): string[] {
+    return typeof this.signersAddresses === 'undefined'
+      ? account.getSignersAddresses()
+      : [...account.getSignersAddresses(), ...this.signersAddresses]
   }
 }
 

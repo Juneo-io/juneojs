@@ -65,7 +65,7 @@ export class SupernetAuth extends AbstractSignable implements Serializable {
       throw new SignatureError('cannot get addresses of read only supernet auth')
     }
     const addresses: Address[] = []
-    for (let i = 0; i < this.rewardsOwner.threshold && i < this.addressIndices.length; i++) {
+    for (let i = 0; i < this.addressIndices.length; i++) {
       addresses.push(this.rewardsOwner.addresses[i])
     }
     return addresses

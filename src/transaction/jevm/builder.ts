@@ -147,7 +147,7 @@ export function buildJEVMExportTransaction (
 export function buildJEVMImportTransaction (
   userInputs: UserInput[],
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   fee: bigint,
   networkId: number
 ): JEVMImportTransaction {
@@ -165,12 +165,7 @@ export function buildJEVMImportTransaction (
     }
   }
   const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
-  const importedInputs: TransferableInput[] = buildTransactionInputs(
-    userInputs,
-    utxoSet,
-    Address.toAddresses(signersAddresses),
-    [feeData]
-  )
+  const importedInputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
   const outputs: EVMOutput[] = buildTransactionEVMOutputs(userInputs, importedInputs, feeData)
   return new JEVMImportTransaction(
     networkId,

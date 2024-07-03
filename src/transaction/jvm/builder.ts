@@ -4,14 +4,14 @@ import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
 import { type TransferableOutput, type UserOutput, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
-import { Address, BlockchainId } from '../types'
+import { type Address, BlockchainId } from '../types'
 import { type InitialState } from './operation'
 import { CreateAssetTransaction, JVMBaseTransaction, JVMExportTransaction, JVMImportTransaction } from './transaction'
 
 export function buildJVMBaseTransaction (
   userInputs: UserInput[],
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   fee: bigint,
   changeAddress: string,
   networkId: number,
@@ -27,12 +27,7 @@ export function buildJVMBaseTransaction (
     }
   }
   const feeData = new TransactionFee(userInputs[0].sourceChain, fee)
-  const inputs: TransferableInput[] = buildTransactionInputs(
-    userInputs,
-    utxoSet,
-    Address.toAddresses(signersAddresses),
-    [feeData]
-  )
+  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])
   const outputs: UserOutput[] = buildTransactionOutputs(userInputs, inputs, feeData, changeAddress)
   return new JVMBaseTransaction(networkId, new BlockchainId(sourceId), outputs, inputs, memo)
 }
@@ -40,7 +35,7 @@ export function buildJVMBaseTransaction (
 export function buildJVMExportTransaction (
   userInputs: UserInput[],
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   exportAddress: string,
   sourceFee: bigint,
   destinationFee: bigint,
@@ -64,12 +59,7 @@ export function buildJVMExportTransaction (
   const sourceFeeData: TransactionFee = new TransactionFee(userInputs[0].sourceChain, sourceFee)
   const destinationFeeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, destinationFee)
   const fees: TransactionFee[] = [sourceFeeData, destinationFeeData]
-  const inputs: TransferableInput[] = buildTransactionInputs(
-    userInputs,
-    utxoSet,
-    Address.toAddresses(signersAddresses),
-    fees
-  )
+  const inputs: TransferableInput[] = buildTransactionInputs(userInputs, utxoSet, signersAddresses, fees)
   // fixed user inputs with a defined export address to import it later
   const fixedUserInputs: UserInput[] = []
   for (const input of userInputs) {
@@ -114,7 +104,7 @@ export function buildJVMExportTransaction (
 export function buildJVMImportTransaction (
   userInputs: UserInput[],
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   fee: bigint,
   changeAddress: string,
   networkId: number,
@@ -136,7 +126,7 @@ export function buildJVMImportTransaction (
   const feeData: TransactionFee = new TransactionFee(userInputs[0].destinationChain, fee)
   const inputs: TransferableInput[] = []
   const importedInputs: TransferableInput[] = []
-  for (const input of buildTransactionInputs(userInputs, utxoSet, Address.toAddresses(signersAddresses), [feeData])) {
+  for (const input of buildTransactionInputs(userInputs, utxoSet, signersAddresses, [feeData])) {
     if (input.input.utxo === undefined) {
       throw new InputError('input cannot use read only utxo')
     }
@@ -166,7 +156,7 @@ export function buildJVMImportTransaction (
 
 export function buildJVMCreateAssetTransaction (
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   fee: bigint,
   chain: JVMBlockchain,
   name: string,
@@ -181,9 +171,7 @@ export function buildJVMCreateAssetTransaction (
     throw new InputError('initial states cannot be empty')
   }
   const feeData = new TransactionFee(chain, fee)
-  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, Address.toAddresses(signersAddresses), [
-    feeData
-  ])
+  const inputs: TransferableInput[] = buildTransactionInputs([], utxoSet, signersAddresses, [feeData])
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, feeData, changeAddress)
   return new CreateAssetTransaction(
     networkId,

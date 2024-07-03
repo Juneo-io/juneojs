@@ -2,6 +2,7 @@ import { type JVMAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
+  Address,
   type UnsignedTransaction,
   UserInput,
   type Utxo,
@@ -39,7 +40,7 @@ export async function executeJVMExportTransaction (
   const transaction: UnsignedTransaction = buildJVMExportTransaction(
     inputs,
     utxoSet,
-    [sender],
+    [new Address(sender)],
     exportAddress,
     fee.amount,
     sendImportFee ? importFee : BigInt(0),
@@ -68,7 +69,7 @@ export async function executeJVMImportTransaction (
   const transaction: UnsignedTransaction = buildJVMImportTransaction(
     inputs,
     utxoSet,
-    [sender],
+    [new Address(sender)],
     fee.amount,
     sender,
     provider.mcn.id

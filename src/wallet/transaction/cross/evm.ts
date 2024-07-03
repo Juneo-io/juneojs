@@ -2,6 +2,7 @@ import { type JEVMAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
+  Address,
   type JEVMExportTransaction,
   type JEVMImportTransaction,
   UserInput,
@@ -126,7 +127,7 @@ export async function executeEVMImportTransaction (
   const transaction: JEVMImportTransaction = buildJEVMImportTransaction(
     inputs,
     utxoSet,
-    [sender],
+    [new Address(sender)],
     fee.amount,
     provider.mcn.id
   )

@@ -1,6 +1,6 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type Blockchain, type JEVMBlockchain, type PlatformBlockchain } from '../../chain'
-import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
+import { Address, BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
 import { getUtxoSetAssetAmountUtxos, type UtxoSet } from '../../utils'
 import { type UtxoAccount } from '../account'
 
@@ -67,7 +67,6 @@ export class SendOperation extends ChainNetworkOperation {
 
 export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
   utxoSet: UtxoSet | undefined
-  signersAddresses: string[] | undefined
 
   constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: UtxoSet) {
     super(type, chain)
@@ -83,10 +82,10 @@ export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
     return [...feeUtxos, ...this.utxoSet.utxos]
   }
 
-  getPreferredSigners (account: UtxoAccount): string[] {
-    return typeof this.signersAddresses === 'undefined'
-      ? account.getSignersAddresses()
-      : [...account.getSignersAddresses(), ...this.signersAddresses]
+  getPreferredSigners (account: UtxoAccount): Address[] {
+    return typeof this.utxoSet === 'undefined'
+      ? Address.toAddresses(account.getSignersAddresses())
+      : [...Address.toAddresses(account.getSignersAddresses()), ...this.utxoSet.getSelectedSigners()]
   }
 }
 

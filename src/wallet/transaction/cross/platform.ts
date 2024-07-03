@@ -2,6 +2,7 @@ import { type PlatformAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
 import { type MCNProvider } from '../../../juneo'
 import {
+  Address,
   type UnsignedTransaction,
   UserInput,
   type Utxo,
@@ -34,7 +35,7 @@ export async function executePlatformExportTransaction (
   const transaction: UnsignedTransaction = buildPlatformExportTransaction(
     [new UserInput(assetId, api.chain, amount, [address], 1, destination)],
     utxoSet,
-    [sender],
+    [new Address(sender)],
     exportAddress,
     fee.amount,
     sendImportFee ? importFee : BigInt(0),
@@ -63,7 +64,7 @@ export async function executePlatformImportTransaction (
   const transaction: UnsignedTransaction = buildPlatformImportTransaction(
     inputs,
     utxoSet,
-    [sender],
+    [new Address(sender)],
     fee.amount,
     sender,
     provider.mcn.id

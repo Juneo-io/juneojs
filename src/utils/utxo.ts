@@ -62,23 +62,16 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
 }
 
 export class UtxoSet {
+  private static readonly ENCODING_HRP = 'key'
   private readonly expectedSigners: ExpectedSigner[] = []
+  private readonly selectedSigners = new Map<string, Address>()
   utxos: Utxo[]
-  selectedSigners: Address[] = []
 
   constructor (utxos: Utxo[]) {
     this.utxos = utxos
     for (const utxo of utxos) {
       this.expectedSigners.push(new ExpectedSigner(utxo.output.addresses, utxo.output.threshold))
     }
-  }
-
-  getHighestThreshold (): number {
-    let highest = 1
-    for (const utxo of this.utxos) {
-      highest = Math.max(highest, utxo.output.threshold)
-    }
-    return highest
   }
 
   getUniqueAddresses (): Address[] {
@@ -89,17 +82,27 @@ export class UtxoSet {
     return Address.uniqueAddresses(addresses)
   }
 
+  getSelectedSigners (): IterableIterator<Address> {
+    return this.selectedSigners.values()
+  }
+
   addSigner (address: Address): boolean {
+    const key = address.encode(UtxoSet.ENCODING_HRP)
     // already added avoid duplicate entries
-    if (address.matchesList(this.selectedSigners)) {
+    if (this.selectedSigners.has(key)) {
       return false
     }
     // cannot sign this utxoSet
     if (!this.isValidSigner(address)) {
       return false
     }
-    this.selectedSigners.push(address)
+    this.selectedSigners.set(key, address)
     return true
+  }
+
+  removeSigner (address: Address): boolean {
+    const key = address.encode(UtxoSet.ENCODING_HRP)
+    return this.selectedSigners.delete(key)
   }
 
   getMissingSignersAddresses (): Address[] {
@@ -109,7 +112,7 @@ export class UtxoSet {
       const addresses: Address[] = []
       let selectedAmount = 0
       for (const address of expectedSigner.addresses) {
-        if (address.matchesList(this.selectedSigners)) {
+        if (this.selectedSigners.has(address.encode(UtxoSet.ENCODING_HRP))) {
           selectedAmount += 1
           continue
         }

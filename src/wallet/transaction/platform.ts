@@ -64,7 +64,7 @@ async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFe
 export async function estimatePlatformAddPrimaryValidatorTransaction (
   provider: MCNProvider,
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   changeAddress: string,
   validator: Validator,
   share: number,
@@ -151,7 +151,7 @@ export async function estimatePlatformValidatePrimaryOperation (
 export async function estimatePlatformAddPrimaryDelegatorTransaction (
   provider: MCNProvider,
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   changeAddress: string,
   validator: Validator,
   stakeAddresses: string[],
@@ -238,7 +238,7 @@ export async function estimatePlatformCreateSupernetTransaction (
   const fee: BaseFeeData = await getPlatformCreateSupernetFee(provider)
   const transaction: UnsignedTransaction = buildCreateSupernetTransaction(
     account.utxoSet,
-    account.getSignersAddresses(),
+    Address.toAddresses(account.getSignersAddresses()),
     fee.amount,
     provider.platformChain,
     supernetAuthAddresses,
@@ -284,7 +284,7 @@ export async function estimatePlatformAddSupernetValidatorTransaction (
   )
   const transaction: UnsignedTransaction = buildAddSupernetValidatorTransaction(
     account.utxoSet,
-    account.getSignersAddresses(),
+    Address.toAddresses(account.getSignersAddresses()),
     fee.amount,
     provider.platformChain,
     validator.nodeId,
@@ -340,7 +340,7 @@ export async function estimatePlatformRemoveSupernetValidatorTransaction (
   )
   const transaction: UnsignedTransaction = buildRemoveSupernetValidatorTransaction(
     account.utxoSet,
-    account.getSignersAddresses(),
+    Address.toAddresses(account.getSignersAddresses()),
     fee.amount,
     provider.platformChain,
     nodeId,
@@ -391,7 +391,7 @@ export async function estimatePlatformCreateChainTransaction (
   )
   const transaction: UnsignedTransaction = buildCreateChainTransaction(
     account.utxoSet,
-    account.getSignersAddresses(),
+    Address.toAddresses(account.getSignersAddresses()),
     fee.amount,
     provider.platformChain,
     supernetId,

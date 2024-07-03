@@ -1,6 +1,7 @@
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import {
+  Address,
   buildJVMBaseTransaction,
   buildPlatformBaseTransaction,
   type UnsignedTransaction,
@@ -20,7 +21,7 @@ export async function estimateBaseTransaction (
   provider: MCNProvider,
   chain: Blockchain,
   utxoSet: Utxo[],
-  signersAddresses: string[],
+  signersAddresses: Address[],
   changeAddress: string,
   assetId: string,
   amount: bigint,
@@ -61,7 +62,7 @@ export async function estimateSendOperation (
     provider,
     chain,
     account.utxoSet,
-    account.getSignersAddresses(),
+    Address.toAddresses(account.getSignersAddresses()),
     account.address,
     send.assetId,
     send.amount,

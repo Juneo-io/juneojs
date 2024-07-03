@@ -1,7 +1,7 @@
 import { type JRC20Asset, type WrappedAsset } from '../../asset'
 import { type Blockchain, type JEVMBlockchain, type PlatformBlockchain } from '../../chain'
 import { BLSPublicKey, BLSSignature, DynamicId, type Utxo } from '../../transaction'
-import { getUtxoSetAssetAmountUtxos } from '../../utils'
+import { getUtxoSetAssetAmountUtxos, type UtxoSet } from '../../utils'
 import { type UtxoAccount } from '../account'
 
 export enum NetworkOperationType {
@@ -66,13 +66,12 @@ export class SendOperation extends ChainNetworkOperation {
 }
 
 export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
-  utxoSet: Utxo[] | undefined
+  utxoSet: UtxoSet | undefined
   signersAddresses: string[] | undefined
 
-  constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: Utxo[], signersAddress?: string[]) {
+  constructor (type: NetworkOperationType, chain: Blockchain, utxoSet?: UtxoSet) {
     super(type, chain)
     this.utxoSet = utxoSet
-    this.signersAddresses = signersAddress
   }
 
   getPreferredUtxoSet (account: UtxoAccount, amount: bigint): Utxo[] {
@@ -80,8 +79,8 @@ export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
       return account.utxoSet
     }
     // adding a fee utxo allows the user to fully spend the chosen utxos
-    const feeUtxos = getUtxoSetAssetAmountUtxos(account.utxoSet, this.chain.assetId, amount)
-    return [...feeUtxos, ...this.utxoSet]
+    const feeUtxos = getUtxoSetAssetAmountUtxos(account.utxoSet, this.chain.assetId, amount, this.utxoSet.utxos)
+    return [...feeUtxos, ...this.utxoSet.utxos]
   }
 
   getPreferredSigners (account: UtxoAccount): string[] {

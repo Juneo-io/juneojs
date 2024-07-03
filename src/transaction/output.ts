@@ -22,6 +22,10 @@ export class Utxo {
     this.output = output
   }
 
+  getUniqueId (): string {
+    return `${this.transactionId.value}_${this.utxoIndex}}`
+  }
+
   static parse (data: string | JuneoBuffer): Utxo {
     let buffer = JuneoBuffer.from(data)
     // The data could be provided with a codec, if it is a string then

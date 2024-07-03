@@ -53,10 +53,11 @@ export abstract class TransactionCredentials implements Serializable {
     this.signatures = signatures
   }
 
-  recoverAddresses (message: JuneoBuffer, recovery: number): Address[] {
+  recoverAddresses (message: JuneoBuffer): Address[] {
     const addresses: Address[] = []
     for (const signature of this.signatures) {
-      const publicKey = recoverPubKey(signature.serialize(), message, recovery)
+      const publicKey = recoverPubKey(signature.serialize(), message)
+      console.log(publicKey)
       addresses.push(new Address(publicKeyToAddress(publicKey)))
     }
     return addresses
@@ -175,7 +176,7 @@ export class SignedTransaction {
     const addresses: Address[] = []
     const message = this.unsignedTransaction.serialize()
     for (const credential of this.credentials) {
-      addresses.push(...credential.recoverAddresses(message, 0), ...credential.recoverAddresses(message, 1))
+      addresses.push(...credential.recoverAddresses(message))
     }
     return Address.uniqueAddresses(addresses)
   }
@@ -186,9 +187,7 @@ export class SignedTransaction {
     for (const credential of this.credentials) {
       const addresses: Address[] = []
       for (const signature of credential.signatures) {
-        addresses.push(
-          ...[recoverAddress(signature.serialize(), message, 0), recoverAddress(signature.serialize(), message, 1)]
-        )
+        addresses.push(...[recoverAddress(signature.serialize(), message)])
         signaturesData.push(new SignatureData(signature, addresses))
       }
     }

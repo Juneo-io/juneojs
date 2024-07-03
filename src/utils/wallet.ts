@@ -71,8 +71,8 @@ export function validatePrivateKey (data: string): boolean {
   return false
 }
 
-export function recoverAddress (signature: JuneoBuffer, message: JuneoBuffer, recovery: number): Address {
-  return new Address(publicKeyToAddress(recoverPubKey(signature, message, recovery)))
+export function recoverAddress (signature: JuneoBuffer, message: JuneoBuffer): Address {
+  return new Address(publicKeyToAddress(recoverPubKey(signature, message)))
 }
 
 export function publicKeyToAddress (publicKey: string): JuneoBuffer {

@@ -17,8 +17,8 @@ export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
 
 export function recoverPubKey (signature: Signature, message: JuneoBuffer): string {
   const sig = parseSignature(signature)
-  const bytes = Buffer.from(sig.recoverPublicKey(message.toHex()).toHex(true))
-  return JuneoBuffer.fromBytes(bytes).toHex().padStart(66, '0')
+  const bytes = Buffer.from(sig.recoverPublicKey(nobleSha256(message.getBytes())).toRawBytes(true))
+  return JuneoBuffer.fromBytes(bytes).toHex()
 }
 
 export function verifySignature (signature: Signature, message: JuneoBuffer, publicKey: string): boolean {
@@ -37,9 +37,7 @@ export class ECKeyPair {
 
   constructor (privateKey: string) {
     this.privateKey = privateKey
-    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(secp256k1.getPublicKey(privateKey, true)))
-      .toHex()
-      .padStart(66, '0')
+    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(secp256k1.getPublicKey(privateKey, true))).toHex()
   }
 
   sign (message: JuneoBuffer): JuneoBuffer {

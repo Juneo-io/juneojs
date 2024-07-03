@@ -61,20 +61,90 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
   return false
 }
 
-export function getUtxoSetHighestThreshold (utxoSet: Utxo[]): number {
-  let highest = 1
-  for (const utxo of utxoSet) {
-    highest = Math.max(highest, utxo.output.threshold)
+export class UtxoSet {
+  private readonly expectedSigners: ExpectedSigner[] = []
+  utxos: Utxo[]
+  selectedSigners: Address[] = []
+
+  constructor (utxos: Utxo[]) {
+    this.utxos = utxos
+    for (const utxo of utxos) {
+      this.expectedSigners.push(new ExpectedSigner(utxo.output.addresses, utxo.output.threshold))
+    }
   }
-  return highest
+
+  getHighestThreshold (): number {
+    let highest = 1
+    for (const utxo of this.utxos) {
+      highest = Math.max(highest, utxo.output.threshold)
+    }
+    return highest
+  }
+
+  getUniqueAddresses (): Address[] {
+    const addresses: Address[] = []
+    for (const utxo of this.utxos) {
+      addresses.push(...utxo.output.addresses)
+    }
+    return Address.uniqueAddresses(addresses)
+  }
+
+  addSigner (address: Address): boolean {
+    // already added avoid duplicate entries
+    if (address.matchesList(this.selectedSigners)) {
+      return false
+    }
+    // cannot sign this utxoSet
+    if (!this.isValidSigner(address)) {
+      return false
+    }
+    this.selectedSigners.push(address)
+    return true
+  }
+
+  getMissingSignersAddresses (): Address[] {
+    const missing: Address[] = []
+    for (const expectedSigner of this.expectedSigners) {
+      const threshold = expectedSigner.threshold
+      const addresses: Address[] = []
+      let selectedAmount = 0
+      for (const address of expectedSigner.addresses) {
+        if (address.matchesList(this.selectedSigners)) {
+          selectedAmount += 1
+          continue
+        }
+        addresses.push(address)
+      }
+      if (selectedAmount < threshold) {
+        for (const address of addresses) {
+          if (address.matchesList(missing)) {
+            continue
+          }
+          missing.push(address)
+        }
+      }
+    }
+    return missing
+  }
+
+  private isValidSigner (address: Address): boolean {
+    for (const expectedSigner of this.expectedSigners) {
+      if (address.matchesList(expectedSigner.addresses)) {
+        return true
+      }
+    }
+    return false
+  }
 }
 
-export function getUtxoSetUniqueAddresses (utxoSet: Utxo[]): Address[] {
-  const addresses: Address[] = []
-  for (const utxo of utxoSet) {
-    addresses.push(...utxo.output.addresses)
+class ExpectedSigner {
+  addresses: Address[]
+  threshold: number
+
+  constructor (addresses: Address[], threshold: number) {
+    this.addresses = addresses
+    this.threshold = threshold
   }
-  return Address.uniqueAddresses(addresses)
 }
 
 export function getUtxoSetAssetAmountUtxos (

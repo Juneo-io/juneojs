@@ -133,12 +133,20 @@ export class BlockchainId extends BytesData {
 }
 
 export class Signature extends BytesData {
+  r: JuneoBuffer
+  s: JuneoBuffer
+  v: number
+
   constructor (signature: JuneoBuffer) {
     validateData(signature)
     if (signature.length !== SignatureSize) {
       throw new JuneoTypeError(`signature is not ${SignatureSize} bytes long`)
     }
     super(signature)
+    const reader = signature.createReader()
+    this.r = reader.read(32)
+    this.s = reader.read(32)
+    this.v = reader.readUInt8()
   }
 }
 

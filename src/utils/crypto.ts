@@ -1,7 +1,8 @@
-import { type SignatureType } from '@noble/curves/abstract/weierstrass'
+import { type RecoveredSignatureType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
+import { type Signature } from '../transaction'
 import { JuneoBuffer } from './bytes'
 
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
@@ -14,20 +15,20 @@ export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
   return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
-export function recoverPubKey (signature: JuneoBuffer, message: JuneoBuffer): string {
+export function recoverPubKey (signature: Signature, message: JuneoBuffer): string {
   const sig = parseSignature(signature)
   const bytes = Buffer.from(sig.recoverPublicKey(message.toHex()).toHex(true))
   return JuneoBuffer.fromBytes(bytes).toHex().padStart(66, '0')
 }
 
-export function verifySignature (signature: JuneoBuffer, message: JuneoBuffer, publicKey: string): boolean {
+export function verifySignature (signature: Signature, message: JuneoBuffer, publicKey: string): boolean {
   return secp256k1.verify(parseSignature(signature), nobleSha256(message.getBytes()), publicKey)
 }
 
-function parseSignature (signature: JuneoBuffer): SignatureType {
-  return signature.length === 65
-    ? secp256k1.Signature.fromCompact(signature.getBytes().subarray(0, 64))
-    : secp256k1.Signature.fromCompact(signature.getBytes())
+function parseSignature (signature: Signature): RecoveredSignatureType {
+  const bytes = signature.serialize().getBytes()
+  const sig = secp256k1.Signature.fromCompact(bytes.subarray(0, 64))
+  return sig.addRecoveryBit(signature.v)
 }
 
 export class ECKeyPair {

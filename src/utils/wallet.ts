@@ -1,5 +1,5 @@
 import { JEVM_ID, JVM_ID, PLATFORMVM_ID, type Blockchain } from '../chain'
-import { Address, UserInput } from '../transaction'
+import { Address, type Signature, UserInput } from '../transaction'
 import { BaseSpending, type ExecutableOperation, type MCNAccount, type Spending, type TransactionType } from '../wallet'
 import { type JuneoBuffer } from './bytes'
 import { recoverPubKey, rmd160, sha256 } from './crypto'
@@ -71,7 +71,7 @@ export function validatePrivateKey (data: string): boolean {
   return false
 }
 
-export function recoverAddress (signature: JuneoBuffer, message: JuneoBuffer): Address {
+export function recoverAddress (signature: Signature, message: JuneoBuffer): Address {
   return new Address(publicKeyToAddress(recoverPubKey(signature, message)))
 }
 

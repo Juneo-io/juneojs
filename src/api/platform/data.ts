@@ -34,22 +34,22 @@ export interface GetCurrentValidatorsResponse {
 
 export interface ValidatorData {
   txID: string
-  startTime: string
-  endTime: string
-  weight: string
+  startTime: bigint
+  endTime: bigint
+  weight: bigint
   nodeID: string
-  stakeAmount: string
+  stakeAmount: bigint
   rewardOwner: RewardOwner
   validationRewardOwner: RewardOwner
   delegationRewardOwner: RewardOwner
-  potentialReward: string
-  accruedDelegateeReward: string
-  delegationFee: string
-  uptime: string
+  potentialReward: bigint
+  accruedDelegateeReward: bigint
+  delegationFee: number
+  uptime: number
   connected: boolean
   signer: ValidatorSigner
-  delegatorCount: string
-  delegatorWeight: string
+  delegatorCount: number
+  delegatorWeight: bigint
 }
 
 export interface RewardOwner {

@@ -90,29 +90,11 @@ export class Secp256k1Credentials extends TransactionCredentials {
 
 export class SignedTransaction {
   unsignedTransaction: UnsignedTransaction
-  signatures: Signature[]
   credentials: TransactionCredentials[] = []
 
   constructor (unsignedTransaction: UnsignedTransaction, signatures: Signature[]) {
     this.unsignedTransaction = unsignedTransaction
-    this.signatures = signatures
-    this.buildCredentials()
-  }
-
-  buildCredentials (): void {
-    const message = this.unsignedTransaction.serialize()
-    const credentials: TransactionCredentials[] = []
-    for (const signable of this.unsignedTransaction.getSignables()) {
-      const signatures: Signature[] = []
-      for (const signature of this.signatures) {
-        const address = signature.recoverAddress(message)
-        if (address.matchesList(signable.getAddresses())) {
-          signatures.push(signature)
-        }
-      }
-      credentials.push(new Secp256k1Credentials(signatures))
-    }
-    this.credentials = credentials
+    this.buildCredentials(signatures)
   }
 
   /**
@@ -129,7 +111,7 @@ export class SignedTransaction {
   verifySignatures (): Address[] {
     const missing: Address[] = []
     const signablesAddresses = this.getSignablesUniqueAddresses()
-    const credentialsAddresses = this.getSignaturesUniqueAddresses()
+    const credentialsAddresses = this.getCredentialsUniqueAddresses()
     for (const address of signablesAddresses) {
       if (!address.matchesList(credentialsAddresses) && !address.matchesList(missing)) {
         missing.push(address)
@@ -146,13 +128,31 @@ export class SignedTransaction {
     return Address.uniqueAddresses(addresses)
   }
 
-  getSignaturesUniqueAddresses (): Address[] {
+  getCredentialsUniqueAddresses (): Address[] {
     const addresses: Address[] = []
     const message = this.unsignedTransaction.serialize()
-    for (const signature of this.signatures) {
-      addresses.push(signature.recoverAddress(message))
+    for (const credentials of this.credentials) {
+      for (const signature of credentials.signatures) {
+        addresses.push(signature.recoverAddress(message))
+      }
     }
     return Address.uniqueAddresses(addresses)
+  }
+
+  private buildCredentials (signatures: Signature[]): void {
+    const message = this.unsignedTransaction.serialize()
+    const credentials: TransactionCredentials[] = []
+    for (const signable of this.unsignedTransaction.getSignables()) {
+      const sigs: Signature[] = []
+      for (const signature of signatures) {
+        const address = signature.recoverAddress(message)
+        if (address.matchesList(signable.getAddresses())) {
+          sigs.push(signature)
+        }
+      }
+      credentials.push(new Secp256k1Credentials(sigs))
+    }
+    this.credentials = credentials
   }
 
   serialize (): JuneoBuffer {

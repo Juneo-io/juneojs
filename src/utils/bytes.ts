@@ -51,7 +51,7 @@ export class JuneoBuffer {
     return new JuneoReader(this)
   }
 
-  private verifyWriteIndexes (length: number): void {
+  private verifyWriteIndices (length: number): void {
     if (this.cursor + length > this.length) {
       throw new CapacityError(`writing at ${this.cursor} with length of ${length} to capacity of ${this.length}`)
     }
@@ -62,39 +62,39 @@ export class JuneoBuffer {
   }
 
   writeBuffer (data: Buffer): void {
-    this.verifyWriteIndexes(data.length)
+    this.verifyWriteIndices(data.length)
     const written: Buffer = this.cursor === 0 ? Buffer.alloc(0) : this.bytes.subarray(0, this.cursor)
     this.bytes = Buffer.concat([written, data], this.length)
     this.cursor += data.length
   }
 
   writeUInt8 (data: number): void {
-    this.verifyWriteIndexes(1)
+    this.verifyWriteIndices(1)
     this.cursor = this.bytes.writeUInt8(data, this.cursor)
   }
 
   writeUInt16 (data: number): void {
-    this.verifyWriteIndexes(2)
+    this.verifyWriteIndices(2)
     this.cursor = this.bytes.writeUInt16BE(data, this.cursor)
   }
 
   writeUInt32 (data: number): void {
-    this.verifyWriteIndexes(4)
+    this.verifyWriteIndices(4)
     this.cursor = this.bytes.writeUInt32BE(data, this.cursor)
   }
 
   writeUInt64 (data: bigint): void {
-    this.verifyWriteIndexes(8)
+    this.verifyWriteIndices(8)
     this.cursor = this.bytes.writeBigUInt64BE(data, this.cursor)
   }
 
   writeString (data: string, encoding: BufferEncoding = 'utf8'): void {
-    this.verifyWriteIndexes(data.length)
+    this.verifyWriteIndices(data.length)
     // Buffer.write returns the amount of bytes written instead of the cursor
     this.cursor += this.bytes.write(data, this.cursor, encoding)
   }
 
-  private verifyReadIndexes (index: number, length: number): void {
+  private verifyReadIndices (index: number, length: number): void {
     if (index < 0) {
       throw new CapacityError(`cannot read at negative index but got ${index}`)
     }
@@ -110,32 +110,32 @@ export class JuneoBuffer {
   }
 
   readUInt8 (index: number): number {
-    this.verifyReadIndexes(index, 1)
+    this.verifyReadIndices(index, 1)
     return this.bytes.readUInt8(index)
   }
 
   readUInt16 (index: number): number {
-    this.verifyReadIndexes(index, 2)
+    this.verifyReadIndices(index, 2)
     return this.bytes.readUInt16BE(index)
   }
 
   readUInt32 (index: number): number {
-    this.verifyReadIndexes(index, 4)
+    this.verifyReadIndices(index, 4)
     return this.bytes.readUInt32BE(index)
   }
 
   readUInt64 (index: number): bigint {
-    this.verifyReadIndexes(index, 8)
+    this.verifyReadIndices(index, 8)
     return this.bytes.readBigUInt64BE(index)
   }
 
   readString (index: number, length: number, encoding: BufferEncoding = 'utf8'): string {
-    this.verifyReadIndexes(index, length)
+    this.verifyReadIndices(index, length)
     return this.read(index, length).bytes.toString(encoding)
   }
 
   read (index: number, length: number): JuneoBuffer {
-    this.verifyReadIndexes(index, length)
+    this.verifyReadIndices(index, length)
     return JuneoBuffer.fromBytes(this.bytes.subarray(index, index + length))
   }
 

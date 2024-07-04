@@ -95,7 +95,7 @@ function isGatheringComplete (targets: Map<string, bigint>, gathereds: Map<strin
 
 export function getSignersIndices (signers: Address[], addresses: Address[]): number[] {
   const indices: number[] = []
-  for (const signer of signers) {
+  for (const signer of Address.uniqueAddresses(signers)) {
     for (let i = 0; i < addresses.length; i++) {
       const address = addresses[i]
       if (signer.matches(address)) {

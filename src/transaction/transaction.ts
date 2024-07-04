@@ -85,9 +85,17 @@ export class BaseTransaction implements UnsignedTransaction {
 
   async sign (signers: Signer[]): Promise<Signature[]> {
     const bytes = this.serialize()
+    const signed = new Set<string>()
     const signatures: Signature[] = []
     for (const signable of this.getSignables()) {
-      signatures.push(...(await signable.sign(bytes, signers)))
+      for (const signature of await signable.sign(bytes, signers)) {
+        const key = signature.recoverAddress(bytes).serialize().toHex()
+        if (signed.has(key)) {
+          continue
+        }
+        signed.add(key)
+        signatures.push(signature)
+      }
     }
     return signatures
   }

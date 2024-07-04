@@ -1,32 +1,34 @@
+import { type RecoveredSignatureType } from '@noble/curves/abstract/weierstrass'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
-import { Signature, getPublicKey, recoverPublicKey, signSync, verify } from '@noble/secp256k1'
+import { type Signature } from '../transaction'
 import { JuneoBuffer } from './bytes'
 
 export function rmd160 (data: string | JuneoBuffer): JuneoBuffer {
-  const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
+  const buffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
   return JuneoBuffer.fromBytes(Buffer.from(ripemd160(buffer.getBytes())))
 }
 
 export function sha256 (data: string | JuneoBuffer): JuneoBuffer {
-  const buffer: JuneoBuffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
+  const buffer = typeof data === 'string' ? JuneoBuffer.fromString(data, 'hex') : data
   return JuneoBuffer.fromBytes(Buffer.from(nobleSha256(buffer.getBytes())))
 }
 
-export function recoverPubKey (signature: JuneoBuffer, message: JuneoBuffer, recovery: number): string {
-  const sig: Signature = parseSignature(signature)
-  const bytes: Buffer = Buffer.from(recoverPublicKey(nobleSha256(message.getBytes()), sig, recovery, true))
-  return JuneoBuffer.fromBytes(bytes).toHex().padStart(66, '0')
+export function recoverPubKey (signature: Signature, message: JuneoBuffer): string {
+  const sig = parseSignature(signature)
+  const bytes = Buffer.from(sig.recoverPublicKey(nobleSha256(message.getBytes())).toRawBytes(true))
+  return JuneoBuffer.fromBytes(bytes).toHex()
 }
 
-export function verifySignature (signature: JuneoBuffer, message: JuneoBuffer, publicKey: string): boolean {
-  return verify(parseSignature(signature), nobleSha256(message.getBytes()), publicKey)
+export function verifySignature (signature: Signature, message: JuneoBuffer, publicKey: string): boolean {
+  return secp256k1.verify(parseSignature(signature), nobleSha256(message.getBytes()), publicKey)
 }
 
-function parseSignature (signature: JuneoBuffer): Signature {
-  return signature.length === 65
-    ? Signature.fromCompact(signature.getBytes().subarray(0, 64))
-    : Signature.fromCompact(signature.getBytes())
+function parseSignature (signature: Signature): RecoveredSignatureType {
+  const bytes = signature.serialize().getBytes()
+  const sig = secp256k1.Signature.fromCompact(bytes.subarray(0, 64))
+  return sig.addRecoveryBit(signature.v)
 }
 
 export class ECKeyPair {
@@ -35,16 +37,11 @@ export class ECKeyPair {
 
   constructor (privateKey: string) {
     this.privateKey = privateKey
-    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(getPublicKey(privateKey, true)))
-      .toHex()
-      .padStart(66, '0')
+    this.publicKey = JuneoBuffer.fromBytes(Buffer.from(secp256k1.getPublicKey(privateKey, true))).toHex()
   }
 
   sign (message: JuneoBuffer): JuneoBuffer {
-    const signature: Signature = Signature.fromHex(signSync(nobleSha256(message.getBytes()), this.privateKey))
-    // noble as of v1.7.1 does not provide recovery param so do it here
-    const publicKey: string = recoverPubKey(JuneoBuffer.fromString(signature.toCompactHex()), message, 0)
-    const v: number = publicKey === this.publicKey ? 0 : 1
-    return JuneoBuffer.fromString(`${signature.toCompactHex()}${v.toString(16).padStart(2, '0')}`)
+    const signature = secp256k1.sign(nobleSha256(message.getBytes()), this.privateKey)
+    return JuneoBuffer.fromString(`${signature.toCompactHex()}${signature.recovery.toString(16).padStart(2, '0')}`)
   }
 }

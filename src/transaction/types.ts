@@ -1,4 +1,4 @@
-import { BytesData, JuneoBuffer, JuneoTypeError } from '../utils'
+import { BytesData, JuneoBuffer, JuneoTypeError, recoverAddress } from '../utils'
 import * as encoding from '../utils/encoding'
 import {
   AddressSize,
@@ -147,6 +147,10 @@ export class Signature extends BytesData {
     this.r = reader.read(32)
     this.s = reader.read(32)
     this.v = reader.readUInt8()
+  }
+
+  recoverAddress (message: JuneoBuffer): Address {
+    return recoverAddress(this, message)
   }
 }
 

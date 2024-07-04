@@ -1,6 +1,6 @@
 {
   "name": "juneojs",
-  "version": "0.0.113",
+  "version": "0.0.114",
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,7 +25,7 @@
   "devDependencies": {
     "@jest/globals": "29.7.0",
     "@types/jest": "29.5.12",
-    "@types/node": "20.12.12",
+    "@types/node": "20.14.9",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
@@ -43,9 +43,9 @@
   "dependencies": {
     "@noble/hashes": "1.4.0",
     "@noble/curves": "1.4.2",
-    "axios": "1.6.8",
+    "axios": "1.7.2",
     "bech32": "2.0.0",
-    "bs58": "5.0.0",
-    "ethers": "6.7.1"
+    "bs58": "6.0.0",
+    "ethers": "6.13.1"
   }
 }

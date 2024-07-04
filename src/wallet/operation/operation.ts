@@ -79,7 +79,7 @@ export abstract class MultiSigUtxoOperation extends ChainNetworkOperation {
     }
     // adding a fee utxo allows the user to fully spend the chosen utxos
     const feeUtxos = getUtxoSetAssetAmountUtxos(account.utxoSet, this.chain.assetId, amount, this.utxoSet.utxos)
-    return [...feeUtxos, ...this.utxoSet.utxos]
+    return [...this.utxoSet.utxos, ...feeUtxos]
   }
 
   getPreferredSigners (account: UtxoAccount): Address[] {

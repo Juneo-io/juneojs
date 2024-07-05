@@ -110,6 +110,7 @@ export async function estimatePlatformValidatePrimaryOperation (
   const validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
   const values = new Map<string, bigint>()
   const fee = await getPlatformAddPrimaryValidatorFee(provider)
+  const hasSpending = typeof validate.utxoSet === 'undefined'
   return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
     validate.getPreferredUtxoSet(account, fee.amount),
@@ -124,26 +125,18 @@ export async function estimatePlatformValidatePrimaryOperation (
     validate.rewardThreshold
   ).then(
     (fee) => {
-      const spending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(
-        provider,
-        validate,
-        chain,
-        fee,
-        [spending, fee.spending],
-        values,
-        potentialReward
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()))
+      }
+      return new StakingOperationSummary(provider, validate, chain, fee, spendings, values, potentialReward)
     },
     async () => {
-      return new ChainOperationSummary(
-        provider,
-        validate,
-        chain,
-        fee,
-        [new BaseSpending(chain, validate.amount, chain.assetId), fee.spending],
-        values
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new BaseSpending(chain, validate.amount, chain.assetId))
+      }
+      return new ChainOperationSummary(provider, validate, chain, fee, spendings, values)
     }
   )
 }
@@ -193,6 +186,7 @@ export async function estimatePlatformDelegatePrimaryOperation (
   const validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
   const values = new Map<string, bigint>()
   const fee = await getPlatformAddPrimaryDelegatorFee(provider)
+  const hasSpending = typeof delegate.utxoSet === 'undefined'
   return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
     delegate.getPreferredUtxoSet(account, fee.amount),
@@ -205,26 +199,18 @@ export async function estimatePlatformDelegatePrimaryOperation (
     delegate.rewardThreshold
   ).then(
     (fee) => {
-      const spending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(
-        provider,
-        delegate,
-        chain,
-        fee,
-        [spending, fee.spending],
-        values,
-        potentialReward
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()))
+      }
+      return new StakingOperationSummary(provider, delegate, chain, fee, spendings, values, potentialReward)
     },
     async () => {
-      return new ChainOperationSummary(
-        provider,
-        delegate,
-        chain,
-        fee,
-        [new BaseSpending(chain, delegate.amount, chain.assetId), fee.spending],
-        values
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new BaseSpending(chain, delegate.amount, chain.assetId))
+      }
+      return new ChainOperationSummary(provider, delegate, chain, fee, spendings, values)
     }
   )
 }

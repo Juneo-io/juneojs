@@ -96,6 +96,8 @@ export async function estimateSendUtxoOperation (
 ): Promise<ChainOperationSummary> {
   const values = new Map<string, bigint>([[send.assetId, send.amount]])
   const fee = await getBaseTxFee(provider, FeeType.BaseFee, chain)
+  // do not add a spending if utxoSet is defined as this means it is a multiSig op
+  const hasSpending = typeof send.utxoSet === 'undefined'
   return await estimateBaseTransaction(
     provider,
     chain,
@@ -109,18 +111,18 @@ export async function estimateSendUtxoOperation (
     send.locktime
   ).then(
     (fee) => {
-      const spending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
-      return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos()))
+      }
+      return new ChainOperationSummary(provider, send, chain, fee, spendings, values)
     },
     async () => {
-      return new ChainOperationSummary(
-        provider,
-        send,
-        chain,
-        fee,
-        [new BaseSpending(chain, send.amount, send.assetId), fee.spending],
-        values
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new BaseSpending(chain, send.amount, send.assetId))
+      }
+      return new ChainOperationSummary(provider, send, chain, fee, spendings, values)
     }
   )
 }

@@ -172,8 +172,7 @@ export class EthCallOperation extends JEVMChainOperation {
 export abstract class Staking extends MultiSigUtxoOperation {
   nodeId: string
   amount: bigint
-  startTime: bigint
-  endTime: bigint
+  stakePeriod: bigint
   stakeAddresses: string[]
   stakeThreshold: number
   rewardAddresses: string[]
@@ -184,8 +183,7 @@ export abstract class Staking extends MultiSigUtxoOperation {
     chain: PlatformBlockchain,
     nodeId: string,
     amount: bigint,
-    startTime: bigint,
-    endTime: bigint,
+    stakePeriod: bigint,
     stakeAddresses: string[],
     stakeThreshold: number,
     rewardAddresses: string[],
@@ -194,8 +192,7 @@ export abstract class Staking extends MultiSigUtxoOperation {
     super(type, chain)
     this.nodeId = nodeId
     this.amount = amount
-    this.startTime = startTime
-    this.endTime = endTime
+    this.stakePeriod = stakePeriod
     this.stakeAddresses = stakeAddresses
     this.stakeThreshold = stakeThreshold
     this.rewardAddresses = rewardAddresses
@@ -213,8 +210,7 @@ export class ValidatePrimaryOperation extends Staking {
     publicKey: string,
     signature: string,
     amount: bigint,
-    startTime: bigint,
-    endTime: bigint,
+    stakePeriod: bigint,
     stakeAddresses: string[],
     stakeThreshold: number,
     rewardAddresses: string[],
@@ -225,8 +221,7 @@ export class ValidatePrimaryOperation extends Staking {
       chain,
       nodeId,
       amount,
-      startTime,
-      endTime,
+      stakePeriod,
       stakeAddresses,
       stakeThreshold,
       rewardAddresses,
@@ -242,8 +237,7 @@ export class DelegatePrimaryOperation extends Staking {
     chain: PlatformBlockchain,
     nodeId: string,
     amount: bigint,
-    startTime: bigint,
-    endTime: bigint,
+    stakePeriod: bigint,
     stakeAddresses: string[],
     stakeThreshold: number,
     rewardAddresses: string[],
@@ -254,8 +248,7 @@ export class DelegatePrimaryOperation extends Staking {
       chain,
       nodeId,
       amount,
-      startTime,
-      endTime,
+      stakePeriod,
       stakeAddresses,
       stakeThreshold,
       rewardAddresses,
@@ -279,23 +272,14 @@ export class AddSupernetValidatorOperation extends ChainNetworkOperation {
   supernetId: string
   nodeId: string
   amount: bigint
-  startTime: bigint
-  endTime: bigint
+  stakePeriod: bigint
 
-  constructor (
-    chain: PlatformBlockchain,
-    supernetId: string,
-    nodeId: string,
-    amount: bigint,
-    startTime: bigint,
-    endTime: bigint
-  ) {
+  constructor (chain: PlatformBlockchain, supernetId: string, nodeId: string, amount: bigint, stakePeriod: bigint) {
     super(NetworkOperationType.ValidateSupernet, chain)
     this.supernetId = supernetId
     this.nodeId = nodeId
     this.amount = amount
-    this.startTime = startTime
-    this.endTime = endTime
+    this.stakePeriod = stakePeriod
   }
 }
 

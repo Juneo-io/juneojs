@@ -1,4 +1,4 @@
-import { JuneoBuffer, SignatureError, type Serializable } from '../../utils'
+import { JuneoBuffer, SignatureError, TimeUtils, type Serializable } from '../../utils'
 import { getSignersIndices } from '../builder'
 import {
   BLSPublicKeySize,
@@ -20,11 +20,20 @@ export class Validator implements Serializable {
   endTime: bigint
   weight: bigint
 
-  constructor (nodeId: NodeId, startTime: bigint, endTime: bigint, weight: bigint) {
+  constructor (nodeId: NodeId, stakePeriod: bigint, weight: bigint) {
     this.nodeId = nodeId
-    this.startTime = startTime
-    this.endTime = endTime
+    // Since Durango upgrade start time and end time values are used to calculate stake period.
+    // To avoid issues of stake period too low (e.g. using Time.now and a stakePeriod of 14 days),
+    // that would result in if sending the transaction a bit after building it, an error as the
+    // stake period would have already decreased below the minimum acceptable value, we use
+    // a start time one year in the future.
+    this.startTime = TimeUtils.now() + TimeUtils.year()
+    this.endTime = this.startTime + stakePeriod
     this.weight = weight
+  }
+
+  getStakePeriod (): bigint {
+    return this.endTime - this.startTime
   }
 
   serialize (): JuneoBuffer {
@@ -39,7 +48,9 @@ export class Validator implements Serializable {
   static parse (data: string | JuneoBuffer): Validator {
     const reader = JuneoBuffer.from(data).createReader()
     const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
-    return new Validator(nodeId, reader.readUInt64(), reader.readUInt64(), reader.readUInt64())
+    const startTime = reader.readUInt64()
+    const endTime = reader.readUInt64()
+    return new Validator(nodeId, endTime - startTime, reader.readUInt64())
   }
 }
 

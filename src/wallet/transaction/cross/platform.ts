@@ -1,6 +1,6 @@
 import { type PlatformAPI } from '../../../api'
 import { type Blockchain } from '../../../chain'
-import { type MCNProvider } from '../../../juneo'
+import { type MCNProvider, TransactionType } from '../../../juneo'
 import {
   Address,
   type UnsignedTransaction,
@@ -11,10 +11,10 @@ import {
 } from '../../../transaction'
 import { getImportUserInputs, getUtxosAmountValues } from '../../../utils'
 import { type MCNWallet } from '../../wallet'
-import { BaseFeeData, type FeeData, FeeType } from '../fee'
+import { BaseFeeData, type FeeData } from '../fee'
 
 export async function estimatePlatformExportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ExportFee)
+  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), TransactionType.Export)
 }
 
 export async function executePlatformExportTransaction (
@@ -47,7 +47,7 @@ export async function executePlatformExportTransaction (
 }
 
 export async function estimatePlatformImportTransaction (provider: MCNProvider): Promise<BaseFeeData> {
-  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), FeeType.ImportFee)
+  return new BaseFeeData(provider.platformChain, BigInt((await provider.info.getTxFee()).txFee), TransactionType.Import)
 }
 
 export async function executePlatformImportTransaction (

@@ -10,10 +10,10 @@ import {
 } from '../../transaction'
 import { type UtxoAccount } from '../account'
 import { ChainOperationSummary, type SendOperation, type SendUtxoOperation } from '../operation'
-import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
-import { BaseSpending, UtxoSpending } from './transaction'
+import { BaseFeeData, UtxoFeeData } from './fee'
+import { BaseSpending, TransactionType, UtxoSpending } from './transaction'
 
-async function getBaseTxFee (provider: MCNProvider, type: FeeType, chain: Blockchain): Promise<BaseFeeData> {
+async function getBaseTxFee (provider: MCNProvider, type: TransactionType, chain: Blockchain): Promise<BaseFeeData> {
   return new BaseFeeData(chain, BigInt((await provider.info.getTxFee()).txFee), type)
 }
 
@@ -29,7 +29,7 @@ export async function estimateBaseTransaction (
   threshold: number,
   locktime: bigint = BigInt(0)
 ): Promise<UtxoFeeData> {
-  const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
+  const fee: BaseFeeData = await getBaseTxFee(provider, TransactionType.Base, chain)
   const transaction: UnsignedTransaction =
     chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
@@ -75,7 +75,7 @@ export async function estimateSendOperation (
       return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
     },
     async () => {
-      const fee: BaseFeeData = await getBaseTxFee(provider, FeeType.BaseFee, chain)
+      const fee: BaseFeeData = await getBaseTxFee(provider, TransactionType.Base, chain)
       return new ChainOperationSummary(
         provider,
         send,
@@ -95,7 +95,7 @@ export async function estimateSendUtxoOperation (
   send: SendUtxoOperation
 ): Promise<ChainOperationSummary> {
   const values = new Map<string, bigint>([[send.assetId, send.amount]])
-  const fee = await getBaseTxFee(provider, FeeType.BaseFee, chain)
+  const fee = await getBaseTxFee(provider, TransactionType.Base, chain)
   // do not add a spending if utxoSet is defined as this means it is a multiSig op
   const hasSpending = typeof send.utxoSet === 'undefined'
   return await estimateBaseTransaction(

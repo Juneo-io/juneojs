@@ -28,37 +28,37 @@ import {
   StakingOperationSummary,
   type ValidatePrimaryOperation
 } from '../operation'
-import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
-import { BaseSpending, UtxoSpending } from './transaction'
+import { BaseFeeData, UtxoFeeData } from './fee'
+import { BaseSpending, TransactionType, UtxoSpending } from './transaction'
 
 async function getPlatformAddPrimaryValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkValidatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.PrimaryValidation)
 }
 
 async function getPlatformAddPrimaryDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkDelegatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.DelegateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.PrimaryDelegation)
 }
 
 async function getPlatformCreateSupernetFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).createSupernetTxFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.CreateSupernet)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.CreateSupernet)
 }
 
 async function getPlatformAddSupernetValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addSupernetValidatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.ValidateSupernet)
 }
 
 async function getPlatformRemoveSupernetValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).txFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.RemoveSupernetValidator)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.RemoveSupernetValidator)
 }
 
 async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).createBlockchainTxFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.CreateChain)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.CreateChain)
 }
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (

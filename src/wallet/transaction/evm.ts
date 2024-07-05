@@ -12,8 +12,8 @@ import {
   InvalidNonceRetryDelay,
   MaxInvalidNonceAttempts
 } from './constants'
-import { EVMFeeData, FeeType } from './fee'
-import { type BaseSpending, EVMTransactionData } from './transaction'
+import { EVMFeeData } from './fee'
+import { type BaseSpending, EVMTransactionData, TransactionType } from './transaction'
 
 export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchronize: boolean): Promise<bigint> {
   if (synchronize || !wallet.synchronized) {
@@ -69,7 +69,7 @@ export async function estimateEVMOperation (
   address: string,
   amount: bigint,
   data: string,
-  feeType: FeeType
+  feeType: TransactionType
 ): Promise<ChainOperationSummary> {
   const api: JEVMAPI = provider.jevmApi[chain.id]
   const baseFee: bigint = await estimateEVMBaseFee(api)
@@ -140,7 +140,7 @@ export async function estimateEVMWithdrawJRC20 (
   const fee = new EVMFeeData(
     api.chain,
     baseFee * DefaultWithdrawEstimate,
-    FeeType.Withdraw,
+    TransactionType.Withdraw,
     baseFee,
     DefaultWithdrawEstimate,
     new EVMTransactionData(sender, jrc20.address, BigInt(0), data)
@@ -165,7 +165,7 @@ export async function estimateEVMDepositJRC20 (
   const fee = new EVMFeeData(
     api.chain,
     baseFee * DefaultDepositEstimate,
-    FeeType.Deposit,
+    TransactionType.Deposit,
     baseFee,
     DefaultDepositEstimate,
     new EVMTransactionData(sender, NativeAssetCallContract, BigInt(0), data)

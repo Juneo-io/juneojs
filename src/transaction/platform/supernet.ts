@@ -47,7 +47,10 @@ export class Validator implements Serializable {
     const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
     const startTime = reader.readUInt64()
     const endTime = reader.readUInt64()
-    return new Validator(nodeId, endTime - startTime, reader.readUInt64())
+    const validator = new Validator(nodeId, endTime - startTime, reader.readUInt64())
+    validator.startTime = startTime
+    validator.endTime = endTime
+    return validator
   }
 }
 

@@ -18,22 +18,17 @@ export class Validator implements Serializable {
   nodeId: NodeId
   startTime: bigint
   endTime: bigint
+  stakePeriod: bigint
   weight: bigint
 
   constructor (nodeId: NodeId, stakePeriod: bigint, weight: bigint) {
     this.nodeId = nodeId
-    // Since Durango upgrade start time and end time values are used to calculate stake period.
-    // To avoid issues of stake period too low (e.g. using Time.now and a stakePeriod of 14 days),
-    // that would result in if sending the transaction a bit after building it, an error as the
-    // stake period would have already decreased below the minimum acceptable value, we use
-    // a start time one year in the future.
-    this.startTime = TimeUtils.now() + TimeUtils.year()
-    this.endTime = this.startTime + stakePeriod
+    // Since Durango upgrade only end time value is used to calculate stake period,
+    // so we use a start time of zero and only sync the end time to instantiate a new validator.
+    this.startTime = BigInt(0)
+    this.endTime = TimeUtils.now() + stakePeriod
+    this.stakePeriod = stakePeriod
     this.weight = weight
-  }
-
-  getStakePeriod (): bigint {
-    return this.endTime - this.startTime
   }
 
   serialize (): JuneoBuffer {

@@ -24,9 +24,9 @@ export class Validator implements Serializable {
   constructor (nodeId: NodeId, stakePeriod: bigint, weight: bigint) {
     this.nodeId = nodeId
     // Since Durango upgrade only end time value is used to calculate stake period,
-    // so we use a start time of zero and only sync the end time to instantiate a new validator.
-    this.startTime = BigInt(0)
-    this.endTime = TimeUtils.now() + stakePeriod
+    // we use a fixed start time of now() as another would not have any effect anyways.
+    this.startTime = TimeUtils.now()
+    this.endTime = this.startTime + stakePeriod
     this.stakePeriod = stakePeriod
     this.weight = weight
   }

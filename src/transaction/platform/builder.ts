@@ -172,8 +172,7 @@ export function buildAddSupernetValidatorTransaction (
   fee: bigint,
   chain: PlatformBlockchain,
   nodeId: string | NodeId,
-  startTime: bigint,
-  endTime: bigint,
+  stakePeriod: bigint,
   weight: bigint,
   supernetId: string | SupernetId,
   supernetAuth: SupernetAuth,
@@ -187,8 +186,7 @@ export function buildAddSupernetValidatorTransaction (
   const outputs: UserOutput[] = buildTransactionOutputs([], inputs, new TransactionFee(chain, fee), changeAddress)
   const validator: Validator = new Validator(
     typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    startTime,
-    endTime,
+    stakePeriod,
     weight
   )
   return new AddSupernetValidatorTransaction(
@@ -401,8 +399,7 @@ export function buildAddPermissionlessValidatorTransaction (
   fee: bigint,
   chain: PlatformBlockchain,
   nodeId: string | NodeId,
-  startTime: bigint,
-  endTime: bigint,
+  stakePeriod: bigint,
   supernetId: string | SupernetId,
   stakeAmount: bigint,
   stakedAssetId: string,
@@ -430,8 +427,7 @@ export function buildAddPermissionlessValidatorTransaction (
   )
   const validator: Validator = new Validator(
     typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    startTime,
-    endTime,
+    stakePeriod,
     stakeAmount
   )
   const stake: TransferableOutput[] = [
@@ -473,8 +469,7 @@ export function buildAddPermissionlessDelegatorTransaction (
   fee: bigint,
   chain: PlatformBlockchain,
   nodeId: string | NodeId,
-  startTime: bigint,
-  endTime: bigint,
+  stakePeriod: bigint,
   supernetId: string | SupernetId,
   stakeAmount: bigint,
   stakedAssetId: string,
@@ -500,8 +495,7 @@ export function buildAddPermissionlessDelegatorTransaction (
   )
   const validator: Validator = new Validator(
     typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    startTime,
-    endTime,
+    stakePeriod,
     stakeAmount
   )
   const stake: TransferableOutput[] = [

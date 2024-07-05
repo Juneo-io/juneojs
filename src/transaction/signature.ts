@@ -1,4 +1,4 @@
-import { JuneoBuffer, ParsingError, TransactionUtils, type Serializable } from '../utils'
+import { JuneoBuffer, ParsingError, sha256, TransactionUtils, type Serializable } from '../utils'
 import { Secp256k1CredentialsTypeId, SignatureSize } from './constants'
 import { type UnsignedTransaction } from './transaction'
 import { Address, Signature } from './types'
@@ -95,6 +95,10 @@ export class SignedTransaction {
   constructor (unsignedTransaction: UnsignedTransaction, signatures: Signature[]) {
     this.unsignedTransaction = unsignedTransaction
     this.buildCredentials(signatures)
+  }
+
+  getTransactionId (): string {
+    return sha256(this.serialize()).toCB58()
   }
 
   /**

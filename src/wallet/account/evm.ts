@@ -15,7 +15,6 @@ import {
 import {
   BaseSpending,
   type EVMFeeData,
-  FeeType,
   TransactionType,
   estimateEVMOperation,
   executeEVMTransaction
@@ -55,7 +54,7 @@ export class EVMAccount extends AbstractChainAccount {
         address,
         isContract ? BigInt(0) : send.amount,
         data,
-        FeeType.BaseFee
+        TransactionType.Base
       )
     } else if (operation.type === NetworkOperationType.Wrap) {
       const wrap = operation as WrapOperation
@@ -69,7 +68,7 @@ export class EVMAccount extends AbstractChainAccount {
         wrap.asset.address,
         wrap.amount,
         wrap.asset.adapter.getDepositData(),
-        FeeType.Wrap
+        TransactionType.Wrap
       )
     } else if (operation.type === NetworkOperationType.Unwrap) {
       const unwrap = operation as UnwrapOperation
@@ -83,7 +82,7 @@ export class EVMAccount extends AbstractChainAccount {
         unwrap.asset.address,
         BigInt(0),
         unwrap.asset.adapter.getWithdrawData(unwrap.amount),
-        FeeType.Unwrap
+        TransactionType.Unwrap
       )
     } else if (operation.type === NetworkOperationType.EthCall) {
       const ethCall = operation as EthCallOperation
@@ -103,7 +102,7 @@ export class EVMAccount extends AbstractChainAccount {
         ethCall.contract,
         ethCall.amount,
         data,
-        FeeType.EthCall
+        TransactionType.EthCall
       )
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)

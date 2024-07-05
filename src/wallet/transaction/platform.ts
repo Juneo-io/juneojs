@@ -28,37 +28,37 @@ import {
   StakingOperationSummary,
   type ValidatePrimaryOperation
 } from '../operation'
-import { BaseFeeData, FeeType, UtxoFeeData } from './fee'
-import { BaseSpending, UtxoSpending } from './transaction'
+import { BaseFeeData, UtxoFeeData } from './fee'
+import { BaseSpending, TransactionType, UtxoSpending } from './transaction'
 
 async function getPlatformAddPrimaryValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkValidatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.PrimaryValidation)
 }
 
 async function getPlatformAddPrimaryDelegatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addPrimaryNetworkDelegatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.DelegateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.PrimaryDelegation)
 }
 
 async function getPlatformCreateSupernetFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).createSupernetTxFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.CreateSupernet)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.CreateSupernet)
 }
 
 async function getPlatformAddSupernetValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).addSupernetValidatorFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.ValidateFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.ValidateSupernet)
 }
 
 async function getPlatformRemoveSupernetValidatorFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).txFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.RemoveSupernetValidator)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.RemoveSupernetValidator)
 }
 
 async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).createBlockchainTxFee)
-  return new BaseFeeData(provider.platformChain, fee, FeeType.CreateChain)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.CreateChain)
 }
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (
@@ -81,8 +81,7 @@ export async function estimatePlatformAddPrimaryValidatorTransaction (
     fee.amount,
     provider.platformChain,
     validator.nodeId,
-    validator.startTime,
-    validator.endTime,
+    validator.stakePeriod,
     provider.mcn.primary.id,
     validator.weight,
     provider.juneAssetId,
@@ -106,10 +105,11 @@ export async function estimatePlatformValidatePrimaryOperation (
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain = provider.platformChain
-  const potentialReward = chain.estimatePrimaryValidationReward(validate.endTime - validate.startTime, validate.amount)
-  const validator = new Validator(new NodeId(validate.nodeId), validate.startTime, validate.endTime, validate.amount)
+  const potentialReward = chain.estimatePrimaryValidationReward(validate.stakePeriod, validate.amount)
+  const validator = new Validator(new NodeId(validate.nodeId), validate.stakePeriod, validate.amount)
   const values = new Map<string, bigint>()
   const fee = await getPlatformAddPrimaryValidatorFee(provider)
+  const hasSpending = typeof validate.utxoSet === 'undefined'
   return await estimatePlatformAddPrimaryValidatorTransaction(
     provider,
     validate.getPreferredUtxoSet(account, fee.amount),
@@ -124,26 +124,18 @@ export async function estimatePlatformValidatePrimaryOperation (
     validate.rewardThreshold
   ).then(
     (fee) => {
-      const spending = new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(
-        provider,
-        validate,
-        chain,
-        fee,
-        [spending, fee.spending],
-        values,
-        potentialReward
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new UtxoSpending(chain, validate.amount, chain.assetId, fee.transaction.getUtxos()))
+      }
+      return new StakingOperationSummary(provider, validate, chain, fee, spendings, values, potentialReward)
     },
     async () => {
-      return new ChainOperationSummary(
-        provider,
-        validate,
-        chain,
-        fee,
-        [new BaseSpending(chain, validate.amount, chain.assetId), fee.spending],
-        values
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new BaseSpending(chain, validate.amount, chain.assetId))
+      }
+      return new ChainOperationSummary(provider, validate, chain, fee, spendings, values)
     }
   )
 }
@@ -166,8 +158,7 @@ export async function estimatePlatformAddPrimaryDelegatorTransaction (
     fee.amount,
     provider.platformChain,
     validator.nodeId,
-    validator.startTime,
-    validator.endTime,
+    validator.stakePeriod,
     provider.mcn.primary.id,
     validator.weight,
     provider.juneAssetId,
@@ -189,10 +180,11 @@ export async function estimatePlatformDelegatePrimaryOperation (
   account: PlatformAccount
 ): Promise<ChainOperationSummary> {
   const chain = provider.platformChain
-  const potentialReward = chain.estimatePrimaryDelegationReward(delegate.endTime - delegate.startTime, delegate.amount)
-  const validator = new Validator(new NodeId(delegate.nodeId), delegate.startTime, delegate.endTime, delegate.amount)
+  const potentialReward = chain.estimatePrimaryDelegationReward(delegate.stakePeriod, delegate.amount)
+  const validator = new Validator(new NodeId(delegate.nodeId), delegate.stakePeriod, delegate.amount)
   const values = new Map<string, bigint>()
   const fee = await getPlatformAddPrimaryDelegatorFee(provider)
+  const hasSpending = typeof delegate.utxoSet === 'undefined'
   return await estimatePlatformAddPrimaryDelegatorTransaction(
     provider,
     delegate.getPreferredUtxoSet(account, fee.amount),
@@ -205,26 +197,18 @@ export async function estimatePlatformDelegatePrimaryOperation (
     delegate.rewardThreshold
   ).then(
     (fee) => {
-      const spending = new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos())
-      return new StakingOperationSummary(
-        provider,
-        delegate,
-        chain,
-        fee,
-        [spending, fee.spending],
-        values,
-        potentialReward
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new UtxoSpending(chain, delegate.amount, chain.assetId, fee.transaction.getUtxos()))
+      }
+      return new StakingOperationSummary(provider, delegate, chain, fee, spendings, values, potentialReward)
     },
     async () => {
-      return new ChainOperationSummary(
-        provider,
-        delegate,
-        chain,
-        fee,
-        [new BaseSpending(chain, delegate.amount, chain.assetId), fee.spending],
-        values
-      )
+      const spendings = [fee.spending]
+      if (hasSpending) {
+        spendings.unshift(new BaseSpending(chain, delegate.amount, chain.assetId))
+      }
+      return new ChainOperationSummary(provider, delegate, chain, fee, spendings, values)
     }
   )
 }
@@ -288,8 +272,7 @@ export async function estimatePlatformAddSupernetValidatorTransaction (
     fee.amount,
     provider.platformChain,
     validator.nodeId,
-    validator.startTime,
-    validator.endTime,
+    validator.stakePeriod,
     validator.weight,
     supernetId,
     createSupernetTx.getSupernetAuth(Address.toAddresses(account.getSignersAddresses())),
@@ -307,8 +290,7 @@ export async function estimatePlatformAddSupernetValidatorOperation (
   const chain: PlatformBlockchain = provider.platformChain
   const validator: Validator = new Validator(
     new NodeId(addValidator.nodeId),
-    addValidator.startTime,
-    addValidator.endTime,
+    addValidator.stakePeriod,
     addValidator.amount
   )
   const values = new Map<string, bigint>()

@@ -117,7 +117,6 @@ export class BaseTransaction implements UnsignedTransaction {
     const buffer = JuneoBuffer.alloc(bytes.length + 4 + credentialsSize)
     buffer.write(bytes)
     buffer.writeUInt32(credentials.length)
-    credentials.sort(JuneoBuffer.comparator)
     for (const credential of credentials) {
       buffer.write(credential)
     }

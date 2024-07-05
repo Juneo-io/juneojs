@@ -11,19 +11,8 @@ import { ACCOUNT, DEFAULT_TIMEOUT, DONE_STATUS, EXCESSIVE_AMOUNT, PROVIDER } fro
 const chainAccount: ChainAccount = ACCOUNT.getAccount(PROVIDER.platformChain.id)
 // for now we take this nodeID. maybe in the future we can select the node Id with a function
 const validNodeId = 'NodeID-4JfgcoMWBpxCQL5VmyQ1f6L36mUbLLBga'
-const ONE_DAY: bigint = BigInt(86_400)
-let currentTime: bigint = TimeUtils.now() + BigInt(30)
-let tomorrow: bigint = currentTime + ONE_DAY
-let twoWeeks: bigint = currentTime + BigInt(14) * ONE_DAY
 
 describe('Staking operations', (): void => {
-  beforeAll(async () => {
-    // TODO create time provider utils to manage those tests
-    currentTime = TimeUtils.now() + BigInt(30)
-    tomorrow = currentTime + ONE_DAY
-    twoWeeks = currentTime + BigInt(14) * ONE_DAY + BigInt(30)
-  })
-
   test.todo('operations instantiations')
 
   describe('DelegateOperation', () => {
@@ -33,18 +22,16 @@ describe('Staking operations', (): void => {
           nodeId: validNodeId,
           amount: BigInt(100_000_000), // 0.1 JUNE
           expectedStatus: DONE_STATUS,
-          startTime: currentTime,
-          endTime: twoWeeks
+          stakePeriod: TimeUtils.week() * BigInt(2)
         }
       ])(
-        '$#) $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
-        async ({ nodeId, amount, expectedStatus, startTime, endTime }) => {
+        '$#) $amount tokens to delegate node id: $nodeId stake period of $stakePeriod',
+        async ({ nodeId, amount, expectedStatus, stakePeriod }) => {
           const delegateOperation = new DelegatePrimaryOperation(
             PROVIDER.platformChain,
             nodeId,
             amount,
-            startTime,
-            endTime,
+            stakePeriod,
             [chainAccount.address],
             1,
             [chainAccount.address],
@@ -66,18 +53,16 @@ describe('Staking operations', (): void => {
           nodeId: 'WRONG_NODE_ID',
           amount: BigInt(10_000_000),
           expectedError: DecodingError,
-          startTime: currentTime,
-          endTime: tomorrow
+          stakePeriod: TimeUtils.day()
         }
       ])(
-        '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
-        async ({ nodeId, amount, expectedError, startTime, endTime }) => {
+        '$#) $description $amount tokens to delegate node id: $nodeId stake period of $stakePeriod',
+        async ({ nodeId, amount, expectedError, stakePeriod }) => {
           const delegateOperation = new DelegatePrimaryOperation(
             PROVIDER.platformChain,
             nodeId,
             amount,
-            startTime,
-            endTime,
+            stakePeriod,
             [chainAccount.address],
             1,
             [chainAccount.address],
@@ -96,18 +81,16 @@ describe('Staking operations', (): void => {
           nodeId: validNodeId,
           amount: EXCESSIVE_AMOUNT,
           expectedError: AccountError,
-          startTime: currentTime,
-          endTime: tomorrow
+          stakePeriod: TimeUtils.day()
         }
       ])(
-        '$#) $description $amount tokens to delegate node id: $nodeId from $startTime to $endTime',
-        async ({ nodeId, amount, expectedError, startTime, endTime }) => {
+        '$#) $description $amount tokens to delegate node id: $nodeId stake period of $stakePeriod',
+        async ({ nodeId, amount, expectedError, stakePeriod }) => {
           const delegateOperation = new DelegatePrimaryOperation(
             PROVIDER.platformChain,
             nodeId,
             amount,
-            startTime,
-            endTime,
+            stakePeriod,
             [chainAccount.address],
             1,
             [chainAccount.address],

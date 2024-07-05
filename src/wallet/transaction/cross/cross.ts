@@ -16,7 +16,6 @@ import {
   executeJVMImportTransaction,
   executePlatformExportTransaction,
   executePlatformImportTransaction,
-  FeeType,
   TransactionType,
   type EVMFeeData,
   type FeeData,
@@ -250,7 +249,7 @@ export class CrossManager {
         const spending: Spending = fee.spending
         spending.chain = jvm
         spending.assetId = jvm.assetId
-        if (fee.type === FeeType.Deposit) {
+        if (fee.type === TransactionType.Deposit) {
           spending.amount /= AtomicDenomination
         }
         spendings.push(spending)
@@ -269,7 +268,7 @@ export class CrossManager {
       for (const jrc20 of juneChain.jrc20Assets) {
         if (jrc20.address === cross.assetId) {
           exportedJRC20 = jrc20
-          fees.push(new BaseFeeData(juneChain, BigInt(0), FeeType.Withdraw))
+          fees.push(new BaseFeeData(juneChain, BigInt(0), TransactionType.Withdraw))
           spendingAssetId = jrc20.address
           cross.assetId = jrc20.nativeAssetId
           break
@@ -288,7 +287,7 @@ export class CrossManager {
     const exportFee: BaseFeeData = await this.estimateExport(provider, cross.source, cross.destination, cross.assetId)
     const importFee: BaseFeeData = await this.estimateImport(provider, cross.destination, cross.assetId)
     fees.push(exportFee, importFee)
-    if (fees[0].type === FeeType.Withdraw) {
+    if (fees[0].type === TransactionType.Withdraw) {
       const sender: string = account.getAccount(juneChain.id).address
       const amount: bigint = cross.amount + importFee.amount
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
@@ -361,7 +360,7 @@ export class CrossManager {
       // always export fee from JVM to destination
       cross.sendImportFee = true
       const lastFee: FeeData = summary.fees[summary.fees.length - 1]
-      const jrc20Import: boolean = lastFee.type === FeeType.Deposit
+      const jrc20Import: boolean = lastFee.type === TransactionType.Deposit
       let extraFeeAmount: bigint = BigInt(0)
       if (jrc20Import) {
         extraFeeAmount = lastFee.amount / AtomicDenomination
@@ -369,7 +368,7 @@ export class CrossManager {
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[2], summary.fees[3], extraFeeAmount)
       return
     }
-    let feeIndex: number = summary.fees[0].type === FeeType.Withdraw ? 1 : 0
+    let feeIndex: number = summary.fees[0].type === TransactionType.Withdraw ? 1 : 0
     await this.executeCrossOperationStep(summary, account, cross, summary.fees[feeIndex++], summary.fees[feeIndex++])
   }
 
@@ -384,7 +383,7 @@ export class CrossManager {
     const executable: ExecutableOperation = summary.getExecutable()
     const provider: MCNProvider = executable.provider
     // exporting jrc20
-    if (summary.fees[0].type === FeeType.Withdraw) {
+    if (summary.fees[0].type === TransactionType.Withdraw) {
       const juneChain: JEVMBlockchain = provider.juneChain
       const juneAccount: EVMAccount = account.getAccount(juneChain.id) as EVMAccount
       const feeData: EVMFeeData = summary.fees[0] as EVMFeeData
@@ -475,7 +474,7 @@ export class CrossManager {
     }
     // importing jrc20
     const lastFee: FeeData = summary.fees[summary.fees.length - 1]
-    const deposit: boolean = lastFee.chain.id === cross.destination.id && lastFee.type === FeeType.Deposit
+    const deposit: boolean = lastFee.chain.id === cross.destination.id && lastFee.type === TransactionType.Deposit
     const importTransactionAssets: string[] = [cross.assetId]
     if (cross.assetId !== importFee.assetId) {
       importTransactionAssets.push(importFee.assetId)

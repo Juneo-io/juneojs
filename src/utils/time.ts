@@ -18,6 +18,26 @@ export class TimeUtils {
     return TimeUtils.getSingleton().provider.getCurrentClientTimeSeconds()
   }
 
+  static minute (): bigint {
+    return BigInt(60)
+  }
+
+  static hour (): bigint {
+    return TimeUtils.minute() * BigInt(60)
+  }
+
+  static day (): bigint {
+    return TimeUtils.hour() * BigInt(24)
+  }
+
+  static week (): bigint {
+    return TimeUtils.day() * BigInt(7)
+  }
+
+  static year (): bigint {
+    return TimeUtils.day() * BigInt(365)
+  }
+
   static async sleep (milliseconds: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, milliseconds))
   }

@@ -18,7 +18,6 @@ export class Validator implements Serializable {
   nodeId: NodeId
   startTime: bigint
   endTime: bigint
-  stakePeriod: bigint
   weight: bigint
 
   constructor (nodeId: NodeId, stakePeriod: bigint, weight: bigint) {
@@ -27,8 +26,11 @@ export class Validator implements Serializable {
     // we use a fixed start time of now() as another would not have any effect anyways.
     this.startTime = TimeUtils.now()
     this.endTime = this.startTime + stakePeriod
-    this.stakePeriod = stakePeriod
     this.weight = weight
+  }
+
+  getStakePeriod (): bigint {
+    return this.endTime - this.startTime
   }
 
   serialize (): JuneoBuffer {

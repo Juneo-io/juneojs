@@ -46,11 +46,11 @@ export class PlatformBlockchain extends AbstractBlockchain {
   }
 
   estimatePrimaryValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    return this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
+    return this.rewardCalculator.calculate(stakePeriod, TimeUtils.now(), stakeAmount)
   }
 
   estimatePrimaryDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    const rewards: bigint = this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
+    const rewards = this.rewardCalculator.calculate(stakePeriod, TimeUtils.now(), stakeAmount)
     return (rewards * BigInt(BaseShare - this.stakeConfig.minDelegationFee)) / BigInt(BaseShare)
   }
 }

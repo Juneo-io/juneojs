@@ -26,12 +26,12 @@ export class RewardCalculator {
 
   getCurrentReward (currentTime: bigint): bigint {
     if (currentTime >= this.config.targetRewardTime) {
-      return this.config.targetReward
+      return this.config.targetRewardShare
     }
     if (currentTime >= this.config.diminishingRewardTime) {
       return this.getReward(
-        this.config.targetReward,
-        this.config.diminishingReward,
+        this.config.targetRewardShare,
+        this.config.diminishingRewardShare,
         this.getRemainingTimeBoundsPercentage(
           this.config.diminishingRewardTime,
           this.config.targetRewardTime,
@@ -41,8 +41,8 @@ export class RewardCalculator {
     }
     if (currentTime >= this.config.startRewardTime) {
       return this.getReward(
-        this.config.diminishingReward,
-        this.config.startReward,
+        this.config.diminishingRewardShare,
+        this.config.startRewardShare,
         this.getRemainingTimeBoundsPercentage(
           this.config.startRewardTime,
           this.config.diminishingRewardTime,
@@ -51,7 +51,7 @@ export class RewardCalculator {
       )
     }
     // Start period or before
-    return this.config.startReward
+    return this.config.startRewardShare
   }
 
   getReward (lowerReward: bigint, upperReward: bigint, remainingTimeBoundsPercentage: bigint): bigint {

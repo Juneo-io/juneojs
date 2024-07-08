@@ -1,4 +1,5 @@
 export * from './chain'
+export * from './constants'
 export * from './jevm'
 export * from './jvm'
 export * from './platform'

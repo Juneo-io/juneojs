@@ -24,12 +24,12 @@ export class ContractManager {
   }
 
   async balanceOf (provider: ethers.JsonRpcProvider, contractAddress: string, address: string): Promise<bigint> {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.BalanceOfABI, provider)
+    const contract = new ethers.Contract(contractAddress, abi.BalanceOfABI, provider)
     return BigInt.asUintN(256, BigInt(await contract.balanceOf(address)))
   }
 
   getTransferData (provider: ethers.JsonRpcProvider, contractAddress: string, to: string, amount: bigint): string {
-    const contract: ethers.Contract = new ethers.Contract(contractAddress, abi.TransferABI, provider)
+    const contract = new ethers.Contract(contractAddress, abi.TransferABI, provider)
     return contract.interface.encodeFunctionData('transfer', [to, amount])
   }
 }
@@ -48,7 +48,7 @@ export class ERC20TokenHandler implements SolidityTokenHandler {
   }
 
   async instanceOf (contractAddress: string): Promise<boolean> {
-    const contract: ethers.Contract = this.getContract(contractAddress)
+    const contract = this.getContract(contractAddress)
     // checking if is ERC20 by calling decimals read only function
     // other main tokens interfaces should not be using decimals
     // IERC165 is not widespread enough to be used by ERC20 tokens
@@ -59,7 +59,7 @@ export class ERC20TokenHandler implements SolidityTokenHandler {
   }
 
   async queryTokenData (contractAddress: string): Promise<TokenAsset> {
-    const contract: ethers.Contract = this.getContract(contractAddress)
+    const contract = this.getContract(contractAddress)
     const name: string = await contract.name()
     const symbol: string = await contract.symbol()
     const decimals: number = await contract.decimals()
@@ -97,7 +97,7 @@ export class JRC20ContractAdapter extends EVMCallAdapter {
 
   getDepositData (assetId: string, amount: bigint): string {
     // native asset call data
-    let data: string = ethers.solidityPacked(
+    let data = ethers.solidityPacked(
       ['address', 'uint256', 'uint256'],
       [this.contractAddress, `0x${new AssetId(assetId).serialize().toHex()}`, amount]
     )

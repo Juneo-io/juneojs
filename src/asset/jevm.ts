@@ -21,7 +21,7 @@ export class JEVMGasToken extends EVMGasToken {
  * Representation of a JRC20 smart contract.
  */
 export class JRC20Asset extends ERC20Asset {
-  override readonly type: string = TokenType.JRC20
+  override readonly type: TokenType = TokenType.JRC20
   readonly nativeAssetId: string
   readonly adapter: JRC20ContractAdapter
 

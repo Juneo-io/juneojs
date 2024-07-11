@@ -1,5 +1,6 @@
 import { JuneoBuffer, type Serializable } from '../../utils'
 import {
+  AddressSize,
   AssetIdSize,
   BlockchainIdSize,
   EVMExportTransactionTypeId,
@@ -9,10 +10,10 @@ import {
   TransactionIdSize
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
-import { type TransferableOutput } from '../output'
+import { TransferableOutput } from '../output'
 import { AbstractSignable, type Signable } from '../signature'
 import { ExportTransaction, ImportTransaction } from '../transaction'
-import { Address, AssetId, type BlockchainId } from '../types'
+import { Address, AssetId, BlockchainId } from '../types'
 
 export class EVMOutput implements Serializable {
   address: Address
@@ -31,6 +32,14 @@ export class EVMOutput implements Serializable {
     buffer.writeUInt64(this.amount)
     buffer.write(this.assetId.serialize())
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): EVMOutput {
+    const reader = JuneoBuffer.from(data).createReader()
+    const address = new Address(reader.read(AddressSize))
+    const amount = reader.readUInt64()
+    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    return new EVMOutput(address, amount, assetId)
   }
 
   static comparator = (a: EVMOutput, b: EVMOutput): number => {
@@ -79,6 +88,15 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
     buffer.write(this.assetId.serialize())
     buffer.writeUInt64(this.nonce)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): EVMInput {
+    const reader = JuneoBuffer.from(data).createReader()
+    const address = new Address(reader.read(AddressSize))
+    const amount = reader.readUInt64()
+    const assetId = new AssetId(reader.read(AssetIdSize).toCB58())
+    const nonce = reader.readUInt64()
+    return new EVMInput(address, amount, assetId, nonce)
   }
 
   static comparator = (a: EVMInput, b: EVMInput): number => {
@@ -142,6 +160,34 @@ export class JEVMExportTransaction extends ExportTransaction {
       buffer.write(output)
     }
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): JEVMExportTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    // skip codec reading
+    reader.skip(2)
+    reader.readAndVerifyTypeId(EVMExportTransactionTypeId)
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const destinationChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const inputsLength = reader.readUInt32()
+    const inputs: EVMInput[] = []
+    for (let i = 0; i < inputsLength; i++) {
+      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const input = EVMInput.parse(inputBuffer)
+      reader.skip(input.serialize().length)
+      inputs.push(input)
+    }
+    const exportedOutputsLength = reader.readUInt32()
+    const exportedOutputs: TransferableOutput[] = []
+    for (let i = 0; i < exportedOutputsLength; i++) {
+      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const output = TransferableOutput.parse(outputBuffer)
+      reader.skip(output.serialize().length)
+      exportedOutputs.push(output)
+    }
+    return new JEVMExportTransaction(networkId, blockchainId, destinationChain, inputs, exportedOutputs)
   }
 
   static estimateSignaturesCount (exportedAssets: string[], exportFeeAssetId: string, importFeeAssetId: string): number {
@@ -220,6 +266,34 @@ export class JEVMImportTransaction extends ImportTransaction {
       buffer.write(output)
     }
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): JEVMImportTransaction {
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    // skip codec reading
+    reader.skip(2)
+    reader.readAndVerifyTypeId(EVMImportTransactionTypeId)
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const sourceChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const importedInputsLength = reader.readUInt32()
+    const importedInputs: TransferableInput[] = []
+    for (let i = 0; i < importedInputsLength; i++) {
+      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const input = TransferableInput.parse(inputBuffer)
+      reader.skip(input.serialize().length)
+      importedInputs.push(input)
+    }
+    const outputsLength = reader.readUInt32()
+    const outputs: EVMOutput[] = []
+    for (let i = 0; i < outputsLength; i++) {
+      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
+      const output = EVMOutput.parse(outputBuffer)
+      reader.skip(output.serialize().length)
+      outputs.push(output)
+    }
+    return new JEVMImportTransaction(networkId, blockchainId, sourceChain, importedInputs, outputs)
   }
 
   static estimateSize (inputsCount: number, outputsCount: number): number {

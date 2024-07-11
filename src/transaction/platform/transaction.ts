@@ -22,7 +22,7 @@ import { type TransferableInput } from '../input'
 import { Secp256k1OutputOwners, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { BaseTransaction, ExportTransaction, ImportTransaction } from '../transaction'
-import { type Address, AssetId, type BlockchainId, DynamicId, type NodeId, SupernetId } from '../types'
+import { type Address, AssetId, type BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
 import { type BLSSigner, PrimarySigner, SupernetAuth, Validator } from './supernet'
 
 export class PlatformBaseTransaction extends BaseTransaction {
@@ -388,6 +388,26 @@ export class RemoveSupernetValidatorTransaction extends BaseTransaction {
     buffer.write(this.supernetId.serialize())
     buffer.write(supernetAuthBytes)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): RemoveSupernetValidatorTransaction {
+    const baseTx = BaseTransaction.parse(data, RemoveSupernetValidatorTransactionTypeId)
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.skip(baseTx)
+    const nodeId = new NodeId(reader.read(NodeIdSize).toCB58())
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
+    const supernetAuth = SupernetAuth.parse(reader.peekRemaining())
+    reader.skip(supernetAuth)
+    return new RemoveSupernetValidatorTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      nodeId,
+      supernetId,
+      supernetAuth
+    )
   }
 }
 

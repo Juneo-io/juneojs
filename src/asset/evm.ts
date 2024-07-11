@@ -8,7 +8,7 @@ const EVMGasTokenDecimals = 18
  * It is also known as the native asset of an EVM.
  */
 export class EVMGasToken extends TokenAsset {
-  override readonly type: string = TokenType.Gas
+  override readonly type: TokenType = TokenType.Gas
 
   constructor (assetId: string, name: string, symbol: string) {
     super(assetId, name, symbol, EVMGasTokenDecimals)
@@ -23,7 +23,7 @@ export interface EVMContract {
  * Representation of an ERC20 smart contract.
  */
 export class ERC20Asset extends TokenAsset implements EVMContract {
-  override readonly type: string = TokenType.ERC20
+  override readonly type: TokenType = TokenType.ERC20
   readonly address
 
   constructor (address: string, name: string, symbol: string, decimals: number) {
@@ -41,7 +41,7 @@ export class ERC20Asset extends TokenAsset implements EVMContract {
  * Also known as wrapped native. In the Juneo network it is deployed as the wJUNE.
  */
 export class WrappedAsset extends ERC20Asset {
-  override readonly type: string = TokenType.Wrapped
+  override readonly type: TokenType = TokenType.Wrapped
   readonly adapter: WrappedContractAdapter
 
   constructor (address: string, name: string, symbol: string, decimals: number) {

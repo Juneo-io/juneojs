@@ -9,54 +9,29 @@ export class RewardCalculator {
     this.config = config
   }
 
-  // Used for non Primary supernet rewards
   calculate (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
-    const boundsPercentage: bigint = this.getRemainingTimeBoundsPercentage(
-      this.config.startRewardTime,
-      this.config.targetRewardTime,
-      currentTime
-    )
-    const reward: bigint = this.getReward(this.config.targetReward, this.config.startReward, boundsPercentage)
-    return this.getEffectiveReward(stakePeriod, stakeAmount, reward)
-  }
-
-  calculatePrimary (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
-    const reward: bigint = this.getCurrentPrimaryReward(currentTime)
-    return this.getEffectiveReward(stakePeriod, stakeAmount, reward)
-  }
-
-  getEffectiveReward (stakePeriod: bigint, stakeAmount: bigint, reward: bigint): bigint {
-    reward += this.getStakePeriodReward(
-      this.config.maxStakePeriod,
-      this.config.minStakePeriod,
-      stakePeriod,
-      this.config.stakePeriodRewardShare
-    )
-    const stakePeriodRatio: bigint = (stakePeriod * PrecisionConstant) / this.config.maxStakePeriod
-    const effectiveReward: bigint = (reward * stakePeriodRatio) / PrecisionConstant
+    let reward = this.getCurrentReward(currentTime)
+    reward += this.getStakePeriodReward(stakePeriod)
+    const stakePeriodRatio = (stakePeriod * PrecisionConstant) / this.config.maxStakePeriod
+    const effectiveReward = (reward * stakePeriodRatio) / PrecisionConstant
     return (stakeAmount * effectiveReward) / PrecisionConstant
   }
 
-  getStakePeriodReward (
-    maxStakePeriod: bigint,
-    minStakePeriod: bigint,
-    stakePeriod: bigint,
-    stakePeriodRewardShare: bigint
-  ): bigint {
-    const adjustedStakePeriod: bigint = (stakePeriod - minStakePeriod) * PrecisionConstant
-    const adjustedMaxStakePeriod: bigint = maxStakePeriod - minStakePeriod
-    const adjustedStakePeriodRatio: bigint = adjustedStakePeriod / adjustedMaxStakePeriod
-    return (adjustedStakePeriodRatio * stakePeriodRewardShare) / PrecisionConstant
+  getStakePeriodReward (stakePeriod: bigint): bigint {
+    const adjustedStakePeriod = (stakePeriod - this.config.minStakePeriod) * PrecisionConstant
+    const adjustedMaxStakePeriod = this.config.maxStakePeriod - this.config.minStakePeriod
+    const adjustedStakePeriodRatio = adjustedStakePeriod / adjustedMaxStakePeriod
+    return (adjustedStakePeriodRatio * this.config.stakePeriodRewardShare) / PrecisionConstant
   }
 
-  getCurrentPrimaryReward (currentTime: bigint): bigint {
+  getCurrentReward (currentTime: bigint): bigint {
     if (currentTime >= this.config.targetRewardTime) {
-      return this.config.targetReward
+      return this.config.targetRewardShare
     }
     if (currentTime >= this.config.diminishingRewardTime) {
       return this.getReward(
-        this.config.targetReward,
-        this.config.diminishingReward,
+        this.config.targetRewardShare,
+        this.config.diminishingRewardShare,
         this.getRemainingTimeBoundsPercentage(
           this.config.diminishingRewardTime,
           this.config.targetRewardTime,
@@ -66,8 +41,8 @@ export class RewardCalculator {
     }
     if (currentTime >= this.config.startRewardTime) {
       return this.getReward(
-        this.config.diminishingReward,
-        this.config.startReward,
+        this.config.diminishingRewardShare,
+        this.config.startRewardShare,
         this.getRemainingTimeBoundsPercentage(
           this.config.startRewardTime,
           this.config.diminishingRewardTime,
@@ -76,12 +51,12 @@ export class RewardCalculator {
       )
     }
     // Start period or before
-    return this.config.startReward
+    return this.config.startRewardShare
   }
 
   getReward (lowerReward: bigint, upperReward: bigint, remainingTimeBoundsPercentage: bigint): bigint {
-    const diminishingReward: bigint = upperReward - lowerReward
-    const remainingReward: bigint = (diminishingReward * remainingTimeBoundsPercentage) / PrecisionConstant
+    const diminishingReward = upperReward - lowerReward
+    const remainingReward = (diminishingReward * remainingTimeBoundsPercentage) / PrecisionConstant
     return remainingReward + lowerReward
   }
 
@@ -99,8 +74,8 @@ export class RewardCalculator {
     if (currentTime <= lowerTimeBound) {
       return PrecisionConstant
     }
-    const maxElapsedTime: bigint = upperTimeBound - lowerTimeBound
-    const elapsedTime: bigint = currentTime - lowerTimeBound
+    const maxElapsedTime = upperTimeBound - lowerTimeBound
+    const elapsedTime = currentTime - lowerTimeBound
     // Current time is after or at upper bound
     if (elapsedTime >= maxElapsedTime) {
       return BigInt(0)

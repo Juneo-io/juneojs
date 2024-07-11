@@ -1,24 +1,13 @@
 import { ethers } from 'ethers'
 import { type JEVMAPI } from '../api'
-import { type JEVMGasToken, type JRC20Asset, type TokenAsset, TokenType, type WrappedAsset } from '../asset'
+import { type JEVMGasToken, type JRC20Asset, type TokenAsset, type WrappedAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { AssetId } from '../transaction'
 import { ChainError, fetchJNT, isContractAddress } from '../utils'
 import { AbstractBlockchain } from './chain'
-import { ContractManager, ERC20TokenHandler, type SolidityTokenHandler } from './solidity'
+import { EmptyCallData, EVM_HD_PATH, EVMTransferables, JEVM_ID } from './constants'
+import { ContractManager, ERC20TokenHandler } from './solidity'
 import { ChainVM, VMType, VMWalletType } from './vm'
-
-export const JEVM_ID: string = 'orkbbNQVf27TiBe6GqN5dm8d8Lo3rutEov8DUWZaKNUjckwSk'
-export const EVM_ID: string = 'mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6'
-
-const HD_PATH = 60
-
-export const NativeAssetBalanceContract: string = '0x0100000000000000000000000000000000000001'
-export const NativeAssetCallContract: string = '0x0100000000000000000000000000000000000002'
-
-export const SendEtherGasLimit = BigInt(21_000)
-export const EmptyCallData = '0x'
-const Transferables: string[] = [TokenType.ERC20, TokenType.JRC20, TokenType.Wrapped]
 
 export class JEVMBlockchain extends AbstractBlockchain {
   override asset: JEVMGasToken
@@ -41,7 +30,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
     jrc20Assets: JRC20Asset[] = [],
     wrappedAsset?: WrappedAsset | undefined
   ) {
-    super(name, id, new ChainVM(JEVM_ID, VMType.EVM, VMWalletType.Nonce, HD_PATH), asset, aliases, registeredAssets)
+    super(name, id, new ChainVM(JEVM_ID, VMType.EVM, VMWalletType.Nonce, EVM_HD_PATH), asset, aliases, registeredAssets)
     this.asset = asset
     this.chainId = chainId
     this.baseFee = baseFee
@@ -62,8 +51,8 @@ export class JEVMBlockchain extends AbstractBlockchain {
   ): Promise<string> {
     // could rather use contract manager but it would require one extra network call
     // we avoid it if the asset is already registered
-    const asset: TokenAsset = await this.getAsset(provider, assetId)
-    if (Transferables.includes(asset.type)) {
+    const asset = await this.getAsset(provider, assetId)
+    if (EVMTransferables.includes(asset.type)) {
       return this.contractManager.getTransferData(this.ethProvider, assetId, to, amount)
     }
     return EmptyCallData
@@ -71,7 +60,7 @@ export class JEVMBlockchain extends AbstractBlockchain {
 
   protected async fetchAsset (provider: MCNProvider, assetId: string): Promise<TokenAsset> {
     if (isContractAddress(assetId)) {
-      const handler: SolidityTokenHandler | null = await this.contractManager.getHandler(assetId)
+      const handler = await this.contractManager.getHandler(assetId)
       if (handler === null) {
         throw new ChainError(`contract address ${assetId} does not implement a compatible interface`)
       }

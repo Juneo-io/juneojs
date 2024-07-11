@@ -2,13 +2,8 @@ import { type JNTAsset, type TokenAsset } from '../asset'
 import { type MCNProvider } from '../juneo'
 import { fetchJNT, RewardCalculator, TimeUtils, validateBech32 } from '../utils'
 import { AbstractBlockchain } from './chain'
+import { BaseShare, JVM_HD_PATH, PLATFORMVM_ID } from './constants'
 import { ChainVM, VMType, VMWalletType } from './vm'
-
-export const PLATFORMVM_ID: string = '11111111111111111111111111111111LpoYY'
-
-const HD_PATH = 9000
-
-const BaseShare: number = 100_0000 // 100%
 
 export class PlatformBlockchain extends AbstractBlockchain {
   stakeConfig: StakeConfig
@@ -27,7 +22,7 @@ export class PlatformBlockchain extends AbstractBlockchain {
     super(
       name,
       id,
-      new ChainVM(PLATFORMVM_ID, VMType.JVM, VMWalletType.Utxo, HD_PATH),
+      new ChainVM(PLATFORMVM_ID, VMType.JVM, VMWalletType.Utxo, JVM_HD_PATH),
       asset,
       aliases,
       registeredAssets
@@ -46,11 +41,11 @@ export class PlatformBlockchain extends AbstractBlockchain {
   }
 
   estimatePrimaryValidationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    return this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
+    return this.rewardCalculator.calculate(stakePeriod, TimeUtils.now(), stakeAmount)
   }
 
   estimatePrimaryDelegationReward (stakePeriod: bigint, stakeAmount: bigint): bigint {
-    const rewards: bigint = this.rewardCalculator.calculatePrimary(stakePeriod, TimeUtils.now(), stakeAmount)
+    const rewards = this.rewardCalculator.calculate(stakePeriod, TimeUtils.now(), stakeAmount)
     return (rewards * BigInt(BaseShare - this.stakeConfig.minDelegationFee)) / BigInt(BaseShare)
   }
 }
@@ -91,31 +86,31 @@ export class RewardConfig {
   maxStakePeriod: bigint
   stakePeriodRewardShare: bigint
   startRewardTime: bigint
-  startReward: bigint
+  startRewardShare: bigint
   diminishingRewardTime: bigint
-  diminishingReward: bigint
+  diminishingRewardShare: bigint
   targetRewardTime: bigint
-  targetReward: bigint
+  targetRewardShare: bigint
 
   constructor (
     minStakePeriod: bigint,
     maxStakePeriod: bigint,
     stakePeriodRewardShare: bigint,
     startRewardTime: bigint,
-    startReward: bigint,
+    startRewardShare: bigint,
     diminishingRewardTime: bigint,
-    diminishingReward: bigint,
+    diminishingRewardShare: bigint,
     targetRewardTime: bigint,
-    targetReward: bigint
+    targetRewardShare: bigint
   ) {
     this.minStakePeriod = minStakePeriod
     this.maxStakePeriod = maxStakePeriod
     this.stakePeriodRewardShare = stakePeriodRewardShare
     this.startRewardTime = startRewardTime
-    this.startReward = startReward
+    this.startRewardShare = startRewardShare
     this.diminishingRewardTime = diminishingRewardTime
-    this.diminishingReward = diminishingReward
+    this.diminishingRewardShare = diminishingRewardShare
     this.targetRewardTime = targetRewardTime
-    this.targetReward = targetReward
+    this.targetRewardShare = targetRewardShare
   }
 }

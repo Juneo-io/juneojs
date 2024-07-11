@@ -59,7 +59,7 @@ export abstract class AbstractBlockchain implements Blockchain {
     if (this.registeredAssets.has(assetId)) {
       return this.registeredAssets.get(assetId)!
     }
-    const asset: TokenAsset = await this.fetchAsset(provider, assetId)
+    const asset = await this.fetchAsset(provider, assetId)
     this.addRegisteredAsset(asset)
     return asset
   }

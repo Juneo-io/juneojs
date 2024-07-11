@@ -14,7 +14,7 @@ export enum TokenType {
  * such as an id, a name, a symbol and decimals.
  */
 export class TokenAsset {
-  readonly type: string = TokenType.Generic
+  readonly type: TokenType = TokenType.Generic
   readonly assetId: string
   readonly name: string
   readonly symbol: string

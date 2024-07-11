@@ -521,6 +521,10 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     this.shares = shares
   }
 
+  getOutputs (): TransferableOutput[] {
+    return [...this.outputs, ...this.stake]
+  }
+
   serialize (): JuneoBuffer {
     const baseTransaction: JuneoBuffer = super.serialize()
     const signerBytes: JuneoBuffer = this.signer.serialize()
@@ -621,6 +625,10 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     this.supernetId = supernetId
     this.stake = stake
     this.delegatorRewardsOwner = delegatorRewardsOwner
+  }
+
+  getOutputs (): TransferableOutput[] {
+    return [...this.outputs, ...this.stake]
   }
 
   serialize (): JuneoBuffer {

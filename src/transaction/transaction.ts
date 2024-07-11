@@ -1,5 +1,5 @@
 import { type Blockchain } from '../chain'
-import { JuneoBuffer, SignatureError, type Serializable } from '../utils'
+import { JuneoBuffer, SignatureError, TransactionError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
 import { TransferableOutput, type Utxo } from './output'
@@ -32,6 +32,8 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getInputs: () => TransferableInput[]
+  getOutputs: () => TransferableOutput[]
+  getOutput: (index: number) => TransferableOutput
   getUtxos: () => Utxo[]
   sign: (signers: Signer[]) => Promise<Signature[]>
   signTransaction: (signers: Signer[]) => Promise<string>
@@ -71,6 +73,18 @@ export class BaseTransaction implements UnsignedTransaction {
 
   getInputs (): TransferableInput[] {
     return this.inputs
+  }
+
+  getOutputs (): TransferableOutput[] {
+    return this.outputs
+  }
+
+  getOutput (index: number): TransferableOutput {
+    const outputs = this.getOutputs()
+    if (index > outputs.length) {
+      throw new TransactionError(`transaction does not have output at index ${index} > length (${outputs.length})`)
+    }
+    return outputs[index]
   }
 
   getUtxos (): Utxo[] {
@@ -209,6 +223,10 @@ export class ExportTransaction extends BaseTransaction {
     this.destinationChain = destinationChain
     this.exportedOutputs = exportedOutputs
     this.exportedOutputs.sort(TransferableOutput.comparator)
+  }
+
+  getOutputs (): TransferableOutput[] {
+    return [...this.outputs, ...this.exportedOutputs]
   }
 
   serialize (): JuneoBuffer {

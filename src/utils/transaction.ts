@@ -11,7 +11,6 @@ import {
   CreateChainTransactionTypeId,
   CreateSupernetTransaction,
   CreateSupernetTransactionTypeId,
-  type ExportTransaction,
   ImportTransaction,
   JVMBaseTransaction,
   JVMBaseTransactionTypeId,
@@ -25,10 +24,11 @@ import {
   PlatformExportTransactionTypeId,
   PlatformImportTransaction,
   PlatformImportTransactionTypeId,
-  RemoveSupernetTransactionTypeId,
+  RemoveSupernetValidatorTransactionTypeId,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
   Utxo,
+  type ExportTransaction,
   type UnsignedTransaction
 } from '../transaction'
 import { JuneoBuffer } from './bytes'
@@ -102,8 +102,8 @@ export class TransactionUtils {
       case PlatformExportTransactionTypeId: {
         return 'Platform Export Transaction'
       }
-      case RemoveSupernetTransactionTypeId: {
-        return 'Remove Supernet Transaction'
+      case RemoveSupernetValidatorTransactionTypeId: {
+        return 'Remove Supernet Validator Transaction'
       }
       case TransformSupernetTransactionTypeId: {
         return 'Transform Supernet Transaction'
@@ -164,7 +164,7 @@ export class TransactionUtils {
       case PlatformExportTransactionTypeId: {
         return PlatformExportTransaction.parse(data)
       }
-      case RemoveSupernetTransactionTypeId: {
+      case RemoveSupernetValidatorTransactionTypeId: {
         throw notImplementedTypeIdError
       }
       case TransformSupernetTransactionTypeId: {

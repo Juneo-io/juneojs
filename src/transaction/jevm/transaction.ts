@@ -174,17 +174,15 @@ export class JEVMExportTransaction extends ExportTransaction {
     const inputsLength = reader.readUInt32()
     const inputs: EVMInput[] = []
     for (let i = 0; i < inputsLength; i++) {
-      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const input = EVMInput.parse(inputBuffer)
-      reader.skip(input.serialize().length)
+      const input = EVMInput.parse(reader.peekRemaining())
+      reader.skip(input)
       inputs.push(input)
     }
     const exportedOutputsLength = reader.readUInt32()
     const exportedOutputs: TransferableOutput[] = []
     for (let i = 0; i < exportedOutputsLength; i++) {
-      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const output = TransferableOutput.parse(outputBuffer)
-      reader.skip(output.serialize().length)
+      const output = TransferableOutput.parse(reader.peekRemaining())
+      reader.skip(output)
       exportedOutputs.push(output)
     }
     return new JEVMExportTransaction(networkId, blockchainId, destinationChain, inputs, exportedOutputs)
@@ -280,17 +278,15 @@ export class JEVMImportTransaction extends ImportTransaction {
     const importedInputsLength = reader.readUInt32()
     const importedInputs: TransferableInput[] = []
     for (let i = 0; i < importedInputsLength; i++) {
-      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const input = TransferableInput.parse(inputBuffer)
-      reader.skip(input.serialize().length)
+      const input = TransferableInput.parse(reader.peekRemaining())
+      reader.skip(input)
       importedInputs.push(input)
     }
     const outputsLength = reader.readUInt32()
     const outputs: EVMOutput[] = []
     for (let i = 0; i < outputsLength; i++) {
-      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const output = EVMOutput.parse(outputBuffer)
-      reader.skip(output.serialize().length)
+      const output = EVMOutput.parse(reader.peekRemaining())
+      reader.skip(output)
       outputs.push(output)
     }
     return new JEVMImportTransaction(networkId, blockchainId, sourceChain, importedInputs, outputs)

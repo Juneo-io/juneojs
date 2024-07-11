@@ -185,9 +185,8 @@ export class SignedTransaction {
     const credentials: TransactionCredentials[] = []
     const credentialsLength = reader.readUInt32()
     for (let i = 0; i < credentialsLength; i++) {
-      const credentialBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const credential = TransactionCredentials.parse(credentialBuffer)
-      reader.skip(credential.serialize().length)
+      const credential = TransactionCredentials.parse(reader.peekRemaining())
+      reader.skip(credential)
       credentials.push(credential)
     }
     const signedTransaction = new SignedTransaction(unsignedTransaction, [])

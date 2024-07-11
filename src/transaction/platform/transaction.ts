@@ -128,7 +128,7 @@ export class AddSupernetValidatorTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data, AddSupernetValidatorTransactionTypeId)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const validator = Validator.parse(reader.read(ValidatorSize))
     const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const supernetAuth = SupernetAuth.parse(reader.readRemaining())
@@ -176,7 +176,7 @@ export class CreateSupernetTransaction extends BaseTransaction {
   static parse (data: string | JuneoBuffer): CreateSupernetTransaction {
     const baseTx = BaseTransaction.parse(data, CreateSupernetTransactionTypeId)
     const reader = JuneoBuffer.from(data).createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())
     return new CreateSupernetTransaction(
       baseTx.networkId,
@@ -261,7 +261,7 @@ export class CreateChainTransaction extends BaseTransaction {
   static parse (data: string | JuneoBuffer): CreateChainTransaction {
     const baseTx = BaseTransaction.parse(data, CreateChainTransactionTypeId)
     const reader = JuneoBuffer.from(data).createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const nameLength = reader.readUInt16()
     const name = reader.readString(nameLength)
@@ -329,6 +329,26 @@ export class TransferSupernetOwnershipTransaction extends BaseTransaction {
     buffer.write(supernetAuthBytes)
     buffer.write(ownerBytes)
     return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): TransferSupernetOwnershipTransaction {
+    const baseTx = BaseTransaction.parse(data, TransferSupernetOwnershipTransactionTypeId)
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.skip(baseTx)
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
+    const supernetAuth = SupernetAuth.parse(reader.peekRemaining())
+    reader.skip(supernetAuth)
+    const owner = Secp256k1OutputOwners.parse(reader.readRemaining())
+    return new TransferSupernetOwnershipTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      supernetId,
+      supernetAuth,
+      owner
+    )
   }
 }
 
@@ -569,25 +589,21 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data, AddPermissionlessValidatorTransactionTypeId)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const validator = Validator.parse(reader.read(ValidatorSize))
     const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const signer = PrimarySigner.parse(reader.read(PrimarySignerSize))
     const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
     for (let i = 0; i < stakeLength; i++) {
-      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(stake.serialize().length)
+      const stake = TransferableOutput.parse(reader.peekRemaining())
+      reader.skip(stake)
       stakes.push(stake)
     }
-    const validatorRewardsOwner = Secp256k1OutputOwners.parse(
-      buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-    )
-    reader.skip(validatorRewardsOwner.serialize().length)
-    const delegatorRewardsOwner = Secp256k1OutputOwners.parse(
-      buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-    )
-    reader.skip(delegatorRewardsOwner.serialize().length)
+    const validatorRewardsOwner = Secp256k1OutputOwners.parse(reader.peekRemaining())
+    reader.skip(validatorRewardsOwner)
+    const delegatorRewardsOwner = Secp256k1OutputOwners.parse(reader.peekRemaining())
+    reader.skip(delegatorRewardsOwner)
     const shares = reader.readUInt32()
     return new AddPermissionlessValidatorTransaction(
       baseTx.networkId,
@@ -664,14 +680,14 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data, AddPermissionlessDelegatorTransactionTypeId)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const validator = Validator.parse(reader.read(ValidatorSize))
     const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
     const stakeLength = reader.readUInt32()
     const stakes: TransferableOutput[] = []
     for (let i = 0; i < stakeLength; i++) {
-      const stake = TransferableOutput.parse(buffer.read(reader.getCursor(), buffer.length - reader.getCursor()))
-      reader.skip(stake.serialize().length)
+      const stake = TransferableOutput.parse(reader.peekRemaining())
+      reader.skip(stake)
       stakes.push(stake)
     }
     const rewardsOwner = Secp256k1OutputOwners.parse(reader.readRemaining())

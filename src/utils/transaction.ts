@@ -1,4 +1,3 @@
-import { type AbstractUtxoAPI } from '../api'
 import { type MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
@@ -12,6 +11,7 @@ import {
   CreateChainTransactionTypeId,
   CreateSupernetTransaction,
   CreateSupernetTransactionTypeId,
+  type ExportTransaction,
   ImportTransaction,
   JVMBaseTransaction,
   JVMBaseTransactionTypeId,
@@ -26,7 +26,6 @@ import {
   PlatformImportTransaction,
   PlatformImportTransactionTypeId,
   RemoveSupernetTransactionTypeId,
-  type TransferableInput,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
   Utxo,
@@ -52,21 +51,21 @@ export class TransactionUtils {
   static async syncUtxos (provider: MCNProvider, unsignedTx: UnsignedTransaction): Promise<void> {
     const chain = getBlockchain(provider, unsignedTx.blockchainId)
     const api = getUtxoAPI(provider, chain)
-    await TransactionUtils.syncInputUtxos(api, unsignedTx.inputs)
-    if (unsignedTx instanceof ImportTransaction) {
-      const importTx = unsignedTx
-      const sourceChain = getBlockchain(provider, importTx.sourceChain)
-      const sourceApi = getUtxoAPI(provider, sourceChain)
-      await TransactionUtils.syncInputUtxos(sourceApi, importTx.importedInputs)
-    }
-  }
-
-  static async syncInputUtxos (api: AbstractUtxoAPI, inputs: TransferableInput[]): Promise<void> {
-    for (const input of inputs) {
+    for (const input of unsignedTx.inputs) {
       const data = (await api.getTx(input.transactionId.value)).tx
       const tx = TransactionUtils.parseUnsignedTransaction(data)
       const output = tx.outputs[input.utxoIndex]
       input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
+    }
+    if (unsignedTx instanceof ImportTransaction) {
+      const sourceChain = getBlockchain(provider, unsignedTx.sourceChain)
+      const sourceApi = getUtxoAPI(provider, sourceChain)
+      for (const input of unsignedTx.importedInputs) {
+        const data = (await sourceApi.getTx(input.transactionId.value)).tx
+        const exportTx = TransactionUtils.parseUnsignedTransaction(data) as ExportTransaction
+        const output = exportTx.exportedOutputs[input.utxoIndex]
+        input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
+      }
     }
   }
 

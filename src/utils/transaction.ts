@@ -1,4 +1,4 @@
-import { type MCNProvider } from '../juneo'
+import { type AbstractUtxoAPI, type MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessDelegatorTransactionTypeId,
@@ -11,7 +11,11 @@ import {
   CreateChainTransactionTypeId,
   CreateSupernetTransaction,
   CreateSupernetTransactionTypeId,
+  EVMExportTransactionTypeId,
+  EVMImportTransactionTypeId,
   ImportTransaction,
+  JEVMExportTransaction,
+  JEVMImportTransaction,
   JVMBaseTransaction,
   JVMBaseTransactionTypeId,
   JVMExportTransaction,
@@ -24,11 +28,13 @@ import {
   PlatformExportTransactionTypeId,
   PlatformImportTransaction,
   PlatformImportTransactionTypeId,
+  RemoveSupernetValidatorTransaction,
   RemoveSupernetValidatorTransactionTypeId,
+  TransferSupernetOwnershipTransaction,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
   Utxo,
-  type ExportTransaction,
+  type TransferableInput,
   type UnsignedTransaction
 } from '../transaction'
 import { JuneoBuffer } from './bytes'
@@ -51,21 +57,20 @@ export class TransactionUtils {
   static async syncUtxos (provider: MCNProvider, unsignedTx: UnsignedTransaction): Promise<void> {
     const chain = getBlockchain(provider, unsignedTx.blockchainId)
     const api = getUtxoAPI(provider, chain)
-    for (const input of unsignedTx.inputs) {
-      const data = (await api.getTx(input.transactionId.value)).tx
-      const tx = TransactionUtils.parseUnsignedTransaction(data)
-      const output = tx.outputs[input.utxoIndex]
-      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
-    }
+    await TransactionUtils.syncInputsUtxos(unsignedTx.inputs, api)
     if (unsignedTx instanceof ImportTransaction) {
       const sourceChain = getBlockchain(provider, unsignedTx.sourceChain)
       const sourceApi = getUtxoAPI(provider, sourceChain)
-      for (const input of unsignedTx.importedInputs) {
-        const data = (await sourceApi.getTx(input.transactionId.value)).tx
-        const exportTx = TransactionUtils.parseUnsignedTransaction(data) as ExportTransaction
-        const output = exportTx.exportedOutputs[input.utxoIndex]
-        input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
-      }
+      await TransactionUtils.syncInputsUtxos(unsignedTx.importedInputs, sourceApi)
+    }
+  }
+
+  private static async syncInputsUtxos (inputs: TransferableInput[], api: AbstractUtxoAPI): Promise<void> {
+    for (const input of inputs) {
+      const data = (await api.getTx(input.transactionId.value)).tx
+      const tx = TransactionUtils.parseUnsignedTransaction(data)
+      const output = tx.getOutput(input.utxoIndex)
+      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
     }
   }
 
@@ -73,13 +78,9 @@ export class TransactionUtils {
     switch (typeId) {
       case JVMBaseTransactionTypeId: {
         return 'JVM Base Transaction'
-        // it has the same id as EVMImportTx
-        // when it is implemented try the other if this one failed
       }
       case CreateAssetTransactionTypeId: {
         return 'Create Asset Transaction'
-        // it has the same id as EVMExportTx
-        // when it is implemented try the other if this one failed
       }
       case JVMImportTransactionTypeId: {
         return 'JVM Import Transaction'
@@ -120,6 +121,12 @@ export class TransactionUtils {
       case PlatformBaseTransactionTypeId: {
         return 'Platform Base Transaction'
       }
+      case EVMExportTransactionTypeId: {
+        return 'EVM Export Transaction'
+      }
+      case EVMImportTransactionTypeId: {
+        return 'EVM Import Transaction'
+      }
       default: {
         throw new ParsingError(`unsupported transaction type id "${typeId}"`)
       }
@@ -135,13 +142,9 @@ export class TransactionUtils {
     switch (typeId) {
       case JVMBaseTransactionTypeId: {
         return JVMBaseTransaction.parse(data)
-        // it has the same id as EVMImportTx
-        // when it is implemented try the other if this one failed
       }
       case CreateAssetTransactionTypeId: {
         throw notImplementedTypeIdError
-        // it has the same id as EVMExportTx
-        // when it is implemented try the other if this one failed
       }
       case JVMImportTransactionTypeId: {
         return JVMImportTransaction.parse(data)
@@ -165,7 +168,7 @@ export class TransactionUtils {
         return PlatformExportTransaction.parse(data)
       }
       case RemoveSupernetValidatorTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return RemoveSupernetValidatorTransaction.parse(data)
       }
       case TransformSupernetTransactionTypeId: {
         throw notImplementedTypeIdError
@@ -177,10 +180,16 @@ export class TransactionUtils {
         return AddPermissionlessDelegatorTransaction.parse(data)
       }
       case TransferSupernetOwnershipTransactionTypeId: {
-        throw notImplementedTypeIdError
+        return TransferSupernetOwnershipTransaction.parse(data)
       }
       case PlatformBaseTransactionTypeId: {
         return PlatformBaseTransaction.parse(data)
+      }
+      case EVMExportTransactionTypeId: {
+        return JEVMExportTransaction.parse(data)
+      }
+      case EVMImportTransactionTypeId: {
+        return JEVMImportTransaction.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported transaction type id "${typeId}"`)

@@ -280,4 +280,9 @@ export class JuneoReader {
   readRemaining (): JuneoBuffer {
     return this.read(this.buffer.length - this.cursor)
   }
+
+  peekRemaining (): JuneoBuffer {
+    const value = this.buffer.read(this.cursor, this.buffer.length - this.cursor)
+    return value
+  }
 }

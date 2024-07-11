@@ -81,7 +81,7 @@ export class BaseTransaction implements UnsignedTransaction {
 
   getOutput (index: number): TransferableOutput {
     const outputs = this.getOutputs()
-    if (index > outputs.length) {
+    if (index >= outputs.length) {
       throw new TransactionError(`transaction does not have output at index ${index} > length (${outputs.length})`)
     }
     return outputs[index]

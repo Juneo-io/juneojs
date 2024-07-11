@@ -522,7 +522,10 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
   }
 
   getOutputs (): TransferableOutput[] {
-    return [...this.outputs, ...this.stake]
+    const assetId = this.stake[0].assetId
+    const validatorRewardsOutput = new TransferableOutput(assetId, this.validatorRewardsOwner)
+    const delegatorRewardsOutput = new TransferableOutput(assetId, this.delegatorRewardsOwner)
+    return [...this.outputs, ...this.stake, validatorRewardsOutput, delegatorRewardsOutput]
   }
 
   serialize (): JuneoBuffer {
@@ -628,7 +631,9 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
   }
 
   getOutputs (): TransferableOutput[] {
-    return [...this.outputs, ...this.stake]
+    const assetId = this.stake[0].assetId
+    const delegatorRewardsOutput = new TransferableOutput(assetId, this.delegatorRewardsOwner)
+    return [...this.outputs, ...this.stake, delegatorRewardsOutput]
   }
 
   serialize (): JuneoBuffer {

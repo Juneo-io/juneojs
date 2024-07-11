@@ -12,7 +12,7 @@ import {
   PlatformExportTransactionTypeId,
   PlatformImportTransactionTypeId,
   PrimarySignerSize,
-  RemoveSupernetTransactionTypeId,
+  RemoveSupernetValidatorTransactionTypeId,
   SupernetIdSize,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
@@ -347,7 +347,7 @@ export class RemoveSupernetValidatorTransaction extends BaseTransaction {
     supernetId: SupernetId,
     supernetAuth: SupernetAuth
   ) {
-    super(RemoveSupernetTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    super(RemoveSupernetValidatorTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
     this.nodeId = nodeId
     this.supernetId = supernetId
     this.supernetAuth = supernetAuth

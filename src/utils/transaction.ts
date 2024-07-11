@@ -1,3 +1,4 @@
+import { type AbstractUtxoAPI } from '../api'
 import { type MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
@@ -11,6 +12,7 @@ import {
   CreateChainTransactionTypeId,
   CreateSupernetTransaction,
   CreateSupernetTransactionTypeId,
+  ImportTransaction,
   JVMBaseTransaction,
   JVMBaseTransactionTypeId,
   JVMExportTransaction,
@@ -24,6 +26,7 @@ import {
   PlatformImportTransaction,
   PlatformImportTransactionTypeId,
   RemoveSupernetTransactionTypeId,
+  type TransferableInput,
   TransferSupernetOwnershipTransactionTypeId,
   TransformSupernetTransactionTypeId,
   Utxo,
@@ -49,7 +52,17 @@ export class TransactionUtils {
   static async syncUtxos (provider: MCNProvider, unsignedTx: UnsignedTransaction): Promise<void> {
     const chain = getBlockchain(provider, unsignedTx.blockchainId)
     const api = getUtxoAPI(provider, chain)
-    for (const input of unsignedTx.getInputs()) {
+    await TransactionUtils.syncInputUtxos(api, unsignedTx.inputs)
+    if (unsignedTx instanceof ImportTransaction) {
+      const importTx = unsignedTx
+      const sourceChain = getBlockchain(provider, importTx.sourceChain)
+      const sourceApi = getUtxoAPI(provider, sourceChain)
+      await TransactionUtils.syncInputUtxos(sourceApi, importTx.importedInputs)
+    }
+  }
+
+  static async syncInputUtxos (api: AbstractUtxoAPI, inputs: TransferableInput[]): Promise<void> {
+    for (const input of inputs) {
       const data = (await api.getTx(input.transactionId.value)).tx
       const tx = TransactionUtils.parseUnsignedTransaction(data)
       const output = tx.outputs[input.utxoIndex]

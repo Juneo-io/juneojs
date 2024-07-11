@@ -81,7 +81,7 @@ export class BaseTransaction implements UnsignedTransaction {
 
   getOutput (index: number): TransferableOutput {
     const outputs = this.getOutputs()
-    if (index > outputs.length) {
+    if (index >= outputs.length) {
       throw new TransactionError(`transaction does not have output at index ${index} > length (${outputs.length})`)
     }
     return outputs[index]
@@ -186,17 +186,15 @@ export class BaseTransaction implements UnsignedTransaction {
     const outputsLength = reader.readUInt32()
     const outputs: TransferableOutput[] = []
     for (let i = 0; i < outputsLength; i++) {
-      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const output = TransferableOutput.parse(outputBuffer)
-      reader.skip(output.serialize().length)
+      const output = TransferableOutput.parse(reader.peekRemaining())
+      reader.skip(output)
       outputs.push(output)
     }
     const inputsLength = reader.readUInt32()
     const inputs: TransferableInput[] = []
     for (let i = 0; i < inputsLength; i++) {
-      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const input = TransferableInput.parse(inputBuffer)
-      reader.skip(input.serialize().length)
+      const input = TransferableInput.parse(reader.peekRemaining())
+      reader.skip(input)
       inputs.push(input)
     }
     const memoLength = reader.readUInt32()
@@ -252,14 +250,13 @@ export class ExportTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data, expectedTypeId)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const destinationChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
     const exportedOutputsLength = reader.readUInt32()
     const exportedoutputs: TransferableOutput[] = []
     for (let i = 0; i < exportedOutputsLength; i++) {
-      const outputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const output = TransferableOutput.parse(outputBuffer)
-      reader.skip(output.serialize().length)
+      const output = TransferableOutput.parse(reader.peekRemaining())
+      reader.skip(output)
       exportedoutputs.push(output)
     }
     return new ExportTransaction(
@@ -336,14 +333,13 @@ export class ImportTransaction extends BaseTransaction {
     const baseTx = BaseTransaction.parse(data, expectedTypeId)
     const buffer = JuneoBuffer.from(data)
     const reader = buffer.createReader()
-    reader.skip(baseTx.serialize().length)
+    reader.skip(baseTx)
     const sourceChain = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
     const importedInputsLength = reader.readUInt32()
     const importedInputs: TransferableInput[] = []
     for (let i = 0; i < importedInputsLength; i++) {
-      const inputBuffer = buffer.read(reader.getCursor(), buffer.length - reader.getCursor())
-      const input = TransferableInput.parse(inputBuffer)
-      reader.skip(input.serialize().length)
+      const input = TransferableInput.parse(reader.peekRemaining())
+      reader.skip(input)
       importedInputs.push(input)
     }
     return new ImportTransaction(

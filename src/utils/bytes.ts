@@ -231,7 +231,10 @@ export class JuneoReader {
     return this.cursor
   }
 
-  skip (amount: number): void {
+  skip (amount: number | Serializable): void {
+    if (typeof amount !== 'number') {
+      amount = amount.serialize().length
+    }
     this.cursor += amount
   }
 
@@ -279,5 +282,10 @@ export class JuneoReader {
 
   readRemaining (): JuneoBuffer {
     return this.read(this.buffer.length - this.cursor)
+  }
+
+  peekRemaining (): JuneoBuffer {
+    const value = this.buffer.read(this.cursor, this.buffer.length - this.cursor)
+    return value
   }
 }

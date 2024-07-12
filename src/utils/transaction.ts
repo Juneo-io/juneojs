@@ -1,4 +1,6 @@
-import { NetworkUtils, VMType, type AbstractUtxoAPI, type MCNProvider } from '../juneo'
+import { type AbstractUtxoAPI } from '../api'
+import { VMType } from '../chain'
+import { MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessDelegatorTransactionTypeId,
@@ -77,8 +79,8 @@ export class TransactionUtils {
   }
 
   static getTypeIdName (typeId: number, networkId: number, chainId: string): string {
-    const network = NetworkUtils.getNetworkFromId(networkId)
-    const chain = network.getChain(chainId)
+    const network = MCNProvider.fromId(networkId)
+    const chain = network.mcn.getChain(chainId)
     if (chain.vm.type === VMType.EVM) {
       return TransactionUtils.getEVMTypeIdName(typeId)
     }
@@ -155,8 +157,8 @@ export class TransactionUtils {
     const typeId = reader.readUInt32()
     const networkId = reader.readUInt32()
     const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
-    const network = NetworkUtils.getNetworkFromId(networkId)
-    const chain = network.getChain(blockchainId.value)
+    const network = MCNProvider.fromId(networkId)
+    const chain = network.mcn.getChain(blockchainId.value)
     if (chain.vm.type === VMType.EVM) {
       return TransactionUtils.parseUnsignedEVMTransaction(data, typeId)
     }

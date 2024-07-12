@@ -1,18 +1,18 @@
-import { GenesisNetwork, MainNetwork, MCN, SocotraNetwork } from '../network'
+import { GenesisNetwork, MainNetwork, type MCN, SocotraNetwork } from '../network'
 
 export class NetworkUtils {
   private static INSTANCE: NetworkUtils | undefined
 
-  private constructor() {}
+  private constructor () {}
 
-  static getSingleton(): NetworkUtils {
+  static getSingleton (): NetworkUtils {
     if (NetworkUtils.INSTANCE === undefined) {
       NetworkUtils.INSTANCE = new NetworkUtils()
     }
     return NetworkUtils.INSTANCE
   }
 
-  static getNetworkFromId(id: number): MCN {
+  static getNetworkFromId (id: number): MCN {
     switch (id) {
       case MainNetwork.id: {
         return MainNetwork
@@ -29,7 +29,7 @@ export class NetworkUtils {
     }
   }
 
-  static getNetworkFromHrp(hrp: string): MCN {
+  static getNetworkFromHrp (hrp: string): MCN {
     switch (hrp) {
       case MainNetwork.hrp: {
         return MainNetwork

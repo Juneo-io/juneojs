@@ -4,6 +4,7 @@ import {
   AssetIdSize,
   Secp256k1OutputOwnersTypeId,
   Secp256k1OutputTypeId,
+  StakeableLockedOutputTypeId,
   TransactionIdSize
 } from './constants'
 import { Address, AssetId, TransactionId } from './types'
@@ -79,6 +80,9 @@ export class TransferableOutput implements Serializable {
       }
       case Secp256k1OutputOwnersTypeId: {
         return Secp256k1OutputOwners.parse(data)
+      }
+      case StakeableLockedOutputTypeId: {
+        return StakeableLockedOutput.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported output type id "${typeId}"`)
@@ -188,5 +192,40 @@ export class Secp256k1OutputOwners implements TransactionOutput {
       addresses.push(address)
     }
     return new Secp256k1OutputOwners(locktime, threshold, addresses)
+  }
+}
+
+export class StakeableLockedOutput implements TransactionOutput {
+  readonly typeId = StakeableLockedOutputTypeId
+  locktime: bigint
+  amount: bigint
+  threshold: number
+  addresses: Address[]
+
+  constructor (locktime: bigint, amount: bigint, threshold: number, addresses: Address[]) {
+    this.locktime = locktime
+    this.amount = amount
+    this.threshold = threshold
+    this.addresses = addresses.sort(Address.comparator)
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+      // 4 + 8 + 4 + 8 + 8 + 4 + 4 = 40
+      40 + AddressSize * this.addresses.length
+    )
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt64(this.locktime)
+    const transferableOutput = new Secp256k1Output(this.amount, this.locktime, this.threshold, this.addresses)
+    buffer.write(transferableOutput.serialize())
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): StakeableLockedOutput {
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readAndVerifyTypeId(StakeableLockedOutputTypeId)
+    const locktime = reader.readUInt64()
+    const output = Secp256k1Output.parse(reader.readRemaining())
+    return new StakeableLockedOutput(output.amount, locktime, output.threshold, output.addresses)
   }
 }

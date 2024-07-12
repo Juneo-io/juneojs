@@ -1,33 +1,32 @@
-import { type AxiosResponse } from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 import { HttpError, JsonRpcError, NetworkError, ProtocolError } from '../utils'
-import axios from 'axios'
 
-const JsonRpcVersion: string = '2.0'
+const JsonRpcVersion = '2.0'
 const HttpHeaders = {
-  'Content-Type': 'application/json;charset=UTF-8'
+  'Content-Type': 'application/json'
 }
-export const HttpProtocol: string = 'http'
-export const HttpsProtocol: string = 'https'
-const DefaultProtocol: string = HttpsProtocol
+export const HttpProtocol = 'http'
+export const HttpsProtocol = 'https'
+const DefaultProtocol = HttpsProtocol
 const Protocols: string[] = [HttpProtocol, HttpsProtocol]
 
 export class JuneoClient {
-  private nextRequestId: number = 1
-  private protocol: string = DefaultProtocol
-  host: string = ''
+  private nextRequestId = 1
+  private protocol = DefaultProtocol
+  host = ''
 
   private constructor () {}
 
   static parse (address: string): JuneoClient {
-    const client: JuneoClient = new JuneoClient()
+    const client = new JuneoClient()
     client.parseAddress(address)
     return client
   }
 
   parseAddress (address: string): void {
     const protocolSplit: string[] = address.split('://')
-    const protocol: string = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
-    const host: string = protocolSplit.length > 1 ? protocolSplit[1] : protocolSplit[0]
+    const protocol = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
+    const host = protocolSplit.length > 1 ? protocolSplit[1] : protocolSplit[0]
     this.setProtocol(protocol)
     this.host = host
   }
@@ -48,8 +47,8 @@ export class JuneoClient {
   }
 
   async rpcCall (endpoint: string, request: JsonRpcRequest): Promise<JsonRpcResponse> {
-    const jsonRpcObject: any = request.getJsonRpcObject(this.nextRequestId++)
-    const response: AxiosResponse = await this.post(endpoint, JSON.stringify(jsonRpcObject))
+    const jsonRpcObject = request.getJsonRpcObject(this.nextRequestId++)
+    const response = await this.post(endpoint, JSON.stringify(jsonRpcObject))
     const status = response.status
     if (status < 200 || status >= 300) {
       throw new HttpError(`request status is not accepted "${status}"`)
@@ -64,7 +63,7 @@ export class JuneoClient {
     return new JsonRpcResponse(data.jsonrpc, data.id, data.result)
   }
 
-  private async post (endpoint: string, data: any): Promise<AxiosResponse> {
+  async post (endpoint: string, data: any): Promise<AxiosResponse> {
     return await axios
       .post(endpoint, data, {
         method: 'post',
@@ -89,12 +88,12 @@ export class JsonRpcRequest {
   }
 
   getJsonRpcObject (id: number): any {
-    const jsonRpcObject: any = {}
-    jsonRpcObject.jsonrpc = JsonRpcVersion
-    jsonRpcObject.id = id
-    jsonRpcObject.method = this.method
-    jsonRpcObject.params = this.params
-    return jsonRpcObject
+    return {
+      jsonrpc: JsonRpcVersion,
+      id,
+      method: this.method,
+      params: this.params
+    }
   }
 }
 

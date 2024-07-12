@@ -1,4 +1,6 @@
-import { type AbstractUtxoAPI, type MCNProvider } from '../juneo'
+import { type AbstractUtxoAPI } from '../api'
+import { VMType } from '../chain'
+import { MCNProvider } from '../juneo'
 import {
   AddPermissionlessDelegatorTransaction,
   AddPermissionlessDelegatorTransactionTypeId,
@@ -6,6 +8,8 @@ import {
   AddPermissionlessValidatorTransactionTypeId,
   AddSupernetValidatorTransaction,
   AddSupernetValidatorTransactionType,
+  BlockchainId,
+  BlockchainIdSize,
   CreateAssetTransactionTypeId,
   CreateChainTransaction,
   CreateChainTransactionTypeId,
@@ -74,7 +78,12 @@ export class TransactionUtils {
     }
   }
 
-  static getTypeIdName (typeId: number): string {
+  static getTypeIdName (typeId: number, networkId: number, chainId: string): string {
+    const network = MCNProvider.fromId(networkId)
+    const chain = network.mcn.getChain(chainId)
+    if (chain.vm.type === VMType.EVM) {
+      return TransactionUtils.getEVMTypeIdName(typeId)
+    }
     switch (typeId) {
       case JVMBaseTransactionTypeId: {
         return 'JVM Base Transaction'
@@ -121,11 +130,19 @@ export class TransactionUtils {
       case PlatformBaseTransactionTypeId: {
         return 'Platform Base Transaction'
       }
-      case EVMExportTransactionTypeId: {
-        return 'EVM Export Transaction'
+      default: {
+        throw new ParsingError(`unsupported transaction type id "${typeId}"`)
       }
+    }
+  }
+
+  private static getEVMTypeIdName (typeId: number): string {
+    switch (typeId) {
       case EVMImportTransactionTypeId: {
         return 'EVM Import Transaction'
+      }
+      case EVMExportTransactionTypeId: {
+        return 'EVM Export Transaction'
       }
       default: {
         throw new ParsingError(`unsupported transaction type id "${typeId}"`)
@@ -138,6 +155,13 @@ export class TransactionUtils {
     // skip codec reading
     reader.skip(2)
     const typeId = reader.readUInt32()
+    const networkId = reader.readUInt32()
+    const blockchainId = new BlockchainId(reader.read(BlockchainIdSize).toCB58())
+    const network = MCNProvider.fromId(networkId)
+    const chain = network.mcn.getChain(blockchainId.value)
+    if (chain.vm.type === VMType.EVM) {
+      return TransactionUtils.parseUnsignedEVMTransaction(data, typeId)
+    }
     const notImplementedTypeIdError = new Error(`type id ${typeId} parsing is not implemented yet`)
     switch (typeId) {
       case JVMBaseTransactionTypeId: {
@@ -185,11 +209,19 @@ export class TransactionUtils {
       case PlatformBaseTransactionTypeId: {
         return PlatformBaseTransaction.parse(data)
       }
-      case EVMExportTransactionTypeId: {
-        return JEVMExportTransaction.parse(data)
+      default: {
+        throw new ParsingError(`unsupported transaction type id "${typeId}"`)
       }
+    }
+  }
+
+  static parseUnsignedEVMTransaction (data: string | JuneoBuffer, typeId: number): UnsignedTransaction {
+    switch (typeId) {
       case EVMImportTransactionTypeId: {
         return JEVMImportTransaction.parse(data)
+      }
+      case EVMExportTransactionTypeId: {
+        return JEVMExportTransaction.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported transaction type id "${typeId}"`)

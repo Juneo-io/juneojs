@@ -1,6 +1,6 @@
 import { InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
 import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
-import { SocotraNetwork, type MCN } from './network'
+import { GenesisNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
 
 export class MCNProvider {
   mcn: MCN
@@ -37,9 +37,37 @@ export class MCNProvider {
 
   async getStaticProvider (): Promise<MCNProvider> {
     return this
-    // const url = this.mcn.access.getStaticUrl()
-    // const client: JuneoClient = JuneoClient.parse(url)
-    // return new MCNProvider(this.mcn, client)
+  }
+
+  static fromId (id: number): MCNProvider {
+    switch (id) {
+      case MainNetwork.id: {
+        return new MCNProvider(MainNetwork)
+      }
+      case SocotraNetwork.id: {
+        return new MCNProvider(SocotraNetwork)
+      }
+      case GenesisNetwork.id: {
+        return new MCNProvider(GenesisNetwork)
+      }
+      default: {
+        throw new Error(`unsupported network id: ${id}`)
+      }
+    }
+  }
+
+  static fromHrp (hrp: string): MCNProvider {
+    switch (hrp) {
+      case MainNetwork.hrp: {
+        return new MCNProvider(MainNetwork)
+      }
+      case SocotraNetwork.hrp: {
+        return new MCNProvider(SocotraNetwork)
+      }
+      default: {
+        throw new Error(`unsupported network hrp: ${hrp}`)
+      }
+    }
   }
 }
 

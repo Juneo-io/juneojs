@@ -57,7 +57,10 @@ export class JuneoBuffer {
     }
   }
 
-  write (data: JuneoBuffer): void {
+  write (data: JuneoBuffer | Serializable): void {
+    if (!(data instanceof JuneoBuffer)) {
+      data = data.serialize()
+    }
     this.writeBuffer(data.bytes)
   }
 

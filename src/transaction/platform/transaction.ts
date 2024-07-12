@@ -112,14 +112,12 @@ export class AddSupernetValidatorTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + ValidatorSize + SupernetIdSize + supernetAuthBytes.length
-    )
+    const baseTransaction = super.serialize()
+    const supernetAuthBytes = this.supernetAuth.serialize()
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + ValidatorSize + SupernetIdSize + supernetAuthBytes.length)
     buffer.write(baseTransaction)
-    buffer.write(this.validator.serialize())
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.validator)
+    buffer.write(this.supernetId)
     buffer.write(supernetAuthBytes)
     return buffer
   }
@@ -165,9 +163,9 @@ export class CreateSupernetTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const rewardsOwnerBytes: JuneoBuffer = this.rewardsOwner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + rewardsOwnerBytes.length)
+    const baseTransaction = super.serialize()
+    const rewardsOwnerBytes = this.rewardsOwner.serialize()
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + rewardsOwnerBytes.length)
     buffer.write(baseTransaction)
     buffer.write(rewardsOwnerBytes)
     return buffer
@@ -227,9 +225,9 @@ export class CreateChainTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const baseTransaction = super.serialize()
+    const supernetAuthBytes = this.supernetAuth.serialize()
+    const buffer = JuneoBuffer.alloc(
       baseTransaction.length +
         SupernetIdSize +
         2 +
@@ -243,14 +241,14 @@ export class CreateChainTransaction extends BaseTransaction {
         supernetAuthBytes.length
     )
     buffer.write(baseTransaction)
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.supernetId)
     buffer.writeUInt16(this.name.length)
     buffer.writeString(this.name)
-    buffer.write(this.chainAssetId.serialize())
-    buffer.write(this.vmId.serialize())
+    buffer.write(this.chainAssetId)
+    buffer.write(this.vmId)
     buffer.writeUInt32(this.fxIds.length)
     for (const fxId of this.fxIds) {
-      buffer.write(fxId.serialize())
+      buffer.write(fxId)
     }
     buffer.writeUInt32(this.genesisData.length)
     buffer.writeString(this.genesisData)
@@ -318,14 +316,14 @@ export class TransferSupernetOwnershipTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
-    const ownerBytes: JuneoBuffer = this.owner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const baseTransaction = super.serialize()
+    const supernetAuthBytes = this.supernetAuth.serialize()
+    const ownerBytes = this.owner.serialize()
+    const buffer = JuneoBuffer.alloc(
       baseTransaction.length + SupernetIdSize + supernetAuthBytes.length + ownerBytes.length
     )
     buffer.write(baseTransaction)
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.supernetId)
     buffer.write(supernetAuthBytes)
     buffer.write(ownerBytes)
     return buffer
@@ -378,14 +376,12 @@ export class RemoveSupernetValidatorTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
-      baseTransaction.length + NodeIdSize + SupernetIdSize + supernetAuthBytes.length
-    )
+    const baseTransaction = super.serialize()
+    const supernetAuthBytes = this.supernetAuth.serialize()
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + NodeIdSize + SupernetIdSize + supernetAuthBytes.length)
     buffer.write(baseTransaction)
-    buffer.write(this.nodeId.serialize())
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.nodeId)
+    buffer.write(this.supernetId)
     buffer.write(supernetAuthBytes)
     return buffer
   }
@@ -482,9 +478,9 @@ export class TransformSupernetTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const supernetAuthBytes: JuneoBuffer = this.supernetAuth.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const baseTransaction = super.serialize()
+    const supernetAuthBytes = this.supernetAuth.serialize()
+    const buffer = JuneoBuffer.alloc(
       baseTransaction.length +
         SupernetIdSize +
         AssetIdSize +
@@ -506,8 +502,8 @@ export class TransformSupernetTransaction extends BaseTransaction {
         supernetAuthBytes.length
     )
     buffer.write(baseTransaction)
-    buffer.write(this.supernetId.serialize())
-    buffer.write(this.assetId.serialize())
+    buffer.write(this.supernetId)
+    buffer.write(this.assetId)
     buffer.writeUInt64(this.initialRewardPoolSupply)
     buffer.writeUInt64(this.startRewardShare)
     buffer.writeUInt64(this.startRewardTime)
@@ -569,10 +565,10 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
-    const signerBytes: JuneoBuffer = this.signer.serialize()
+    const baseTransaction = super.serialize()
+    const signerBytes = this.signer.serialize()
     const stakeBytes: JuneoBuffer[] = []
-    let stakeBytesSize: number = 0
+    let stakeBytesSize = 0
     for (const output of this.stake) {
       const bytes: JuneoBuffer = output.serialize()
       stakeBytesSize += bytes.length
@@ -592,8 +588,8 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
         4
     )
     buffer.write(baseTransaction)
-    buffer.write(this.validator.serialize())
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.validator)
+    buffer.write(this.supernetId)
     buffer.write(signerBytes)
     buffer.writeUInt32(this.stake.length)
     for (const output of stakeBytes) {
@@ -673,21 +669,21 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
+    const baseTransaction = super.serialize()
     const stakeBytes: JuneoBuffer[] = []
-    let stakeBytesSize: number = 0
+    let stakeBytesSize = 0
     for (const output of this.stake) {
-      const bytes: JuneoBuffer = output.serialize()
+      const bytes = output.serialize()
       stakeBytesSize += bytes.length
       stakeBytes.push(bytes)
     }
-    const delegatorRewardsOwnerBytes: JuneoBuffer = this.delegatorRewardsOwner.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const delegatorRewardsOwnerBytes = this.delegatorRewardsOwner.serialize()
+    const buffer = JuneoBuffer.alloc(
       baseTransaction.length + ValidatorSize + SupernetIdSize + 4 + stakeBytesSize + delegatorRewardsOwnerBytes.length
     )
     buffer.write(baseTransaction)
-    buffer.write(this.validator.serialize())
-    buffer.write(this.supernetId.serialize())
+    buffer.write(this.validator)
+    buffer.write(this.supernetId)
     buffer.writeUInt32(this.stake.length)
     for (const output of stakeBytes) {
       buffer.write(output)

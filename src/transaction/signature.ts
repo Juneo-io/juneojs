@@ -46,14 +46,14 @@ export abstract class TransactionCredentials implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 4 = 8
       8 + SignatureSize * this.signatures.length
     )
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.signatures.length)
     for (const signature of this.signatures) {
-      buffer.write(signature.serialize())
+      buffer.write(signature)
     }
     return buffer
   }

@@ -4,6 +4,7 @@ import {
   AssetIdSize,
   Secp256k1OutputOwnersTypeId,
   Secp256k1OutputTypeId,
+  StakeableLockedOutputTypeId,
   TransactionIdSize
 } from './constants'
 import { Address, AssetId, TransactionId } from './types'
@@ -53,9 +54,9 @@ export class TransferableOutput implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const outputBuffer: JuneoBuffer = this.output.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(AssetIdSize + outputBuffer.length)
-    buffer.write(this.assetId.serialize())
+    const outputBuffer = this.output.serialize()
+    const buffer = JuneoBuffer.alloc(AssetIdSize + outputBuffer.length)
+    buffer.write(this.assetId)
     buffer.write(outputBuffer)
     return buffer
   }
@@ -79,6 +80,9 @@ export class TransferableOutput implements Serializable {
       }
       case Secp256k1OutputOwnersTypeId: {
         return Secp256k1OutputOwners.parse(data)
+      }
+      case StakeableLockedOutputTypeId: {
+        return StakeableLockedOutput.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported output type id "${typeId}"`)
@@ -118,7 +122,7 @@ export class Secp256k1Output implements TransactionOutput {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 8 + 8 + 4 + 4 = 28
       28 + AddressSize * this.addresses.length
     )
@@ -128,7 +132,7 @@ export class Secp256k1Output implements TransactionOutput {
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
     for (const address of this.addresses) {
-      buffer.write(address.serialize())
+      buffer.write(address)
     }
     return buffer
   }
@@ -162,7 +166,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 8 + 4 + 4 = 20
       20 + AddressSize * this.addresses.length
     )
@@ -171,7 +175,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
     for (const address of this.addresses) {
-      buffer.write(address.serialize())
+      buffer.write(address)
     }
     return buffer
   }
@@ -188,5 +192,40 @@ export class Secp256k1OutputOwners implements TransactionOutput {
       addresses.push(address)
     }
     return new Secp256k1OutputOwners(locktime, threshold, addresses)
+  }
+}
+
+export class StakeableLockedOutput implements TransactionOutput {
+  readonly typeId = StakeableLockedOutputTypeId
+  locktime: bigint
+  amount: bigint
+  threshold: number
+  addresses: Address[]
+
+  constructor (locktime: bigint, amount: bigint, threshold: number, addresses: Address[]) {
+    this.locktime = locktime
+    this.amount = amount
+    this.threshold = threshold
+    this.addresses = addresses.sort(Address.comparator)
+  }
+
+  serialize (): JuneoBuffer {
+    const buffer = JuneoBuffer.alloc(
+      // 4 + 8 + 4 + 8 + 8 + 4 + 4 = 40
+      40 + AddressSize * this.addresses.length
+    )
+    buffer.writeUInt32(this.typeId)
+    buffer.writeUInt64(this.locktime)
+    const transferableOutput = new Secp256k1Output(this.amount, this.locktime, this.threshold, this.addresses)
+    buffer.write(transferableOutput)
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): StakeableLockedOutput {
+    const reader = JuneoBuffer.from(data).createReader()
+    reader.readAndVerifyTypeId(StakeableLockedOutputTypeId)
+    const locktime = reader.readUInt64()
+    const output = Secp256k1Output.parse(reader.readRemaining())
+    return new StakeableLockedOutput(output.amount, locktime, output.threshold, output.addresses)
   }
 }

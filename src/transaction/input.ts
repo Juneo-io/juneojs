@@ -86,11 +86,11 @@ export class TransferableInput extends AbstractSignable implements Serializable,
   }
 
   serialize (): JuneoBuffer {
-    const inputBuffer: JuneoBuffer = this.input.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(TransactionIdSize + 4 + AssetIdSize + inputBuffer.length)
-    buffer.write(this.transactionId.serialize())
+    const inputBuffer = this.input.serialize()
+    const buffer = JuneoBuffer.alloc(TransactionIdSize + 4 + AssetIdSize + inputBuffer.length)
+    buffer.write(this.transactionId)
     buffer.writeUInt32(this.utxoIndex)
-    buffer.write(this.assetId.serialize())
+    buffer.write(this.assetId)
     buffer.write(inputBuffer)
     return buffer
   }

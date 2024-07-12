@@ -88,15 +88,15 @@ export class CreateAssetTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
+    const baseTransaction = super.serialize()
     const initialStatesBytes: JuneoBuffer[] = []
-    let initialStatesBytesSize: number = 0
+    let initialStatesBytesSize = 0
     for (const state of this.initialStates) {
-      const bytes: JuneoBuffer = state.serialize()
+      const bytes = state.serialize()
       initialStatesBytesSize += bytes.length
       initialStatesBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       baseTransaction.length + 2 + this.name.length + 2 + this.symbol.length + 1 + 4 + initialStatesBytesSize
     )
     buffer.write(baseTransaction)

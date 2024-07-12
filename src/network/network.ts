@@ -1,13 +1,24 @@
 import { type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from '../chain'
 
+const PrimarySupernetName = 'Primary Supernet'
+
 export class MCN {
+  name: string
   url: string
   id: number
   hrp: string
   primary: PrimarySupernet
   supernets: Supernet[]
 
-  constructor (url: string, id: number, hrp: string, primary: PrimarySupernet, supernets: Supernet[] = [primary]) {
+  constructor (
+    name: string,
+    url: string,
+    id: number,
+    hrp: string,
+    primary: PrimarySupernet,
+    supernets: Supernet[] = [primary]
+  ) {
+    this.name = name
     this.url = url
     this.id = id
     this.hrp = hrp
@@ -15,33 +26,35 @@ export class MCN {
     this.supernets = supernets
   }
 
-  getChain (chainId: string): Blockchain | undefined {
+  getChain (chainId: string): Blockchain {
     for (const supernet of this.supernets) {
-      const chain: Blockchain | undefined = supernet.getChain(chainId)
+      const chain = supernet.getSupernetChain(chainId)
       if (chain !== undefined) {
         return chain
       }
     }
-    return undefined
+    throw new Error(`no registered chain with id ${chainId} in ${this.name}`)
   }
 }
 
 export class Supernet {
+  name: string
   id: string
   chains: Blockchain[]
 
-  constructor (id: string, chains: Blockchain[]) {
+  constructor (name: string, id: string, chains: Blockchain[]) {
+    this.name = name
     this.id = id
     this.chains = chains
   }
 
-  getChain (chainId: string): Blockchain | undefined {
+  getSupernetChain (chainId: string): Blockchain {
     for (const chain of this.chains) {
       if (chain.id === chainId) {
         return chain
       }
     }
-    return undefined
+    throw new Error(`no registered chain with id ${chainId} in supernet ${this.name}`)
   }
 }
 
@@ -57,7 +70,7 @@ export class PrimarySupernet extends Supernet {
     jvm: JVMBlockchain,
     june: JEVMBlockchain
   ) {
-    super(id, chains)
+    super(PrimarySupernetName, id, chains)
     this.platform = platform
     this.jvm = jvm
     this.june = june

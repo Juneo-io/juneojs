@@ -2,9 +2,10 @@ import { JEVMGasToken, JNTAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
 import { MCN, PrimarySupernet } from './network'
 
-const LocalNetworkId: number = 12345
-const LocalHrp: string = 'local'
-const LocalStakeConfig: StakeConfig = new StakeConfig(
+const LocalNetworkName = 'Local Devnet'
+const LocalNetworkId = 12345
+const LocalHrp = 'local'
+const LocalStakeConfig = new StakeConfig(
   0.8, // 80%
   BigInt(1_000000000), // 1 JUNE
   BigInt(1_000_000_000000000), // 100_000 JUNE
@@ -14,7 +15,7 @@ const LocalStakeConfig: StakeConfig = new StakeConfig(
   BigInt(86_400), // 1 day
   BigInt(365 * 86_400) // 365 days
 )
-const LocalRewardConfig: RewardConfig = new RewardConfig(
+const LocalRewardConfig = new RewardConfig(
   BigInt(86_400), // 1 day
   BigInt(31_536_000), // 365 days
   BigInt(2_0000), // 2%
@@ -25,39 +26,39 @@ const LocalRewardConfig: RewardConfig = new RewardConfig(
   BigInt(1843423200), // 2028
   BigInt(6_7000) // 6.7%
 )
-const LocalAddress: string = 'http://127.0.0.1:9650'
+const LocalAddress = 'http://127.0.0.1:9650'
 
-export const LocalJUNEAssetId: string = 'CJNB9rL9AoeL1yXhx91hL7aN6cgMUHsJJBHL5KhkJGuWDewrc'
-export const LocalETH1AssetId: string = 'nktDJbBBuDqR39T4FxVZq3UEKUGa7x99irKgbQQRxDWXUHbg4'
-export const LocalMBTC1AssetId: string = 'u2ZYLhvGCMb2a2uCJYWmokzrs5nH5AzheZtuFeAEc4ew8s1y6'
-export const LocalDOGE1AssetId: string = '2moVWus1GJhY8u758r7RkYyMDohzVYsGCeKLtnKXGeEair3xzM'
-export const LocalUSDT1AssetId: string = 'EMwudc6prKBwBjNLebRnxQUH3jJHMHs3ZK8iiUd5QmXZuaMwq'
-export const LocalDAI1AssetId: string = 'J4se1ySSqQvCZsN231EqwKpzJ77f5VwFQMyFRnqf6sPoFLCJV'
-export const LocalEUROC1AssetId: string = '2BHhvtDaZfWzKmB4Brc5drac5whCpFKXTTLvkg7WbbwRXWxrWC'
-export const LocalLTC1AssetId: string = '2JrAJvq5v9xghGr4avA52YVmHfoibKXaYwP6u4BVb5HXDKVGUj'
-export const LocalXLM1AssetId: string = '2jjXPFioyppdsfFhjKFshQEp5BtttNQS633emdAfg6ARXDEUkw'
-export const LocalBCH1AssetId: string = '2nag6fGNnuXcjNoBLccfAWoGf2bTxvgmWRh4FTEraymRxywEo8'
-export const LocalPAXG1AssetId: string = 'zb5SyLzBiubdGqQ9Fz6yugiPYvLX7MjWCHMjw4v3kBPRQDDPB'
-export const LocalXSGD1AssetId: string = '2rR2QsGJJXeWRrNA15BaqLadvEC1sCUj4M77uoG3YYooP9Z7nE'
-export const LocalETC1AssetId: string = '2ku2KPR43vhVUyBNT17yu2q5fXTT9VNZSQMhPBmtnev6QJbm7H'
-export const LocalR1000AssetId: string = '2detzzUKDshXyYrXLpe2tczd84T4pU7SdQtsZqmWHSLpoz2u92'
-export const LocalR10AssetId: string = '2WxMKug8STh4PF6VcpXbrsfX2gAj2q1LmNArZ8FnrhzF79AAPD'
+export const LocalJUNEAssetId = 'CJNB9rL9AoeL1yXhx91hL7aN6cgMUHsJJBHL5KhkJGuWDewrc'
+export const LocalETH1AssetId = 'nktDJbBBuDqR39T4FxVZq3UEKUGa7x99irKgbQQRxDWXUHbg4'
+export const LocalMBTC1AssetId = 'u2ZYLhvGCMb2a2uCJYWmokzrs5nH5AzheZtuFeAEc4ew8s1y6'
+export const LocalDOGE1AssetId = '2moVWus1GJhY8u758r7RkYyMDohzVYsGCeKLtnKXGeEair3xzM'
+export const LocalUSDT1AssetId = 'EMwudc6prKBwBjNLebRnxQUH3jJHMHs3ZK8iiUd5QmXZuaMwq'
+export const LocalDAI1AssetId = 'J4se1ySSqQvCZsN231EqwKpzJ77f5VwFQMyFRnqf6sPoFLCJV'
+export const LocalEUROC1AssetId = '2BHhvtDaZfWzKmB4Brc5drac5whCpFKXTTLvkg7WbbwRXWxrWC'
+export const LocalLTC1AssetId = '2JrAJvq5v9xghGr4avA52YVmHfoibKXaYwP6u4BVb5HXDKVGUj'
+export const LocalXLM1AssetId = '2jjXPFioyppdsfFhjKFshQEp5BtttNQS633emdAfg6ARXDEUkw'
+export const LocalBCH1AssetId = '2nag6fGNnuXcjNoBLccfAWoGf2bTxvgmWRh4FTEraymRxywEo8'
+export const LocalPAXG1AssetId = 'zb5SyLzBiubdGqQ9Fz6yugiPYvLX7MjWCHMjw4v3kBPRQDDPB'
+export const LocalXSGD1AssetId = '2rR2QsGJJXeWRrNA15BaqLadvEC1sCUj4M77uoG3YYooP9Z7nE'
+export const LocalETC1AssetId = '2ku2KPR43vhVUyBNT17yu2q5fXTT9VNZSQMhPBmtnev6QJbm7H'
+export const LocalR1000AssetId = '2detzzUKDshXyYrXLpe2tczd84T4pU7SdQtsZqmWHSLpoz2u92'
+export const LocalR10AssetId = '2WxMKug8STh4PF6VcpXbrsfX2gAj2q1LmNArZ8FnrhzF79AAPD'
 
-export const LocalJUNEAsset: JNTAsset = new JNTAsset(LocalJUNEAssetId, 'JUNE', 'JUNE', 9, false)
-export const LocalETH1Asset: JNTAsset = new JNTAsset(LocalETH1AssetId, 'ETH1', 'ETH1', 9, false)
-export const LocalMBTC1Asset: JNTAsset = new JNTAsset(LocalMBTC1AssetId, 'mBTC1', 'mBTC1', 9, false)
-export const LocalDOGE1Asset: JNTAsset = new JNTAsset(LocalDOGE1AssetId, 'DOGE1', 'DOGE1', 9, false)
-export const LocalUSDT1Asset: JNTAsset = new JNTAsset(LocalUSDT1AssetId, 'USDT1', 'USDT1', 9, false)
-export const LocalDAI1Asset: JNTAsset = new JNTAsset(LocalDAI1AssetId, 'DAI1', 'DAI1', 9, false)
-export const LocalEUROC1Asset: JNTAsset = new JNTAsset(LocalEUROC1AssetId, 'EUROC1', 'EUROC1', 9, false)
-export const LocalLTC1Asset: JNTAsset = new JNTAsset(LocalLTC1AssetId, 'LTC1', 'LTC1', 9, false)
-export const LocalXLM1Asset: JNTAsset = new JNTAsset(LocalXLM1AssetId, 'XLM1', 'XLM1', 9, false)
-export const LocalBCH1Asset: JNTAsset = new JNTAsset(LocalBCH1AssetId, 'BCH1', 'BCH1', 9, false)
-export const LocalPAXG1Asset: JNTAsset = new JNTAsset(LocalPAXG1AssetId, 'PAXG1', 'PAXG1', 9, false)
-export const LocalXSGD1Asset: JNTAsset = new JNTAsset(LocalXSGD1AssetId, 'XSGD1', 'XSGD1', 9, false)
-export const LocalETC1Asset: JNTAsset = new JNTAsset(LocalETC1AssetId, 'ETC1', 'ETC1', 9, false)
-export const LocalR1000Asset: JNTAsset = new JNTAsset(LocalR1000AssetId, 'R1000', 'R1000', 9, false)
-export const LocalR10Asset: JNTAsset = new JNTAsset(LocalR10AssetId, 'R10', 'R10', 9, false)
+export const LocalJUNEAsset = new JNTAsset(LocalJUNEAssetId, 'JUNE', 'JUNE', 9, false)
+export const LocalETH1Asset = new JNTAsset(LocalETH1AssetId, 'ETH1', 'ETH1', 9, false)
+export const LocalMBTC1Asset = new JNTAsset(LocalMBTC1AssetId, 'mBTC1', 'mBTC1', 9, false)
+export const LocalDOGE1Asset = new JNTAsset(LocalDOGE1AssetId, 'DOGE1', 'DOGE1', 9, false)
+export const LocalUSDT1Asset = new JNTAsset(LocalUSDT1AssetId, 'USDT1', 'USDT1', 9, false)
+export const LocalDAI1Asset = new JNTAsset(LocalDAI1AssetId, 'DAI1', 'DAI1', 9, false)
+export const LocalEUROC1Asset = new JNTAsset(LocalEUROC1AssetId, 'EUROC1', 'EUROC1', 9, false)
+export const LocalLTC1Asset = new JNTAsset(LocalLTC1AssetId, 'LTC1', 'LTC1', 9, false)
+export const LocalXLM1Asset = new JNTAsset(LocalXLM1AssetId, 'XLM1', 'XLM1', 9, false)
+export const LocalBCH1Asset = new JNTAsset(LocalBCH1AssetId, 'BCH1', 'BCH1', 9, false)
+export const LocalPAXG1Asset = new JNTAsset(LocalPAXG1AssetId, 'PAXG1', 'PAXG1', 9, false)
+export const LocalXSGD1Asset = new JNTAsset(LocalXSGD1AssetId, 'XSGD1', 'XSGD1', 9, false)
+export const LocalETC1Asset = new JNTAsset(LocalETC1AssetId, 'ETC1', 'ETC1', 9, false)
+export const LocalR1000Asset = new JNTAsset(LocalR1000AssetId, 'R1000', 'R1000', 9, false)
+export const LocalR10Asset = new JNTAsset(LocalR10AssetId, 'R10', 'R10', 9, false)
 // JUNE is omitted here because it should be registered by default as the chain asset
 const jntAssets: JNTAsset[] = [
   LocalETH1Asset,
@@ -76,7 +77,7 @@ const jntAssets: JNTAsset[] = [
   LocalR10Asset
 ]
 
-export const LocalPlatformChain: PlatformBlockchain = new PlatformBlockchain(
+export const LocalPlatformChain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
   LocalJUNEAsset,
@@ -85,14 +86,14 @@ export const LocalPlatformChain: PlatformBlockchain = new PlatformBlockchain(
   ['P'],
   jntAssets
 )
-export const LocalJVMChain: JVMBlockchain = new JVMBlockchain(
+export const LocalJVMChain = new JVMBlockchain(
   'JVM-Chain',
   '2b67xnViKRFPTLHjhaaeTFsDWbWo3q8ASS631ztvyWoc316RUL',
   LocalJUNEAsset,
   ['JVM'],
   jntAssets
 )
-export const LocalJUNEChain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalJUNEChain = new JEVMBlockchain(
   'JUNE-Chain',
   '2rwGLc5X9zRricpnnHyQnT56ytfBVKG1h2QFnGJGYz85xy38aE',
   new JEVMGasToken(LocalJUNEAsset),
@@ -102,7 +103,7 @@ export const LocalJUNEChain: JEVMBlockchain = new JEVMBlockchain(
   ['JUNE']
 )
 
-export const LocalETH1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalETH1Chain = new JEVMBlockchain(
   'ETH1-Chain',
   'kYHGpm2VVjZUM7pqBesaHZRJBhHdC9QRj9Nd9VyBDzbRyGogC',
   new JEVMGasToken(LocalETH1Asset),
@@ -112,7 +113,7 @@ export const LocalETH1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['ETH1'],
   [LocalJUNEAsset]
 )
-export const LocalMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalMBTC1Chain = new JEVMBlockchain(
   'mBTC1-Chain',
   'fRpR8iBy97PXeugvbXpYxnLZFJn7sy6fUQs6ZNp7KU6VNDaCn',
   new JEVMGasToken(LocalMBTC1Asset),
@@ -122,7 +123,7 @@ export const LocalMBTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['mBTC1'],
   [LocalJUNEAsset]
 )
-export const LocalDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalDOGE1Chain = new JEVMBlockchain(
   'DOGE1-Chain',
   '2rn6KpgRBfnJ7WKhgP5JCGwAMmUs1bLnpsYLaip2dEu3nhAM4W',
   new JEVMGasToken(LocalDOGE1Asset),
@@ -132,7 +133,7 @@ export const LocalDOGE1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['DOGE1'],
   [LocalJUNEAsset]
 )
-export const LocalUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalUSDT1Chain = new JEVMBlockchain(
   'USDT1-Chain',
   'eKSKvEaeMMY6giRENQ473gDXFsEBYbPedrtv7yeJBnXNyYpmV',
   new JEVMGasToken(LocalUSDT1Asset),
@@ -142,7 +143,7 @@ export const LocalUSDT1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['USDT1'],
   [LocalJUNEAsset]
 )
-export const LocalDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalDAI1Chain = new JEVMBlockchain(
   'DAI1-Chain',
   '29rRiNoArirgpxui3L6YYtLJwAKkXRhEXHK75FouSAjqZwvT22',
   new JEVMGasToken(LocalDAI1Asset),
@@ -152,7 +153,7 @@ export const LocalDAI1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['DAI1'],
   [LocalJUNEAsset]
 )
-export const LocalEUROC1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalEUROC1Chain = new JEVMBlockchain(
   'EUROC1-Chain',
   'V8FXXAUXYm7AkXrRex7jrFvQ5ZnW9EeSeRwsWEYUqECZRPq8w',
   new JEVMGasToken(LocalEUROC1Asset),
@@ -162,7 +163,7 @@ export const LocalEUROC1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['EUROC1'],
   [LocalJUNEAsset]
 )
-export const LocalLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalLTC1Chain = new JEVMBlockchain(
   'LTC1-Chain',
   'A8h2bUcXvRhy39CwTSqfMgJr3mxSHvbk3r1opqFgSp9mj8rEA',
   new JEVMGasToken(LocalLTC1Asset),
@@ -172,7 +173,7 @@ export const LocalLTC1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['LTC1'],
   [LocalJUNEAsset]
 )
-export const LocalXLM1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalXLM1Chain = new JEVMBlockchain(
   'XLM1-Chain',
   '2GVXieb3jVY159xE59NyjNWymzaqJsy6ARsXxBbDz4sbSeqkUh',
   new JEVMGasToken(LocalXLM1Asset),
@@ -182,7 +183,7 @@ export const LocalXLM1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['XLM1'],
   [LocalJUNEAsset]
 )
-export const LocalBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalBCH1Chain = new JEVMBlockchain(
   'BCH1-Chain',
   'vdBEzHtv4chmKK9bm2utMpCWnXtGygygwSLB6GAdCVwuuFeNb',
   new JEVMGasToken(LocalBCH1Asset),
@@ -192,7 +193,7 @@ export const LocalBCH1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['BCH1'],
   [LocalJUNEAsset]
 )
-export const LocalPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalPAXG1Chain = new JEVMBlockchain(
   'PAXG1-Chain',
   'QPQgkxtfx3QkRydNXri8LVcYKh9R3Y5Z2TnA2GbjpxVHxFuzi',
   new JEVMGasToken(LocalPAXG1Asset),
@@ -202,7 +203,7 @@ export const LocalPAXG1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['PAXG1'],
   [LocalJUNEAsset]
 )
-export const LocalXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalXSGD1Chain = new JEVMBlockchain(
   'XSGD1-Chain',
   'T4JgH3Mso84HrNN78ytM71kdfKsxDjt27fkdTRFC6nXfwwtLQ',
   new JEVMGasToken(LocalXSGD1Asset),
@@ -212,7 +213,7 @@ export const LocalXSGD1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['XSGD1'],
   [LocalJUNEAsset]
 )
-export const LocalETC1Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalETC1Chain = new JEVMBlockchain(
   'ETC1-Chain',
   's4WgDnS3qmNTY9NQQWcbE1AULLgdmHjnj3fDBjBdqhMAxjtcU',
   new JEVMGasToken(LocalETC1Asset),
@@ -222,7 +223,7 @@ export const LocalETC1Chain: JEVMBlockchain = new JEVMBlockchain(
   ['ETC1'],
   [LocalJUNEAsset]
 )
-export const LocalR1000Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalR1000Chain = new JEVMBlockchain(
   'R1000-Chain',
   '2CyecVstLCni9ccdRmkuYRGYprFeQGMmbXz5XwZK4ufi3WN1bE',
   new JEVMGasToken(LocalR1000Asset),
@@ -232,7 +233,7 @@ export const LocalR1000Chain: JEVMBlockchain = new JEVMBlockchain(
   ['R1000'],
   [LocalJUNEAsset]
 )
-export const LocalR10Chain: JEVMBlockchain = new JEVMBlockchain(
+export const LocalR10Chain = new JEVMBlockchain(
   'R10-Chain',
   'p24EfTFS6KScKDyPu1g9o14gDVcVqu6a2yAYn2LC6X6pMod8H',
   new JEVMGasToken(LocalR10Asset),
@@ -243,7 +244,7 @@ export const LocalR10Chain: JEVMBlockchain = new JEVMBlockchain(
   [LocalJUNEAsset]
 )
 
-export const LocalPrimarySupernet: PrimarySupernet = new PrimarySupernet(
+export const LocalPrimarySupernet = new PrimarySupernet(
   '11111111111111111111111111111111LpoYY',
   [
     LocalPlatformChain,
@@ -269,4 +270,4 @@ export const LocalPrimarySupernet: PrimarySupernet = new PrimarySupernet(
   LocalJUNEChain
 )
 
-export const LocalNetwork: MCN = new MCN(LocalAddress, LocalNetworkId, LocalHrp, LocalPrimarySupernet)
+export const LocalNetwork = new MCN(LocalNetworkName, LocalAddress, LocalNetworkId, LocalHrp, LocalPrimarySupernet)

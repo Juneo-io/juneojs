@@ -28,9 +28,9 @@ export class EVMOutput implements Serializable {
 
   serialize (): JuneoBuffer {
     const buffer = JuneoBuffer.alloc(EVMOutputSize)
-    buffer.write(this.address.serialize())
+    buffer.write(this.address)
     buffer.writeUInt64(this.amount)
-    buffer.write(this.assetId.serialize())
+    buffer.write(this.assetId)
     return buffer
   }
 
@@ -83,9 +83,9 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
 
   serialize (): JuneoBuffer {
     const buffer = JuneoBuffer.alloc(EVMInputSize)
-    buffer.write(this.address.serialize())
+    buffer.write(this.address)
     buffer.writeUInt64(this.amount)
-    buffer.write(this.assetId.serialize())
+    buffer.write(this.assetId)
     buffer.writeUInt64(this.nonce)
     return buffer
   }
@@ -149,8 +149,8 @@ export class JEVMExportTransaction extends ExportTransaction {
     buffer.writeUInt16(this.codecId)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.networkId)
-    buffer.write(this.blockchainId.serialize())
-    buffer.write(this.destinationChain.serialize())
+    buffer.write(this.blockchainId)
+    buffer.write(this.destinationChain)
     buffer.writeUInt32(this.evmInputs.length)
     for (const input of inputsBytes) {
       buffer.write(input)
@@ -253,8 +253,8 @@ export class JEVMImportTransaction extends ImportTransaction {
     buffer.writeUInt16(this.codecId)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.networkId)
-    buffer.write(this.blockchainId.serialize())
-    buffer.write(this.sourceChain.serialize())
+    buffer.write(this.blockchainId)
+    buffer.write(this.sourceChain)
     buffer.writeUInt32(this.importedInputs.length)
     for (const input of inputsBytes) {
       buffer.write(input)

@@ -43,13 +43,13 @@ export class Secp256k1InitialState implements InitialState {
 
   serialize (): JuneoBuffer {
     const outputsBytes: JuneoBuffer[] = []
-    let outputsSize: number = 0
+    let outputsSize = 0
     for (const output of this.outputs) {
       const bytes: JuneoBuffer = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(4 + 4 + outputsSize)
+    const buffer = JuneoBuffer.alloc(4 + 4 + outputsSize)
     buffer.writeUInt32(this.fxId)
     buffer.writeUInt32(this.outputs.length)
     for (const bytes of outputsBytes) {

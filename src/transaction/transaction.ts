@@ -139,27 +139,27 @@ export class BaseTransaction implements UnsignedTransaction {
 
   serialize (): JuneoBuffer {
     const outputsBytes: JuneoBuffer[] = []
-    let outputsSize: number = 0
+    let outputsSize = 0
     for (const output of this.outputs) {
-      const bytes: JuneoBuffer = output.serialize()
+      const bytes = output.serialize()
       outputsSize += bytes.length
       outputsBytes.push(bytes)
     }
     const inputsBytes: JuneoBuffer[] = []
-    let inputsSize: number = 0
+    let inputsSize = 0
     for (const input of this.inputs) {
-      const bytes: JuneoBuffer = input.serialize()
+      const bytes = input.serialize()
       inputsSize += bytes.length
       inputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 2 + 4 + 4 + 4 + 4 + 4 = 22
       22 + BlockchainIdSize + outputsSize + inputsSize + this.memo.length
     )
     buffer.writeUInt16(this.codecId)
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt32(this.networkId)
-    buffer.write(this.blockchainId.serialize())
+    buffer.write(this.blockchainId)
     buffer.writeUInt32(this.outputs.length)
     for (const output of outputsBytes) {
       buffer.write(output)
@@ -228,17 +228,17 @@ export class ExportTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
+    const baseTransaction = super.serialize()
     const exportedOutputsBytes: JuneoBuffer[] = []
-    let exportedOutputsSize: number = 0
+    let exportedOutputsSize = 0
     for (const output of this.exportedOutputs) {
       const bytes: JuneoBuffer = output.serialize()
       exportedOutputsSize += bytes.length
       exportedOutputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + exportedOutputsSize)
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + exportedOutputsSize)
     buffer.write(baseTransaction)
-    buffer.write(this.destinationChain.serialize())
+    buffer.write(this.destinationChain)
     buffer.writeUInt32(this.exportedOutputs.length)
     for (const output of exportedOutputsBytes) {
       buffer.write(output)
@@ -311,17 +311,17 @@ export class ImportTransaction extends BaseTransaction {
   }
 
   serialize (): JuneoBuffer {
-    const baseTransaction: JuneoBuffer = super.serialize()
+    const baseTransaction = super.serialize()
     const importedInputsBytes: JuneoBuffer[] = []
-    let importedInputsSize: number = 0
+    let importedInputsSize = 0
     for (const input of this.importedInputs) {
       const bytes: JuneoBuffer = input.serialize()
       importedInputsSize += bytes.length
       importedInputsBytes.push(bytes)
     }
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + importedInputsSize)
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + BlockchainIdSize + 4 + importedInputsSize)
     buffer.write(baseTransaction)
-    buffer.write(this.sourceChain.serialize())
+    buffer.write(this.sourceChain)
     buffer.writeUInt32(this.importedInputs.length)
     for (const input of importedInputsBytes) {
       buffer.write(input)

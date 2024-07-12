@@ -54,9 +54,9 @@ export class TransferableOutput implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const outputBuffer: JuneoBuffer = this.output.serialize()
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(AssetIdSize + outputBuffer.length)
-    buffer.write(this.assetId.serialize())
+    const outputBuffer = this.output.serialize()
+    const buffer = JuneoBuffer.alloc(AssetIdSize + outputBuffer.length)
+    buffer.write(this.assetId)
     buffer.write(outputBuffer)
     return buffer
   }
@@ -122,7 +122,7 @@ export class Secp256k1Output implements TransactionOutput {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 8 + 8 + 4 + 4 = 28
       28 + AddressSize * this.addresses.length
     )
@@ -132,7 +132,7 @@ export class Secp256k1Output implements TransactionOutput {
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
     for (const address of this.addresses) {
-      buffer.write(address.serialize())
+      buffer.write(address)
     }
     return buffer
   }
@@ -166,7 +166,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 8 + 4 + 4 = 20
       20 + AddressSize * this.addresses.length
     )
@@ -175,7 +175,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
     buffer.writeUInt32(this.threshold)
     buffer.writeUInt32(this.addresses.length)
     for (const address of this.addresses) {
-      buffer.write(address.serialize())
+      buffer.write(address)
     }
     return buffer
   }
@@ -210,14 +210,14 @@ export class StakeableLockedOutput implements TransactionOutput {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(
+    const buffer = JuneoBuffer.alloc(
       // 4 + 8 + 4 + 8 + 8 + 4 + 4 = 40
       40 + AddressSize * this.addresses.length
     )
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt64(this.locktime)
     const transferableOutput = new Secp256k1Output(this.amount, this.locktime, this.threshold, this.addresses)
-    buffer.write(transferableOutput.serialize())
+    buffer.write(transferableOutput)
     return buffer
   }
 

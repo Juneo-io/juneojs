@@ -34,8 +34,8 @@ export class Validator implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const buffer: JuneoBuffer = JuneoBuffer.alloc(ValidatorSize)
-    buffer.write(this.nodeId.serialize())
+    const buffer = JuneoBuffer.alloc(ValidatorSize)
+    buffer.write(this.nodeId)
     buffer.writeUInt64(this.startTime)
     buffer.writeUInt64(this.endTime)
     buffer.writeUInt64(this.weight)
@@ -124,8 +124,8 @@ export class ProofOfPossession implements Serializable {
   }
 
   serialize (): JuneoBuffer {
-    const publicKeyBytes: JuneoBuffer = this.publicKey.serialize()
-    const signatureBytes: JuneoBuffer = this.signature.serialize()
+    const publicKeyBytes = this.publicKey.serialize()
+    const signatureBytes = this.signature.serialize()
     const buffer: JuneoBuffer = JuneoBuffer.alloc(publicKeyBytes.length + signatureBytes.length)
     buffer.write(publicKeyBytes)
     buffer.write(signatureBytes)

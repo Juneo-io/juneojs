@@ -215,7 +215,7 @@ export class TransactionUtils {
     }
   }
 
-  static parseUnsignedEVMTransaction (data: string | JuneoBuffer, typeId: number): UnsignedTransaction {
+  private static parseUnsignedEVMTransaction (data: string | JuneoBuffer, typeId: number): UnsignedTransaction {
     switch (typeId) {
       case EVMImportTransactionTypeId: {
         return JEVMImportTransaction.parse(data)

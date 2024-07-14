@@ -76,6 +76,20 @@ export class JuneoClient {
         throw new NetworkError(error.message)
       })
   }
+
+  async get (endpoint: string): Promise<AxiosResponse> {
+    return await axios
+      .get(endpoint, {
+        method: 'get',
+        baseURL: `${this.protocol}://${this.host}`,
+        headers: HttpHeaders,
+        responseType: 'json',
+        responseEncoding: 'utf8'
+      })
+      .catch((error) => {
+        throw new NetworkError(error.message)
+      })
+  }
 }
 
 export class JsonRpcRequest {

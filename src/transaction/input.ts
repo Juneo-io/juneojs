@@ -13,6 +13,7 @@ export class UserInput {
   threshold: number
   destinationChain: Blockchain
   locktime: bigint
+  stakeable: boolean
 
   constructor (
     assetId: string,
@@ -21,7 +22,8 @@ export class UserInput {
     addresses: string[],
     threshold: number,
     destinationChain: Blockchain,
-    locktime: bigint = BigInt(0)
+    locktime: bigint = BigInt(0),
+    stakeable: boolean = false
   ) {
     this.assetId = assetId
     this.sourceChain = sourceChain
@@ -33,6 +35,7 @@ export class UserInput {
     this.threshold = threshold
     this.destinationChain = destinationChain
     this.locktime = locktime
+    this.stakeable = stakeable
   }
 }
 

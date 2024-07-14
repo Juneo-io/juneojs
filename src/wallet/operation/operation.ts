@@ -95,6 +95,7 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
   addresses: string[]
   threshold: number
   locktime: bigint
+  stakeable: boolean
 
   constructor (
     chain: Blockchain,
@@ -102,7 +103,8 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
     amount: bigint,
     addresses: string[],
     threshold: number,
-    locktime: bigint = BigInt(0)
+    locktime: bigint = BigInt(0),
+    stakeable: boolean = false
   ) {
     super(NetworkOperationType.SendUtxo, chain)
     this.assetId = assetId
@@ -110,6 +112,7 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
     this.addresses = addresses
     this.threshold = threshold
     this.locktime = locktime
+    this.stakeable = stakeable
   }
 }
 

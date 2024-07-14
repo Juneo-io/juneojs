@@ -1,7 +1,7 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
 import { Secp256k1OutputTypeId } from './constants'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, UserOutput, type Utxo } from './output'
+import { Secp256k1Output, StakeableLockedOutput, UserOutput, type Utxo } from './output'
 import { type TransactionFee } from './transaction'
 import { Address, AssetId } from './types'
 
@@ -119,13 +119,10 @@ export function buildTransactionOutputs (
   let outputs: UserOutput[] = []
   // adding outputs matching user inputs
   for (const input of userInputs) {
-    outputs.push(
-      new UserOutput(
-        new AssetId(input.assetId),
-        new Secp256k1Output(input.amount, input.locktime, input.threshold, Address.toAddresses(input.addresses)),
-        false
-      )
-    )
+    const transferOutput = input.stakeable
+      ? new StakeableLockedOutput(input.locktime, input.amount, input.threshold, Address.toAddresses(input.addresses))
+      : new Secp256k1Output(input.amount, input.locktime, input.threshold, Address.toAddresses(input.addresses))
+    outputs.push(new UserOutput(new AssetId(input.assetId), transferOutput, false))
     const assetId = input.assetId
     const amount = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     spentAmounts.set(assetId, amount + BigInt(input.amount))
@@ -175,10 +172,10 @@ function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
   for (const output of outputs) {
-    let key = output.assetId.value
+    let key = output.output.typeId.toString()
+    key += output.assetId.value
     key += output.output.locktime
-    key += output.output.threshold.toString()
-    output.output.addresses.sort(Address.comparator)
+    key += output.output.threshold
     for (const address of output.output.addresses) {
       key += address.serialize().toHex()
     }

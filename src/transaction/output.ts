@@ -46,9 +46,9 @@ export class Utxo {
 
 export class TransferableOutput implements Serializable {
   assetId: AssetId
-  output: TransactionOutput
+  output: TransferOutput
 
-  constructor (assetId: AssetId, output: TransactionOutput) {
+  constructor (assetId: AssetId, output: TransferOutput) {
     this.assetId = assetId
     this.output = output
   }
@@ -71,15 +71,12 @@ export class TransferableOutput implements Serializable {
     return new TransferableOutput(assetId, this.parseOutput(reader.readRemaining()))
   }
 
-  static parseOutput (data: string | JuneoBuffer): TransactionOutput {
+  static parseOutput (data: string | JuneoBuffer): TransferOutput {
     const reader = JuneoBuffer.from(data).createReader()
     const typeId = reader.readUInt32()
     switch (typeId) {
       case Secp256k1OutputTypeId: {
         return Secp256k1Output.parse(data)
-      }
-      case Secp256k1OutputOwnersTypeId: {
-        return Secp256k1OutputOwners.parse(data)
       }
       case StakeableLockedOutputTypeId: {
         return StakeableLockedOutput.parse(data)
@@ -94,7 +91,7 @@ export class TransferableOutput implements Serializable {
 export class UserOutput extends TransferableOutput {
   isChange: boolean
 
-  constructor (assetId: AssetId, output: TransactionOutput, isChange: boolean) {
+  constructor (assetId: AssetId, output: TransferOutput, isChange: boolean) {
     super(assetId, output)
     this.isChange = isChange
   }
@@ -107,7 +104,11 @@ export interface TransactionOutput extends Serializable {
   addresses: Address[]
 }
 
-export class Secp256k1Output implements TransactionOutput {
+export interface TransferOutput extends TransactionOutput {
+  amount: bigint
+}
+
+export class Secp256k1Output implements TransferOutput {
   readonly typeId = Secp256k1OutputTypeId
   amount: bigint
   locktime: bigint
@@ -195,7 +196,7 @@ export class Secp256k1OutputOwners implements TransactionOutput {
   }
 }
 
-export class StakeableLockedOutput implements TransactionOutput {
+export class StakeableLockedOutput implements TransferOutput {
   readonly typeId = StakeableLockedOutputTypeId
   locktime: bigint
   amount: bigint

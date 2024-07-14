@@ -2,7 +2,7 @@ import { type Blockchain } from '../chain'
 import { JuneoBuffer, SignatureError, TransactionError, type Serializable } from '../utils'
 import { BlockchainIdSize, CodecId } from './constants'
 import { TransferableInput } from './input'
-import { TransferableOutput, type Utxo } from './output'
+import { type TransactionOutput, TransferableOutput, type Utxo } from './output'
 import { Secp256k1Credentials, type Signable, type Signer } from './signature'
 import { BlockchainId, type Signature } from './types'
 
@@ -32,8 +32,8 @@ export interface UnsignedTransaction extends Serializable {
   memo: string
   getSignables: () => Signable[]
   getInputs: () => TransferableInput[]
-  getOutputs: () => TransferableOutput[]
-  getOutput: (index: number) => TransferableOutput
+  getOutputs: () => TransactionOutput[]
+  getOutput: (index: number) => TransactionOutput
   getUtxos: () => Utxo[]
   sign: (signers: Signer[]) => Promise<Signature[]>
   signTransaction: (signers: Signer[]) => Promise<string>
@@ -75,11 +75,15 @@ export class BaseTransaction implements UnsignedTransaction {
     return this.inputs
   }
 
-  getOutputs (): TransferableOutput[] {
-    return this.outputs
+  getOutputs (): TransactionOutput[] {
+    const outputs: TransactionOutput[] = []
+    for (const output of this.outputs) {
+      outputs.push(output.output)
+    }
+    return outputs
   }
 
-  getOutput (index: number): TransferableOutput {
+  getOutput (index: number): TransactionOutput {
     const outputs = this.getOutputs()
     if (index >= outputs.length) {
       throw new TransactionError(`transaction does not have output at index ${index} > length (${outputs.length})`)
@@ -223,8 +227,12 @@ export class ExportTransaction extends BaseTransaction {
     this.exportedOutputs.sort(TransferableOutput.comparator)
   }
 
-  getOutputs (): TransferableOutput[] {
-    return [...this.outputs, ...this.exportedOutputs]
+  getOutputs (): TransactionOutput[] {
+    const outputs: TransactionOutput[] = super.getOutputs()
+    for (const output of this.exportedOutputs) {
+      outputs.push(output.output)
+    }
+    return outputs
   }
 
   serialize (): JuneoBuffer {

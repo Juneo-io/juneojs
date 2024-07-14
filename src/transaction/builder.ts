@@ -1,7 +1,6 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
-import { Secp256k1OutputTypeId } from './constants'
 import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, StakeableLockedOutput, UserOutput, type Utxo } from './output'
+import { Secp256k1Output, StakeableLockedOutput, type TransferOutput, UserOutput, type Utxo } from './output'
 import { type TransactionFee } from './transaction'
 import { Address, AssetId } from './types'
 
@@ -42,10 +41,10 @@ export function buildTransactionInputs (
   // for the outputs so make sure to spend them to avoid losses.
   for (let i = 0; i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts); i++) {
     const utxo = utxoSet[i]
-    if (utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (!('amount' in utxo.output)) {
       continue
     }
-    const output = utxo.output as Secp256k1Output
+    const output = utxo.output as TransferOutput
     // output cannot be consumed because it is timelocked
     if (output.locktime > now) {
       throw new InputError('cannot consume time locked utxo')

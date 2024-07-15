@@ -201,6 +201,20 @@ export abstract class Staking extends MultiSigUtxoOperation {
     this.rewardAddresses = rewardAddresses
     this.rewardThreshold = rewardThreshold
   }
+
+  getPreferredUtxoSet (account: UtxoAccount, amount: bigint): Utxo[] {
+    if (typeof this.utxoSet === 'undefined') {
+      return account.utxoSetStakeable
+    }
+    // adding a fee utxo allows the user to fully spend the chosen utxos
+    const feeUtxos = getUtxoSetAssetAmountUtxos(
+      account.utxoSetStakeable,
+      this.chain.assetId,
+      amount,
+      this.utxoSet.utxos
+    )
+    return [...this.utxoSet.utxos, ...feeUtxos]
+  }
 }
 
 export class ValidatePrimaryOperation extends Staking {

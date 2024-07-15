@@ -1,5 +1,6 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
-import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
+import { StakeableLockedOutputTypeId } from './constants'
+import { Secp256k1Input, type Spendable, StakeableLockedInput, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, StakeableLockedOutput, type TransferOutput, UserOutput, type Utxo } from './output'
 import { type TransactionFee } from './transaction'
 import { Address, AssetId } from './types'
@@ -45,19 +46,17 @@ export function buildTransactionInputs (
       continue
     }
     const output = utxo.output as TransferOutput
+    const stakeable = output.typeId === StakeableLockedOutputTypeId
     // output cannot be consumed because it is timelocked
-    if (output.locktime > now) {
+    if (output.locktime > now && !stakeable) {
       throw new InputError('cannot consume time locked utxo')
     }
+    const addressIndices = getSignersIndices(signersAddresses, utxo.output.addresses)
+    const input = stakeable
+      ? new StakeableLockedInput(output.locktime, output.amount, addressIndices, utxo)
+      : new Secp256k1Input(output.amount, addressIndices, utxo)
     // The utxo will be added as an input in any case
-    inputs.push(
-      new TransferableInput(
-        utxo.transactionId,
-        utxo.utxoIndex,
-        utxo.assetId,
-        new Secp256k1Input(output.amount, getSignersIndices(signersAddresses, utxo.output.addresses), utxo)
-      )
-    )
+    inputs.push(new TransferableInput(utxo.transactionId, utxo.utxoIndex, utxo.assetId, input))
     const assetId = utxo.assetId.value
     gatheredAmounts.set(assetId, gatheredAmounts.get(assetId)! + BigInt(output.amount))
   }
@@ -170,20 +169,20 @@ export function buildTransactionOutputs (
 function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
-  for (const output of outputs) {
-    let key = output.output.typeId.toString()
-    key += output.assetId.value
-    key += output.output.locktime
-    key += output.output.threshold
-    for (const address of output.output.addresses) {
+  for (const userOutput of outputs) {
+    let key = userOutput.output.typeId.toString()
+    key += userOutput.assetId.value
+    key += userOutput.output.locktime
+    key += userOutput.output.threshold
+    for (const address of userOutput.output.addresses) {
       key += address.serialize().toHex()
     }
     if (spendings.has(key)) {
       const out = spendings.get(key)!.output
-      ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
+      out.amount += userOutput.output.amount
     } else {
-      mergedOutputs.push(output)
-      spendings.set(key, output)
+      mergedOutputs.push(userOutput)
+      spendings.set(key, userOutput)
     }
   }
   return mergedOutputs

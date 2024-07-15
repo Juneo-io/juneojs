@@ -2,7 +2,7 @@ import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type Utxo } from '../../transaction'
+import { StakeableLockedOutputTypeId, type Utxo } from '../../transaction'
 import { type AssetValue, calculateBalances, fetchUtxos, TimeUtils } from '../../utils'
 import { type ChainNetworkOperation, type ChainOperationSummary } from '../operation'
 import { type Spending, type UtxoSpending } from '../transaction'
@@ -122,6 +122,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoSetMultiSig: Utxo[] = []
   utxoSetLocked: Utxo[] = []
+  utxoSetStakeable: Utxo[] = []
   readonly lockedBalances: Map<string, Balance> = new Map<string, Balance>()
   protected fetching: boolean = false
   private readonly utxoApi: AbstractUtxoAPI
@@ -209,10 +210,14 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
         this.utxoSetLocked.push(utxo)
+        if (utxo.output.typeId === StakeableLockedOutputTypeId) {
+          this.utxoSetStakeable.push(utxo)
+        }
       } else if (!this.hasThreshold(utxo)) {
         this.utxoSetMultiSig.push(utxo)
       } else {
         spendableUtxoSet.push(utxo)
+        this.utxoSetStakeable.push(utxo)
       }
     }
     this.utxoSet = spendableUtxoSet

@@ -227,6 +227,6 @@ export class StakeableLockedOutput implements TransferOutput {
     reader.readAndVerifyTypeId(StakeableLockedOutputTypeId)
     const locktime = reader.readUInt64()
     const output = Secp256k1Output.parse(reader.readRemaining())
-    return new StakeableLockedOutput(output.amount, locktime, output.threshold, output.addresses)
+    return new StakeableLockedOutput(locktime, output.amount, output.threshold, output.addresses)
   }
 }

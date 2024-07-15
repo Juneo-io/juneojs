@@ -59,10 +59,7 @@ export class TransferableInput extends AbstractSignable implements Serializable,
   }
 
   getAmount (): bigint {
-    if (this.input.typeId === Secp256k1InputTypeId) {
-      return (this.input as Secp256k1Input).amount
-    }
-    return BigInt(0)
+    return this.input.amount
   }
 
   getAssetId (): AssetId {
@@ -116,6 +113,9 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     switch (typeId) {
       case Secp256k1InputTypeId: {
         return Secp256k1Input.parse(data)
+      }
+      case StakeableLockedInputTypeId: {
+        return StakeableLockedInput.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported input type id "${typeId}"`)

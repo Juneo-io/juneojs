@@ -40,6 +40,7 @@ export class UserInput {
 }
 
 export interface Spendable {
+  getTypeId: () => number
   getAmount: () => bigint
   getAssetId: () => AssetId
 }
@@ -56,6 +57,10 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     this.utxoIndex = utxoIndex
     this.assetId = assetId
     this.input = input
+  }
+
+  getTypeId (): number {
+    return this.input.typeId
   }
 
   getAmount (): bigint {

@@ -1,5 +1,5 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
-import { StakeableLockedOutputTypeId } from './constants'
+import { StakeableLockedInputTypeId, StakeableLockedOutputTypeId } from './constants'
 import { Secp256k1Input, type Spendable, StakeableLockedInput, TransferableInput, type UserInput } from './input'
 import { Secp256k1Output, StakeableLockedOutput, type TransferOutput, UserOutput, type Utxo } from './output'
 import { type TransactionFee } from './transaction'
@@ -147,20 +147,14 @@ export function buildTransactionOutputs (
     if (spent === available) {
       continue
     }
+    const stakeable = input.getTypeId() === StakeableLockedInputTypeId
+    const transferOutput = stakeable
+      ? new StakeableLockedOutput((input as TransferableInput).input.utxo!.output.locktime, available - spent, 1, [
+        new Address(changeAddress)
+      ])
+      : new Secp256k1Output(available - spent, BigInt(0), 1, [new Address(changeAddress)])
     // adding change output to send remaining value into the change address
-    outputs.push(
-      new UserOutput(
-        input.getAssetId(),
-        new Secp256k1Output(
-          available - spent,
-          // no locktime for the change
-          BigInt(0),
-          1,
-          [new Address(changeAddress)]
-        ),
-        true
-      )
-    )
+    outputs.push(new UserOutput(input.getAssetId(), transferOutput, true))
     // adding the spending of the change output
     const amount = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     spentAmounts.set(assetId, amount + available - spent)

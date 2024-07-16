@@ -206,6 +206,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     const spendableUtxoSet: Utxo[] = []
     this.utxoSetMultiSig = []
     this.utxoSetLocked = []
+    this.utxoSetStakeable = []
     const currentTime: bigint = TimeUtils.now()
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {

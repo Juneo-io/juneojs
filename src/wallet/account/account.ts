@@ -2,7 +2,7 @@ import { type AbstractUtxoAPI } from '../../api'
 import { type TokenAsset } from '../../asset'
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { type Utxo } from '../../transaction'
+import { StakeableLockedOutputTypeId, type Utxo } from '../../transaction'
 import { type AssetValue, calculateBalances, fetchUtxos, TimeUtils } from '../../utils'
 import { type ChainNetworkOperation, type ChainOperationSummary } from '../operation'
 import { type Spending, type UtxoSpending } from '../transaction'
@@ -122,7 +122,9 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSet: Utxo[] = []
   utxoSetMultiSig: Utxo[] = []
   utxoSetLocked: Utxo[] = []
+  utxoSetStakeable: Utxo[] = []
   readonly lockedBalances: Map<string, Balance> = new Map<string, Balance>()
+  readonly stakeableBalances: Map<string, Balance> = new Map<string, Balance>()
   protected fetching: boolean = false
   private readonly utxoApi: AbstractUtxoAPI
 
@@ -151,6 +153,26 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     return this.lockedBalances.get(assetId)!
   }
 
+  getStakeableAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getStakeableAmount(asset.assetId))
+  }
+
+  async getStakeableValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+    const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
+    return this.getStakeableAssetValue(asset)
+  }
+
+  getStakeableAmount (assetId: string): bigint {
+    return this.getStakeableBalance(assetId).getValue()
+  }
+
+  getStakeableBalance (assetId: string): Balance {
+    if (!this.stakeableBalances.has(assetId)) {
+      this.stakeableBalances.set(assetId, new Balance())
+    }
+    return this.stakeableBalances.get(assetId)!
+  }
+
   async fetchBalance (assetId: string): Promise<void> {
     // there is currently no other way to do it only with utxos
     // a seperated indexing of each asset is needed to be able to do it
@@ -169,6 +191,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.sortUtxoSet()
     calculateBalances(this.utxoSet, this.balances)
     calculateBalances(this.utxoSetLocked, this.lockedBalances)
+    calculateBalances(this.utxoSetStakeable, this.stakeableBalances)
     this.fetching = false
   }
 
@@ -205,14 +228,19 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     const spendableUtxoSet: Utxo[] = []
     this.utxoSetMultiSig = []
     this.utxoSetLocked = []
+    this.utxoSetStakeable = []
     const currentTime: bigint = TimeUtils.now()
     for (const utxo of this.utxoSet) {
       if (utxo.output.locktime > currentTime) {
         this.utxoSetLocked.push(utxo)
+        if (utxo.output.typeId === StakeableLockedOutputTypeId) {
+          this.utxoSetStakeable.push(utxo)
+        }
       } else if (!this.hasThreshold(utxo)) {
         this.utxoSetMultiSig.push(utxo)
       } else {
         spendableUtxoSet.push(utxo)
+        this.utxoSetStakeable.push(utxo)
       }
     }
     this.utxoSet = spendableUtxoSet

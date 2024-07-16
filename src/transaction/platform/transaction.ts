@@ -19,7 +19,7 @@ import {
   ValidatorSize
 } from '../constants'
 import { type TransferableInput } from '../input'
-import { Secp256k1OutputOwners, TransferableOutput } from '../output'
+import { Secp256k1OutputOwners, type TransactionOutput, TransferableOutput } from '../output'
 import { type Signable } from '../signature'
 import { BaseTransaction, ExportTransaction, ImportTransaction } from '../transaction'
 import { type Address, AssetId, type BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
@@ -557,11 +557,13 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     this.shares = shares
   }
 
-  getOutputs (): TransferableOutput[] {
-    const assetId = this.stake[0].assetId
-    const validatorRewardsOutput = new TransferableOutput(assetId, this.validatorRewardsOwner)
-    const delegatorRewardsOutput = new TransferableOutput(assetId, this.delegatorRewardsOwner)
-    return [...this.outputs, ...this.stake, validatorRewardsOutput, delegatorRewardsOutput]
+  getOutputs (): TransactionOutput[] {
+    const outputs: TransactionOutput[] = super.getOutputs()
+    for (const output of this.stake) {
+      outputs.push(output.output)
+    }
+    outputs.push(this.validatorRewardsOwner, this.delegatorRewardsOwner)
+    return outputs
   }
 
   serialize (): JuneoBuffer {
@@ -662,10 +664,13 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     this.delegatorRewardsOwner = delegatorRewardsOwner
   }
 
-  getOutputs (): TransferableOutput[] {
-    const assetId = this.stake[0].assetId
-    const delegatorRewardsOutput = new TransferableOutput(assetId, this.delegatorRewardsOwner)
-    return [...this.outputs, ...this.stake, delegatorRewardsOutput]
+  getOutputs (): TransactionOutput[] {
+    const outputs: TransactionOutput[] = super.getOutputs()
+    for (const output of this.stake) {
+      outputs.push(output.output)
+    }
+    outputs.push(this.delegatorRewardsOwner)
+    return outputs
   }
 
   serialize (): JuneoBuffer {

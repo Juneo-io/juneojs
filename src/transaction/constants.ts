@@ -17,6 +17,8 @@ export const EVMInputSize = AddressSize + 8 + AssetIdSize + 8
 
 export const CodecId = 0
 
+export const InvalidTypeId = -1
+
 export const Secp256k1InitialStateFxId = 0x00000000
 
 export const JVMBaseTransactionTypeId = 0x00000000

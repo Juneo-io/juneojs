@@ -95,6 +95,7 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
   addresses: string[]
   threshold: number
   locktime: bigint
+  stakeable: boolean
 
   constructor (
     chain: Blockchain,
@@ -102,7 +103,8 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
     amount: bigint,
     addresses: string[],
     threshold: number,
-    locktime: bigint = BigInt(0)
+    locktime: bigint = BigInt(0),
+    stakeable: boolean = false
   ) {
     super(NetworkOperationType.SendUtxo, chain)
     this.assetId = assetId
@@ -110,6 +112,7 @@ export class SendUtxoOperation extends MultiSigUtxoOperation {
     this.addresses = addresses
     this.threshold = threshold
     this.locktime = locktime
+    this.stakeable = stakeable
   }
 }
 
@@ -197,6 +200,20 @@ export abstract class Staking extends MultiSigUtxoOperation {
     this.stakeThreshold = stakeThreshold
     this.rewardAddresses = rewardAddresses
     this.rewardThreshold = rewardThreshold
+  }
+
+  getPreferredUtxoSet (account: UtxoAccount, amount: bigint): Utxo[] {
+    if (typeof this.utxoSet === 'undefined') {
+      return account.utxoSetStakeable
+    }
+    // adding a fee utxo allows the user to fully spend the chosen utxos
+    const feeUtxos = getUtxoSetAssetAmountUtxos(
+      account.utxoSetStakeable,
+      this.chain.assetId,
+      amount,
+      this.utxoSet.utxos
+    )
+    return [...this.utxoSet.utxos, ...feeUtxos]
   }
 }
 

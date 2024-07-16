@@ -1,8 +1,8 @@
 import { type PlatformBlockchain } from '../../chain'
 import { InputError } from '../../utils'
-import { buildTransactionInputs, buildTransactionOutputs } from '../builder'
+import { buildStakeOutputs, buildTransactionInputs, buildTransactionOutputs } from '../builder'
 import { UserInput, type TransferableInput } from '../input'
-import { Secp256k1Output, Secp256k1OutputOwners, TransferableOutput, type UserOutput, type Utxo } from '../output'
+import { Secp256k1OutputOwners, type TransferableOutput, type UserOutput, type Utxo } from '../output'
 import { TransactionFee } from '../transaction'
 import { Address, AssetId, BlockchainId, DynamicId, NodeId, SupernetId } from '../types'
 import { Validator, type BLSSigner, type SupernetAuth } from './supernet'
@@ -415,31 +415,42 @@ export function buildAddPermissionlessValidatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddPermissionlessValidatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [
+  const stakeData = new UserInput(
+    stakedAssetId,
+    chain,
+    stakeAmount,
+    stakeAddresses,
+    stakeThreshold,
+    chain,
+    stakeLocktime
+  )
+  // sort set by locktime so stakeable locked are processed first
+  // non stakeable utxos should not be present there as it would
+  // throw an error during outputs building, we assume that the set
+  // was pre sorted in order not to have those
+  utxoSet.sort((a, b) => {
+    return Number(b.output.locktime - a.output.locktime)
+  })
+  const inputs: TransferableInput[] = buildTransactionInputs([stakeData], utxoSet, signersAddresses, [
     new TransactionFee(chain, fee)
   ])
+  const validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, stakePeriod, stakeAmount)
+  const stake: TransferableOutput[] = buildStakeOutputs(stakeData, inputs)
+  const rewardsOwner = new Secp256k1OutputOwners(rewardLocktime, rewardThreshold, Address.toAddresses(rewardAddresses))
+  // same as for utxo set sorting because inputs are used to build the change outputs
+  // also using locktime but in inverted order so change prioritizes lowest locktime
+  // first and if mixed with unlocked utxos change will then be unlocked instead of
+  // locked stakeable change output. Also note that here we did sorting after building
+  // of the stake, because the stake must use the same order of inputs as the utxoSet
+  // they were build from
+  inputs.sort((a, b) => {
+    return Number(a.input.utxo!.output.locktime - b.input.utxo!.output.locktime)
+  })
   const outputs: UserOutput[] = buildTransactionOutputs(
-    [userInput],
+    [stakeData],
     inputs,
     new TransactionFee(chain, fee),
     changeAddress
-  )
-  const validator: Validator = new Validator(
-    typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    stakePeriod,
-    stakeAmount
-  )
-  const stake: TransferableOutput[] = [
-    new TransferableOutput(
-      new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
-    )
-  ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardLocktime,
-    rewardThreshold,
-    Address.toAddresses(rewardAddresses)
   )
   const changeOutputs: TransferableOutput[] = []
   for (const output of outputs) {
@@ -483,31 +494,32 @@ export function buildAddPermissionlessDelegatorTransaction (
   networkId: number,
   memo: string = ''
 ): AddPermissionlessDelegatorTransaction {
-  const userInput: UserInput = new UserInput(stakedAssetId, chain, stakeAmount, stakeAddresses, stakeThreshold, chain)
-  const inputs: TransferableInput[] = buildTransactionInputs([userInput], utxoSet, signersAddresses, [
+  const stakeData = new UserInput(
+    stakedAssetId,
+    chain,
+    stakeAmount,
+    stakeAddresses,
+    stakeThreshold,
+    chain,
+    stakeLocktime
+  )
+  utxoSet.sort((a, b) => {
+    return Number(b.output.locktime - a.output.locktime)
+  })
+  const inputs: TransferableInput[] = buildTransactionInputs([stakeData], utxoSet, signersAddresses, [
     new TransactionFee(chain, fee)
   ])
+  const validator = new Validator(typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId, stakePeriod, stakeAmount)
+  const stake: TransferableOutput[] = buildStakeOutputs(stakeData, inputs)
+  const rewardsOwner = new Secp256k1OutputOwners(rewardLocktime, rewardThreshold, Address.toAddresses(rewardAddresses))
+  inputs.sort((a, b) => {
+    return Number(a.input.utxo!.output.locktime - b.input.utxo!.output.locktime)
+  })
   const outputs: UserOutput[] = buildTransactionOutputs(
-    [userInput],
+    [stakeData],
     inputs,
     new TransactionFee(chain, fee),
     changeAddress
-  )
-  const validator: Validator = new Validator(
-    typeof nodeId === 'string' ? new NodeId(nodeId) : nodeId,
-    stakePeriod,
-    stakeAmount
-  )
-  const stake: TransferableOutput[] = [
-    new TransferableOutput(
-      new AssetId(stakedAssetId),
-      new Secp256k1Output(stakeAmount, stakeLocktime, stakeThreshold, Address.toAddresses(stakeAddresses))
-    )
-  ]
-  const rewardsOwner: Secp256k1OutputOwners = new Secp256k1OutputOwners(
-    rewardLocktime,
-    rewardThreshold,
-    Address.toAddresses(rewardAddresses)
   )
   const changeOutputs: TransferableOutput[] = []
   for (const output of outputs) {

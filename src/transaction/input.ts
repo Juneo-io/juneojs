@@ -13,6 +13,7 @@ export class UserInput {
   threshold: number
   destinationChain: Blockchain
   locktime: bigint
+  stakeable: boolean
 
   constructor (
     assetId: string,
@@ -21,7 +22,8 @@ export class UserInput {
     addresses: string[],
     threshold: number,
     destinationChain: Blockchain,
-    locktime: bigint = BigInt(0)
+    locktime: bigint = BigInt(0),
+    stakeable: boolean = false
   ) {
     this.assetId = assetId
     this.sourceChain = sourceChain
@@ -33,10 +35,12 @@ export class UserInput {
     this.threshold = threshold
     this.destinationChain = destinationChain
     this.locktime = locktime
+    this.stakeable = stakeable
   }
 }
 
 export interface Spendable {
+  getTypeId: () => number
   getAmount: () => bigint
   getAssetId: () => AssetId
 }
@@ -55,11 +59,12 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     this.input = input
   }
 
+  getTypeId (): number {
+    return this.input.typeId
+  }
+
   getAmount (): bigint {
-    if (this.input.typeId === Secp256k1InputTypeId) {
-      return (this.input as Secp256k1Input).amount
-    }
-    return BigInt(0)
+    return this.input.amount
   }
 
   getAssetId (): AssetId {
@@ -113,6 +118,9 @@ export class TransferableInput extends AbstractSignable implements Serializable,
     switch (typeId) {
       case Secp256k1InputTypeId: {
         return Secp256k1Input.parse(data)
+      }
+      case StakeableLockedInputTypeId: {
+        return StakeableLockedInput.parse(data)
       }
       default: {
         throw new ParsingError(`unsupported input type id "${typeId}"`)

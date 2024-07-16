@@ -1,7 +1,7 @@
 import { type AbstractUtxoAPI } from '../api'
 import { type Blockchain, JEVM_ID, JVM_ID, PLATFORMVM_ID } from '../chain'
 import { type MCNProvider } from '../juneo'
-import { Address, type Secp256k1Output, Secp256k1OutputTypeId, Utxo } from '../transaction'
+import { Address, type TransferOutput, Utxo } from '../transaction'
 import { Balance } from '../wallet'
 import { WalletError } from './errors'
 
@@ -62,7 +62,6 @@ function addUtxo (utxos: Utxo[], utxo: Utxo, transactionId?: string): boolean {
 }
 
 export class UtxoSet {
-  private static readonly ENCODING_HRP = 'key'
   private readonly expectedSigners: ExpectedSigner[] = []
   private readonly selectedSigners = new Map<string, Address>()
   utxos: Utxo[]
@@ -87,7 +86,7 @@ export class UtxoSet {
   }
 
   addSigner (address: Address): boolean {
-    const key = address.encode(UtxoSet.ENCODING_HRP)
+    const key = address.encodeHex()
     // already added avoid duplicate entries
     if (this.selectedSigners.has(key)) {
       return false
@@ -101,7 +100,7 @@ export class UtxoSet {
   }
 
   removeSigner (address: Address): boolean {
-    const key = address.encode(UtxoSet.ENCODING_HRP)
+    const key = address.encodeHex()
     return this.selectedSigners.delete(key)
   }
 
@@ -112,7 +111,7 @@ export class UtxoSet {
       const addresses: Address[] = []
       let selectedAmount = 0
       for (const address of expectedSigner.addresses) {
-        if (this.selectedSigners.has(address.encode(UtxoSet.ENCODING_HRP))) {
+        if (this.selectedSigners.has(address.encodeHex())) {
           selectedAmount += 1
           continue
         }
@@ -163,7 +162,7 @@ export function getUtxoSetAssetAmountUtxos (
   const hasIgnoredUtxos = typeof ignoredUtxos !== 'undefined'
   let totalAmount = BigInt(0)
   for (const utxo of utxoSet) {
-    if (utxo.assetId.value !== assetId || utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (utxo.assetId.value !== assetId || !('amount' in utxo.output)) {
       continue
     }
     if (hasIgnoredUtxos) {
@@ -173,7 +172,7 @@ export function getUtxoSetAssetAmountUtxos (
         }
       }
     }
-    totalAmount += (utxo.output as Secp256k1Output).amount
+    totalAmount += (utxo.output as TransferOutput).amount
     utxos.push(utxo)
     if (totalAmount >= amount) {
       break
@@ -185,11 +184,11 @@ export function getUtxoSetAssetAmountUtxos (
 export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<string, bigint> {
   const values = new Map<string, bigint>()
   for (const utxo of utxoSet) {
-    if (utxo.sourceChain !== source || utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (utxo.sourceChain !== source || !('amount' in utxo.output)) {
       continue
     }
-    let value: bigint = (utxo.output as Secp256k1Output).amount
-    const assetId: string = utxo.assetId.value
+    let value = (utxo.output as TransferOutput).amount
+    const assetId = utxo.assetId.value
     if (values.has(assetId)) {
       value += values.get(assetId)!
     }
@@ -199,7 +198,7 @@ export function getUtxosAmountValues (utxoSet: Utxo[], source?: string): Map<str
 }
 
 export function calculateBalances (utxoSet: Utxo[], balances: Map<string, Balance>): void {
-  const values: Map<string, bigint> = getUtxosAmountValues(utxoSet)
+  const values = getUtxosAmountValues(utxoSet)
   for (const [key, value] of values) {
     if (!balances.has(key)) {
       balances.set(key, new Balance())
@@ -216,7 +215,7 @@ export function calculateBalances (utxoSet: Utxo[], balances: Map<string, Balanc
 }
 
 export function getUtxoAPI (provider: MCNProvider, chain: Blockchain): AbstractUtxoAPI {
-  const vmId: string = chain.vm.id
+  const vmId = chain.vm.id
   if (vmId === JVM_ID) {
     return provider.jvmApi
   } else if (vmId === PLATFORMVM_ID) {

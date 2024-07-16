@@ -217,7 +217,7 @@ export class StakeableLockedOutput implements TransferOutput {
     )
     buffer.writeUInt32(this.typeId)
     buffer.writeUInt64(this.locktime)
-    const transferableOutput = new Secp256k1Output(this.amount, this.locktime, this.threshold, this.addresses)
+    const transferableOutput = new Secp256k1Output(this.amount, BigInt(0), this.threshold, this.addresses)
     buffer.write(transferableOutput)
     return buffer
   }

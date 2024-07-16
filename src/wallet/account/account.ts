@@ -124,6 +124,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
   utxoSetLocked: Utxo[] = []
   utxoSetStakeable: Utxo[] = []
   readonly lockedBalances: Map<string, Balance> = new Map<string, Balance>()
+  readonly stakeableBalances: Map<string, Balance> = new Map<string, Balance>()
   protected fetching: boolean = false
   private readonly utxoApi: AbstractUtxoAPI
 
@@ -152,6 +153,26 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     return this.lockedBalances.get(assetId)!
   }
 
+  getStakeableAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getStakeableAmount(asset.assetId))
+  }
+
+  async getStakeableValue (provider: MCNProvider, assetId: string): Promise<AssetValue> {
+    const asset: TokenAsset = await this.chain.getAsset(provider, assetId)
+    return this.getStakeableAssetValue(asset)
+  }
+
+  getStakeableAmount (assetId: string): bigint {
+    return this.getStakeableBalance(assetId).getValue()
+  }
+
+  getStakeableBalance (assetId: string): Balance {
+    if (!this.stakeableBalances.has(assetId)) {
+      this.stakeableBalances.set(assetId, new Balance())
+    }
+    return this.stakeableBalances.get(assetId)!
+  }
+
   async fetchBalance (assetId: string): Promise<void> {
     // there is currently no other way to do it only with utxos
     // a seperated indexing of each asset is needed to be able to do it
@@ -170,6 +191,7 @@ export abstract class UtxoAccount extends AbstractChainAccount {
     this.sortUtxoSet()
     calculateBalances(this.utxoSet, this.balances)
     calculateBalances(this.utxoSetLocked, this.lockedBalances)
+    calculateBalances(this.utxoSetStakeable, this.stakeableBalances)
     this.fetching = false
   }
 

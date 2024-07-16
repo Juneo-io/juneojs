@@ -5,7 +5,7 @@ import {
   type AddSupernetValidatorTransaction,
   type Validator
 } from '../../transaction'
-import { AccountError, TimeUtils } from '../../utils'
+import { AccountError, StakeError, TimeUtils } from '../../utils'
 import {
   type AddSupernetValidatorOperation,
   type ChainNetworkOperation,
@@ -108,14 +108,22 @@ export class PlatformAccount extends UtxoAccount {
   // This avoids to send tx with too low staking period which can easily happen when
   // users are trying to stake for staking periods of minStakeDuration.
   private verifyAndFixStakeTransaction (validator: Validator): void {
+    const minStakeDuration = this.provider.platformChain.stakeConfig.minStakeDuration
+    // if the stake period the user entered is too low it is better to throw an error than
+    // adjusting it and sending it so it does not have an unexpected behaviour
+    if (validator.getStakePeriod() < minStakeDuration) {
+      throw new StakeError(
+        `stake period of ${validator.getStakePeriod()} is too low: want at least ${minStakeDuration}`
+      )
+    }
     // resync of start time to match chain timestamp
     // note: maybe use actual chain timestamp instead of local user time
     // some may have reconfigured their clock
     validator.startTime = TimeUtils.now()
-    const minStakeDuration = this.provider.platformChain.stakeConfig.minStakeDuration
     // resync endTime to accomodate for minStakeDuration according to new startTime
+    // give it an extra 60 seconds headroom to make sure the staking does not fail
     if (validator.getStakePeriod() < minStakeDuration) {
-      validator.endTime = validator.startTime + minStakeDuration
+      validator.endTime = validator.startTime + minStakeDuration + BigInt(60)
     }
   }
 

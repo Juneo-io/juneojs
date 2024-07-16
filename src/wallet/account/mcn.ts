@@ -81,6 +81,20 @@ export class MCNAccount {
     return totalAmount
   }
 
+  getTotalStakeableAssetValue (asset: TokenAsset): AssetValue {
+    return asset.getAssetValue(this.getTotalStakeableAmount(asset.assetId))
+  }
+
+  getTotalStakeableAmount (assetId: string): bigint {
+    let totalAmount: bigint = BigInt(0)
+    for (const [, account] of this.chainAccounts) {
+      if (account.type === AccountType.Utxo) {
+        totalAmount += (account as UtxoAccount).getStakeableBalance(assetId).getValue()
+      }
+    }
+    return totalAmount
+  }
+
   async fetchUnfinishedJuneDepositOperations (): Promise<DepositResumeOperation[]> {
     return await this.crossManager.fetchUnfinishedDepositOperations()
   }

@@ -74,7 +74,7 @@ export class TransactionUtils {
       const data = (await api.getTx(input.transactionId.value)).tx
       const tx = TransactionUtils.parseUnsignedTransaction(data)
       const output = tx.getOutput(input.utxoIndex)
-      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output.output)
+      input.input.utxo = new Utxo(input.transactionId, input.utxoIndex, input.assetId, output)
     }
   }
 
@@ -215,7 +215,7 @@ export class TransactionUtils {
     }
   }
 
-  static parseUnsignedEVMTransaction (data: string | JuneoBuffer, typeId: number): UnsignedTransaction {
+  private static parseUnsignedEVMTransaction (data: string | JuneoBuffer, typeId: number): UnsignedTransaction {
     switch (typeId) {
       case EVMImportTransactionTypeId: {
         return JEVMImportTransaction.parse(data)

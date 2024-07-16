@@ -27,13 +27,14 @@ export async function estimateBaseTransaction (
   amount: bigint,
   addresses: string[],
   threshold: number,
-  locktime: bigint = BigInt(0)
+  locktime: bigint,
+  stakeable: boolean
 ): Promise<UtxoFeeData> {
   const fee: BaseFeeData = await getBaseTxFee(provider, TransactionType.Base, chain)
   const transaction: UnsignedTransaction =
     chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
-        [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime)],
+        [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime, stakeable)],
         utxoSet,
         signersAddresses,
         fee.amount,
@@ -68,7 +69,8 @@ export async function estimateSendOperation (
     send.amount,
     [send.address],
     1,
-    BigInt(0)
+    BigInt(0),
+    false
   ).then(
     (fee) => {
       const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
@@ -108,7 +110,8 @@ export async function estimateSendUtxoOperation (
     send.amount,
     send.addresses,
     send.threshold,
-    send.locktime
+    send.locktime,
+    send.stakeable
   ).then(
     (fee) => {
       const spendings = [fee.spending]

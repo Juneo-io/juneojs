@@ -7,6 +7,7 @@ import {
   EVMImportTransactionTypeId,
   EVMInputSize,
   EVMOutputSize,
+  InvalidTypeId,
   TransactionIdSize
 } from '../constants'
 import { type Spendable, TransferableInput } from '../input'
@@ -63,6 +64,10 @@ export class EVMInput extends AbstractSignable implements Serializable, Spendabl
     this.amount = amount
     this.assetId = assetId
     this.nonce = nonce
+  }
+
+  getTypeId (): number {
+    return InvalidTypeId
   }
 
   getAmount (): bigint {

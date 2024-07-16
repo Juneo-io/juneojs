@@ -1,7 +1,14 @@
 import { InputError, OutputError, TimeUtils } from '../utils'
-import { Secp256k1OutputTypeId } from './constants'
-import { Secp256k1Input, type Spendable, TransferableInput, type UserInput } from './input'
-import { Secp256k1Output, UserOutput, type Utxo } from './output'
+import { StakeableLockedInputTypeId, StakeableLockedOutputTypeId } from './constants'
+import { Secp256k1Input, type Spendable, StakeableLockedInput, TransferableInput, type UserInput } from './input'
+import {
+  Secp256k1Output,
+  StakeableLockedOutput,
+  TransferableOutput,
+  type TransferOutput,
+  UserOutput,
+  type Utxo
+} from './output'
 import { type TransactionFee } from './transaction'
 import { Address, AssetId } from './types'
 
@@ -42,23 +49,23 @@ export function buildTransactionInputs (
   // for the outputs so make sure to spend them to avoid losses.
   for (let i = 0; i < utxoSet.length && !isGatheringComplete(targetAmounts, gatheredAmounts); i++) {
     const utxo = utxoSet[i]
-    if (utxo.output.typeId !== Secp256k1OutputTypeId) {
+    if (!('amount' in utxo.output)) {
       continue
     }
-    const output = utxo.output as Secp256k1Output
+    const output = utxo.output as TransferOutput
+    const locked = output.locktime > now
+    const stakeable = output.typeId === StakeableLockedOutputTypeId
     // output cannot be consumed because it is timelocked
-    if (output.locktime > now) {
+    if (locked && !stakeable) {
       throw new InputError('cannot consume time locked utxo')
     }
+    const addressIndices = getSignersIndices(signersAddresses, utxo.output.addresses)
+    const input =
+      stakeable && locked
+        ? new StakeableLockedInput(output.locktime, output.amount, addressIndices, utxo)
+        : new Secp256k1Input(output.amount, addressIndices, utxo)
     // The utxo will be added as an input in any case
-    inputs.push(
-      new TransferableInput(
-        utxo.transactionId,
-        utxo.utxoIndex,
-        utxo.assetId,
-        new Secp256k1Input(output.amount, getSignersIndices(signersAddresses, utxo.output.addresses), utxo)
-      )
-    )
+    inputs.push(new TransferableInput(utxo.transactionId, utxo.utxoIndex, utxo.assetId, input))
     const assetId = utxo.assetId.value
     gatheredAmounts.set(assetId, gatheredAmounts.get(assetId)! + BigInt(output.amount))
   }
@@ -119,13 +126,10 @@ export function buildTransactionOutputs (
   let outputs: UserOutput[] = []
   // adding outputs matching user inputs
   for (const input of userInputs) {
-    outputs.push(
-      new UserOutput(
-        new AssetId(input.assetId),
-        new Secp256k1Output(input.amount, input.locktime, input.threshold, Address.toAddresses(input.addresses)),
-        false
-      )
-    )
+    const transferOutput = input.stakeable
+      ? new StakeableLockedOutput(input.locktime, input.amount, input.threshold, Address.toAddresses(input.addresses))
+      : new Secp256k1Output(input.amount, input.locktime, input.threshold, Address.toAddresses(input.addresses))
+    outputs.push(new UserOutput(new AssetId(input.assetId), transferOutput, false))
     const assetId = input.assetId
     const amount = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     spentAmounts.set(assetId, amount + BigInt(input.amount))
@@ -150,20 +154,14 @@ export function buildTransactionOutputs (
     if (spent === available) {
       continue
     }
+    const stakeable = input.getTypeId() === StakeableLockedInputTypeId
+    const transferOutput = stakeable
+      ? new StakeableLockedOutput((input as TransferableInput).input.utxo!.output.locktime, available - spent, 1, [
+        new Address(changeAddress)
+      ])
+      : new Secp256k1Output(available - spent, BigInt(0), 1, [new Address(changeAddress)])
     // adding change output to send remaining value into the change address
-    outputs.push(
-      new UserOutput(
-        input.getAssetId(),
-        new Secp256k1Output(
-          available - spent,
-          // no locktime for the change
-          BigInt(0),
-          1,
-          [new Address(changeAddress)]
-        ),
-        true
-      )
-    )
+    outputs.push(new UserOutput(input.getAssetId(), transferOutput, true))
     // adding the spending of the change output
     const amount = spentAmounts.has(assetId) ? spentAmounts.get(assetId)! : BigInt(0)
     spentAmounts.set(assetId, amount + available - spent)
@@ -174,21 +172,109 @@ export function buildTransactionOutputs (
 function mergeSecp256k1Outputs (outputs: UserOutput[]): UserOutput[] {
   const mergedOutputs: UserOutput[] = []
   const spendings = new Map<string, UserOutput>()
-  for (const output of outputs) {
-    let key = output.assetId.value
-    key += output.output.locktime
-    key += output.output.threshold.toString()
-    output.output.addresses.sort(Address.comparator)
-    for (const address of output.output.addresses) {
+  for (const userOutput of outputs) {
+    let key = userOutput.output.typeId.toString()
+    key += userOutput.assetId.value
+    key += userOutput.output.locktime
+    key += userOutput.output.threshold
+    for (const address of userOutput.output.addresses) {
       key += address.serialize().toHex()
     }
     if (spendings.has(key)) {
       const out = spendings.get(key)!.output
-      ;(out as Secp256k1Output).amount += (output.output as Secp256k1Output).amount
+      out.amount += userOutput.output.amount
     } else {
-      mergedOutputs.push(output)
-      spendings.set(key, output)
+      mergedOutputs.push(userOutput)
+      spendings.set(key, userOutput)
     }
   }
   return mergedOutputs
+}
+
+export function buildStakeOutputs (stakeData: UserInput, inputs: TransferableInput[]): TransferableOutput[] {
+  const stake: TransferableOutput[] = []
+  const targetStake = stakeData.amount
+  let spentStakeAmount = BigInt(0)
+  let spentLockedStakeAmount = BigInt(0)
+  const stakeableLockedInputs: StakeableLockedInput[] = []
+  for (const transferableInput of inputs) {
+    const input = transferableInput.input
+    const remaining = targetStake - spentStakeAmount - spentLockedStakeAmount
+    const spent = input.amount > remaining ? remaining : input.amount
+    if (input.typeId === StakeableLockedInputTypeId) {
+      spentLockedStakeAmount += spent
+      stakeableLockedInputs.push(input as StakeableLockedInput)
+    } else {
+      spentStakeAmount += spent
+    }
+    // enough inputs will be used already
+    if (spentStakeAmount + spentLockedStakeAmount >= targetStake) {
+      break
+    }
+  }
+  // output for regular stake
+  if (spentStakeAmount > 0) {
+    stake.push(
+      new TransferableOutput(
+        new AssetId(stakeData.assetId),
+        new Secp256k1Output(
+          spentStakeAmount,
+          stakeData.locktime,
+          stakeData.threshold,
+          Address.toAddresses(stakeData.addresses)
+        )
+      )
+    )
+  }
+  // output for stake that is stakeable only
+  if (spentLockedStakeAmount > 0) {
+    stake.push(...buildStakeStakeableLockedOutputs(stakeData, stakeableLockedInputs, spentLockedStakeAmount))
+  }
+  return stake
+}
+
+function buildStakeStakeableLockedOutputs (
+  stakeData: UserInput,
+  inputs: StakeableLockedInput[],
+  spentLockedStakeAmount: bigint
+): TransferableOutput[] {
+  const outputs: TransferableOutput[] = []
+  const locktimesMap = new Map<bigint, StakeableLockedInput[]>()
+  for (const input of inputs) {
+    const key = input.locktime
+    if (!locktimesMap.has(key)) {
+      locktimesMap.set(key, [])
+    }
+    const values = locktimesMap.get(key)
+    values!.push(input)
+  }
+  let totalAmount = BigInt(0)
+  for (const [locktime, inputs] of locktimesMap) {
+    let outputAmount = BigInt(0)
+    for (const input of inputs) {
+      const remaining = spentLockedStakeAmount - totalAmount
+      const isLast = input.amount > remaining
+      const amount = isLast ? remaining : input.amount
+      totalAmount += amount
+      outputAmount += amount
+      if (isLast) {
+        break
+      }
+    }
+    outputs.push(
+      new TransferableOutput(
+        new AssetId(stakeData.assetId),
+        new StakeableLockedOutput(
+          locktime,
+          outputAmount,
+          stakeData.threshold,
+          Address.toAddresses(stakeData.addresses)
+        )
+      )
+    )
+    if (spentLockedStakeAmount - totalAmount < 1) {
+      break
+    }
+  }
+  return outputs
 }

@@ -46,15 +46,17 @@ export function buildTransactionInputs (
       continue
     }
     const output = utxo.output as TransferOutput
+    const locked = output.locktime > now
     const stakeable = output.typeId === StakeableLockedOutputTypeId
     // output cannot be consumed because it is timelocked
-    if (output.locktime > now && !stakeable) {
+    if (locked && !stakeable) {
       throw new InputError('cannot consume time locked utxo')
     }
     const addressIndices = getSignersIndices(signersAddresses, utxo.output.addresses)
-    const input = stakeable
-      ? new StakeableLockedInput(output.locktime, output.amount, addressIndices, utxo)
-      : new Secp256k1Input(output.amount, addressIndices, utxo)
+    const input =
+      stakeable && locked
+        ? new StakeableLockedInput(output.locktime, output.amount, addressIndices, utxo)
+        : new Secp256k1Input(output.amount, addressIndices, utxo)
     // The utxo will be added as an input in any case
     inputs.push(new TransferableInput(utxo.transactionId, utxo.utxoIndex, utxo.assetId, input))
     const assetId = utxo.assetId.value

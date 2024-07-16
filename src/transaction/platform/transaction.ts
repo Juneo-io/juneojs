@@ -552,6 +552,7 @@ export class AddPermissionlessValidatorTransaction extends BaseTransaction {
     this.supernetId = supernetId
     this.signer = signer
     this.stake = stake
+    this.stake.sort(TransferableOutput.comparator)
     this.validatorRewardsOwner = validatorRewardsOwner
     this.delegatorRewardsOwner = delegatorRewardsOwner
     this.shares = shares
@@ -661,6 +662,7 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
     this.validator = validator
     this.supernetId = supernetId
     this.stake = stake
+    this.stake.sort(TransferableOutput.comparator)
     this.delegatorRewardsOwner = delegatorRewardsOwner
   }
 

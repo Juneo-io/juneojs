@@ -219,20 +219,26 @@ export class MCNAccount {
   }
 
   async verifySpendings (summary: OperationSummary): Promise<Spending[]> {
-    const spendings: Map<string, Spending> = sortSpendings(summary.spendings)
+    const spendings = sortSpendings(summary.spendings)
     const promises: Array<Promise<void>> = []
     for (const spending of spendings.values()) {
-      const assetId: string = spending.assetId
-      const account: ChainAccount = this.getAccount(spending.chain.id)
+      const assetId = spending.assetId
+      const account = this.getAccount(spending.chain.id)
       if (account.getAmount(assetId) < spending.amount || account.balances.get(assetId)!.shouldUpdate()) {
         promises.push(account.fetchBalance(assetId))
       }
     }
     await Promise.all(promises)
     const faulty: Spending[] = []
+    const isStakingOperation =
+      summary.operation.type === NetworkOperationType.ValidatePrimary ||
+      summary.operation.type === NetworkOperationType.DelegatePrimary
     for (const spending of spendings.values()) {
-      const account: ChainAccount = this.getAccount(spending.chain.id)
-      if (spending.amount > account.getAmount(spending.assetId)) {
+      const account = this.getAccount(spending.chain.id)
+      const amount = isStakingOperation
+        ? (account as UtxoAccount).getStakeableAmount(spending.assetId)
+        : account.getAmount(spending.assetId)
+      if (spending.amount > amount) {
         faulty.push(spending)
       }
     }

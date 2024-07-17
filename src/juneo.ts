@@ -1,6 +1,6 @@
 import { InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
 import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
-import { GenesisNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
+import { GenesisNetwork, LocalNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
 
 export class MCNProvider {
   mcn: MCN
@@ -50,6 +50,9 @@ export class MCNProvider {
       case GenesisNetwork.id: {
         return new MCNProvider(GenesisNetwork)
       }
+      case LocalNetwork.id: {
+        return new MCNProvider(LocalNetwork)
+      }
       default: {
         throw new Error(`unsupported network id: ${id}`)
       }
@@ -63,6 +66,9 @@ export class MCNProvider {
       }
       case SocotraNetwork.hrp: {
         return new MCNProvider(SocotraNetwork)
+      }
+      case LocalNetwork.hrp: {
+        return new MCNProvider(LocalNetwork)
       }
       default: {
         throw new Error(`unsupported network hrp: ${hrp}`)

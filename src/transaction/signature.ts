@@ -147,16 +147,27 @@ export class SignedTransaction {
     const message = this.unsignedTransaction.serialize()
     const credentials: TransactionCredentials[] = []
     for (const signable of this.unsignedTransaction.getSignables()) {
-      const sigs: Signature[] = []
-      for (const signature of signatures) {
-        const address = signature.recoverAddress(message)
-        if (address.matchesList(signable.getAddresses())) {
-          sigs.push(signature)
-        }
-      }
+      const sigs = this.getMatchingSignatures(signable, signatures, message)
       credentials.push(new Secp256k1Credentials(sigs))
     }
     this.credentials = credentials
+  }
+
+  private getMatchingSignatures (signable: Signable, signatures: Signature[], message: JuneoBuffer): Signature[] {
+    const sigs: Signature[] = []
+    for (const address of signable.getAddresses()) {
+      for (const signature of signatures) {
+        const signatureAddress = signature.recoverAddress(message)
+        if (address.matches(signatureAddress)) {
+          sigs.push(signature)
+          break
+        }
+      }
+      if (sigs.length >= signable.getThreshold()) {
+        break
+      }
+    }
+    return sigs
   }
 
   serialize (): JuneoBuffer {

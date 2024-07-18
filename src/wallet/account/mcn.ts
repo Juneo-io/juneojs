@@ -1,5 +1,5 @@
 import { type TokenAsset } from '../../asset'
-import { type Blockchain } from '../../chain'
+import { PLATFORMVM_ID, type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError, sortSpendings, type AssetValue } from '../../utils'
 import {
@@ -88,7 +88,7 @@ export class MCNAccount {
   getTotalStakeableAmount (assetId: string): bigint {
     let totalAmount: bigint = BigInt(0)
     for (const [, account] of this.chainAccounts) {
-      if (account.type === AccountType.Utxo) {
+      if (account.chain.vm.id === PLATFORMVM_ID) {
         totalAmount += (account as UtxoAccount).getStakeableBalance(assetId).getValue()
       }
     }

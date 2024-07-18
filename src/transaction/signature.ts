@@ -94,7 +94,9 @@ export class SignedTransaction {
 
   constructor (unsignedTransaction: UnsignedTransaction, signatures: Signature[]) {
     this.unsignedTransaction = unsignedTransaction
-    this.buildCredentials(signatures)
+    if (signatures.length > 0) {
+      this.buildCredentials(signatures)
+    }
   }
 
   getTransactionId (): string {

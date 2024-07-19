@@ -1,6 +1,7 @@
 import { InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
 import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
 import { GenesisNetwork, LocalNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
+import { MCNAccount } from './wallet'
 
 export class MCNProvider {
   mcn: MCN
@@ -33,6 +34,14 @@ export class MCNProvider {
       }
     }
     this.juneAssetId = this.platformChain.assetId
+  }
+
+  recoverAccount (recoveryData: string): MCNAccount {
+    return new MCNAccount(this, this.mcn.recoverWallet(recoveryData))
+  }
+
+  generateAccount (wordsCount?: number): MCNAccount {
+    return new MCNAccount(this, this.mcn.generateWallet(wordsCount))
   }
 
   async getStaticProvider (): Promise<MCNProvider> {

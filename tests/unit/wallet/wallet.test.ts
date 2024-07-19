@@ -3,6 +3,7 @@ import {
   GenesisJVMChain,
   GenesisPlatformChain,
   MCNWallet,
+  MainNetwork,
   SocotraNetwork,
   WalletError,
   validatePrivateKey
@@ -10,24 +11,19 @@ import {
 
 describe('MCNWallet', (): void => {
   describe('Generate', (): void => {
-    test('Defaults to 12 words', () => {
-      const wallet = MCNWallet.generate()
-      expect(wallet.mnemonic).toBeDefined()
-      expect(wallet.mnemonic?.split(' ').length).toBe(12)
-    })
-
     describe('Valid words count', (): void => {
-      test.each([[12], [24]])('%i words', (wordsCount) => {
-        const wallet = MCNWallet.generate(wordsCount)
+      test.each([[12], [15], [18], [21], [24]])('%i words', (wordsCount) => {
+        const wallet = new MCNWallet(SocotraNetwork.hrp, wordsCount)
         expect(wallet.mnemonic).toBeDefined()
-        expect(wallet.mnemonic?.split(' ').length).toBe(wordsCount)
+        expect(wallet.mnemonic!.split(' ').length).toBe(wordsCount)
       })
     })
 
     describe('Invalid words count', (): void => {
       test.each([[0], [11], [13], [25]])('%i words', (wordsCount) => {
         expect(() => {
-          MCNWallet.generate(wordsCount)
+          const wallet = new MCNWallet(SocotraNetwork.hrp, wordsCount)
+          wallet.setHrp(MainNetwork.hrp)
         }).toThrow(WalletError)
       })
     })
@@ -36,7 +32,7 @@ describe('MCNWallet', (): void => {
   describe('Recover', (): void => {
     describe('Valid mnemonic', (): void => {
       test.each([['energy correct expire mistake find pair tuna blouse album pig become help']])('%s', (words) => {
-        const wallet = MCNWallet.recover(words)
+        const wallet = new MCNWallet(SocotraNetwork.hrp, words)
         expect(wallet.mnemonic).toBeDefined()
         expect(wallet.mnemonic).toBe(words)
       })
@@ -45,7 +41,8 @@ describe('MCNWallet', (): void => {
     describe('Invalid mnemonic', (): void => {
       test.each([['lounge flush donate journey throw harvest morning brut few juice red rare']])('%s', (words) => {
         expect(() => {
-          MCNWallet.recover(words)
+          const wallet = new MCNWallet(SocotraNetwork.hrp, words)
+          wallet.setHrp(MainNetwork.hrp)
         }).toThrow(WalletError)
       })
     })
@@ -79,7 +76,7 @@ describe('MCNWallet', (): void => {
         address: '0xf44b80bf950058b087F47d88fDB71686c4beFef8'
       }
     ])('$chain.name address: $address', ({ mnemonic, chain, address }): void => {
-      const wallet: MCNWallet = MCNWallet.recover(mnemonic, SocotraNetwork.hrp)
+      const wallet: MCNWallet = new MCNWallet(SocotraNetwork.hrp, mnemonic)
       expect(wallet.getAddress(chain)).toBe(address)
     })
   })
@@ -95,13 +92,13 @@ describe('MCNWallet', (): void => {
         chain: GenesisJUNEChain
       }
     ])('$chain.name wallet from: $mnemonic', ({ mnemonic, chain }): void => {
-      const wallet: MCNWallet = MCNWallet.recover(mnemonic)
+      const wallet: MCNWallet = new MCNWallet(SocotraNetwork.hrp, mnemonic)
       expect(wallet.getWallet(chain)).toBeDefined()
     })
   })
 
   test('getWallets', () => {
-    const wallet = MCNWallet.generate(12)
+    const wallet = new MCNWallet(SocotraNetwork.hrp, 12)
     wallet.getAddress(GenesisJUNEChain)
     wallet.getAddress(GenesisPlatformChain)
     const wallets = wallet.getWallets()

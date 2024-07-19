@@ -1,6 +1,5 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
-import { MainNetwork } from '../network'
 import { type Address, type Signer } from '../transaction'
 import {
   ECKeyPair,
@@ -32,8 +31,13 @@ export class MCNWallet {
   privateKey?: string
   chainsWallets = new Map<string, VMWallet>()
 
-  private constructor (hrp: string = MainNetwork.hrp) {
+  public constructor (hrp: string, data: string | number) {
     this.hrp = hrp
+    if (typeof data === 'string') {
+      this.recover(data)
+    } else if (typeof data === 'number') {
+      this.generate(data)
+    }
   }
 
   getAddress (chain: Blockchain): string {
@@ -97,35 +101,33 @@ export class MCNWallet {
     this.mnemonic = mnemonic
   }
 
-  static recover (data: string, hrp?: string): MCNWallet {
-    if (Mnemonic.isValidMnemonic(data)) {
-      const wallet: MCNWallet = new MCNWallet(hrp)
-      wallet.setMnemonic(data)
-      return wallet
+  private setPrivateKey (privateKey: string): void {
+    // should only be hex or bs58 private key after validate
+    if (encoding.isHex(privateKey)) {
+      privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2) : privateKey
+    } else {
+      privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toHex()
     }
-    if (validatePrivateKey(data)) {
-      const wallet: MCNWallet = new MCNWallet(hrp)
-      let privateKey: string = data
-      // should only be hex or bs58 private key after validate
-      if (encoding.isHex(privateKey)) {
-        privateKey = encoding.hasHexPrefix(privateKey) ? privateKey.substring(2) : privateKey
-      } else {
-        privateKey = encoding.decodeCB58(privateKey.split('-')[1]).toHex()
-      }
-      wallet.privateKey = privateKey
-      return wallet
-    }
-    throw new WalletError('invalid recovery data provided')
+    this.privateKey = privateKey
   }
 
-  static generate (words: number = 12, hrp?: string): MCNWallet {
-    if (words !== 12 && words !== 24) {
-      throw new WalletError('words count must be 12 or 24')
+  private recover (data: string): void {
+    if (Mnemonic.isValidMnemonic(data)) {
+      this.setMnemonic(data)
+    } else if (validatePrivateKey(data)) {
+      this.setPrivateKey(data)
+    } else {
+      throw new WalletError('invalid recovery data provided')
     }
-    const strength: number = words === 12 ? 128 : 256
-    const mnemonic = Mnemonic.fromEntropy(randomBytes(strength / 8)).phrase
-    const wallet = MCNWallet.recover(mnemonic, hrp)
-    return wallet
+  }
+
+  private generate (wordsCount: number): void {
+    if (wordsCount % 3 !== 0 || wordsCount < 12 || wordsCount > 24) {
+      throw new WalletError(`words count must be min 12 and max 24 and multiple of 3 but got: ${wordsCount}`)
+    }
+    const strength = (wordsCount / 3) * 4
+    const mnemonic = Mnemonic.fromEntropy(randomBytes(strength)).phrase
+    this.recover(mnemonic)
   }
 }
 

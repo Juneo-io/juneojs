@@ -1,4 +1,5 @@
 import { type Blockchain, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from '../chain'
+import { MCNWallet } from '../wallet'
 
 const PrimarySupernetName = 'Primary Supernet'
 
@@ -24,6 +25,14 @@ export class MCN {
     this.hrp = hrp
     this.primary = primary
     this.supernets = supernets
+  }
+
+  recoverWallet (recoveryData: string): MCNWallet {
+    return new MCNWallet(this.hrp, recoveryData)
+  }
+
+  generateWallet (wordsCount: number = 12): MCNWallet {
+    return new MCNWallet(this.hrp, wordsCount)
   }
 
   getChain (chainId: string): Blockchain {

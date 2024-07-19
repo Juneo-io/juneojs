@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv'
-import { MCNAccount, MCNProvider, MCNWallet, SocotraNetwork } from '../../src'
+import { MCNAccount, MCNProvider, SocotraNetwork } from '../../src'
 dotenv.config()
 
-export const PROVIDER: MCNProvider = new MCNProvider(SocotraNetwork)
-const WALLET = MCNWallet.recover(process.env.MNEMONIC ?? '', PROVIDER.mcn.hrp)
-export const ACCOUNT: MCNAccount = new MCNAccount(PROVIDER, WALLET)
+export const PROVIDER = new MCNProvider(SocotraNetwork)
+const WALLET = PROVIDER.mcn.recoverWallet(process.env.MNEMONIC!)
+export const ACCOUNT = new MCNAccount(PROVIDER, WALLET)
 
 export const EXCESSIVE_AMOUNT = BigInt('100000000000000000000000000000000000000000000000')
 export const DONE_STATUS = 'Done'

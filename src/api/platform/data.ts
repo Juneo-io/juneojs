@@ -50,6 +50,7 @@ export interface ValidatorData {
   signer: ValidatorSigner
   delegatorCount: number
   delegatorWeight: bigint
+  delegators: DelegatorData[]
 }
 
 export interface RewardOwner {
@@ -61,6 +62,17 @@ export interface RewardOwner {
 export interface ValidatorSigner {
   publicKey: string
   proofOfPossession: string
+}
+
+export interface DelegatorData {
+  txID: string
+  startTime: bigint
+  endTime: bigint
+  weight: bigint
+  nodeID: string
+  stakeAmount: bigint
+  rewardOwner: RewardOwner
+  potentialReward: bigint
 }
 
 export interface GetMinStakeResponse {

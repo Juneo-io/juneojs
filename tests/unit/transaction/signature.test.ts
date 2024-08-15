@@ -6,6 +6,7 @@ import {
   Secp256k1Output,
   SignedTransaction,
   SocotraJVMChain,
+  SocotraNetwork,
   TransactionId,
   UserInput,
   Utxo
@@ -13,9 +14,15 @@ import {
 
 const JVM_CHAIN = SocotraJVMChain
 const ZERO_CB58 = '11111111111111111111111111111111LpoYY'
-const WALLET_A = MCNWallet.recover('rescue shoe prevent wasp close crash grief web lesson rich baby replace')
+const WALLET_A = new MCNWallet(
+  SocotraNetwork.hrp,
+  'rescue shoe prevent wasp close crash grief web lesson rich baby replace'
+)
 const WALLET_A_ADDRESS = WALLET_A.getAddress(JVM_CHAIN)
-const WALLET_B = MCNWallet.recover('midnight spider novel juice pizza couple marine anger echo boost loan glare')
+const WALLET_B = new MCNWallet(
+  SocotraNetwork.hrp,
+  'midnight spider novel juice pizza couple marine anger echo boost loan glare'
+)
 const WALLET_B_ADDRESS = WALLET_B.getAddress(JVM_CHAIN)
 
 describe('SignedTransaction valid signatures verification', () => {

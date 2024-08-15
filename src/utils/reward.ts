@@ -12,12 +12,18 @@ export class RewardCalculator {
   calculate (stakePeriod: bigint, currentTime: bigint, stakeAmount: bigint): bigint {
     let reward = this.getCurrentReward(currentTime)
     reward += this.getStakePeriodReward(stakePeriod)
+    if (this.config.maxStakePeriod === BigInt(0)) {
+      return (stakeAmount * reward) / PrecisionConstant
+    }
     const stakePeriodRatio = (stakePeriod * PrecisionConstant) / this.config.maxStakePeriod
     const effectiveReward = (reward * stakePeriodRatio) / PrecisionConstant
     return (stakeAmount * effectiveReward) / PrecisionConstant
   }
 
   getStakePeriodReward (stakePeriod: bigint): bigint {
+    if (this.config.maxStakePeriod === this.config.minStakePeriod) {
+      return this.config.stakePeriodRewardShare
+    }
     const adjustedStakePeriod = (stakePeriod - this.config.minStakePeriod) * PrecisionConstant
     const adjustedMaxStakePeriod = this.config.maxStakePeriod - this.config.minStakePeriod
     const adjustedStakePeriodRatio = adjustedStakePeriod / adjustedMaxStakePeriod

@@ -1,5 +1,6 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet } from 'ethers'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
+import { MainNetwork } from '../network'
 import { type Address, type Signer } from '../transaction'
 import {
   ECKeyPair,
@@ -111,6 +112,16 @@ export class MCNWallet {
     this.privateKey = privateKey
   }
 
+  /**
+   * @deprecated
+   */
+  static recover (data: string, hrp?: string): MCNWallet {
+    if (typeof hrp === 'undefined') {
+      hrp = MainNetwork.hrp
+    }
+    return new MCNWallet(hrp, data)
+  }
+
   private recover (data: string): void {
     if (Mnemonic.isValidMnemonic(data)) {
       this.setMnemonic(data)
@@ -119,6 +130,16 @@ export class MCNWallet {
     } else {
       throw new WalletError('invalid recovery data provided')
     }
+  }
+
+  /**
+   * @deprecated
+   */
+  static generate (words: number = 12, hrp?: string): MCNWallet {
+    if (typeof hrp === 'undefined') {
+      hrp = MainNetwork.hrp
+    }
+    return new MCNWallet(hrp, words)
   }
 
   private generate (wordsCount: number): void {

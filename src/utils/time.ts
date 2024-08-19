@@ -1,3 +1,5 @@
+import { TimeError } from './errors'
+
 export class TimeUtils {
   private static INSTANCE: TimeUtils | undefined
   private readonly provider: TimeProvider
@@ -40,6 +42,18 @@ export class TimeUtils {
 
   static async sleep (milliseconds: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, milliseconds))
+  }
+
+  static verifyLocktime (locktime: bigint): void {
+    const now = TimeUtils.now()
+    const minValue = BigInt(60)
+    const maxValue = TimeUtils.year() * BigInt(3)
+    if (locktime > now && locktime < now + minValue) {
+      throw new TimeError(`locktime value ${locktime} below minimum of ${minValue}`)
+    }
+    if (locktime > now + maxValue) {
+      throw new TimeError(`locktime value ${locktime} above maximum of ${maxValue}`)
+    }
   }
 }
 

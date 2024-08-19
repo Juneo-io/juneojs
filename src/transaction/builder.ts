@@ -29,6 +29,7 @@ export function buildTransactionInputs (
   }
   // gathering data needed to build transaction inputs
   for (const input of userInputs) {
+    TimeUtils.verifyLocktime(input.locktime)
     const assetId = input.assetId
     const amount = targetAmounts.has(assetId) ? targetAmounts.get(assetId)! : BigInt(0)
     targetAmounts.set(assetId, amount + BigInt(input.amount))

@@ -1,24 +1,25 @@
-const NETWORK_CODE: string = 'Network error'
-const HTTP_CODE: string = 'HTTP error'
-const JSON_RPC_CODE: string = 'JsonRPC error'
-const NOT_IMPLEMENTED_CODE: string = 'Not implemented'
-const PROTOCOL_CODE: string = 'Protocol error'
-const DECODING_CODE: string = 'Decoding error'
-const WALLET_CODE: string = 'Wallet error'
-const JUNEO_TYPE_CODE: string = 'Juneo type error'
-const PARSING_CODE: string = 'Parsing error'
-const INPUT_CODE: string = 'Input error'
-const OUTPUT_CODE: string = 'Output error'
-const SIGNATURE_CODE: string = 'Signature error'
-const GENESIS_CODE: string = 'Genesis error'
-const ACCOUNT_CODE: string = 'Account error'
-const CHAIN_CODE: string = 'Chain error'
-const CROSS_CODE: string = 'Cross error'
-const STAKE_CODE: string = 'Stake error'
-const AMOUNT_CODE: string = 'Amount error'
-const CAPACITY_CODE: string = 'Capacity error'
-const TRANSACTION_CODE: string = 'Transaction error'
-const VAULT_CODE: string = 'Vault error'
+const NETWORK_CODE = 'Network error'
+const HTTP_CODE = 'HTTP error'
+const JSON_RPC_CODE = 'JsonRPC error'
+const NOT_IMPLEMENTED_CODE = 'Not implemented'
+const PROTOCOL_CODE = 'Protocol error'
+const DECODING_CODE = 'Decoding error'
+const WALLET_CODE = 'Wallet error'
+const JUNEO_TYPE_CODE = 'Juneo type error'
+const PARSING_CODE = 'Parsing error'
+const INPUT_CODE = 'Input error'
+const OUTPUT_CODE = 'Output error'
+const SIGNATURE_CODE = 'Signature error'
+const GENESIS_CODE = 'Genesis error'
+const ACCOUNT_CODE = 'Account error'
+const CHAIN_CODE = 'Chain error'
+const CROSS_CODE = 'Cross error'
+const STAKE_CODE = 'Stake error'
+const AMOUNT_CODE = 'Amount error'
+const CAPACITY_CODE = 'Capacity error'
+const TRANSACTION_CODE = 'Transaction error'
+const VAULT_CODE = 'Vault error'
+const TIME_CODE = 'Time error'
 
 export class JuneoError extends Error {
   private readonly code: string
@@ -178,5 +179,12 @@ export class VaultError extends JuneoError {
   constructor (message: string) {
     super(message, VAULT_CODE)
     Object.setPrototypeOf(this, VaultError.prototype)
+  }
+}
+
+export class TimeError extends JuneoError {
+  constructor (message: string) {
+    super(message, TIME_CODE)
+    Object.setPrototypeOf(this, TimeError.prototype)
   }
 }

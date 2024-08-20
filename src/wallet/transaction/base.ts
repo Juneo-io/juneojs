@@ -1,13 +1,6 @@
 import { type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import {
-  Address,
-  buildJVMBaseTransaction,
-  buildPlatformBaseTransaction,
-  type UnsignedTransaction,
-  UserInput,
-  type Utxo
-} from '../../transaction'
+import { Address, buildJVMBaseTransaction, buildPlatformBaseTransaction, UserInput, type Utxo } from '../../transaction'
 import { type UtxoAccount } from '../account'
 import { ChainOperationSummary, type SendOperation, type SendUtxoOperation } from '../operation'
 import { BaseFeeData, UtxoFeeData } from './fee'
@@ -30,8 +23,8 @@ export async function estimateBaseTransaction (
   locktime: bigint,
   stakeable: boolean
 ): Promise<UtxoFeeData> {
-  const fee: BaseFeeData = await getBaseTxFee(provider, TransactionType.Base, chain)
-  const transaction: UnsignedTransaction =
+  const fee = await getBaseTxFee(provider, TransactionType.Base, chain)
+  const transaction =
     chain.id === provider.platformChain.id
       ? buildPlatformBaseTransaction(
         [new UserInput(assetId, chain, amount, addresses, threshold, chain, locktime, stakeable)],
@@ -73,18 +66,19 @@ export async function estimateSendOperation (
     false
   ).then(
     (fee) => {
-      const spending: UtxoSpending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
+      const spending = new UtxoSpending(chain, send.amount, send.assetId, fee.transaction.getUtxos())
       return new ChainOperationSummary(provider, send, chain, fee, [spending, fee.spending], values)
     },
-    async () => {
-      const fee: BaseFeeData = await getBaseTxFee(provider, TransactionType.Base, chain)
+    async (error) => {
+      const fee = await getBaseTxFee(provider, TransactionType.Base, chain)
       return new ChainOperationSummary(
         provider,
         send,
         chain,
         fee,
         [new BaseSpending(chain, send.amount, send.assetId), fee.spending],
-        values
+        values,
+        [error]
       )
     }
   )
@@ -120,12 +114,12 @@ export async function estimateSendUtxoOperation (
       }
       return new ChainOperationSummary(provider, send, chain, fee, spendings, values)
     },
-    async () => {
+    async (error) => {
       const spendings = [fee.spending]
       if (hasSpending) {
         spendings.unshift(new BaseSpending(chain, send.amount, send.assetId))
       }
-      return new ChainOperationSummary(provider, send, chain, fee, spendings, values)
+      return new ChainOperationSummary(provider, send, chain, fee, spendings, values, [error])
     }
   )
 }

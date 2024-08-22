@@ -36,13 +36,12 @@ export class EVMAccount extends AbstractChainAccount {
   }
 
   async estimate (operation: ChainNetworkOperation): Promise<ChainOperationSummary> {
-    const provider: MCNProvider = await this.provider.getStaticProvider()
+    const provider = await this.provider.getStaticProvider()
     if (operation.type === NetworkOperationType.Send) {
-      const send: SendOperation = operation as SendOperation
-      const isContract: boolean = isContractAddress(send.assetId)
-      const address: string = isContract ? send.assetId : send.address
-      const data: string = isContract
-        ? await this.chain.getContractTransactionData(provider, send.assetId, address, send.amount)
+      const send = operation as SendOperation
+      const isContract = isContractAddress(send.assetId)
+      const data = isContract
+        ? await this.chain.getContractTransactionData(provider, send.assetId, send.address, send.amount)
         : EmptyCallData
       return await estimateEVMOperation(
         provider,
@@ -51,7 +50,7 @@ export class EVMAccount extends AbstractChainAccount {
         send,
         [new BaseSpending(this.chain, send.amount, send.assetId)],
         new Map<string, bigint>([[send.assetId, send.amount]]),
-        address,
+        isContract ? send.assetId : send.address,
         isContract ? BigInt(0) : send.amount,
         data,
         TransactionType.Base

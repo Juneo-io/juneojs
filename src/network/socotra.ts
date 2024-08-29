@@ -2,7 +2,7 @@ import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
 import { MCN, PrimarySupernet } from './network'
 
-const SocotraNetworkName = 'SocotraTestnet'
+const SocotraNetworkName = 'Socotra Testnet'
 const SocotraNetworkId = 46
 const SocotraHrp = 'socotra'
 const SocotraStakeConfig = new StakeConfig(

@@ -136,7 +136,7 @@ export class CrossManager {
     )
   }
 
-  async export (
+  async crossExport (
     provider: MCNProvider,
     source: Blockchain,
     destination: Blockchain,
@@ -197,7 +197,7 @@ export class CrossManager {
     throw new CrossError(`source vm id does not support cross: ${source.vm.id}`)
   }
 
-  async import (
+  async crossImport (
     provider: MCNProvider,
     source: Blockchain,
     destination: Blockchain,
@@ -411,7 +411,7 @@ export class CrossManager {
       sourceUtxos = (sourceAccount as UtxoAccount).utxoSet
     }
     const destinationAccount: ChainAccount = account.getAccount(cross.destination.id)
-    const exportTransactionId: string = await this.export(
+    const exportTransactionId: string = await this.crossExport(
       provider,
       cross.source,
       cross.destination,
@@ -454,7 +454,7 @@ export class CrossManager {
     if (!cross.sendImportFee && (destinationVmId === JVM_ID || destinationVmId === PLATFORMVM_ID)) {
       destinationUtxos.push(...(destinationAccount as UtxoAccount).utxoSet)
     }
-    const importTransactionId: string = await this.import(
+    const importTransactionId: string = await this.crossImport(
       provider,
       cross.source,
       cross.destination,
@@ -671,7 +671,7 @@ export class CrossManager {
   async executeCrossResumeOperation (summary: CrossResumeOperationSummary, account: ChainAccount): Promise<void> {
     const resumeOperation: CrossResumeOperation = summary.operation
     const executable: ExecutableOperation = summary.getExecutable()
-    const importTransactionId: string = await this.import(
+    const importTransactionId: string = await this.crossImport(
       executable.provider,
       resumeOperation.source,
       resumeOperation.destination,

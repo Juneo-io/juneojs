@@ -1,6 +1,6 @@
 {
   "name": "juneojs",
-  "version": "0.0.134",
+  "version": "0.0.135",
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -46,7 +46,6 @@
     "axios": "1.7.4",
     "bech32": "2.0.0",
     "bs58": "6.0.0",
-    "ethers": "6.13.2",
-    "juneojs": "file:"
+    "ethers": "6.13.2"
   }
 }

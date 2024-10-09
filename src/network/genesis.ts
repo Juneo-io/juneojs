@@ -268,6 +268,9 @@ export const GenesisR10Chain = new JEVMBlockchain(
   [GenesisJUNEAsset]
 )
 
+/**
+ * @deprecated
+ */
 export const GenesisPrimarySupernet = new PrimarySupernet(
   '11111111111111111111111111111111LpoYY',
   [
@@ -294,6 +297,9 @@ export const GenesisPrimarySupernet = new PrimarySupernet(
   GenesisJUNEChain
 )
 
+/**
+ * @deprecated
+ */
 export const GenesisNetwork = new MCN(
   GenesisNetworkName,
   GenesisAddress,

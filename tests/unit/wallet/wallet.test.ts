@@ -1,10 +1,10 @@
 import {
-  GenesisJUNEChain,
-  GenesisJVMChain,
-  GenesisPlatformChain,
   MCNWallet,
   MainNetwork,
+  SocotraJUNEChain,
+  SocotraJVMChain,
   SocotraNetwork,
+  SocotraPlatformChain,
   WalletError,
   validatePrivateKey
 } from '../../../src'
@@ -67,12 +67,12 @@ describe('MCNWallet', (): void => {
     test.each([
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: GenesisJVMChain,
+        chain: SocotraJVMChain,
         address: 'JVM-socotra17p4punu4589yqfzgv044tl546dnwvf2pd2k6j4'
       },
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: GenesisJUNEChain,
+        chain: SocotraJUNEChain,
         address: '0xf44b80bf950058b087F47d88fDB71686c4beFef8'
       }
     ])('$chain.name address: $address', ({ mnemonic, chain, address }): void => {
@@ -85,11 +85,11 @@ describe('MCNWallet', (): void => {
     test.each([
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: GenesisJVMChain
+        chain: SocotraJVMChain
       },
       {
         mnemonic: 'install melt spy tiny dose spot close van oven sibling misery symptom',
-        chain: GenesisJUNEChain
+        chain: SocotraJUNEChain
       }
     ])('$chain.name wallet from: $mnemonic', ({ mnemonic, chain }): void => {
       const wallet: MCNWallet = new MCNWallet(SocotraNetwork.hrp, mnemonic)
@@ -99,8 +99,8 @@ describe('MCNWallet', (): void => {
 
   test('getWallets', () => {
     const wallet = new MCNWallet(SocotraNetwork.hrp, 12)
-    wallet.getAddress(GenesisJUNEChain)
-    wallet.getAddress(GenesisPlatformChain)
+    wallet.getAddress(SocotraJUNEChain)
+    wallet.getAddress(SocotraPlatformChain)
     const wallets = wallet.getWallets()
     expect(wallets.length).toBe(2)
   })

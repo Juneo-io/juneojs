@@ -49,7 +49,7 @@ export interface GetHeightResponse {
 }
 
 export interface GetUTXOsResponse {
-  numFetched: number
+  numFetched: string
   utxos: string[]
   endIndex: UTXOIndex
   encoding: string

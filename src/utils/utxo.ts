@@ -29,7 +29,7 @@ export async function fetchUtxos (
       utxoSet.add(utxo.getUniqueId())
     }
   }
-  while (utxoResponse.numFetched === UtxoRequestLimit) {
+  while (Number(utxoResponse.numFetched) === UtxoRequestLimit) {
     utxoResponse =
       sourceChain === undefined
         ? await utxoApi.getUTXOs(addresses, UtxoRequestLimit, utxoResponse.endIndex)

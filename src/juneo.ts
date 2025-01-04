@@ -1,6 +1,6 @@
 import { InfoAPI, JEVMAPI, JuneoClient, JVMAPI, PlatformAPI } from './api'
 import { JEVM_ID, type JEVMBlockchain, type JVMBlockchain, type PlatformBlockchain } from './chain'
-import { GenesisNetwork, LocalNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
+import { LocalNetwork, MainNetwork, SocotraNetwork, type MCN } from './network'
 import { MCNAccount } from './wallet'
 
 export class MCNProvider {
@@ -55,9 +55,6 @@ export class MCNProvider {
       }
       case SocotraNetwork.id: {
         return new MCNProvider(SocotraNetwork)
-      }
-      case GenesisNetwork.id: {
-        return new MCNProvider(GenesisNetwork)
       }
       case LocalNetwork.id: {
         return new MCNProvider(LocalNetwork)

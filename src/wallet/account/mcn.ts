@@ -1,5 +1,5 @@
 import { type TokenAsset } from '../../asset'
-import { PLATFORMVM_ID, type Blockchain } from '../../chain'
+import { JVM_ID, PLATFORMVM_ID, type Blockchain } from '../../chain'
 import { type MCNProvider } from '../../juneo'
 import { AccountError, sortSpendings, type AssetValue } from '../../utils'
 import {
@@ -108,6 +108,11 @@ export class MCNAccount {
       const crossOperation: CrossOperation = operation as CrossOperation
       // JVM balance might be needed for proxy and is mandatory if so before estimation
       await this.jvmAccount.refreshBalances()
+      // balance of native is needed to know if JVM will need to pay for the import fees
+      if (crossOperation.source.vm.id !== JVM_ID) {
+        const sourceAccount = this.getAccount(crossOperation.source.id)
+        await sourceAccount.fetchBalance(crossOperation.source.assetId)
+      }
       return await this.crossManager.estimateCrossOperation(crossOperation, this)
     }
     if (operation.type === NetworkOperationType.CrossResume) {

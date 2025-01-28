@@ -223,6 +223,8 @@ export class CrossManager {
   }
 
   async estimateCrossOperation (cross: CrossOperation, account: MCNAccount): Promise<CrossOperationSummary> {
+    const estimateStartAmount = cross.amount
+    const estimateStartAssetId = cross.assetId
     const provider: MCNProvider = await this.provider.getStaticProvider()
     const juneChain: JEVMBlockchain = provider.juneChain
     const values = new Map<string, bigint>([[cross.assetId, cross.amount]])
@@ -341,6 +343,9 @@ export class CrossManager {
     } else {
       spendings.push(importFee.spending)
     }
+    // properly restore base state of op in case of subsequent estimates
+    cross.amount = estimateStartAmount
+    cross.assetId = estimateStartAssetId
     return new CrossOperationSummary(provider, cross, chains, fees, spendings, values)
   }
 

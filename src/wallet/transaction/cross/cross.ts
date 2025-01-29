@@ -244,7 +244,7 @@ export class CrossManager {
         provider.jvmChain,
         cross.destination,
         cross.assetId,
-        cross.amount
+        cross.amount / AtomicDenomination
       )
       const importSummary: CrossOperationSummary = await this.estimateCrossOperation(proxyImport, account)
       importSummary.fees.forEach((fee) => {
@@ -303,8 +303,6 @@ export class CrossManager {
     }
     if (typeof importedJRC20 !== 'undefined') {
       const sender: string = account.getAccount(juneChain.id).address
-      // native asset value must be divided by atomic denomination for jrc20 smart contract and shared memory values
-      cross.amount /= AtomicDenomination
       const fee: EVMFeeData = await estimateEVMDepositJRC20(
         provider.jevmApi[juneChain.id],
         sender,

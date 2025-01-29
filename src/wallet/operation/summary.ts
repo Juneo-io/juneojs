@@ -108,11 +108,15 @@ export class ChainOperationSummary extends AbstractOperationSummary {
 export class CrossOperationSummary extends AbstractOperationSummary {
   override operation: CrossOperation
   chains: Blockchain[]
+  amount: bigint
+  assetId: string
 
   constructor (
     provider: MCNProvider,
     operation: CrossOperation,
     chains: Blockchain[],
+    amount: bigint,
+    assetId: string,
     fees: FeeData[],
     spendings: Spending[],
     values: Map<string, bigint>,
@@ -121,6 +125,8 @@ export class CrossOperationSummary extends AbstractOperationSummary {
     super(provider, operation, fees, spendings, values, errors)
     this.operation = operation
     this.chains = chains
+    this.amount = amount
+    this.assetId = assetId
   }
 
   getChains (): Blockchain[] {

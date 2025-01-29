@@ -258,7 +258,7 @@ export class CrossManager {
       })
       const fees: FeeData[] = [...exportSummary.fees, ...importSummary.fees]
       cross.sendImportFee = proxyExport.sendImportFee
-      return new CrossOperationSummary(provider, cross, chains, fees, spendings, values)
+      return new CrossOperationSummary(provider, cross, chains, cross.amount, cross.assetId, fees, spendings, values)
     }
     const chains: Blockchain[] = [cross.source, cross.destination]
     const fees: BaseFeeData[] = []
@@ -343,17 +343,32 @@ export class CrossManager {
     } else {
       spendings.push(importFee.spending)
     }
+    const summary = new CrossOperationSummary(
+      provider,
+      cross,
+      chains,
+      cross.amount,
+      cross.assetId,
+      fees,
+      spendings,
+      values
+    )
     // properly restore base state of op in case of subsequent estimates
     cross.amount = estimateStartAmount
     cross.assetId = estimateStartAssetId
-    return new CrossOperationSummary(provider, cross, chains, fees, spendings, values)
+    return summary
   }
 
   async executeCrossOperation (summary: CrossOperationSummary, account: MCNAccount): Promise<void> {
-    const cross: CrossOperation = summary.operation
+    const cross = summary.operation
+    const executeStartAmount = cross.amount
+    const executeStartAssetId = cross.assetId
+    // set cross state to summary data that was mutated (short term fix before refactoring)
+    cross.amount = summary.amount
+    cross.assetId = summary.assetId
     if (this.shouldProxy(cross)) {
-      const destination: Blockchain = cross.destination
-      const jvmChain: JVMBlockchain = this.provider.jvmChain
+      const destination = cross.destination
+      const jvmChain = this.provider.jvmChain
       cross.destination = jvmChain
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[0], summary.fees[1])
       // jevm cross transactions amount must be changed because of atomic denominator
@@ -364,17 +379,19 @@ export class CrossManager {
       cross.destination = destination
       // always export fee from JVM to destination
       cross.sendImportFee = true
-      const lastFee: FeeData = summary.fees[summary.fees.length - 1]
-      const jrc20Import: boolean = lastFee.type === TransactionType.Deposit
-      let extraFeeAmount: bigint = BigInt(0)
-      if (jrc20Import) {
+      const lastFee = summary.fees[summary.fees.length - 1]
+      let extraFeeAmount = BigInt(0)
+      if (lastFee.type === TransactionType.Deposit) {
         extraFeeAmount = lastFee.amount / AtomicDenomination
       }
       await this.executeCrossOperationStep(summary, account, cross, summary.fees[2], summary.fees[3], extraFeeAmount)
       return
     }
-    let feeIndex: number = summary.fees[0].type === TransactionType.Withdraw ? 1 : 0
+    let feeIndex = summary.fees[0].type === TransactionType.Withdraw ? 1 : 0
     await this.executeCrossOperationStep(summary, account, cross, summary.fees[feeIndex++], summary.fees[feeIndex++])
+    // properly restore base state of op in case of subsequent estimates/executes
+    cross.amount = executeStartAmount
+    cross.assetId = executeStartAssetId
   }
 
   private async executeCrossOperationStep (

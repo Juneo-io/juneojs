@@ -216,7 +216,7 @@ export class JEVMExportTransaction extends ExportTransaction {
     // TransferableOutput size
     // 4 + 8 + 8 + 4 + 4 = 28 + 20 * addressesCount
     // addresses count most likely will be 1 so = 48
-    return AssetIdSize + 48 * outputsCount
+    return (AssetIdSize + 48) * outputsCount
   }
 }
 

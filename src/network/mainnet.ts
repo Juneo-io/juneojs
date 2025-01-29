@@ -63,7 +63,9 @@ const jntAssets: JNTAsset[] = [
   MainnetGLD1Asset,
   MainnetMBTC1Asset,
   MainnetDOGE1Asset,
-  MainnetLTC1Asset
+  MainnetLTC1Asset,
+  MainnetBCH1Asset,
+  MainnetLINK1Asset
 ]
 
 export const MainnetPlatformChain = new PlatformBlockchain(

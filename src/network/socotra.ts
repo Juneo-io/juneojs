@@ -63,7 +63,9 @@ const jntAssets: JNTAsset[] = [
   SocotraGLD1Asset,
   SocotraMBTC1Asset,
   SocotraDOGE1Asset,
-  SocotraLTC1Asset
+  SocotraLTC1Asset,
+  SocotraBCH1Asset,
+  SocotraLINK1Asset
 ]
 
 export const SocotraPlatformChain = new PlatformBlockchain(

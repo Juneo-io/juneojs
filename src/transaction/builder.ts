@@ -35,10 +35,6 @@ export function buildTransactionInputs (
     targetAmounts.set(assetId, amount + BigInt(input.amount))
   }
   const gatheredAmounts = new Map<string, bigint>()
-  // init all asset ids of targets to avoid undefined values
-  for (const assetId of targetAmounts.keys()) {
-    gatheredAmounts.set(assetId, BigInt(0))
-  }
   const now = TimeUtils.now()
   const inputs: TransferableInput[] = []
   // This loop tries to gather required amounts from the provided utxo set
@@ -68,6 +64,9 @@ export function buildTransactionInputs (
     // The utxo will be added as an input in any case
     inputs.push(new TransferableInput(utxo.transactionId, utxo.utxoIndex, utxo.assetId, input))
     const assetId = utxo.assetId.value
+    if (!gatheredAmounts.has(assetId)) {
+      gatheredAmounts.set(assetId, BigInt(0))
+    }
     gatheredAmounts.set(assetId, gatheredAmounts.get(assetId)! + BigInt(output.amount))
   }
   const missingFunds = !isGatheringComplete(targetAmounts, gatheredAmounts)

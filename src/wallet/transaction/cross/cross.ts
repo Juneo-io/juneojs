@@ -291,7 +291,10 @@ export class CrossManager {
     fees.push(exportFee, importFee)
     if (fees[0].type === TransactionType.Withdraw) {
       const sender: string = account.getAccount(juneChain.id).address
-      const amount: bigint = cross.amount + importFee.amount
+      let amount: bigint = cross.amount
+      if (cross.assetId === importFee.assetId) {
+        amount += importFee.amount
+      }
       const fee: EVMFeeData = await estimateEVMWithdrawJRC20(
         provider.jevmApi[juneChain.id],
         sender,

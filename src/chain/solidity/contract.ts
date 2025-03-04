@@ -4,7 +4,7 @@ import { AssetId } from '../../transaction'
 import * as abi from './abi'
 
 export class ContractManager {
-  private readonly handlers: SolidityTokenHandler[] = []
+  private handlers: SolidityTokenHandler[] = []
 
   async getHandler (contractAddress: string): Promise<SolidityTokenHandler | null> {
     for (const handler of this.handlers) {
@@ -13,6 +13,10 @@ export class ContractManager {
       }
     }
     return null
+  }
+
+  resetHandlers (): void {
+    this.handlers = []
   }
 
   registerHandler (handler: SolidityTokenHandler): void {

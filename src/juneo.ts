@@ -16,7 +16,7 @@ export class MCNProvider {
   jevmApi: Record<string, JEVMAPI> = {}
   juneAssetId: string
 
-  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
+  constructor (mcn: MCN = MainNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
     this.mcn = mcn
     this.mcn.url = client.getUrl()
     this.client = client

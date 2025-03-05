@@ -13,7 +13,8 @@ const Protocols: string[] = [HttpProtocol, HttpsProtocol]
 export class JuneoClient {
   private nextRequestId = 1
   private protocol = DefaultProtocol
-  host = ''
+  private host = ''
+  private url = ''
 
   private constructor () {}
 
@@ -23,7 +24,12 @@ export class JuneoClient {
     return client
   }
 
+  getUrl (): string {
+    return this.url
+  }
+
   parseAddress (address: string): void {
+    this.url = address
     const protocolSplit: string[] = address.split('://')
     const protocol = protocolSplit.length > 1 ? protocolSplit[0] : DefaultProtocol
     const host = protocolSplit.length > 1 ? protocolSplit[1] : protocolSplit[0]

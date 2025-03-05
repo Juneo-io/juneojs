@@ -16,8 +16,9 @@ export class MCNProvider {
   jevmApi: Record<string, JEVMAPI> = {}
   juneAssetId: string
 
-  constructor (mcn: MCN = SocotraNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
+  constructor (mcn: MCN = MainNetwork, client: JuneoClient = JuneoClient.parse(mcn.url)) {
     this.mcn = mcn
+    this.mcn.url = client.getUrl()
     this.client = client
     this.info = new InfoAPI(client)
     this.platformChain = this.mcn.primary.platform
@@ -29,7 +30,9 @@ export class MCNProvider {
     for (const supernet of this.mcn.supernets) {
       for (const chain of supernet.chains) {
         if (chain.vm.id === JEVM_ID) {
-          this.jevmApi[chain.id] = new JEVMAPI(client, chain as JEVMBlockchain)
+          const jevm = chain as JEVMBlockchain
+          this.jevmApi[chain.id] = new JEVMAPI(client, jevm)
+          jevm.setProvider(this.mcn.url)
         }
       }
     }

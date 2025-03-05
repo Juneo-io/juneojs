@@ -43,6 +43,12 @@ export class JEVMBlockchain extends AbstractBlockchain {
     this.contractManager.registerHandler(new ERC20TokenHandler(this.ethProvider))
   }
 
+  setProvider (nodeAddress: string): void {
+    this.ethProvider = new ethers.JsonRpcProvider(`${nodeAddress}/ext/bc/${this.id}/rpc`)
+    this.contractManager.resetHandlers()
+    this.contractManager.registerHandler(new ERC20TokenHandler(this.ethProvider))
+  }
+
   async getContractTransactionData (
     provider: MCNProvider,
     assetId: string,

@@ -108,7 +108,7 @@ export const MainnetJUNEChain = new JEVMBlockchain(
   '2XjWAiAdw3BR56KhPSPxKJNzea2Ebvc67uhE1DTN9NsqCyP9eW',
   new JEVMGasToken(MainnetJUNEAsset),
   BigInt(45003),
-  BigInt('48000000000'),
+  BigInt('16000000000'),
   MainnetAddress,
   ['JUNE'],
   jrc20Assets,
@@ -120,7 +120,7 @@ export const MainnetUSDT1Chain = new JEVMBlockchain(
   'xSKyNAhrJEfNyC3JCVxGdBa4MyjV21zUzQNDChpzHtYJ2c3pj',
   new JEVMGasToken(MainnetUSDT1Asset),
   BigInt(45005),
-  BigInt('943000000000'),
+  BigInt('314000000000'),
   MainnetAddress,
   ['USDT1'],
   [MainnetJUNEAsset]
@@ -130,7 +130,7 @@ export const MainnetUSD1Chain = new JEVMBlockchain(
   'ebp1w3w7rgWJr8hKeKZbtiXojSGbmu2p7Kah8tVbgbgxGLduT',
   new JEVMGasToken(MainnetUSD1Asset),
   BigInt(45006),
-  BigInt('943000000000'),
+  BigInt('314000000000'),
   MainnetAddress,
   ['USD1'],
   [MainnetJUNEAsset]
@@ -140,7 +140,7 @@ export const MainnetDAI1Chain = new JEVMBlockchain(
   'PMuHHig6Evi2HDWUFUmPWFpvvjDPWzuUtt9WnciKFdZAgSj5N',
   new JEVMGasToken(MainnetDAI1Asset),
   BigInt(45004),
-  BigInt('943000000000'),
+  BigInt('314000000000'),
   MainnetAddress,
   ['DAI1'],
   [MainnetJUNEAsset]
@@ -150,7 +150,7 @@ export const MainnetEUR1Chain = new JEVMBlockchain(
   '2fLEwhs3wCx6fBVQ3rKKYZtXiT5uXHjgpCZKWp6iKBEWHegtXx',
   new JEVMGasToken(MainnetEUR1Asset),
   BigInt(45011),
-  BigInt('857000000000'),
+  BigInt('286000000000'),
   MainnetAddress,
   ['EUR1'],
   [MainnetJUNEAsset]
@@ -160,7 +160,7 @@ export const MainnetSGD1Chain = new JEVMBlockchain(
   '2K8AUycQ36eMxs7sWNAFk4o95skQRrB53rY4DXub4kwNyNft9i',
   new JEVMGasToken(MainnetSGD1Asset),
   BigInt(45012),
-  BigInt('1257000000000'),
+  BigInt('419000000000'),
   MainnetAddress,
   ['SGD1'],
   [MainnetJUNEAsset]
@@ -170,7 +170,7 @@ export const MainnetGLD1Chain = new JEVMBlockchain(
   '3k2Rxfz1EawisiFjhtdJ8pvTQ7dwXz7KrMpNAPmkpHLtY6SiJ',
   new JEVMGasToken(MainnetGLD1Asset),
   BigInt(45008),
-  BigInt('2000000000'),
+  BigInt('1000000000'),
   MainnetAddress,
   ['GLD1'],
   [MainnetJUNEAsset]
@@ -180,7 +180,7 @@ export const MainnetMBTC1Chain = new JEVMBlockchain(
   '2qo4khKnGPez5xnUSPJKWUAvRimio86gN8TDqMsEspYdT3Z5Yu',
   new JEVMGasToken(MainnetMBTC1Asset),
   BigInt(45007),
-  BigInt('22000000000'),
+  BigInt('7000000000'),
   MainnetAddress,
   ['mBTC1'],
   [MainnetJUNEAsset]
@@ -190,7 +190,7 @@ export const MainnetDOGE1Chain = new JEVMBlockchain(
   's6AyhDbNGPw6eSQuseQLywWCThfNtMsM21HV27pSoM7FLHhoJ',
   new JEVMGasToken(MainnetDOGE1Asset),
   BigInt(45010),
-  BigInt('9524000000000'),
+  BigInt('3175000000000'),
   MainnetAddress,
   ['DOGE1'],
   [MainnetJUNEAsset]
@@ -200,7 +200,7 @@ export const MainnetLTC1Chain = new JEVMBlockchain(
   'iFQE4KDJKD95rNN3oFJ5FyufsL6p6CdhEZi8ZRTe4VBKvyrr7',
   new JEVMGasToken(MainnetLTC1Asset),
   BigInt(45009),
-  BigInt('17000000000'),
+  BigInt('6000000000'),
   MainnetAddress,
   ['LTC1'],
   [MainnetJUNEAsset]
@@ -210,7 +210,7 @@ export const MainnetBCH1Chain = new JEVMBlockchain(
   '2Hm47qrPwjq5JmZuSEv5PrPZ2pF4qJVWTppvmddCbcvmpqUeBt',
   new JEVMGasToken(MainnetBCH1Asset),
   BigInt(45013),
-  BigInt('3000000000'),
+  BigInt('1000000000'),
   MainnetAddress,
   ['BCH1'],
   [MainnetJUNEAsset]
@@ -220,7 +220,7 @@ export const MainnetLINK1Chain = new JEVMBlockchain(
   '2fUcPShTQQUcqLhZjpRA8apB9cXNFW5e3cbTrtmmAvYcpD4P4m',
   new JEVMGasToken(MainnetLINK1Asset),
   BigInt(45014),
-  BigInt('102000000000'),
+  BigInt('34000000000'),
   MainnetAddress,
   ['LINK1'],
   [MainnetJUNEAsset]

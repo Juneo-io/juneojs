@@ -16,16 +16,15 @@ const BananaStakeConfig = new StakeConfig(
   BigInt(365 * 86_400) // 365 days
 )
 const BananaRewardConfig = new RewardConfig(
-  // TODO
   BigInt(1_209_600), // 14 day
   BigInt(31_536_000), // 365 days
   BigInt(2_0000), // 2%
-  BigInt(1721001600), // 15th July 2024
-  BigInt(21_5000), // 21.5%
-  BigInt(1847232000), // 15th July  2028
+  BigInt(1749945600), // 15th June 2025
   BigInt(19_5000), // 19.5%
-  BigInt(1878768000), // 15th July  2029
-  BigInt(6_7000) // 6.7%
+  BigInt(1907712000), // 15th June  2030
+  BigInt(19_5000), // 19.5%
+  BigInt(1939248000), // 15th June  2031
+  BigInt(6_6000) // 6.6%
 )
 const BananaAddress = 'https://rpc.banana1-mainnet.network'
 

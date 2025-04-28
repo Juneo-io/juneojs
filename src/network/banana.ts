@@ -13,7 +13,7 @@ const BananaStakeConfig = new StakeConfig(
   5_0000, // 5%
   5_0000, // 5%
   BigInt(14 * 86_400), // 14 days
-  BigInt(365 * 86_400), // 365 days
+  BigInt(365 * 86_400) // 365 days
 )
 const BananaRewardConfig = new RewardConfig(
   // TODO
@@ -25,11 +25,11 @@ const BananaRewardConfig = new RewardConfig(
   BigInt(1847232000), // 15th July  2028
   BigInt(19_5000), // 19.5%
   BigInt(1878768000), // 15th July  2029
-  BigInt(6_7000), // 6.7%
+  BigInt(6_7000) // 6.7%
 )
 const BananaAddress = 'https://rpc.banana1-mainnet.network'
 
-export const BananaBANANA1AssetId = 'a1M6oyJphYMDgFiPo9DCUeSxn7xWsF2tPfUNWmYbVCdVvt8rt'
+export const BananaBANANA1AssetId = 'kufL8fbbsr1fkzJpHptZu5b9dDNDVf3EAnqNA79aerrhBPMRm'
 export const BananaSOL1AssetId = '2ByMC1sVqvaWP1dWhqJUkD5bj2xUvrKEcF3aXbhpSpWPNFze5f'
 export const BananaCOOKIE1AssetId = 'j3kykapHBmTUXQPHxG1KbPYJ5iXjHhFz8nGAbjz8sGZ4beVkD'
 export const BananaTON1AssetId = '8t1rERnfiRTWTVuzHNjxa6iNciqZAC5TmvF2M2cxfxrjNtrfF'
@@ -66,7 +66,7 @@ const jntAssets: JNTAsset[] = [
   BananaKNC1Asset,
   BananaLUNA1Asset,
   BananaAIXBT1Asset,
-  BananaVIRTUAL1Asset,
+  BananaVIRTUAL1Asset
 ]
 
 export const BananaPlatformChain = new PlatformBlockchain(
@@ -76,14 +76,14 @@ export const BananaPlatformChain = new PlatformBlockchain(
   BananaStakeConfig,
   BananaRewardConfig,
   ['P'],
-  jntAssets,
+  jntAssets
 )
 export const BananaJVMChain = new JVMBlockchain(
   'JVM-Chain',
-  '2EkWdLU2NQYZbthn4L1rN6wpmytxZyvjyvv9UJNGVmNeHLpvuf',
+  '2EKWB4RwWouir9iBUiHJjebwg8RByDQaYVoFLKa4C3pZAP4A1m',
   BananaBANANA1Asset,
   ['JVM'],
-  jntAssets,
+  jntAssets
 )
 const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Solana', 'SOL', 9, BananaSOL1AssetId),
@@ -101,136 +101,136 @@ const jrc20Assets: JRC20Asset[] = [
     'Virtuals Protocols',
     'VIRTUAL',
     9,
-    BananaVIRTUAL1AssetId,
-  ),
+    BananaVIRTUAL1AssetId
+  )
 ]
 export const BananaWBANANA1Asset = new WrappedAsset(
   '0x466e8b1156e49D29B70447a9Af68038cF5562BdD',
   'Wrapped BANANA1',
   'wBANA',
-  18,
+  18
 )
 export const BananaBANANA1Chain = new JEVMBlockchain(
   'BANANA1-Chain',
-  '2b5pNsWSZSQDe1qM9KGZHpDH2W8gitjPwjKtyhwk9VREhyZWRx',
+  '2AuwJiL43gQrawiexK7ciSWvQzBsVj9VWWi1uJstLXDQprbWH7',
   new JEVMGasToken(BananaBANANA1Asset),
   BigInt(65003),
-  BigInt('48000000000'),
+  BigInt('2000000000'),
   BananaAddress,
   ['BANANA1'],
   jrc20Assets,
-  jrc20Assets,
-  BananaWBANANA1Asset,
+  jrc20Assets
+  // BananaWBANANA1Asset,
 )
 export const BananaSOL1Chain = new JEVMBlockchain(
   'SOL1-Chain',
-  '2ca8WWjRhuAKZnGDW4XccU21t8c3d5yYwfoex18BTURhDVN2ys',
+  'twKq48jFiKqYfvMQaxoxV7dh33CBXbtyULrVZ2qyH3uuku6mU',
   new JEVMGasToken(BananaSOL1Asset),
   BigInt(65005),
-  BigInt('943000000000'),
+  BigInt('4000000000'),
   BananaAddress,
   ['SOL1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaCOOKIE1Chain = new JEVMBlockchain(
   'COOKIE1-Chain',
-  '261mMjThC8DiEqt3KMP4LDHNQdMA5KbQ6GKUrPVeJhEqhQGdSw',
+  'geNYWPzLHuBymUubA3Vyb4y5vgASCYnAxUSeTmRy6Qia3FZ14',
   new JEVMGasToken(BananaCOOKIE1Asset),
   BigInt(65006),
-  BigInt('943000000000'),
+  BigInt('5952000000000'),
   BananaAddress,
   ['COOKIE1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaTON1Chain = new JEVMBlockchain(
   'TON1-Chain',
-  '2UfCTe7xyGFmzkVAWnFWJxZR3gdAAi13Zhy6wDZWmcv81H7Kq3',
+  '2mbAmSAKvp7DQfXVYYwj6mQ5PS5JnTQqWTAq515i5a7FEPrVo7',
   new JEVMGasToken(BananaTON1Asset),
   BigInt(65004),
-  BigInt('943000000000'),
+  BigInt('153000000000'),
   BananaAddress,
   ['TON1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaKPEPE1Chain = new JEVMBlockchain(
   'kPEPE1-Chain',
-  'ScoVd2j3K2PJr27pjxeM6EYxsbRQDRNrFwjH7B6EPZiV6xUmi',
+  '2CaayzuahcWNxz1Zrra9c5vTB1bFrQ8PKZ4obnRQamNUgHEQbv',
   new JEVMGasToken(BananaKPEPE1Asset),
   BigInt(65011),
-  BigInt('857000000000'),
+  BigInt('38181000000000'),
   BananaAddress,
   ['kPEPE1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaKFLOKI1Chain = new JEVMBlockchain(
   'kFLOKI1-Chain',
-  'np6RuoETe42hunJoikeyC4McFGWMAhpU7jBuxNS6W6CjRXyZK',
+  'CzY2Ad1wYbAEGuv27ueKSgNnWdyrwumsLBdtbSXwGj7Ez7QNv',
   new JEVMGasToken(BananaKFLOKI1Asset),
   BigInt(65012),
-  BigInt('1257000000000'),
+  BigInt('9524000000000'),
   BananaAddress,
   ['kFLOKI1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaKBONK1Chain = new JEVMBlockchain(
   'kBONK1-Chain',
-  '2bNVzLySfmppvnRL2prVDRXy3xyhpQXYk7d9HZAk8kZGkRQ4yS',
+  'RcDkr3wQx1kY214j7KJAve34xx16mH4WHu3F5XC9TehHPaU3F',
   new JEVMGasToken(BananaKBONK1Asset),
   BigInt(65008),
-  BigInt('2000000000'),
+  BigInt('47194252000000000'),
   BananaAddress,
   ['kBONK1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaUSD1Chain = new JEVMBlockchain(
   'USD1-Chain',
-  'cVQuuNkVBHAc1zLfokSzQrbEzvidJqQ5P8Yd7T8m3ezvTuGqL',
+  '2hLg72aui7ovxnv4Qpzt7mZ2UC5nb2SJfSVQtcHVkGuPwsKANC',
   new JEVMGasToken(BananaUSD1Asset),
   BigInt(65007),
-  BigInt('22000000000'),
+  BigInt('48000000000'),
   BananaAddress,
   ['USD1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaKNC1Chain = new JEVMBlockchain(
   'KNC1-Chain',
-  '2SbTyFB5dJZU9A22bmYUzWHzf28WHXKDAX26Ngdcxeyt23fouA',
+  'Jdxkkd4zNSBtr6i3gp2xWfSK3qmgkGs5rGfS98FT5Bri6CkA7',
   new JEVMGasToken(BananaKNC1Asset),
   BigInt(65010),
-  BigInt('9524000000000'),
+  BigInt('1701000000000'),
   BananaAddress,
   ['KNC1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaLUNA1Chain = new JEVMBlockchain(
   'LUNA1-Chain',
-  '2u3kb4tUKnhtNieuNMkHEzgCrRv23LbUVq1DbysarwosW1MJbV',
+  'okHa8Bikqk9HporjfmYv8g6xkTHgagqE89A2KYiL6XzUy4XbD',
   new JEVMGasToken(BananaLUNA1Asset),
   BigInt(65009),
-  BigInt('17000000000'),
+  BigInt('78372000000000'),
   BananaAddress,
   ['LUNA1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaAIXBT1Chain = new JEVMBlockchain(
   'AIXBT1-Chain',
-  '2e3DYfoadfQJWAfTdy2aV55omfQMTaa2swZXpXqVpgS5j8wvY5',
+  'p6F7HnXHErg6Y4rJ6r3ujarRLqT3TNoaGtrVtAUbetTyahLEn',
   new JEVMGasToken(BananaAIXBT1Asset),
   BigInt(65013),
-  BigInt('3000000000'),
+  BigInt('6431000000000'),
   BananaAddress,
   ['AIXBT1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 export const BananaVIRTUAL1Chain = new JEVMBlockchain(
   'VIRTUAL1-Chain',
-  '2sa7JdVkPHdyZX5N2pHni76cP8QthkN37TX2UqyK8a6UhGFUeQ',
+  'SdVPjzWKW4Q7LcPHrcuuh6wnMFy4a3fThY3uVCCdM1TyzYYFQ',
   new JEVMGasToken(BananaVIRTUAL1Asset),
   BigInt(65014),
-  BigInt('102000000000'),
+  BigInt('10151000000000'),
   BananaAddress,
   ['VIRTUAL1'],
-  [BananaBANANA1Asset],
+  [BananaBANANA1Asset]
 )
 
 export const BananaPrimarySupernet = new PrimarySupernet(
@@ -249,11 +249,11 @@ export const BananaPrimarySupernet = new PrimarySupernet(
     BananaKNC1Chain,
     BananaLUNA1Chain,
     BananaAIXBT1Chain,
-    BananaVIRTUAL1Chain,
+    BananaVIRTUAL1Chain
   ],
   BananaPlatformChain,
   BananaJVMChain,
-  BananaBANANA1Chain,
+  BananaBANANA1Chain
 )
 
 export const BananaNetwork = new MCN(
@@ -261,5 +261,5 @@ export const BananaNetwork = new MCN(
   BananaAddress,
   BananaNetworkId,
   BananaHrp,
-  BananaPrimarySupernet,
+  BananaPrimarySupernet
 )

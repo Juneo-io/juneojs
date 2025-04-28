@@ -21,9 +21,9 @@ const MainnetRewardConfig = new RewardConfig(
   BigInt(2_0000), // 2%
   BigInt(1721001600), // 15th July 2024
   BigInt(21_5000), // 21.5%
-  BigInt(1847232000), // 15th July  2028
-  BigInt(19_5000), // 19.5%
   BigInt(1878768000), // 15th July  2029
+  BigInt(19_5000), // 19.5%
+  BigInt(1910304000), // 15th July  2030
   BigInt(6_7000) // 6.7%
 )
 const MainnetAddress = 'https://rpc.juneo-mainnet.network'

@@ -19,11 +19,11 @@ const SocotraRewardConfig = new RewardConfig(
   BigInt(1_209_600), // 14 day
   BigInt(31_536_000), // 365 days
   BigInt(2_0000), // 2%
-  BigInt(1711922400), // 1st April 2024
+  BigInt(1711929600), // 1st April 2024
   BigInt(21_5000), // 21.5%
-  BigInt(1838160000), // 1st April 2028
-  BigInt(19_5000), // 19.5%
   BigInt(1869696000), // 1st April 2029
+  BigInt(19_5000), // 19.5%
+  BigInt(1901232000), // 1st April 2030
   BigInt(6_7000) // 6.7%
 )
 const SocotraAddress = 'https://rpc.socotra-testnet.network'

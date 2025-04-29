@@ -3,27 +3,20 @@ import { type JEVMAPI } from '../../api'
 import { type JRC20Asset } from '../../asset'
 import { EmptyCallData, type JEVMBlockchain, NativeAssetCallContract, SendEtherGasLimit } from '../../chain'
 import { type MCNProvider } from '../../juneo'
-import { TimeUtils, TransactionError } from '../../utils'
 import { type ChainNetworkOperation, ChainOperationSummary } from '../operation'
 import { type JEVMWallet } from '../wallet'
-import {
-  DefaultDepositEstimate,
-  DefaultWithdrawEstimate,
-  InvalidNonceRetryDelay,
-  MaxInvalidNonceAttempts
-} from './constants'
+import { DefaultDepositEstimate, DefaultWithdrawEstimate } from './constants'
 import { EVMFeeData } from './fee'
 import { type BaseSpending, EVMTransactionData, TransactionType } from './transaction'
 
 export async function getWalletNonce (wallet: JEVMWallet, api: JEVMAPI, synchronize: boolean): Promise<bigint> {
-  if (synchronize || !wallet.synchronized) {
-    wallet.synchronized = true
-    // In the future may set unsync if error occurs in sync process.
-    // Verify that it would not negatively impact any other logics before.
-    // Not doing it now because of doubt it could fail somewhere else.
-    wallet.nonce = await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
-  }
-  return wallet.nonce++
+  return await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
+  // TODO update logic maybe use mutex
+  // if (synchronize || !wallet.synchronized) {
+  //   wallet.synchronized = true
+  //   wallet.nonce = await api.eth_getTransactionCount(wallet.getAddress(), 'pending')
+  // }
+  // return wallet.nonce++
 }
 
 export async function estimateEVMBaseFee (api: JEVMAPI): Promise<bigint> {
@@ -109,24 +102,8 @@ export async function executeEVMTransaction (
     gasPrice: feeData.baseFee,
     data: feeData.data.data
   }
-  for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
-    const transaction = await wallet.evmWallet.signTransaction(unsignedTransaction)
-    const transactionId: string | undefined = await api.eth_sendRawTransaction(transaction).catch((error) => {
-      const errorMessage: string = error.message as string
-      if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
-        return undefined
-      }
-      // Non nonce related error decrement nonce to avoid resyncing later.
-      wallet.nonce--
-      throw error
-    })
-    if (typeof transactionId === 'string') {
-      return transactionId
-    }
-    await TimeUtils.sleep(InvalidNonceRetryDelay)
-    unsignedTransaction.nonce = Number(await getWalletNonce(wallet, api, true))
-  }
-  throw new TransactionError(`could not provide a valid nonce: ${wallet.nonce}`)
+  const transaction = await wallet.evmWallet.signTransaction(unsignedTransaction)
+  return await api.eth_sendRawTransaction(transaction)
 }
 
 export async function estimateEVMWithdrawJRC20 (

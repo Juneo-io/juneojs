@@ -3,7 +3,6 @@ import { type Blockchain } from '../../../chain'
 import { type MCNProvider, TransactionType } from '../../../juneo'
 import {
   Address,
-  type JEVMExportTransaction,
   type JEVMImportTransaction,
   UserInput,
   type Utxo,
@@ -12,8 +11,6 @@ import {
 } from '../../../transaction'
 import {
   AtomicDenomination,
-  TimeUtils,
-  TransactionError,
   calculateAtomicCost,
   estimateAtomicExportGas,
   estimateAtomicImportGas,
@@ -21,7 +18,6 @@ import {
   getUtxosAmountValues
 } from '../../../utils'
 import { type JEVMWallet, type MCNWallet, type VMWallet } from '../../wallet'
-import { InvalidNonceRetryDelay, MaxInvalidNonceAttempts } from '../constants'
 import { estimateEVMBaseFee, getWalletNonce } from '../evm'
 import { BaseFeeData, type FeeData } from '../fee'
 
@@ -57,39 +53,18 @@ export async function executeEVMExportTransaction (
   const feeAmount: bigint = fee.amount / AtomicDenomination
   const exportAddress: string = wallet.getWallet(destination).getJuneoAddress()
   const evmWallet: JEVMWallet = wallet.getJEVMWallet(api.chain)
-  let nonce: bigint = await getWalletNonce(evmWallet, api, false)
-  for (let i = 0; i < MaxInvalidNonceAttempts; i++) {
-    const unsignedTransaction: JEVMExportTransaction = buildJEVMExportTransaction(
-      [new UserInput(assetId, api.chain, amount, [address], 1, destination)],
-      wallet.getAddress(api.chain),
-      nonce,
-      exportAddress,
-      feeAmount,
-      sendImportFee ? importFee : BigInt(0),
-      provider.mcn.id
-    )
-    const signedTx = await unsignedTransaction.signTransaction([wallet.getWallet(api.chain)])
-    const transactionId: string | undefined = await api
-      .issueTx(signedTx)
-      .then((response) => {
-        return response.txID
-      })
-      .catch((error) => {
-        const errorMessage: string = error.message as string
-        if (errorMessage.includes('nonce') || errorMessage.includes('replacement transaction underpriced')) {
-          return undefined
-        }
-        // Non nonce related error decrement nonce to avoid resyncing later.
-        evmWallet.nonce--
-        throw error
-      })
-    if (typeof transactionId === 'string') {
-      return transactionId
-    }
-    await TimeUtils.sleep(InvalidNonceRetryDelay)
-    nonce = await getWalletNonce(evmWallet, api, true)
-  }
-  throw new TransactionError(`could not provide a valid nonce ${evmWallet.nonce}`)
+  const nonce = await getWalletNonce(evmWallet, api, false)
+  const unsignedTransaction = buildJEVMExportTransaction(
+    [new UserInput(assetId, api.chain, amount, [address], 1, destination)],
+    wallet.getAddress(api.chain),
+    nonce,
+    exportAddress,
+    feeAmount,
+    sendImportFee ? importFee : BigInt(0),
+    provider.mcn.id
+  )
+  const signedTx = await unsignedTransaction.signTransaction([wallet.getWallet(api.chain)])
+  return (await api.issueTx(signedTx)).txID
 }
 
 export async function estimateEVMImportTransaction (

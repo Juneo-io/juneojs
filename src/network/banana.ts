@@ -2,7 +2,7 @@ import { JEVMGasToken, JNTAsset, JRC20Asset, WrappedAsset } from '../asset'
 import { JEVMBlockchain, JVMBlockchain, PlatformBlockchain, RewardConfig, StakeConfig } from '../chain'
 import { MCN, PrimarySupernet } from './network'
 
-const BananaNetworkName = 'Banana Supernet'
+const BananaNetworkName = 'Banana1 Supernet'
 const BananaNetworkId = 47
 const BananaHrp = 'banana'
 const BananaStakeConfig = new StakeConfig(

@@ -26,7 +26,7 @@ const BluebyteRewardConfig = new RewardConfig(
   BigInt(1939248000), // 15th June  2031
   BigInt(6_6000) // 6.6%
 )
-const BluebyteAddress = 'https://rpc.bluebyte1-mainnet.network/ext/health'
+const BluebyteAddress = 'https://rpc.bluebyte1-mainnet.network'
 
 export const BluebyteBBY1AssetId = '2a6i1usvJKegJEte8MDWkz9WkoFeWg3siz2fk2SqiSojNLrLZW'
 export const BluebytePYUSD1AssetId = '2tZD8KnDoetXiCJTU6xvx2CvqiShkvYw7e1kMZjwz6asmu8rPs'
@@ -41,7 +41,7 @@ export const BluebyteBAT1AssetId = '2PkV8iFxY6AajJgXnHKLfWVUYuP9CWTXB4H4YuHwstVY
 export const BluebyteC98AssetId = '2mMoHTWjGxMUP7n1Jzw1Rt29usvBkYmwT4xdMqYuTYwb6kVnXf'
 export const BluebytePYTH1AssetId = '2K9CqrFdVcM6WSowtisUuGA6QcTroBAQyi3U9Mu246pcWucEF3'
 
-export const BluebyteBBY1Asset = new JNTAsset(BluebyteBBY1AssetId, 'Blue Byte1', 'BBY1', 9, false)
+export const BluebyteBBY1Asset = new JNTAsset(BluebyteBBY1AssetId, 'Blue Byte1', 'BBY', 9, false)
 export const BluebytePYUSD1Asset = new JNTAsset(BluebytePYUSD1AssetId, 'PayPal USD', 'PYUSD1', 9, false)
 export const BluebyteLCX1Asset = new JNTAsset(BluebyteLCX1AssetId, 'LCX', 'LCX1', 9, false)
 export const BluebyteNEXO1Asset = new JNTAsset(BluebyteNEXO1AssetId, 'Nexo', 'NEXO1', 9, false)

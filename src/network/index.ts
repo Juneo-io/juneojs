@@ -1,5 +1,6 @@
 export * from './banana'
 export * from './bluebyte'
+export * from './fusion'
 export * from './genesis'
 export * from './local'
 export * from './mainnet'

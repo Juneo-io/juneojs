@@ -111,7 +111,7 @@ export const FusionWFUSION1Asset = new WrappedAsset(
 )
 export const FusionFUSION1Chain = new JEVMBlockchain(
   'FUSION1-Chain',
-  '2EciyikxKRzUiQm22o71cbYaNMQamvcB5FxthdzXPZmUExsQno',
+  '2BPF6zjaA1MV5DjyUVK6TahLfCPnkmPF8JrZDiEmnHqDcy2UXY',
   new JEVMGasToken(FusionFUSION1Asset),
   BigInt(95003),
   BigInt('2000000000'),

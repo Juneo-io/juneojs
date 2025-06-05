@@ -27,10 +27,10 @@ class NodeManager {
     return hdNode.deriveChild(index).privateKey.substring(2)
   }
 
-  // Derive the extended public key for a given chain and index
-  derivateXPublicKey (chain: Blockchain, index: number): string {
+  // Derive the extended public key for a given chain
+  derivateXPublicKey (chain: Blockchain): string {
     const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${chain.vm.hdPath}'/0'/0`)
-    return hdNode.deriveChild(index).neuter().extendedKey
+    return hdNode.neuter().extendedKey
   }
 }
 

@@ -36,7 +36,7 @@ class NodeManager {
 
 export class MCNWallet {
   hrp: string
-  private nodeManager?: NodeManager
+  nodeManager?: NodeManager
   mnemonic?: string
   privateKey?: string
   chainsWallets = new Map<string, VMWallet>()

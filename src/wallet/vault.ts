@@ -1,12 +1,20 @@
 import { type MCNProvider } from '../juneo'
 import { VaultError } from '../utils'
 import { AccountType, MCNAccount } from './account'
-import { type VMWallet, type MCNWallet } from './wallet'
+import { type MCNWallet, type VMWallet } from './wallet'
 
 function getAccountId (provider: MCNProvider, wallet: MCNWallet): string {
-  const jvmId: string = wallet.getWallet(provider.jvmChain).getKeyPair().publicKey
-  const evmId: string = wallet.getWallet(provider.juneChain).getKeyPair().publicKey
-  return `${jvmId}_${evmId}`
+  if (wallet.readOnlyWallet) {
+    const jvmWallet = wallet.getWallet(provider.jvmChain)
+    const evmWallet = wallet.getWallet(provider.juneChain)
+    const jvmId = (jvmWallet as any).xpub ?? jvmWallet.getAddress()
+    const evmId = (evmWallet as any).xpub ?? evmWallet.getAddress()
+    return `${jvmId}_${evmId}`
+  } else {
+    const jvmId: string = wallet.getWallet(provider.jvmChain).getKeyPair().publicKey
+    const evmId: string = wallet.getWallet(provider.juneChain).getKeyPair().publicKey
+    return `${jvmId}_${evmId}`
+  }
 }
 
 export class VaultWallet {
@@ -62,6 +70,9 @@ export class MCNVault {
     // adding new wallets as signers
     for (const chainAccount of this.account.chainAccounts.values()) {
       if (chainAccount.type === AccountType.Utxo) {
+        if (vaultWallet.wallet.readOnlyWallet) {
+          continue
+        }
         const signer: VMWallet = vaultWallet.wallet.getWallet(chainAccount.chain)
         chainAccount.signers.push(signer)
       }
@@ -82,6 +93,9 @@ export class MCNVault {
     for (const chainAccount of this.account.chainAccounts.values()) {
       if (chainAccount.type === AccountType.Utxo) {
         for (const wallet of this.wallets.values()) {
+          if (wallet.wallet.readOnlyWallet) {
+            continue
+          }
           const signer: VMWallet = wallet.wallet.getWallet(chainAccount.chain)
           chainAccount.signers.push(signer)
         }
@@ -104,6 +118,9 @@ export class MCNVault {
       if (chainAccount.type === AccountType.Utxo) {
         const signers: VMWallet[] = []
         for (const vaultWallet of this.wallets.values()) {
+          if (vaultWallet.wallet.readOnlyWallet) {
+            continue
+          }
           const signer: VMWallet = vaultWallet.wallet.getWallet(chainAccount.chain)
           signers.push(signer)
         }

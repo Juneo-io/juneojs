@@ -24,7 +24,7 @@ export class Utxo {
   }
 
   getUniqueId (): string {
-    return `${this.transactionId.value}_${this.utxoIndex}}`
+    return `${this.transactionId.value}_${this.utxoIndex}`
   }
 
   static parse (data: string | JuneoBuffer): Utxo {

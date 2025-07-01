@@ -28,31 +28,93 @@ const FusionRewardConfig = new RewardConfig(
 )
 const FusionAddress = 'https://rpc.fusion1-mainnet.network'
 
-export const FusionFUSION1AssetId = 'c8yjve1m1jsCN9bHcbx12eiwuc8V8RvdxX7D8Vp94U7BfyYhS'
-export const FusionSANTOS1AssetId = 'G4UEgSDc1KRVZyN5o3Ck1yf2tWHSKgcoQdrJ39YNcPaMSMM2G'
-export const FusionPSG1AssetId = '2giVcsEctNrt2qJ9Fq9eY692DEjFw6dUG9kncSj6vUTsNgdjX1'
-export const FusionJUV1AssetId = 'atGZ6KYieKtW35xcHaC2LipJFjPSRKLV1uAboqUJNGB8PQHax'
-export const FusionGAL1AssetId = '2nwY3DtNjFbE98SpxK26E4ZtGNrAvVh4u5nBimXbWeW5MgfTvp'
-export const FusionOG1AssetId = 'BnFBHsz1zgerrHY1rhx1j94xkEwXEwpsgyreXXE67FZmTLqcY'
-export const FusionFORM1AssetId = '2hokCBn3jmsdMh8yg8pP4y49RDB5scLupCEAfA8h6bh2HJt6aL'
-export const FusionSAND1AssetId = '2RWZ5JSYceyNfuABw7bp2K5M5rRq23DFMpT24peTZFMaAvufVw'
-export const FusionBRL1AssetId = '2anSgB4z74Nuk1vPPJhKK95pfXcXE8pbKEhMSouw2ofmRZeyNo'
-export const FusionAED1AssetId = 'SMUQcbVsYqoTBdvfWjCTxVjCoN4ZUs7qwrMB3zqetTsaBZtdq'
-export const FusionVUSD1AssetId = 'kabW1a6uzUKi277PNLbgisKZkv6rTF5SkFEgXfABx39J5tKH2'
-export const FusionMXN1AssetId = 'HjdiZpXajP9EPmA2JS9o2qxMPtAg9HRg8ef8aU8LVEC9qJhGT'
-
-export const FusionFUSION1Asset = new JNTAsset(FusionFUSION1AssetId, 'FUSION1', 'FUS', 9, false)
-export const FusionSANTOS1Asset = new JNTAsset(FusionSANTOS1AssetId, 'Santos FC', 'SANTOS1', 9, false)
-export const FusionPSG1Asset = new JNTAsset(FusionPSG1AssetId, 'Paris Saint-Germain', 'PSG1', 9, false)
-export const FusionJUV1Asset = new JNTAsset(FusionJUV1AssetId, 'Juventus', 'JUV1', 9, false)
-export const FusionGAL1Asset = new JNTAsset(FusionGAL1AssetId, 'Galatasary', 'GAL1', 9, false)
-export const FusionOG1Asset = new JNTAsset(FusionOG1AssetId, 'OG Fan', 'OG1', 9, false)
-export const FusionFORM1Asset = new JNTAsset(FusionFORM1AssetId, 'Four', 'FORM1', 9, false)
-export const FusionSAND1Asset = new JNTAsset(FusionSAND1AssetId, 'The Sandbox', 'SAND1', 9, false)
-export const FusionBRL1Asset = new JNTAsset(FusionBRL1AssetId, 'Brazilian Real Token', 'BRL1', 9, false)
-export const FusionAED1Asset = new JNTAsset(FusionAED1AssetId, 'United Arab Emirate Dirham Token', 'AED1', 9, false)
-export const FusionVUSD1Asset = new JNTAsset(FusionVUSD1AssetId, 'Vaulted USD', 'vUSD1', 9, false)
-export const FusionMXN1Asset = new JNTAsset(FusionMXN1AssetId, 'Mexican Peso Token', 'MXN1', 9, false)
+//
+// ----- JNT Assets -----
+//
+export const FusionFUSN1Asset = new JNTAsset(
+  '2Gi5ewBz7La9dPw4fV2wtAMRyjAydaW5BsrxRgCQnH2bdU6B5Q',
+  'Fusion1',
+  'FUSN1',
+  9,
+  false
+)
+export const FusionSANTOS1Asset = new JNTAsset(
+  'G4UEgSDc1KRVZyN5o3Ck1yf2tWHSKgcoQdrJ39YNcPaMSMM2G',
+  'Santos FC',
+  'SANTOS1',
+  9,
+  false
+)
+export const FusionPSG1Asset = new JNTAsset(
+  '2giVcsEctNrt2qJ9Fq9eY692DEjFw6dUG9kncSj6vUTsNgdjX1',
+  'Paris Saint-Germain',
+  'PSG1',
+  9,
+  false
+)
+export const FusionJUV1Asset = new JNTAsset(
+  'atGZ6KYieKtW35xcHaC2LipJFjPSRKLV1uAboqUJNGB8PQHax',
+  'Juventus',
+  'JUV1',
+  9,
+  false
+)
+export const FusionGAL1Asset = new JNTAsset(
+  '2nwY3DtNjFbE98SpxK26E4ZtGNrAvVh4u5nBimXbWeW5MgfTvp',
+  'Galatasary',
+  'GAL1',
+  9,
+  false
+)
+export const FusionOG1Asset = new JNTAsset(
+  'BnFBHsz1zgerrHY1rhx1j94xkEwXEwpsgyreXXE67FZmTLqcY',
+  'OG Fan',
+  'OG1',
+  9,
+  false
+)
+export const FusionFORM1Asset = new JNTAsset(
+  '2hokCBn3jmsdMh8yg8pP4y49RDB5scLupCEAfA8h6bh2HJt6aL',
+  'Four',
+  'FORM1',
+  9,
+  false
+)
+export const FusionSAND1Asset = new JNTAsset(
+  '2RWZ5JSYceyNfuABw7bp2K5M5rRq23DFMpT24peTZFMaAvufVw',
+  'The Sandbox',
+  'SAND1',
+  9,
+  false
+)
+export const FusionBRL1Asset = new JNTAsset(
+  '2anSgB4z74Nuk1vPPJhKK95pfXcXE8pbKEhMSouw2ofmRZeyNo',
+  'Brazilian Real Token',
+  'BRL1',
+  9,
+  false
+)
+export const FusionAED1Asset = new JNTAsset(
+  'SMUQcbVsYqoTBdvfWjCTxVjCoN4ZUs7qwrMB3zqetTsaBZtdq',
+  'United Arab Emirate Dirham Token',
+  'AED1',
+  9,
+  false
+)
+export const FusionVUSD1Asset = new JNTAsset(
+  'kabW1a6uzUKi277PNLbgisKZkv6rTF5SkFEgXfABx39J5tKH2',
+  'Vaulted USD',
+  'vUSD1',
+  9,
+  false
+)
+export const FusionMXN1Asset = new JNTAsset(
+  'HjdiZpXajP9EPmA2JS9o2qxMPtAg9HRg8ef8aU8LVEC9qJhGT',
+  'Mexican Peso Token',
+  'MXN1',
+  9,
+  false
+)
 // FUSION1 is omitted here because it should be registered by default as the chain asset
 const jntAssets: JNTAsset[] = [
   FusionSANTOS1Asset,
@@ -67,11 +129,53 @@ const jntAssets: JNTAsset[] = [
   FusionVUSD1Asset,
   FusionMXN1Asset
 ]
-
+//
+// ----- JRC20 Assets -----
+//
+const jrc20Assets: JRC20Asset[] = [
+  new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Santos FC', 'SANTOS', 9, FusionSANTOS1Asset.assetId),
+  new JRC20Asset(
+    '0x2e00000000000000000000000000000000000000',
+    'Paris Saint-Germain',
+    'PSG',
+    9,
+    FusionPSG1Asset.assetId
+  ),
+  new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Juventus', 'JUV', 9, FusionJUV1Asset.assetId),
+  new JRC20Asset('0x3000000000000000000000000000000000000000', 'Galatasary', 'GAL', 9, FusionGAL1Asset.assetId),
+  new JRC20Asset('0x3100000000000000000000000000000000000000', 'OG Fan', 'OG', 9, FusionOG1Asset.assetId),
+  new JRC20Asset('0x3200000000000000000000000000000000000000', 'Four', 'FORM', 9, FusionFORM1Asset.assetId),
+  new JRC20Asset('0x3300000000000000000000000000000000000000', 'The Sandbox', 'SAND', 9, FusionSAND1Asset.assetId),
+  new JRC20Asset(
+    '0x3400000000000000000000000000000000000000',
+    'Brazilian Real Token',
+    'BRL',
+    9,
+    FusionBRL1Asset.assetId
+  ),
+  new JRC20Asset(
+    '0x3500000000000000000000000000000000000000',
+    'United Arab Emirate Dirham Token',
+    'AED',
+    9,
+    FusionAED1Asset.assetId
+  ),
+  new JRC20Asset('0x3600000000000000000000000000000000000000', 'Vaulted USD', 'vUSD', 9, FusionVUSD1Asset.assetId),
+  new JRC20Asset('0x3700000000000000000000000000000000000000', 'Mexican Peso Token', 'MXN', 9, FusionMXN1Asset.assetId)
+]
+export const FusionWFUSION1Asset = new WrappedAsset(
+  '0x466e8b1156e49D29B70447a9Af68038cF5562BdD',
+  'Wrapped Fusion1',
+  'wFUSN1',
+  18
+)
+//
+// ----- CHAINS -----
+//
 export const FusionPlatformChain = new PlatformBlockchain(
   'Platform-Chain',
   '11111111111111111111111111111111LpoYY',
-  FusionFUSION1Asset,
+  FusionFUSN1Asset,
   FusionStakeConfig,
   FusionRewardConfig,
   ['P'],
@@ -79,157 +183,132 @@ export const FusionPlatformChain = new PlatformBlockchain(
 )
 export const FusionJVMChain = new JVMBlockchain(
   'JVM-Chain',
-  '2ip3bvABP5NPpWwS6C46ASy69vRFiJ9w6U6d6ytmv9cPS9nvH',
-  FusionFUSION1Asset,
+  '25hfdTrgTRW5aFHpx1revBr2p5amj8Lgcwb2Zb1z8zmrzB72aJ',
+  FusionFUSN1Asset,
   ['JVM'],
   jntAssets
 )
-const jrc20Assets: JRC20Asset[] = [
-  new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Santos FC', 'SANTOS', 9, FusionSANTOS1AssetId),
-  new JRC20Asset('0x2e00000000000000000000000000000000000000', 'Paris Saint-Germain', 'PSG', 9, FusionPSG1AssetId),
-  new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Juventus', 'JUV', 9, FusionJUV1AssetId),
-  new JRC20Asset('0x3000000000000000000000000000000000000000', 'Galatasary', 'GAL', 9, FusionGAL1AssetId),
-  new JRC20Asset('0x3100000000000000000000000000000000000000', 'OG Fan', 'OG', 9, FusionOG1AssetId),
-  new JRC20Asset('0x3200000000000000000000000000000000000000', 'Four', 'FORM', 9, FusionFORM1AssetId),
-  new JRC20Asset('0x3300000000000000000000000000000000000000', 'The Sandbox', 'SAND', 9, FusionSAND1AssetId),
-  new JRC20Asset('0x3400000000000000000000000000000000000000', 'Brazilian Real Token', 'BRL', 9, FusionBRL1AssetId),
-  new JRC20Asset(
-    '0x3500000000000000000000000000000000000000',
-    'United Arab Emirate Dirham Token',
-    'AED',
-    9,
-    FusionAED1AssetId
-  ),
-  new JRC20Asset('0x3600000000000000000000000000000000000000', 'Vaulted USD', 'vUSD', 9, FusionVUSD1AssetId),
-  new JRC20Asset('0x3700000000000000000000000000000000000000', 'Mexican Peso Token', 'MXN', 9, FusionMXN1AssetId)
-]
-export const FusionWFUSION1Asset = new WrappedAsset(
-  '0x466e8b1156e49D29B70447a9Af68038cF5562BdD',
-  'Wrapped FUSION1',
-  'wFUS',
-  18
-)
 export const FusionFUSION1Chain = new JEVMBlockchain(
   'FUSION1-Chain',
-  '2BPF6zjaA1MV5DjyUVK6TahLfCPnkmPF8JrZDiEmnHqDcy2UXY',
-  new JEVMGasToken(FusionFUSION1Asset),
+  '2wQs1iaoYciQqz7BnV6GVYoNYNh1gRZtje5v9bKr2cxrUR8iiE',
+  new JEVMGasToken(FusionFUSN1Asset),
   BigInt(95003),
   BigInt('2000000000'),
   FusionAddress,
   ['FUSION1'],
   jrc20Assets,
   jrc20Assets
-  // FusionWFUSION1Asset,
+  // FusionWFUSN1Asset,
 )
 export const FusionSANTOS1Chain = new JEVMBlockchain(
   'SANTOS1-Chain',
-  'xKVXXPvg8wpiTfaHbvFqFSW6LpkeqsbwyzPMqaobqitkx4P6J',
+  '55W5qPZstpD5Djj13u21fPg6m76JF7P9W3bakSRhwm5nqzk2E',
   new JEVMGasToken(FusionSANTOS1Asset),
   BigInt(95004),
-  BigInt('4000000000'),
+  BigInt('199000000000'),
   FusionAddress,
   ['SANTOS1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionPSG1Chain = new JEVMBlockchain(
   'PSG1-Chain',
-  '2UKnvSeeyqAouFgZj8neMAoKxo8GpHqX7rmjcpHmDDUpw9mJru',
+  'TWoPYKgkbHFuuxVh7fzKWcNWW58jqF8sE4PeHw7rZrnokMh4Z',
   new JEVMGasToken(FusionPSG1Asset),
   BigInt(95005),
-  BigInt('5952000000000'),
+  BigInt('179000000000'),
   FusionAddress,
   ['PSG1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionJUV1Chain = new JEVMBlockchain(
   'JUV1-Chain',
-  'okC5rCZdSiLQsGpiu7NjcieUkasyLhS51581nYe98xft4Mkaf',
+  '22xRmmDUwVrMbH4aJTC6oZLpr72k1wk3rRKUWoACBzuHGh5Q1J',
   new JEVMGasToken(FusionJUV1Asset),
   BigInt(95006),
-  BigInt('153000000000'),
+  BigInt('394000000000'),
   FusionAddress,
   ['JUV1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionGAL1Chain = new JEVMBlockchain(
   'GAL1-Chain',
-  'Uhy3wiXzEAXBJz3dbSYktrtmvMsDiAnPvPLx86Q8znw8Hw45s',
+  '2eZrGDYZwYm3i65C4bJaB7UGJtsuFfwzXX15JUPnfXuXcVa4HQ',
   new JEVMGasToken(FusionGAL1Asset),
   BigInt(95007),
-  BigInt('38181000000000'),
+  BigInt('169000000000'),
   FusionAddress,
   ['GAL1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionOG1Chain = new JEVMBlockchain(
   'OG1-Chain',
-  'puQqhmQ8Hhsr1wxmScohUFNdpkURe8BxwHmTCxXkVUVqVdGX3',
+  'Tq4sS8p7xHkMqnbP3TnujnGAeuND91pYFa3wxwgLFDGGNt38N',
   new JEVMGasToken(FusionOG1Asset),
   BigInt(95008),
-  BigInt('9524000000000'),
+  BigInt('169000000000'),
   FusionAddress,
   ['OG1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionFORM1Chain = new JEVMBlockchain(
   'FORM1-Chain',
-  '2c5ZSc6SfEg6ywSsyQhx2YejXWv7xm4HRsxUsEVs88LXYS4g7g',
+  '2ZQXpkUMqpd6hadAVENeUxo86MQHG1QYahZX2wBPpAN8xrq6F3',
   new JEVMGasToken(FusionFORM1Asset),
   BigInt(95009),
-  BigInt('47194252000000000'),
+  BigInt('193000000000'),
   FusionAddress,
   ['FORM1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionSAND1Chain = new JEVMBlockchain(
   'SAND1-Chain',
-  '28bwwTGwr9okH1UgkVjXLMHjEnjjkjRzFW1PArhTUd4d1nXXdP',
+  '2o5UvJyqF6uSrZUzEXS9jjHCFLNeTtn48X7pBX4u2NaDXiCebc',
   new JEVMGasToken(FusionSAND1Asset),
   BigInt(95010),
-  BigInt('48000000000'),
+  BigInt('183000000000'),
   FusionAddress,
   ['SAND1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionBRL1Chain = new JEVMBlockchain(
   'BRL1-Chain',
-  '2t9XqLb8y5Qev5DB1KiKS8oZvzsGoJ53k5fgEtCTSejGDbEZgL',
+  'bSBdSdxSU3vG54n9iptgDsy465pXy26kcZowrjAhHWJHeV2y6',
   new JEVMGasToken(FusionBRL1Asset),
   BigInt(95011),
-  BigInt('1701000000000'),
+  BigInt('2646000000000'),
   FusionAddress,
   ['BRL1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionAED1Chain = new JEVMBlockchain(
   'AED1-Chain',
-  '2QsQZMPaLSKwZkMmiVCeEzKJozNEAev5dhWruEuQvwsoG852u4',
+  '2AqXm4gF8V6BawpbCuZTDp5duAyebHvyLmSb1GtBKj46qaeLxK',
   new JEVMGasToken(FusionAED1Asset),
   BigInt(95012),
-  BigInt('78372000000000'),
+  BigInt('1764000000000'),
   FusionAddress,
   ['AED1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionVUSD1Chain = new JEVMBlockchain(
   'vUSD1-Chain',
-  '2mE4AKXkJjUojSs3y5wNgSVksVv7qFZd3LisNVQ63MzwgBSBb8',
+  'h7qk5YUxzL9ucZszrRXqQxxvzo2h8tYYJBVF4PE7LboF749Fh',
   new JEVMGasToken(FusionVUSD1Asset),
   BigInt(95013),
-  BigInt('6431000000000'),
+  BigInt('476000000000'),
   FusionAddress,
   ['vUSD1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 export const FusionMXN1Chain = new JEVMBlockchain(
   'MXN1-Chain',
-  'sG1SqT5KQ68yZYjR3f2hY4dqqnFtBz61frqwDCaSV89dBmn7N',
+  'HZtQQXBwYTpi96xoezUr1NrboKCHEUiqDSYSyRmegu9Y7V3Gh',
   new JEVMGasToken(FusionMXN1Asset),
   BigInt(95014),
-  BigInt('10151000000000'),
+  BigInt('8851000000000'),
   FusionAddress,
   ['MXN1'],
-  [FusionFUSION1Asset]
+  [FusionFUSN1Asset]
 )
 
 export const FusionPrimarySupernet = new PrimarySupernet(

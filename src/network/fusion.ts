@@ -164,7 +164,7 @@ const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x3700000000000000000000000000000000000000', 'Mexican Peso Token', 'MXN', 9, FusionMXN1Asset.assetId)
 ]
 export const FusionWFUSION1Asset = new WrappedAsset(
-  '0x466e8b1156e49D29B70447a9Af68038cF5562BdD',
+  '0x36aD1F7DCCbafAdC23Fcec2fAb1BEFE45e10b04A',
   'Wrapped Fusion1',
   'wFUSN1',
   18

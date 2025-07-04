@@ -191,8 +191,8 @@ export const BananaBANANA1Chain = new JEVMBlockchain(
   BananaAddress,
   ['BANANA1'],
   jrc20Assets,
-  jrc20Assets
-  // BananaWBANA1Asset,
+  jrc20Assets,
+  BananaWBANANA1Asset
 )
 export const BananaSOL1Chain = new JEVMBlockchain(
   'SOL1-Chain',

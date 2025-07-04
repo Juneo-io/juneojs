@@ -191,8 +191,8 @@ export const BluebyteBLUEBYTE1Chain = new JEVMBlockchain(
   BluebyteAddress,
   ['BLUEBYTE1'],
   jrc20Assets,
-  jrc20Assets
-  // BluebyteWBBY1Asset,
+  jrc20Assets,
+  BluebyteWBBY1Asset
 )
 export const BluebytePYUSD1Chain = new JEVMBlockchain(
   'PYUSD1-Chain',

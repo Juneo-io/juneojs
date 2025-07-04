@@ -197,8 +197,8 @@ export const FusionFUSION1Chain = new JEVMBlockchain(
   FusionAddress,
   ['FUSION1'],
   jrc20Assets,
-  jrc20Assets
-  // FusionWFUSN1Asset,
+  jrc20Assets,
+  FusionWFUSION1Asset
 )
 export const FusionSANTOS1Chain = new JEVMBlockchain(
   'SANTOS1-Chain',

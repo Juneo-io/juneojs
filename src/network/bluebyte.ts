@@ -7,9 +7,9 @@ const BluebyteNetworkId = 48
 const BluebyteHrp = 'bluebyte'
 const BluebyteStakeConfig = new StakeConfig(
   0.8, // 80%
-  BigInt(20_000000000), // 20 BBY1
-  BigInt(30_000_000000000), // 30_000 BBY1
-  BigInt(1_000000), // 0.1 BBY1
+  BigInt(5_000000000), // 5 BBY1
+  BigInt(7_500_000000000), // 7_500 BBY1
+  BigInt(100_000_000), // 0.1 BBY1
   5_0000, // 5%
   5_0000, // 5%
   BigInt(14 * 86_400), // 14 days

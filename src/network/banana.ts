@@ -7,9 +7,9 @@ const BananaNetworkId = 47
 const BananaHrp = 'banana'
 const BananaStakeConfig = new StakeConfig(
   0.8, // 80%
-  BigInt(20_000000000), // 20 BANANA1
-  BigInt(30_000_000000000), // 30_000 BANANA1
-  BigInt(1_000000), // 0.1 BANANA1
+  BigInt(5_000000000), // 5 BANANA1
+  BigInt(7_500_000000000), // 7_500 BANANA1
+  BigInt(100_000_000), // 0.1 BANANA1
   5_0000, // 5%
   5_0000, // 5%
   BigInt(14 * 86_400), // 14 days
@@ -134,7 +134,7 @@ const jntAssets: JNTAsset[] = [
 //
 const jrc20Assets: JRC20Asset[] = [
   new JRC20Asset('0x2d00000000000000000000000000000000000000', 'Solana', 'SOL', 9, BananaSOL1Asset.assetId),
-  new JRC20Asset('0x2e00000000000000000000000000000000000000', 'CookieDAO', 'COOKIE', 9, BananaCOOKIE1Asset.assetId),
+  new JRC20Asset('0x2e00000000000000000000000000000000000000', 'Cookie DAO', 'COOKIE', 9, BananaCOOKIE1Asset.assetId),
   new JRC20Asset('0x2f00000000000000000000000000000000000000', 'Toncoin', 'TON', 9, BananaTON1Asset.assetId),
   new JRC20Asset('0x3000000000000000000000000000000000000000', 'Pepe', 'kPEPE', 9, BananaKPEPE1Asset.assetId),
   new JRC20Asset('0x3100000000000000000000000000000000000000', 'FLOKI', 'kFLOKI', 9, BananaKFLOKI1Asset.assetId),
@@ -249,7 +249,7 @@ export const BananaKBONK1Chain = new JEVMBlockchain(
   'xg8L8oXQHQSxTPGtX6rBeR86jBNnKXQn99LXz5FwVoJePsSD3',
   new JEVMGasToken(BananaKBONK1Asset),
   BigInt(65009),
-  BigInt('47194252000000000'),
+  BigInt('47194000000000'),
   BananaAddress,
   ['kBONK1'],
   [BananaBANA1Asset]

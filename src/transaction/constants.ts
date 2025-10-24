@@ -45,6 +45,7 @@ export const EmptySignerTypeId = 0x0000001b
 export const PrimarySignerTypeId = 0x0000001c
 export const TransferSupernetOwnershipTransactionTypeId = 0x00000021
 export const PlatformBaseTransactionTypeId = 0x00000022
+export const DonationTransactionTypeId = 0x00000023
 
 export const EVMImportTransactionTypeId = 0
 export const EVMExportTransactionTypeId = 1

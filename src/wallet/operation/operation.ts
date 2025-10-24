@@ -20,6 +20,7 @@ export enum NetworkOperationType {
   RemoveSupernetValidator = 'Remove supernet validator',
   CreateChain = 'Create chain',
   EthCall = 'Eth call',
+  Donation = 'Protocol donation',
 }
 
 export enum NetworkOperationRange {
@@ -335,6 +336,17 @@ export class CreateChainOperation extends ChainNetworkOperation {
     this.genesisData = genesisData
     this.chainAssetId = chainAssetId
     this.fxIds = fxIds
+  }
+}
+
+export class DonationOperation extends ChainNetworkOperation {
+  supernetId: string
+  amount: bigint
+
+  constructor (chain: PlatformBlockchain, supernetId: string, amount: bigint) {
+    super(NetworkOperationType.Donation, chain)
+    this.supernetId = supernetId
+    this.amount = amount
   }
 }
 

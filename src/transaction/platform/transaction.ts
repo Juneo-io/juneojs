@@ -6,6 +6,7 @@ import {
   AssetIdSize,
   CreateChainTransactionTypeId,
   CreateSupernetTransactionTypeId,
+  DonationTransactionTypeId,
   DynamicIdSize,
   NodeIdSize,
   PlatformBaseTransactionTypeId,
@@ -724,6 +725,52 @@ export class AddPermissionlessDelegatorTransaction extends BaseTransaction {
       supernetId,
       stakes,
       rewardsOwner
+    )
+  }
+}
+
+export class PlatformDonationTransaction extends BaseTransaction {
+  supernetId: SupernetId
+  amount: bigint
+
+  constructor (
+    networkId: number,
+    blockchainId: BlockchainId,
+    outputs: TransferableOutput[],
+    inputs: TransferableInput[],
+    memo: string,
+    supernetId: SupernetId,
+    amount: bigint
+  ) {
+    super(DonationTransactionTypeId, networkId, blockchainId, outputs, inputs, memo)
+    this.supernetId = supernetId
+    this.amount = amount
+  }
+
+  serialize (): JuneoBuffer {
+    const baseTransaction = super.serialize()
+    const buffer = JuneoBuffer.alloc(baseTransaction.length + SupernetIdSize + 8)
+    buffer.write(baseTransaction)
+    buffer.write(this.supernetId)
+    buffer.writeUInt64(this.amount)
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): PlatformDonationTransaction {
+    const baseTx = BaseTransaction.parse(data, DonationTransactionTypeId)
+    const buffer = JuneoBuffer.from(data)
+    const reader = buffer.createReader()
+    reader.skip(baseTx)
+    const supernetId = new SupernetId(reader.read(SupernetIdSize).toCB58())
+    const amount = reader.readUInt64()
+    return new PlatformDonationTransaction(
+      baseTx.networkId,
+      baseTx.blockchainId,
+      baseTx.outputs,
+      baseTx.inputs,
+      baseTx.memo,
+      supernetId,
+      amount
     )
   }
 }

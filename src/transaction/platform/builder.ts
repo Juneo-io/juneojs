@@ -13,6 +13,7 @@ import {
   CreateChainTransaction,
   CreateSupernetTransaction,
   PlatformBaseTransaction,
+  PlatformDonationTransaction,
   PlatformExportTransaction,
   PlatformImportTransaction,
   RemoveSupernetValidatorTransaction,
@@ -537,5 +538,40 @@ export function buildAddPermissionlessDelegatorTransaction (
     typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
     stake,
     rewardsOwner
+  )
+}
+
+export function buildPlatformDonationTransaction (
+  chain: PlatformBlockchain,
+  utxoSet: Utxo[],
+  signersAddresses: Address[],
+  fee: bigint,
+  supernetId: string | SupernetId,
+  amount: bigint,
+  changeAddress: string,
+  networkId: number,
+  memo: string = ''
+): PlatformDonationTransaction {
+  const inputData = new UserInput(chain.assetId, chain, amount, [changeAddress], 1, chain)
+  utxoSet.sort((a, b) => {
+    return Number(b.output.locktime - a.output.locktime)
+  })
+  const feeData = new TransactionFee(chain, fee)
+  const inputs: TransferableInput[] = buildTransactionInputs([inputData], utxoSet, signersAddresses, [feeData])
+  const outputs: UserOutput[] = buildTransactionOutputs([inputData], inputs, feeData, changeAddress)
+  const changeOutputs: TransferableOutput[] = []
+  for (const output of outputs) {
+    if (output.isChange) {
+      changeOutputs.push(output)
+    }
+  }
+  return new PlatformDonationTransaction(
+    networkId,
+    new BlockchainId(chain.id),
+    changeOutputs, // only using change outputs because of donation spending
+    inputs,
+    memo,
+    typeof supernetId === 'string' ? new SupernetId(supernetId) : supernetId,
+    amount
   )
 }

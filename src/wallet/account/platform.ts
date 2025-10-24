@@ -13,6 +13,7 @@ import {
   type CreateChainOperation,
   type CreateSupernetOperation,
   type DelegatePrimaryOperation,
+  type DonationOperation,
   NetworkOperationType,
   type RemoveSupernetValidatorOperation,
   type SendOperation,
@@ -27,6 +28,7 @@ import {
   estimatePlatformCreateChainOperation,
   estimatePlatformCreateSupernetOperation,
   estimatePlatformDelegatePrimaryOperation,
+  estimatePlatformDonationOperation,
   estimatePlatformRemoveSupernetValidatorOperation,
   estimatePlatformValidatePrimaryOperation,
   estimateSendOperation,
@@ -70,6 +72,8 @@ export class PlatformAccount extends UtxoAccount {
       )
     } else if (operation.type === NetworkOperationType.CreateChain) {
       return await estimatePlatformCreateChainOperation(provider, operation as CreateChainOperation, this)
+    } else if (operation.type === NetworkOperationType.Donation) {
+      return await estimatePlatformDonationOperation(provider, operation as DonationOperation, this)
     }
     throw new AccountError(`unsupported operation: ${operation.type} for the chain with id: ${this.chain.id}`)
   }
@@ -99,6 +103,8 @@ export class PlatformAccount extends UtxoAccount {
       await this.executeAndTrackTransaction(summary, TransactionType.RemoveSupernetValidator)
     } else if (operation === NetworkOperationType.CreateChain) {
       await this.executeAndTrackTransaction(summary, TransactionType.CreateChain)
+    } else if (operation === NetworkOperationType.Donation) {
+      await this.executeAndTrackTransaction(summary, TransactionType.Donation)
     }
     // balances fetching is needed to get new utxos creating from this operation
     await super.refreshBalances()

@@ -7,6 +7,7 @@ import {
   buildAddSupernetValidatorTransaction,
   buildCreateChainTransaction,
   buildCreateSupernetTransaction,
+  buildPlatformDonationTransaction,
   buildRemoveSupernetValidatorTransaction,
   CreateSupernetTransaction,
   type DynamicId,
@@ -24,6 +25,7 @@ import {
   type CreateChainOperation,
   type CreateSupernetOperation,
   type DelegatePrimaryOperation,
+  type DonationOperation,
   type RemoveSupernetValidatorOperation,
   StakingOperationSummary,
   type ValidatePrimaryOperation
@@ -59,6 +61,11 @@ async function getPlatformRemoveSupernetValidatorFee (provider: MCNProvider): Pr
 async function getPlatformCreateChainFee (provider: MCNProvider): Promise<BaseFeeData> {
   const fee: bigint = BigInt((await provider.info.getTxFee()).createBlockchainTxFee)
   return new BaseFeeData(provider.platformChain, fee, TransactionType.CreateChain)
+}
+
+async function getPlatformDonationFee (provider: MCNProvider): Promise<BaseFeeData> {
+  const fee = BigInt((await provider.info.getTxFee()).txFee)
+  return new BaseFeeData(provider.platformChain, fee, TransactionType.Donation)
 }
 
 export async function estimatePlatformAddPrimaryValidatorTransaction (
@@ -412,6 +419,44 @@ export async function estimatePlatformCreateChainOperation (
     async () => {
       const fee: BaseFeeData = await getPlatformCreateChainFee(provider)
       return new ChainOperationSummary(provider, createChain, chain, fee, [fee.spending], values)
+    }
+  )
+}
+
+export async function estimatePlatformDonationTransaction (
+  provider: MCNProvider,
+  account: PlatformAccount,
+  supernetId: string,
+  amount: bigint
+): Promise<UtxoFeeData> {
+  const fee: BaseFeeData = await getPlatformDonationFee(provider)
+  const transaction = buildPlatformDonationTransaction(
+    provider.platformChain,
+    account.utxoSet,
+    Address.toAddresses(account.getSignersAddresses()),
+    fee.amount,
+    supernetId,
+    amount,
+    account.address,
+    provider.mcn.id
+  )
+  return new UtxoFeeData(fee.chain, fee.amount, fee.type, transaction)
+}
+
+export async function estimatePlatformDonationOperation (
+  provider: MCNProvider,
+  donation: DonationOperation,
+  account: PlatformAccount
+): Promise<ChainOperationSummary> {
+  const chain: PlatformBlockchain = provider.platformChain
+  const values = new Map<string, bigint>()
+  return await estimatePlatformDonationTransaction(provider, account, donation.supernetId, donation.amount).then(
+    (fee) => {
+      return new ChainOperationSummary(provider, donation, chain, fee, [fee.spending], values)
+    },
+    async () => {
+      const fee = await getPlatformDonationFee(provider)
+      return new ChainOperationSummary(provider, donation, chain, fee, [fee.spending], values)
     }
   )
 }

@@ -338,16 +338,12 @@ export class ReadOnlyJVMWallet extends AbstractReadOnlyVMWallet {
 
   constructor (xpub: string, hrp: string, chain: Blockchain) {
     super(xpub, hrp, chain)
-
     const child = super.getChildNodeAt0(xpub)
-
-    const address = chain.aliases.length > 0
+    this.juneoAddress = chain.aliases.length > 0
       ? `${chain.aliases[0]}-${encodeJuneoAddress(child.publicKey, hrp)}`
       : `${chain.id}-${encodeJuneoAddress(child.publicKey, hrp)}`
-
     this.xpub = xpub
     this.hrp = hrp
-    this.address = address
   }
 }
 
@@ -356,11 +352,11 @@ export class ReadOnlyJEVMWallet extends AbstractReadOnlyVMWallet {
 
   constructor (xpub: string, hrp: string, chain: Blockchain) {
     super(xpub, hrp, chain)
-
     const child = super.getChildNodeAt0(xpub)
-    const address = child.address
-
+    this.address = child.address
+    this.juneoAddress = chain.aliases.length > 0
+      ? `${chain.aliases[0]}-${encodeJuneoAddress(child.publicKey, hrp)}`
+      : `${chain.id}-${encodeJuneoAddress(child.publicKey, hrp)}`
     this.xpub = xpub
-    this.address = address
   }
 }

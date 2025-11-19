@@ -6,7 +6,7 @@ on:
 
 jobs:
   prod_test:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, mcn-apps]
     env:
       MNEMONIC: ${{ secrets.MNEMONIC }}
     steps:
@@ -26,7 +26,7 @@ jobs:
 
   publish:
     needs: prod_test
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, mcn-apps]
     steps:
       - name: Checkout
         uses: actions/checkout@v3

@@ -16,6 +16,8 @@ import * as encoding from '../utils/encoding'
 export type XpubMap = Partial<Record<VMType, string>>
 
 class NodeManager {
+  private readonly privateKeyCache = new Map<number, string>()
+  private readonly xPublicKeyCache = new Map<number, string>()
   mnemonic: string
 
   constructor (mnemonic: string) {
@@ -23,14 +25,22 @@ class NodeManager {
   }
 
   derivePrivateKey (chain: Blockchain, index: number): string {
-    const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${chain.vm.hdPath}'/0'/0`)
-    return hdNode.deriveChild(index).privateKey.substring(2)
+    const hdPath = chain.vm.hdPath
+    if (!this.privateKeyCache.has(hdPath)) {
+      const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${hdPath}'/0'/0`)
+      this.privateKeyCache.set(hdPath, hdNode.deriveChild(index).privateKey.substring(2))
+    }
+    return this.privateKeyCache.get(hdPath)!
   }
 
   // Derive the extended public key for a given chain
   derivateXPublicKey (chain: Blockchain): string {
-    const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${chain.vm.hdPath}'/0'/0`)
-    return hdNode.neuter().extendedKey
+    const hdPath = chain.vm.hdPath
+    if (!this.xPublicKeyCache.has(hdPath)) {
+      const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${hdPath}'/0'/0`)
+      this.xPublicKeyCache.set(hdPath, hdNode.neuter().extendedKey)
+    }
+    return this.xPublicKeyCache.get(hdPath)!
   }
 }
 
@@ -198,10 +208,7 @@ export class MCNWallet {
    * @param xpubs - A map of VMType to xpub strings, representing the extended public keys for each VM type.
    * @returns An instance of MCNWallet configured as a read-only.
    */
-  static fromXpubs (
-    hrp: string,
-    xpubs: XpubMap
-  ): MCNWallet {
+  static fromXpubs (hrp: string, xpubs: XpubMap): MCNWallet {
     // if the xpubs are empty, throw an error
     if (Object.keys(xpubs).length === 0) {
       throw new WalletError('xpubs cannot be empty for read-only wallet')

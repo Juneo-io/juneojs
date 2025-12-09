@@ -1,6 +1,5 @@
 import { HDNodeWallet, Mnemonic, randomBytes, Wallet, type HDNodeVoidWallet } from 'ethers'
 import { VMType, type Blockchain, type JEVMBlockchain } from '../chain'
-import { MainNetwork } from '../network'
 import { type Address, type Signer } from '../transaction'
 import {
   ECKeyPair,
@@ -16,12 +15,18 @@ import * as encoding from '../utils/encoding'
 export type XpubMap = Partial<Record<VMType, string>>
 
 class NodeManager {
-  private readonly privateKeyCache = new Map<number, string>()
-  private readonly xPublicKeyCache = new Map<number, string>()
+  private readonly privateKeyCache
+  private readonly xPublicKeyCache
   mnemonic: string
 
-  constructor (mnemonic: string) {
+  constructor (
+    mnemonic: string,
+    privateKeyCache = new Map<number, string>(),
+    xPublicKeyCache = new Map<number, string>()
+  ) {
     this.mnemonic = mnemonic
+    this.privateKeyCache = privateKeyCache
+    this.xPublicKeyCache = xPublicKeyCache
   }
 
   derivePrivateKey (chain: Blockchain, index: number): string {
@@ -34,13 +39,64 @@ class NodeManager {
   }
 
   // Derive the extended public key for a given chain
-  derivateXPublicKey (chain: Blockchain): string {
+  deriveXPublicKey (chain: Blockchain): string {
     const hdPath = chain.vm.hdPath
     if (!this.xPublicKeyCache.has(hdPath)) {
       const hdNode = HDNodeWallet.fromPhrase(this.mnemonic, '', `m/44'/${hdPath}'/0'/0`)
       this.xPublicKeyCache.set(hdPath, hdNode.neuter().extendedKey)
     }
     return this.xPublicKeyCache.get(hdPath)!
+  }
+
+  serialize (): JuneoBuffer {
+    // * 8 to store paths and key sizes
+    // + 12 private/xpublic keys cache size + mnemonic length
+    let length = this.privateKeyCache.size * 8 + this.xPublicKeyCache.size * 8 + 12 + this.mnemonic.length
+    for (const [_, key] of this.privateKeyCache) {
+      length += key.length
+    }
+    for (const [_, key] of this.xPublicKeyCache) {
+      length += key.length
+    }
+    const buffer = JuneoBuffer.alloc(length)
+    buffer.writeUInt32(this.mnemonic.length)
+    buffer.writeString(this.mnemonic)
+    buffer.writeUInt32(this.privateKeyCache.size)
+    for (const [path, key] of this.privateKeyCache) {
+      buffer.writeUInt32(path)
+      buffer.writeUInt32(key.length)
+      buffer.writeString(key)
+    }
+    buffer.writeUInt32(this.xPublicKeyCache.size)
+    for (const [path, key] of this.xPublicKeyCache) {
+      buffer.writeUInt32(path)
+      buffer.writeUInt32(key.length)
+      buffer.writeString(key)
+    }
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): NodeManager {
+    const reader = JuneoBuffer.from(data).createReader()
+    const mnemonicLength = reader.readUInt32()
+    const mnemonic = reader.readString(mnemonicLength)
+    const privateKeyCache = new Map<number, string>()
+    const privateKeyCacheLength = reader.readUInt32()
+    for (let i = 0; i < privateKeyCacheLength; i++) {
+      const path = reader.readUInt32()
+      const keyLength = reader.readUInt32()
+      const key = reader.readString(keyLength)
+      privateKeyCache.set(path, key)
+    }
+    const xPublicKeyCache = new Map<number, string>()
+    const xPublicKeyCacheLength = reader.readUInt32()
+    for (let i = 0; i < xPublicKeyCacheLength; i++) {
+      const path = reader.readUInt32()
+      const keyLength = reader.readUInt32()
+      const key = reader.readString(keyLength)
+      xPublicKeyCache.set(path, key)
+    }
+    return new NodeManager(mnemonic, privateKeyCache, xPublicKeyCache)
   }
 }
 
@@ -161,16 +217,6 @@ export class MCNWallet {
     this.privateKey = privateKey
   }
 
-  /**
-   * @deprecated
-   */
-  static recover (data: string, hrp?: string): MCNWallet {
-    if (typeof hrp === 'undefined') {
-      hrp = MainNetwork.hrp
-    }
-    return new MCNWallet(hrp, data)
-  }
-
   private recover (data: string): void {
     if (Mnemonic.isValidMnemonic(data)) {
       this.setMnemonic(data)
@@ -179,16 +225,6 @@ export class MCNWallet {
     } else {
       throw new WalletError('invalid recovery data provided')
     }
-  }
-
-  /**
-   * @deprecated
-   */
-  static generate (words: number = 12, hrp?: string): MCNWallet {
-    if (typeof hrp === 'undefined') {
-      hrp = MainNetwork.hrp
-    }
-    return new MCNWallet(hrp, words)
   }
 
   private generate (wordsCount: number): void {
@@ -224,6 +260,29 @@ export class MCNWallet {
     // This ensures that the wallet is initialized with the new xpubs and chains
     wallet.chainsWallets.clear()
 
+    return wallet
+  }
+
+  serialize (): JuneoBuffer {
+    if (typeof this.nodeManager === 'undefined') {
+      throw new WalletError('missing node manager to serialize wallet')
+    }
+    const nodeManager = this.nodeManager.serialize()
+    const bufferLength = nodeManager.length
+    const buffer = JuneoBuffer.alloc(bufferLength + 4 + this.hrp.length)
+    buffer.writeUInt32(this.hrp.length)
+    buffer.writeString(this.hrp)
+    buffer.write(nodeManager)
+    return buffer
+  }
+
+  static parse (data: string | JuneoBuffer): MCNWallet {
+    const reader = JuneoBuffer.from(data).createReader()
+    const hrpLength = reader.readUInt32()
+    const hrp = reader.readString(hrpLength)
+    const nodeManager = NodeManager.parse(reader.readRemaining())
+    const wallet = new MCNWallet(hrp, nodeManager.mnemonic)
+    wallet.nodeManager = nodeManager
     return wallet
   }
 }

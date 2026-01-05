@@ -4,6 +4,10 @@
   "description": "Juneo JS Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Juneo-io/juneojs.git"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./dist",

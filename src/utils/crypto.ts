@@ -47,14 +47,14 @@ export class ECKeyPair {
   }
 }
 
-export function registerRandomBytes (func: (length: number) => Uint8Array<ArrayBufferLike>): void {
+export function registerRandomBytes (func: (length: number) => Uint8Array): void {
   ethers.randomBytes.register((len) => {
     return func(len)
   })
 }
 
 export function registerComputeHmac (
-  func: (algorithm: 'sha256' | 'sha512', key: Uint8Array<ArrayBufferLike>, data: Uint8Array) => BytesLike
+  func: (algorithm: 'sha256' | 'sha512', key: Uint8Array, data: Uint8Array) => BytesLike
 ): void {
   ethers.computeHmac.register((algo, key, data) => {
     return func(algo, key, data)
@@ -63,7 +63,7 @@ export function registerComputeHmac (
 
 export function registerPbkdf2 (
   func: (
-    password: Uint8Array<ArrayBufferLike>,
+    password: Uint8Array,
     salt: Uint8Array,
     iterations: number,
     keylen: number,
@@ -75,13 +75,13 @@ export function registerPbkdf2 (
   })
 }
 
-export function registerSha256 (func: (data: Uint8Array<ArrayBufferLike>) => BytesLike): void {
+export function registerSha256 (func: (data: Uint8Array) => BytesLike): void {
   ethers.sha256.register((data) => {
     return func(data)
   })
 }
 
-export function registerSha512 (func: (data: Uint8Array<ArrayBufferLike>) => BytesLike): void {
+export function registerSha512 (func: (data: Uint8Array) => BytesLike): void {
   ethers.sha512.register((data) => {
     return func(data)
   })

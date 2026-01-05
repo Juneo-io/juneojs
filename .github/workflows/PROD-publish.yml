@@ -57,6 +57,20 @@ jobs:
             echo "should_publish=false" >> $GITHUB_ENV
           fi
 
+      - name: Inspect npm auth config
+        run: |
+          echo "== npm config (redacted) =="
+          npm config list -l | sed -E 's/(_authToken=).+/\1***REDACTED***/g' | sed -E 's/(\/\/registry\.npmjs\.org\/:_authToken=).+/\1***REDACTED***/g'
+          echo "== env tokens =="
+          env | grep -E 'NODE_AUTH_TOKEN|NPM_TOKEN|NPM_CONFIG' || true
+          echo "== .npmrc files present? =="
+          ls -la .npmrc || true
+          ls -la ~/.npmrc || true
+          echo "== repo .npmrc (redacted) =="
+          [ -f .npmrc ] && sed -E 's/(_authToken=).+/\1***REDACTED***/g' .npmrc || true
+          echo "== home .npmrc (redacted) =="
+          [ -f ~/.npmrc ] && sed -E 's/(_authToken=).+/\1***REDACTED***/g' ~/.npmrc || true
+           
       - name: Publish package on NPM 📦
         if: env.should_publish == 'true'
         run: npm publish --provenance --access public

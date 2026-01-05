@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   prod_test:
@@ -11,11 +14,11 @@ jobs:
       MNEMONIC: ${{ secrets.MNEMONIC }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies🔧
@@ -29,11 +32,11 @@ jobs:
     runs-on: [self-hosted, mcn-apps]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies and build 🔧
@@ -54,9 +57,7 @@ jobs:
 
       - name: Publish package on NPM 📦
         if: env.should_publish == 'true'
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
 
       - name: Trigger juneojs-examples upgrade workflow
         if: env.should_publish == 'true'

@@ -2,6 +2,7 @@ import { type RecoveredSignatureType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 import { ripemd160 } from '@noble/hashes/ripemd160'
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256'
+import { type BytesLike, ethers } from 'ethers'
 import { type Signature } from '../transaction'
 import { JuneoBuffer } from './bytes'
 
@@ -44,4 +45,44 @@ export class ECKeyPair {
     const signature = secp256k1.sign(nobleSha256(message.getBytes()), this.privateKey)
     return JuneoBuffer.fromString(`${signature.toCompactHex()}${signature.recovery.toString(16).padStart(2, '0')}`)
   }
+}
+
+export function registerRandomBytes (func: (length: number) => Uint8Array<ArrayBufferLike>): void {
+  ethers.randomBytes.register((len) => {
+    return func(len)
+  })
+}
+
+export function registerComputeHmac (
+  func: (algorithm: 'sha256' | 'sha512', key: Uint8Array<ArrayBufferLike>, data: Uint8Array) => BytesLike
+): void {
+  ethers.computeHmac.register((algo, key, data) => {
+    return func(algo, key, data)
+  })
+}
+
+export function registerPbkdf2 (
+  func: (
+    password: Uint8Array<ArrayBufferLike>,
+    salt: Uint8Array,
+    iterations: number,
+    keylen: number,
+    algo: 'sha256' | 'sha512',
+  ) => BytesLike
+): void {
+  ethers.pbkdf2.register((passwd, salt, iter, keylen, algo) => {
+    return func(passwd, salt, iter, keylen, algo)
+  })
+}
+
+export function registerSha256 (func: (data: Uint8Array<ArrayBufferLike>) => BytesLike): void {
+  ethers.sha256.register((data) => {
+    return func(data)
+  })
+}
+
+export function registerSha512 (func: (data: Uint8Array<ArrayBufferLike>) => BytesLike): void {
+  ethers.sha512.register((data) => {
+    return func(data)
+  })
 }

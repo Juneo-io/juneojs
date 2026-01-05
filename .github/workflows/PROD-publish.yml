@@ -55,6 +55,13 @@ jobs:
           rm -f /home/runner/work/_temp/.npmrc || true
           npm config delete //registry.npmjs.org/:_authToken || true
 
+      - name: Force npm to use OIDC
+        run: |
+          npm config set auth-type oidc
+          npm config set provenance true
+          npm config get auth-type
+          npm config get provenance
+
       - name: Install dependencies and build 🔧
         run: npm install && npm run build
 
